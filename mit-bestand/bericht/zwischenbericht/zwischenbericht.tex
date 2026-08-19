@@ -124,34 +124,6 @@
 \renewfontfamily\SemioSansBold[Path=\semio@font@root anta/]{Anta-Regular.ttf}
 \makeatother
 
-% Anlage SK — Systemkarte plus konsolidierte TikZ-Stile für Karte und
-% Prüftabellen. tikz wird bereits von semio-window.sty geladen; hier nur
-% zusätzliche Bibliotheken und die Zeichenstile.
-\usetikzlibrary{matrix,positioning,fit,calc}
-\makeatletter
-\tikzset{
-  semio/.style={every node/.append style={outer sep=0pt}},
-  semio cell/.style={
-    draw=semio-chrome-border-normal, line width=\semio@stroke@hairline,
-    fill=semio-chrome-canvas, align=left, anchor=center,
-    inner xsep=0.55em, inner ysep=0.34em,
-    font=\SemioSans\fontsize{7.2pt}{9.4pt}\selectfont,
-    text=semio-chrome-text-normal},
-  semio module/.style={semio cell, fill=semio-chrome-window, text=semio-chrome-foreground},
-  semio band/.style={draw=semio-chrome-border-emphasized,
-    line width=\semio@stroke@default, fill=none},
-  semio chip/.style={draw=semio-chrome-border-normal,
-    line width=\semio@stroke@hairline, fill=semio-chrome-panel,
-    text=semio-chrome-foreground,
-    font=\SemioMono\fontsize{7.2pt}{8.4pt}\selectfont,
-    inner xsep=0.4em, inner ysep=0.2em},
-  semio edge/.style={draw=semio-chrome-border-emphasized,
-    line width=\semio@stroke@hairline, -latex},
-  semio edge synth/.style={semio edge, dash pattern=on 2.25pt off 1.5pt},
-  semio bar/.style={draw=semio-chrome-border-normal,
-    line width=\semio@stroke@hairline, fill=semio-chrome-panel},
-}
-\makeatother
 % Hürden-Baum (Anlage HW): eigener Mechanismus semio-tree.sty (SemioTree /
 % SemioTreeGroup / SemioTreeLeaf), von semio.cls geladen wie semio-graph.sty --
 % keine Diagramm-Vokabel lebt im Dokument-Preamble.
@@ -765,13 +737,7 @@ Entwurfsstudio.
 \appendixinput[BB]{Bauteilbörsen}{anhang/bauteilboersen}
 \SemioNavShort{Typologische Zuordnung}% LR-navshort
 \appendixinput[TZ]{Typologische Zuordnung und Wiederverwendungsrollen}{anhang/typologie}
-\SemioNavShort{Eingangsmodell}% LR-navshort
-\appendixinput[EM]{Eingangsmodell für Vorbemessung und Ökobilanz}{anhang/eingangsmodell}
 \appendixinput[SB]{Sekundärbefunde BaselCircular/Cirkla}{anhang/sekundaerbefunde}
-\appendixinput[SK]{Systemkarte Skalierung der Wiederverwendung}{anhang/skalierung}
-\appendixinput[NM]{Nachweismatrix dokumentierter Plattformfunktionen}{anhang/nachweismatrix}
-\appendixinput[IR]{Integrationsreife der Wiederverwendungsplattformen}{anhang/integrationsreife}
-\appendixinput[AN]{Akteursnetz der Bauteil-Wiederverwendung in Europa}{anhang/akteursnetz}
 \appendixchapter[I]{Interviews}
 Der Anhang dokumentiert die drei von acht vorgesehenen Fachgespräche, die zum Berichtsstand ausgewertet wurden, sowie ein bearbeitetes Transkript. Die Auswertungen dienen dazu, die aus der Recherche abgeleiteten Anforderungen aus unterschiedlichen fachlichen Perspektiven zu prüfen und zu vertiefen.
 

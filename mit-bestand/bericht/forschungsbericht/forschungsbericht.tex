@@ -226,8 +226,34 @@ Fazit und Ausblick.
 
 \makeappendices
 
-% Die Anlagen werden am Ende der Setzung aus dem Zwischenbericht migriert und
-% hier über \appendixinput eingehängt.
+% \SemioCellList — shared bullet-list cell formatter for the appendix tables.
+% Duplicated from zwischenbericht.tex (not shared via a macro package): the
+% Zwischenbericht still needs its own copy for Bauteilbörsen and Typologie,
+% which stay there. \SemioCellListInline is not duplicated — zero uses
+% repo-wide.
+\ExplSyntaxOn
+\ProvideDocumentCommand \SemioCellList { O{;} m }
+  {
+    \seq_set_split:Nnn \l_tmpa_seq {#1} {#2}
+    \int_zero:N \l_tmpa_int
+    \seq_map_inline:Nn \l_tmpa_seq
+      {
+        \int_incr:N \l_tmpa_int
+        \int_compare:nNnT \l_tmpa_int > 1 { \par \noindent }
+        \hangindent=0.8em \hangafter=1
+        \textcolor{semio-chrome-border-normal}{\textendash}~%
+        \tl_trim_spaces:n {##1}%
+      }
+  }
+\ExplSyntaxOff
+
+\appendixinput[P]{Projekte}{anhang/projekte}
+\SemioNavShort{Eingangsmodell}% LR-navshort
+\appendixinput[EM]{Eingangsmodell für Vorbemessung und Ökobilanz}{anhang/eingangsmodell}
+\appendixinput[SK]{Systemkarte Skalierung der Wiederverwendung}{anhang/skalierung}
+\appendixinput[NM]{Nachweismatrix dokumentierter Plattformfunktionen}{anhang/nachweismatrix}
+\appendixinput[IR]{Integrationsreife der Wiederverwendungsplattformen}{anhang/integrationsreife}
+\appendixinput[AN]{Akteursnetz der Bauteil-Wiederverwendung in Europa}{anhang/akteursnetz}
 
 \appendixchapter[V]{Verzeichnisse}
 \listofappendices
