@@ -1473,7 +1473,7 @@ mod handcrafted_diff_codec_tests {
     /// tri-states, attribute add/remove/modify, and nested child add/remove/modify. Reuses
     /// `demo_diff_cases()` (the single prolog of truth also consumed by
     /// `⚙️engine/🦀️component.rs`'s `diff_grammar_conformance_law`/`protocol_walk_law`).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn diff_codec_text_binary_roundtrip_law() {
         for d in demo_diff_cases() {
             let printed = d.print_diff();

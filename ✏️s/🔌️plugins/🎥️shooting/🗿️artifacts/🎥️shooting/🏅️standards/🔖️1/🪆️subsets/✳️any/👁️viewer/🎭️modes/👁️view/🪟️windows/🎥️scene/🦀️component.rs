@@ -152,14 +152,14 @@ pub async fn render(snapshot: &ShootingSnapshot) -> UiNode {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn definition_declares_the_world_3d_surface_and_body_key() {
         let def = definition();
         assert_eq!(def.body_key, BODY_KEY);
         assert!(matches!(def.surface_kind, SurfaceKind::World3d));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn render_produces_a_scene_node_for_the_default_document() {
         let snapshot = crate::artifacts::shooting::schema::default_snapshot();
         let node = render(&snapshot);

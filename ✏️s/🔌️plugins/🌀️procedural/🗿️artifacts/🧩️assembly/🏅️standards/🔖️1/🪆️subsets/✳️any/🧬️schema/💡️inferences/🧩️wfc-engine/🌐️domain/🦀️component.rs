@@ -284,7 +284,7 @@ mod tests {
         WeightTable::new(&[1.0, 2.0, 4.0, 8.0]).unwrap()
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn new_full_has_all_patterns_and_correct_sums() {
         let w = table();
         let d = Domain::new_full(&w);
@@ -294,7 +294,7 @@ mod tests {
         d.debug_assert_consistent(&w);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn restrict_reduces_and_updates_caches() {
         let w = table();
         let mut d = Domain::new_full(&w);
@@ -308,7 +308,7 @@ mod tests {
         d.debug_assert_consistent(&w);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn restrict_unchanged_when_already_subset() {
         let w = table();
         let mut d = Domain::new_full(&w);
@@ -319,7 +319,7 @@ mod tests {
         assert_eq!(result, RestrictResult::Unchanged);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn reduced_count_is_removed_not_remaining() {
         // 6 patterns, remove exactly 1 -> remaining 5. Reduced(_) must report 1, not 5.
         let w = WeightTable::new(&[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]).unwrap();
@@ -339,7 +339,7 @@ mod tests {
         assert_eq!(d2.cardinality(), 3);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn remove_to_singleton_and_wipeout() {
         let w = WeightTable::new(&[1.0, 1.0]).unwrap();
         let mut d = Domain::new_full(&w);
@@ -350,7 +350,7 @@ mod tests {
         assert!(d.is_wiped());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn assign_forces_single_pattern() {
         let w = table();
         let mut d = Domain::new_full(&w);
@@ -361,7 +361,7 @@ mod tests {
         d.debug_assert_consistent(&w);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn re_add_exactly_reverses_remove() {
         let w = table();
         let mut d = Domain::new_full(&w);
@@ -373,7 +373,7 @@ mod tests {
         d.debug_assert_consistent(&w);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn singleton_has_zero_entropy_regardless_of_weight() {
         let w = WeightTable::new(&[1.0, 100.0]).unwrap();
         let mut d = Domain::new_full(&w);
@@ -381,7 +381,7 @@ mod tests {
         assert!(d.entropy().abs() < 1e-9);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn wiped_domain_has_zero_entropy() {
         let w = WeightTable::new(&[1.0]).unwrap();
         let mut d = Domain::new_full(&w);
@@ -389,14 +389,14 @@ mod tests {
         assert_eq!(d.entropy(), 0.0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn uniform_weights_entropy_matches_ln_cardinality() {
         let w = WeightTable::new(&[1.0, 1.0, 1.0, 1.0]).unwrap();
         let d = Domain::new_full(&w);
         assert!((d.entropy() - 4.0f64.ln()).abs() < 1e-9);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn domain_store_all_singleton() {
         let w = table();
         let mut store = DomainStore::new_full(2, &w);
@@ -410,7 +410,7 @@ mod tests {
     mod quick {
         use super::*;
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn random_remove_re_add_sequences_preserve_invariants() {
             let w = WeightTable::new(&[1.0, 3.0, 5.0, 2.0, 7.0, 1.0, 9.0, 4.0]).unwrap();
             let mut rng = geometry::random::Rng::from_seed(999);
@@ -433,7 +433,7 @@ mod tests {
             }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn resync_boundary_does_not_change_observable_state() {
             let w = WeightTable::new(&(0..70).map(|i| 1.0 + i as f64).collect::<Vec<_>>()).unwrap();
             let mut d = Domain::new_full(&w);

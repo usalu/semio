@@ -92,13 +92,13 @@ mod tests {
     use crate::artifacts::dag::schema::mutations::delete_node;
     use protocol::Mutation;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dag_diff_default_has_no_pending_writes() {
         let diff = DagDiff::default();
         assert!(diff.content.is_none());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn delete_node_diff_removes_the_node() {
         let base = default_snapshot();
         let id = base.nodes().first().expect("fixture has a node").id.clone();
@@ -113,7 +113,7 @@ mod tests {
 mod semio_grammar_conformance {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn component_grammar_semio_is_grammar_dialect() {
         let g = ::dsl::parse_grammar(COMPONENT_GRAMMAR_SEMIO).expect("parse grammar.semio");
         assert_eq!(g.dialect, ::dsl::SemioDialect::Grammar);

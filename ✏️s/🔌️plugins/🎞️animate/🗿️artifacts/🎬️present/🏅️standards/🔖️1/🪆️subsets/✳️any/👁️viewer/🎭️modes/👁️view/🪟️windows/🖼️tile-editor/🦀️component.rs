@@ -105,14 +105,14 @@ mod tests {
     use super::*;
     use serde_json::Value;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn renders_canvas_2d_scene() {
         let deck = crate::artifacts::present::default_present_snapshot();
         let json_str = serde_json::to_string(&render(&deck)).unwrap();
         assert!(json_str.contains("canvas-2d") || json_str.contains("Canvas2d"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn definition_declares_the_canvas_2d_surface_and_body_key() {
         let definition = definition();
         assert_eq!(definition.body_key, BODY_KEY);
@@ -121,7 +121,7 @@ mod tests {
         assert!(definition.actions.is_empty(), "a viewer window declares no mutating actions");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn source_frame_renders_as_actual_image_layer_behind_tiles() {
         let deck = crate::artifacts::present::default_present_snapshot();
         let layers_json = deck_to_canvas_layers(&deck);
@@ -134,7 +134,7 @@ mod tests {
         assert_eq!(source_layer.get("dataUrl").and_then(|v| v.as_str()), Some(source.src.as_str()));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn deck_to_canvas_layers_omits_data_url_when_source_has_no_image() {
         let base = crate::artifacts::present::default_present_snapshot();
         let (mut source, tiles) = crate::artifacts::present::present_working_scene(&base);

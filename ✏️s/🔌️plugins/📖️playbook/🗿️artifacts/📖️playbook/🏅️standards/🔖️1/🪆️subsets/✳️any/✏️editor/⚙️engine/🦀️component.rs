@@ -51,7 +51,7 @@ pub struct PlaybookChapterPayload {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn playbook_io_declares_the_extra_chapters_in_port() {
         let io = playbook_io();
         let ports = io.all_ports();

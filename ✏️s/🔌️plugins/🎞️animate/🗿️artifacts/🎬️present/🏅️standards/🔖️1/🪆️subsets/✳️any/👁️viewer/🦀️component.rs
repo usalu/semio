@@ -89,14 +89,14 @@ pub async fn create_animate_present_viewer() -> semio_framework_plugin::AppDefin
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_animate_present_viewer_builds_a_definition_for_the_viewer_role() {
         let def = create_animate_present_viewer();
         assert_eq!(def.role, semio_framework::AppRole::Viewer);
         assert_eq!(def.dialect, ANIMATE_DIALECT.into());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn viewer_dialect_matches_the_artifact_coordinate() {
         assert_eq!(<AnimatePresentViewer as ArtifactViewer>::DIALECT, ANIMATE_DIALECT);
     }

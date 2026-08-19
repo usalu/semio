@@ -20,7 +20,7 @@ use crate::editor::process3d::panels::{catalogue, document as document_panel, in
 use crate::editor::process3d::presence::{Process3dPresence, Process3dPresenceMutation};
 use crate::editor::process3d::terminology::process3d_labels;
 use crate::artifacts::process3d::op::Process3dMutation;
-use crate::artifacts::process3d::Process3dSnapshot;
+use crate::artifacts::process3d::{MachineCatalog, MachineCatalogs, Process3dSnapshot};
 use semio_framework::kernel::Effect;
 use semio_framework_plugin::{
     ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppActionRegistry, AppDefinition, ArtifactEditor, ArtifactKindSpec, ArtifactView, CommandDefinition, ConfigView, ContextMenuItemSpec, ContextMenuRequest, Dialect,
@@ -635,8 +635,11 @@ async fn leak_str(value: String) -> &'static str {
 }
 
 /// 🧩️ One hot-installed machine catalog deserialized from the `"process.machines"` topic contribution.
+/// 🔓️ `pub` (not private): a variant payload of `crate::artifacts::process3d::MachineCatalogs`
+/// (closed in the trait's own module, not here — see that enum's doc comment for why), which is
+/// itself `pub` — a variant field can never be less visible than the enum wrapping it.
 #[derive(Clone)]
-struct ContributedMachineCatalog {
+pub struct ContributedMachineCatalog {
     catalog_id: &'static str,
     label: &'static str,
     icon_id: &'static str,
@@ -701,13 +704,13 @@ pub async fn sync_process_machine_contributions(contributions_json: &str) {
     *last = contributions_json.to_string();
 }
 
-async fn builtin_installed_catalogs() -> Vec<Box<dyn crate::artifacts::process3d::MachineCatalog>> {
+async fn builtin_installed_catalogs() -> Vec<MachineCatalogs> {
     vec![
-        Box::new(crate::artifacts::process3d::schema::GenericCatalog),
-        crate::artifacts::process3d::schema::wood_catalog(),
-        crate::artifacts::process3d::schema::concrete_catalog(),
-        crate::artifacts::process3d::schema::metal_catalog(),
-        crate::artifacts::process3d::schema::robotic_catalog(),
+        crate::artifacts::process3d::schema::GenericCatalog.into(),
+        crate::artifacts::process3d::schema::wood_catalog().into(),
+        crate::artifacts::process3d::schema::concrete_catalog().into(),
+        crate::artifacts::process3d::schema::metal_catalog().into(),
+        crate::artifacts::process3d::schema::robotic_catalog().into(),
     ]
 }
 
@@ -715,10 +718,10 @@ async fn builtin_installed_catalogs() -> Vec<Box<dyn crate::artifacts::process3d
 /// catalog first (so it renders as the default-open section), then every `process.machines` contribution
 /// merged via `sync_process_machine_contributions` from runtime-installable extensions under
 /// `🏭️process/🧩️extensions/`.
-pub async fn installed_catalogs() -> Vec<Box<dyn crate::artifacts::process3d::MachineCatalog>> {
+pub async fn installed_catalogs() -> Vec<MachineCatalogs> {
     let mut catalogs = builtin_installed_catalogs();
     let contributed = CONTRIBUTED_MACHINE_CATALOGS.lock().expect("process contributed catalogs lock");
-    catalogs.extend(contributed.iter().map(|catalog| Box::new(catalog.clone()) as Box<dyn crate::artifacts::process3d::MachineCatalog>));
+    catalogs.extend(contributed.iter().map(|catalog| catalog.clone().into()));
     catalogs
 }
 
@@ -882,7 +885,7 @@ mod tests {
     //#region 🔖️CommandSurface
     /// 🏷️ Every declared manifest action id must be reachable as exactly one command row, and every row's
     /// wire keyword must be distinct.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn command_ids_are_unique_and_match_the_declared_manifest_actions() {
         let commands = every_command();
         let ids: Vec<&str> = commands.iter().map(|command| command.command_id()).collect();
@@ -894,7 +897,7 @@ mod tests {
     }
 
     /// ⚖️ LAW: text and binary are two projections of the same command, for every single row.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn every_command_round_trips_through_text_and_binary() {
         for command in every_command() {
             store::os_store::test_support::assert_op_text_binary_equivalence(&command);
@@ -905,7 +908,7 @@ mod tests {
     /// verbatim from the pre-migration `Process3dCommand`/`command_id()` match (the two vocabularies
     /// genuinely diverge for about a third of process3d's rows, unlike flow's single `setLocale`
     /// exception, so this pins the full table rather than deriving it from a kebab-case guess).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
         let expected_wire_key = |id: &str| -> &'static str {
             match id {
@@ -1004,7 +1007,7 @@ mod tests {
 
     /// 🌉️ Every Process action emitted by React or wgpu must enter the same closed typed command
     /// vocabulary as native typed callers; undeclared strings fail at this single boundary.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn command_from_action_covers_every_declared_action_and_rejects_unknown_ones() {
         testkit::assert_declared_actions_bridge_to_commands::<EditorApp<Process3dPlayApp>>(process3d_app_manifest_for_testkit);
         assert!(Process3dPlayApp::command_from_action("nonsense", None).is_err());
@@ -1016,7 +1019,7 @@ mod tests {
     /// app-owned selection/hover commands, deleted along with `Process3dConfig::selected_id`/
     /// `hovered_id` — hover/selection now decode through the framework's auto-injected
     /// `interactionHover`/`interactionSelect` verbs instead of this app's own command vocabulary.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn interaction_actions_decode_into_typed_commands() {
         assert_eq!(
             Process3dPlayApp::command_from_action("setActiveExample", Some(&serde_json::json!({ "exampleId": PROCESS3D_EXAMPLE_PLATE }))).expect("example bridge"),
@@ -1026,7 +1029,7 @@ mod tests {
 
     /// 📄️ Example switching exercises the complete registry-backed action path and emits the
     /// architecture's sanctioned whole-document load effect for the requested fixture.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn registry_backed_example_action_emits_the_requested_document() {
         let mut app = app_with_registry();
         let result = action(&mut app, "setActiveExample", Some(&serde_json::json!({ "exampleId": PROCESS3D_EXAMPLE_PLATE })));
@@ -1042,7 +1045,7 @@ mod tests {
     /// decodes through the framework's auto-injected `interactionSelect` verb, and the rendered
     /// world3d selection JSON carries no live selection ids anymore (see
     /// `🎭️modes/✏️edit/🪟️windows/🪚️workpiece`'s `process3d_selection_json` doc comment).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn world3d_render_carries_no_stale_selection_json_fields() {
         let mut app = app();
         let rendered = render_body(&mut app, PROCESS_3D_PLAY_BODY_MAIN);
@@ -1051,7 +1054,7 @@ mod tests {
 
     /// 🖱️ A world right-click has an app-owned menu to request; the host no longer falls through to
     /// an empty default.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn world_context_menu_exposes_process_commands() {
         let mut app = app_with_registry();
         let request = ContextMenuRequest {
@@ -1068,7 +1071,7 @@ mod tests {
     //#endregion 🔖️CommandSurface
 
     //#region 🔖️ManifestSanity
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn the_manifest_stitches_every_taxonomy_node() {
         let json = serde_json::to_string(&create_process3d_app().definition).expect("app definition json");
         assert!(json.contains(workpiece::PROCESS_3D_PLAY_WINDOW_MAIN), "window kind missing from the manifest");
@@ -1079,7 +1082,7 @@ mod tests {
         assert!(json.contains("3d.process"), "artifact kind missing from the manifest");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn utility_registry_declares_four_flat_utilities_scoped_to_workpiece_window() {
         let definition = create_process3d_app().definition;
         let utility_ids: Vec<&str> = definition.utilities.iter().map(|utility| utility.id.as_str()).collect();
@@ -1095,7 +1098,7 @@ mod tests {
     /// 🔤️ `AppIo.export_formats`/`import_formats` (unlike `ArtifactKindSpec`) have no `export_stdio_kinds`/
     /// `import_stdio_kinds` string-id peer and are never read by `register_app_io`, so they stay empty
     /// here in step with `artifact_kind()`'s own now-empty lists (see that fn's doc).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn process3d_io_mirrors_the_declared_artifact_kind() {
         let io = process3d_io();
         assert_eq!(io.document_schema, crate::artifacts::process3d::PROCESS_3D_SCHEMA);
@@ -1106,7 +1109,7 @@ mod tests {
 
     /// 🔌️ WORKFLOWS-END-TO-END-TYPED-PORTS-REAL-SCHEMA-FLOW-CONFIG-ON-NODE Wave 2 port recipe:
     /// `geometry:in` and `brep:out` are declared with the right direction/kind/multiplicity.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn process3d_io_declares_geometry_in_and_brep_out_ports() {
         let io = process3d_io();
         let geometry_in = io.ports.iter().find(|port| port.id == "geometry:in").expect("geometry:in declared");
@@ -1126,7 +1129,7 @@ mod tests {
     //#endregion 🔖️IoTests
 
     //#region 🔖️CrossCutting
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn labels_resolve_native_by_default_and_in_german() {
         let mut config = Process3dConfig::default();
         assert_eq!(process3d_labels(&config).stock.as_str(), "Stock");
@@ -1139,7 +1142,7 @@ mod tests {
     /// CHILD HANDLE — no resolver, see `ProcessWorkingScene`'s doc comment), so the step count
     /// never changes; `undo`/`redo` of a no-op are themselves no-ops, so the handle stays identical
     /// throughout.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn undo_after_add_step_leaves_the_steps_handle_unchanged() {
         let mut app = app();
         let before = app.snapshot().expect("snapshot").steps.clone();
@@ -1152,7 +1155,7 @@ mod tests {
         );
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn undo_after_add_workshop_machine_restores_previous_machine_count() {
         let mut app = app();
         testkit::assert_undo_redo_round_trip(
@@ -1168,7 +1171,7 @@ mod tests {
     /// in-history mutation (a whole-snapshot variant is banned outright), so `setStock` now surfaces as a
     /// `Effect::LoadDocument` rather than an `artifact_mutations` entry — `dispatch`'s in-process
     /// harness never applies `effects` to its own store, so this asserts on the emitted effect.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn arg_form_set_stock_emits_ops_reading_kind_arg() {
         let mut app = app();
         let result = dispatch(&mut app, Process3dCommand::SetStock(set_stock::SetStock { kind: "cylinder".into() }));
@@ -1193,7 +1196,7 @@ mod tests {
     /// so the placed step's real pose is no longer readable back off the persisted document. This
     /// asserts what remains real: the command still dispatches a mutation for a real world-space
     /// click.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn world_pointer_down_dispatches_a_mutation_for_a_real_click() {
         let mut app = app();
         set_utility(&mut app, "cut");
@@ -1201,7 +1204,7 @@ mod tests {
         assert!(!result.mutations.is_empty(), "worldPointerDown must still dispatch a mutation for a real click");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn world_pointer_down_resets_active_utility_to_select() {
         let mut app = app();
         set_utility(&mut app, "cut");
@@ -1215,7 +1218,7 @@ mod tests {
     /// 🌉️ Same documented gap as `world_pointer_down_dispatches_a_mutation_for_a_real_click` — the
     /// per-click pose is no longer readable back off the persisted document, so this asserts that
     /// two distinct real clicks each still dispatch their own mutation.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn repeated_world_pointer_down_each_dispatch_a_mutation() {
         let mut app = app();
         set_utility(&mut app, "cut");
@@ -1235,21 +1238,21 @@ mod tests {
     /// `ProcessWorkingScene` by `🧬️schema/💡️inferences`'s own
     /// `drill_reduces_volume_below_stock`/`attach_increases_volume_above_stock` tests; these two
     /// now assert only that the command still dispatches a mutation for a real face-drag gesture.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn world_face_drag_end_cut_dispatches_a_mutation() {
         let mut app = app();
         let result = dispatch(&mut app, Process3dCommand::WorldFaceDragEnd(world_face_drag_end::WorldFaceDragEnd { normal: [0.0, 0.0, 1.0], start_point: [0.5, 0.5, 1.0], distance: -0.5, face_extent: Some([1.0, 1.0]) }));
         assert!(!result.mutations.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn world_face_drag_end_attach_dispatches_a_mutation() {
         let mut app = app();
         let result = dispatch(&mut app, Process3dCommand::WorldFaceDragEnd(world_face_drag_end::WorldFaceDragEnd { normal: [0.0, 0.0, 1.0], start_point: [0.5, 0.5, 1.0], distance: 0.5, face_extent: Some([0.2, 0.2]) }));
         assert!(!result.mutations.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn world_face_drag_end_ignored_while_a_placement_utility_is_active() {
         let mut app = app();
         set_utility(&mut app, "cut");
@@ -1257,7 +1260,7 @@ mod tests {
         assert!(result.mutations.is_empty(), "worldFaceDragEnd should be a no-operation while a placement utility is active, not the select utility");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn toggle_sun_round_trips_through_config_and_defaults_off() {
         let mut app = app();
         let measures = app.window_measures();
@@ -1278,7 +1281,7 @@ mod tests {
         assert!(children.iter().any(|measure| matches!(measure, WindowMeasure::Toggle { pressed, .. } if *pressed)));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn window_measures_surface_the_sun_group() {
         let mut app = app();
         let measures = main_window_measures(&mut app);
@@ -1286,13 +1289,13 @@ mod tests {
         assert!(matches!(&measures[0], WindowMeasure::Group { id, .. } if id == "process3d-measure-sun"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
         let mut app = app();
         assert!(render_body(&mut app, "process3d.play.nope").contains("Unknown body"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn window_body_accepts_the_framework_instance_suffix() {
         let mut app = app();
         let body_key = format!("{}:{}", workpiece::PROCESS_3D_PLAY_BODY_MAIN, workpiece::PROCESS_3D_PLAY_WINDOW_MAIN);
@@ -1303,7 +1306,7 @@ mod tests {
     /// 🧪️ The registry-enforced app must accept every declared manifest action id without a kind-
     /// discipline error — proves the `app_commands!` rows and the manifest's `.operation`/`.shell_action`/
     /// `.action_with` declarations stay in sync.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn registry_enforced_app_accepts_a_declared_operation_action() {
         let mut app = app_with_registry();
         let result = dispatch(&mut app, Process3dCommand::AddStep(add_step::AddStep { measure: Some("cut".into()), machine_id: None, capability_id: None, position: None }));
@@ -1311,7 +1314,7 @@ mod tests {
     }
 
     //#region 🔖️MediaTests
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn export_brep_out_returns_step_text_structured_payload() {
         let app = Process3dPlayApp;
         let document = crate::artifacts::process3d::schema::default_document();
@@ -1329,7 +1332,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn export_unknown_port_is_not_implemented() {
         let app = Process3dPlayApp;
         let document = crate::artifacts::process3d::schema::default_document();
@@ -1338,7 +1341,7 @@ mod tests {
         assert!(matches!(semio_framework_plugin::resolve_ready(Process3dPlayApp::export_media("nonsense:out", &doc)), Err(MediaError::NotImplemented)));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn import_geometry_in_rejects_unrecognized_schema() {
         let app = Process3dPlayApp;
         let document = crate::artifacts::process3d::schema::default_document();
@@ -1350,20 +1353,20 @@ mod tests {
     //#endregion 🔖️MediaTests
 
     //#region 🔖️BehaviorTests
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn face_drag_orients_box_along_normal() {
         let (axis, angle) = axis_angle_from_up_to([0.0, 1.0, 0.0]);
         assert!((angle - std::f64::consts::FRAC_PI_2).abs() < 1e-9);
         assert!((axis[0] - (-1.0)).abs() < 1e-9 && axis[1].abs() < 1e-9 && axis[2].abs() < 1e-9);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn face_drag_degenerate_antiparallel_normal_does_not_panic() {
         let (_, angle) = axis_angle_from_up_to([0.0, 0.0, -1.0]);
         assert!((angle - std::f64::consts::PI).abs() < 1e-9);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn sync_process_machine_contributions_merges_hot_installed_catalogs() {
         use semio_framework::{ProgramContributionEntry, TopicContribution};
         let machine = crate::artifacts::process3d::WorkshopMachine { id: "hot-saw".into(), label: "Hot Saw".into(), icon_id: "scissors".into(), catalog_id: None, capabilities: vec![] };

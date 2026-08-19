@@ -21,7 +21,7 @@ pub struct Puzzle5dPrecomputeSession {
 }
 
 impl Default for Puzzle5dPrecomputeSession {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self::new()
     }
 }

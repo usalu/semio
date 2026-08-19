@@ -25,7 +25,7 @@ pub struct DocxArtifact {
 
 //#region Conversions
 impl Default for DocxArtifact {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self::from_snapshot(DocxSnapshot::default())
     }
 }
@@ -335,7 +335,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn builder_produces_minimal_valid_package_that_decodes_back() {
         let snap = build_minimal_docx(sample_document());
         let bytes = encode_docx(&snap).expect("encode minimal package");
@@ -345,7 +345,7 @@ mod tests {
         assert_eq!(decoded.document, sample_document());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn tables_and_styles_round_trip() {
         let snap = build_minimal_docx(sample_document_with_table_and_styles());
         let bytes = encode_docx(&snap).expect("encode");
@@ -355,7 +355,7 @@ mod tests {
         assert_eq!(table.rows[0].cells.len(), 2);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn decode_resolves_real_hand_built_package_with_formatting() {
         // Hand-built OOXML: correct Content_Types/.rels/part structure, not just "a zip with xml".
         let mut opc = OpcPackage::empty();
@@ -387,7 +387,7 @@ mod tests {
         assert_eq!(p2.runs[0].text, "Plain & escaped");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn unmodeled_parts_survive_decode_encode_verbatim() {
         const MAIN_DOCUMENT_PART: &str = "word/document.xml";
         const MAIN_DOCUMENT_CONTENT_TYPE: &str = "application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml";
@@ -408,7 +408,7 @@ mod tests {
         assert_eq!(re_decoded.document, sample_document());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn unmodeled_run_properties_survive_round_trip() {
         let mut run = DocxRun { text: "colored".into(), ..Default::default() };
         run.extra_run_properties.push(XmlNode::Element { name: "w:color".into(), attrs: vec![XmlAttr { name: "w:val".into(), value: "FF0000".into() }], children: vec![] });
@@ -419,7 +419,7 @@ mod tests {
         assert_eq!(decoded.document, doc);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn decode_rejects_missing_main_document_relationship() {
         let mut opc = OpcPackage::empty();
         opc.content_types.set_default("rels", RELS_CONTENT_TYPE);
@@ -428,7 +428,7 @@ mod tests {
         assert_eq!(err, DocxError::MissingMainDocumentRelationship);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn analyzer_builder_round_trip() {
         let original = build_minimal_docx(sample_document_with_table_and_styles());
         // Analyzer: real decode of the encoded bytes.
@@ -458,7 +458,7 @@ mod tests {
         /// parse under the real dialect -- independent of, and cheaper than, the two
         /// `recognize`/`walk_protocol` laws below (a parse failure here fails fast with a clearer
         /// message).
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn committed_facet_files_parse() {
             for (label, text) in [("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO)] {
                 let grammar = dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
@@ -481,7 +481,7 @@ mod tests {
         /// itself delegates to) and recognizes EACH real part's own text against the grammar --
         /// direct proof the grammar matches this artifact's own real per-part XML bytes, not an
         /// invented approximation.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn grammar_conformance_law() {
             let grammar = dsl::parse_grammar(snapshot::text::COMPONENT_GRAMMAR_SEMIO).expect("parse snapshot grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
@@ -505,7 +505,7 @@ mod tests {
 
         /// ✅️ `ops_grammar_conformance_law`: the mutations grammar recognizes real `print_op`
         /// output for every `DocxMutation` variant (`mutations::demo_mutation_cases()`).
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn ops_grammar_conformance_law() {
             let grammar = dsl::parse_grammar(mutations::text::COMPONENT_GRAMMAR_SEMIO).expect("parse mutations grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
@@ -517,7 +517,7 @@ mod tests {
 
         /// ✅️ `diff_grammar_conformance_law`: the diff grammar recognizes real `print_diff` output
         /// for every representative `DocxDiff` (`diff::demo_diff_cases()`).
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn diff_grammar_conformance_law() {
             let grammar = dsl::parse_grammar(diff::text::COMPONENT_GRAMMAR_SEMIO).expect("parse diff grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
@@ -536,7 +536,7 @@ mod tests {
         /// exception, `📖️grammar-recipe.md` §2.3) -- assert a sane in-range `consumed` there
         /// instead, same as zip's own `protocol_walk_law` does; the op/diff protocols have no such
         /// exception and must consume every byte.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn protocol_walk_law() {
             let pack_spec = dsl::parse_protocol(snapshot::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
             let demo = demo_docx_snapshot();
@@ -565,7 +565,7 @@ mod tests {
         /// demo()`, `print_dsl(demo()) == fixture` (byte-for-byte), and the pack twin -- so the
         /// fixtures can never silently drift back to a fake `"68656c6c6f"`-style placeholder again
         /// (see this ticket's own recon note on the pre-FG-wave state of these two files).
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn fixture_honesty_law() {
             const FIXTURE_DSL: &str = include_str!("../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
             const FIXTURE_PACK: &[u8] = include_bytes!("../📚️examples/🎬️demo/🖼️assets/🎒️example.pack.semio");
@@ -584,7 +584,7 @@ mod tests {
             assert_eq!(native.as_slice(), include_bytes!("../📚️examples/🎬️demo/🖼️assets/📜️example.docx"), "encode_docx(demo) drifted from 📜️example.docx");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         #[ignore]
         async fn zzz_write_native_docx_fixture() {
             let demo = demo_docx_snapshot();

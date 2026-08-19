@@ -49,7 +49,7 @@ pub struct ShootingSnapshot {
 }
 
 impl Default for ShootingSnapshot {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self {
             schema: SHOOTING_DOCUMENT_SCHEMA.into(),
             assets: Vec::new(),

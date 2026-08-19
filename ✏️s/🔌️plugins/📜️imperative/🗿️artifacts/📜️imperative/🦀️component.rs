@@ -428,13 +428,13 @@ mod tests {
     /// `IMPERATIVE_DOCUMENT_SCHEMA` ("imperative.document/v1") — the former names the artifact kind in
     /// the OS media catalogue, the latter keys the store envelope. Pinned so a future edit can't silently
     /// merge them.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn artifact_kind_keeps_the_media_schema_distinct_from_the_store_schema() {
         assert_eq!(artifact_kind().schema, "imperative.document");
         assert_eq!(IMPERATIVE_DOCUMENT_SCHEMA, "imperative.document/v1");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn default_snapshot_is_empty_with_the_bare_schema() {
         let snapshot = ImperativeSnapshot::default();
         assert_eq!(snapshot.schema, "imperative.document");

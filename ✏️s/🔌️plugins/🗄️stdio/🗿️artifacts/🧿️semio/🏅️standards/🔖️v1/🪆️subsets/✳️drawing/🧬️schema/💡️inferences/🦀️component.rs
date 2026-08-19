@@ -104,18 +104,18 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = fixture();
         assert_eq!(SemioDrawingInference::infer(&snapshot), SemioDrawingInference::infer(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(SemioDrawingInference::infer(&SemioDrawingSnapshot::default()), SemioDrawingInference::default());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_matches_direct_infer_field_call() {
         let snapshot = fixture();
         let inferred = SemioDrawingInference::infer(&snapshot);

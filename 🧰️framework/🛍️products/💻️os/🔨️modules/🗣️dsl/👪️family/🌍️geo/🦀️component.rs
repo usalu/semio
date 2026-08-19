@@ -5,9 +5,9 @@ pub use crate::os_dsl::notation::{print_edge, EdgeLabel, EdgeLink, EdgeNode, Edg
 use crate::os_dsl::{lex, Limits, TextError, TokenKind};
 
 /// @emoji 📍 Parses `lon lat [alt]` tuples.
-pub fn parse_point_text(text: &str) -> Result<(f64, f64, Option<f64>), TextError> {
+pub async fn parse_point_text(text: &str) -> Result<(f64, f64, Option<f64>), TextError> {
     let limits = Limits::default();
-    let nums: Vec<f64> = lex(text, &limits, false)?
+    let nums: Vec<f64> = lex(text, &limits, false).await?
         .into_iter()
         .filter(|t| matches!(t.kind, TokenKind::Float | TokenKind::Int))
         .map(|t| t.text.as_str().parse().map_err(|_| TextError::new("bad number", t.span.clone())))
@@ -22,8 +22,8 @@ pub fn parse_point_text(text: &str) -> Result<(f64, f64, Option<f64>), TextError
 #[cfg(test)]
 mod tests {
     /// @emoji 📖️ The fragment's `.grammar` file must parse under `dsl_grammar`'s parser.
-    #[test]
-    fn grammar_file_is_syntactically_valid() {
+    #[semio_framework_async_macros::async_test]
+    async fn grammar_file_is_syntactically_valid() {
         let source = include_str!("📖️family-geo.grammar.semio");
         let grammar = crate::os_dsl::grammar::parse_grammar(source).expect("family-geo.grammar must parse");
         assert_eq!(grammar.id, "family-geo");

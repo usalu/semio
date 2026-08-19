@@ -1,0 +1,2343 @@
+{
+  "crate": "semio-framework-os-kernel",
+  "history": [
+    {
+      "pass": 1,
+      "errors": 1072,
+      "edits": 197,
+      "ambiguous": 0,
+      "other": 267
+    },
+    {
+      "pass": 2,
+      "errors": 1072,
+      "edits": 0,
+      "ambiguous": 0,
+      "other": 464
+    }
+  ],
+  "residual_errors": 1072,
+  "ambiguous": [],
+  "other": [
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🦀️component.rs:86",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🦀️component.rs:131",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🦀️component.rs:163",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/⌨️cli/🦀️component.rs:242",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:288",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:291",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:296",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:299",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:302",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:307",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:313",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:355",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:358",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:361",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:366",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:369",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:377",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:380",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:606",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:705",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:712",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:717",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:723",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:601",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:607",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:610",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:663",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:666",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:671",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:840",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:860",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:879",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:884",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:897",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:903",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:907",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:921",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:931",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:960",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:965",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:968",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:975",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:981",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:985",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:988",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:1001",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:1009",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:1012",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:1019",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:1027",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:1032",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:1036",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:1039",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:1045",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:1060",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:1063",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:1067",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:1072",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:1078",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:1090",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:1093",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:1096",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:1098",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:1103",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:1107",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:1126",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:1127",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:1128",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:1132",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:1139",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:1146",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:1150",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:1152",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:1154",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:1159",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:1165",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:1166",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:1187",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:1189",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:1200",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:1203",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:1209",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:1216",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:1220",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:1224",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:1228",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:1331",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:1332",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:1336",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:1343",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:1347",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:1353",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:1357",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:1358",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:1398",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:1399",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:1400",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:1400",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:1402",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:1403",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:1405",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:1413",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:1417",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:1418",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:1521",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:1787",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:1910",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:1912",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:1913",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:1916",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:1917",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:1922",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:1935",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:1942",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:1943",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:1944",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:1948",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:1949",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:1955",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:1956",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:1958",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:1959",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:1965",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:1970",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:1971",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:1977",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🔌️io/🦀️component.rs:55",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🔌️io/🦀️component.rs:258",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🔌️io/🦀️component.rs:259",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🔌️io/🦀️component.rs:261",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🔌️io/🦀️component.rs:262",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🔌️io/🦀️component.rs:264",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🔌️io/🦀️component.rs:265",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🔌️io/🦀️component.rs:268",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🔌️io/🦀️component.rs:281",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🔌️io/🦀️component.rs:282",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🔌️io/🦀️component.rs:283",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🔌️io/🦀️component.rs:283",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🔌️io/🦀️component.rs:285",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🔌️io/🦀️component.rs:286",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🔌️io/🦀️component.rs:288",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/💎️materialize/🦀️component.rs:80",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/💎️materialize/🦀️component.rs:84",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/💎️materialize/🦀️component.rs:87",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/💎️materialize/🦀️component.rs:88",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/💎️materialize/🦀️component.rs:94",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/💎️materialize/🦀️component.rs:95",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/💎️materialize/🦀️component.rs:96",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/💎️materialize/🦀️component.rs:98",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/💎️materialize/🦀️component.rs:99",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/💎️materialize/🦀️component.rs:100",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/💎️materialize/🦀️component.rs:115",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/💎️materialize/🦀️component.rs:118",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/💎️materialize/🦀️component.rs:119",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/💎️materialize/🦀️component.rs:120",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/💎️materialize/🦀️component.rs:122",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/💎️materialize/🦀️component.rs:124",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/💎️materialize/🦀️component.rs:125",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/💎️materialize/🦀️component.rs:126",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/💎️materialize/🦀️component.rs:129",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/💎️materialize/🦀️component.rs:130",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/💎️materialize/🦀️component.rs:132",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/💎️materialize/🦀️component.rs:150",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/💎️materialize/🦀️component.rs:154",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/💎️materialize/🦀️component.rs:155",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/💎️materialize/🦀️component.rs:161",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/💎️materialize/🦀️component.rs:162",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/💎️materialize/🦀️component.rs:266",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/💎️materialize/🦀️component.rs:282",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/💎️materialize/🦀️component.rs:322",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/💎️materialize/🦀️component.rs:448",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/💎️materialize/🦀️component.rs:485",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/💎️materialize/🦀️component.rs:495",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️testkit/🦀️component.rs:353",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️testkit/🦀️component.rs:439",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️testkit/🦀️component.rs:452",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️testkit/🦀️component.rs:456",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️testkit/🦀️component.rs:498",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️testkit/🦀️component.rs:499",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️testkit/🦀️component.rs:512",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️testkit/🦀️component.rs:531",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️testkit/🦀️component.rs:532",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️testkit/🦀️component.rs:533",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️testkit/🦀️component.rs:535",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️testkit/🦀️component.rs:550",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️testkit/🦀️component.rs:551",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️testkit/🦀️component.rs:561",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️testkit/🦀️component.rs:562",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️testkit/🦀️component.rs:605",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️testkit/🦀️component.rs:611",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️testkit/🦀️component.rs:660",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️testkit/🦀️component.rs:661",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️testkit/🦀️component.rs:662",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️testkit/🦀️component.rs:685",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️testkit/🦀️component.rs:685",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️testkit/🦀️component.rs:686",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️testkit/🦀️component.rs:686",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:7298",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:7302",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:7177",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:7214",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:3885",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:3987",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:6083",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:6094",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:6104",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:6117",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:7238",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:7250",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:7290",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:7293",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:2273",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:3455",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:2284",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:3466",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:2294",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:2307",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:3476",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:3489",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:545",
+      "code": "E0038",
+      "msg": "the trait `PayloadSource` is not dyn compatible"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:585",
+      "code": "E0038",
+      "msg": "the trait `PayloadSource` is not dyn compatible"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:624",
+      "code": "E0038",
+      "msg": "the trait `PayloadSink` is not dyn compatible"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:640",
+      "code": "E0038",
+      "msg": "the trait `PayloadSink` is not dyn compatible"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:370",
+      "code": "E0038",
+      "msg": "the trait `ResourceResolver` is not dyn compatible"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:418",
+      "code": "E0038",
+      "msg": "the trait `ResourceResolver` is not dyn compatible"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/📇️directory/🔌️client/🦀️component.rs:194",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:504",
+      "code": "E0038",
+      "msg": "the trait `RandomAccessPayload` is not dyn compatible"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/📇️directory/🔌️client/🦀️component.rs:318",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:80",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:82",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:85",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:112",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:114",
+      "code": "E0277",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:119",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:121",
+      "code": "E0277",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:124",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:145",
+      "code": "E0277",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:150",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:153",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:307",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:308",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:315",
+      "code": "E0277",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:316",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:321",
+      "code": "E0277",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:322",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:327",
+      "code": "E0277",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:328",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:333",
+      "code": "E0277",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:334",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:339",
+      "code": "E0277",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:341",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:350",
+      "code": "E0277",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:358",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:377",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:377",
+      "code": "E0038",
+      "msg": "the trait `ResourceResolver` is not dyn compatible"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:383",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:383",
+      "code": "E0038",
+      "msg": "the trait `ResourceResolver` is not dyn compatible"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:383",
+      "code": "E0038",
+      "msg": "the trait `ResourceResolver` is not dyn compatible"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:389",
+      "code": "E0277",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:390",
+      "code": "E0038",
+      "msg": "the trait `PayloadSource` is not dyn compatible"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:395",
+      "code": "E0277",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:396",
+      "code": "E0038",
+      "msg": "the trait `ResourceResolver` is not dyn compatible"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:396",
+      "code": "E0038",
+      "msg": "the trait `ResourceResolver` is not dyn compatible"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:396",
+      "code": "E0038",
+      "msg": "the trait `ResourceResolver` is not dyn compatible"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:397",
+      "code": "E0038",
+      "msg": "the trait `ResourceResolver` is not dyn compatible"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:399",
+      "code": "E0038",
+      "msg": "the trait `PayloadSource` is not dyn compatible"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:404",
+      "code": "E0277",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:408",
+      "code": "E0277",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:425",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:425",
+      "code": "E0038",
+      "msg": "the trait `ResourceResolver` is not dyn compatible"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:431",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:431",
+      "code": "E0038",
+      "msg": "the trait `ResourceResolver` is not dyn compatible"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:431",
+      "code": "E0038",
+      "msg": "the trait `ResourceResolver` is not dyn compatible"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:436",
+      "code": "E0277",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:437",
+      "code": "E0038",
+      "msg": "the trait `PayloadSink` is not dyn compatible"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:442",
+      "code": "E0277",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:443",
+      "code": "E0038",
+      "msg": "the trait `ResourceResolver` is not dyn compatible"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:443",
+      "code": "E0038",
+      "msg": "the trait `ResourceResolver` is not dyn compatible"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:443",
+      "code": "E0038",
+      "msg": "the trait `ResourceResolver` is not dyn compatible"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:444",
+      "code": "E0038",
+      "msg": "the trait `ResourceResolver` is not dyn compatible"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:445",
+      "code": "E0038",
+      "msg": "the trait `PayloadSink` is not dyn compatible"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:450",
+      "code": "E0277",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:454",
+      "code": "E0277",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:480",
+      "code": "E0038",
+      "msg": "the trait `RandomAccessPayload` is not dyn compatible"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:479",
+      "code": "E0038",
+      "msg": "the trait `RandomAccessPayload` is not dyn compatible"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:511",
+      "code": "E0277",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:512",
+      "code": "E0277",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:518",
+      "code": "E0277",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:520",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:524",
+      "code": "E0277",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:525",
+      "code": "E0277",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:526",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:529",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:536",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:538",
+      "code": "E0277",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:552",
+      "code": "E0277",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:554",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:560",
+      "code": "E0038",
+      "msg": "the trait `RandomAccessPayload` is not dyn compatible"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:564",
+      "code": "E0277",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:565",
+      "code": "E0277",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:566",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:569",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:576",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:578",
+      "code": "E0277",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:592",
+      "code": "E0277",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:594",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:599",
+      "code": "E0038",
+      "msg": "the trait `RandomAccessPayload` is not dyn compatible"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:603",
+      "code": "E0277",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:604",
+      "code": "E0277",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:605",
+      "code": "E0609",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:608",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:615",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:617",
+      "code": "E0277",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:631",
+      "code": "E0277",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:632",
+      "code": "E0277",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:633",
+      "code": "E0277",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:647",
+      "code": "E0277",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:648",
+      "code": "E0277",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:649",
+      "code": "E0277",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:1235",
+      "code": "E0507",
+      "msg": "cannot move out of `*dialect` which is behind a shared reference"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:2498",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:2541",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:2546",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🧬️schema/🦀️component.rs:97",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🧬️schema/🦀️component.rs:137",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🧬️schema/🦀️component.rs:137",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🧬️schema/🦀️component.rs:170",
+      "code": "E0277",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:546",
+      "code": "E0277",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5878",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5912",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5927",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5925",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:6205",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:6740",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:6745",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:6746",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:6754",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:7423",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:8083",
+      "code": "E0277",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:8110",
+      "code": "E0308",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:496",
+      "code": "E0053",
+      "msg": "method `put` has an incompatible type for trait"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:500",
+      "code": "E0053",
+      "msg": "method `get` has an incompatible type for trait"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:504",
+      "code": "E0053",
+      "msg": "method `has` has an incompatible type for trait"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:508",
+      "code": "E0053",
+      "msg": "method `delete` has an incompatible type for trait"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:381",
+      "code": "E0038",
+      "msg": "the trait `ResourceResolver` is not dyn compatible"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:387",
+      "code": "E0038",
+      "msg": "the trait `PayloadSource` is not dyn compatible"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:429",
+      "code": "E0038",
+      "msg": "the trait `ResourceResolver` is not dyn compatible"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:435",
+      "code": "E0038",
+      "msg": "the trait `PayloadSink` is not dyn compatible"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:498",
+      "code": "E0038",
+      "msg": "the trait `PayloadSource` is not dyn compatible"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:499",
+      "code": "E0038",
+      "msg": "the trait `PayloadSink` is not dyn compatible"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:7844",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:8210",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:8427",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/💡️inference/🦀️component.rs:306",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:8211",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:322",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:8441",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:8224",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:330",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5841",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:7181",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:8445",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5396",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:6120",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:8226",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5847",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:7187",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5407",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:6124",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:338",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:8228",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5315",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:7193",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5423",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:6001",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5102",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:7199",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:342",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:8325",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5424",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:6128",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:6002",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5104",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:8326",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:7206",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:6130",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5560",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:8339",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5107",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:4582",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:4259",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5109",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:3636",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5565",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:8340",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:4586",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:8342",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5110",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:4290",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5136",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:4625",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5654",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:3215",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:4629",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:3492",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:3256",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:4635",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:3989",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:2945",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:3496",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:4763",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:3993",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:3996",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:2953",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:4004",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:3500",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5721",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:4005",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:2310",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:3383",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:3502",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5721",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:2791",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:3028",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:4007",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:2314",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:4008",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:2861",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:1580",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:4016",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:2318",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:1023",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:1581",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:1459",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:4018",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:1095",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5780",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:2320",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:1164",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:2344",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:4031",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:2377",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:4037",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:370",
+      "code": "E0038",
+      "msg": "the trait `ResourceResolver` is not dyn compatible"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:4038",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:418",
+      "code": "E0038",
+      "msg": "the trait `ResourceResolver` is not dyn compatible"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:4040",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:4045",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:4047",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:4052",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:4054",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🌿️vcs/🦀️component.rs:404",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:4058",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🎒️pack/🦀️component.rs:49",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:4059",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:4061",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:4061",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:4066",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🎒️pack/🔢️value/🦀️component.rs:1383",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🎒️pack/🔢️value/🦀️component.rs:1389",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🎒️pack/🔢️value/🦀️component.rs:1393",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🎒️pack/🔢️value/🦀️component.rs:1394",
+      "code": "E0599",
+      "msg": "out-of-scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:6217",
+      "code": "E0733",
+      "msg": "recursion in an async fn requires boxing"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:6236",
+      "code": "E0733",
+      "msg": "recursion in an async fn requires boxing"
+    }
+  ]
+}

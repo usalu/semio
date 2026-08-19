@@ -13,9 +13,9 @@ use crate::os_dsl::{lex, Limits, TextError, TextSpan, TokenKind};
 /// `dsl_core` ident-continue, so a slash-path already lexes as ONE `Ident` token — this just
 /// splits it, rejecting empty segments (`a//b`, a leading/trailing `/`) since those would silently
 /// round-trip to a different-looking value.
-pub fn parse_slash_path_text(text: &str) -> Result<Vec<String>, TextError> {
+pub async fn parse_slash_path_text(text: &str) -> Result<Vec<String>, TextError> {
     let limits = Limits::default();
-    let tokens: Vec<_> = lex(text, &limits, false)?.into_iter().filter(|t| !t.kind.is_trivia() && t.kind != TokenKind::Eof).collect();
+    let tokens: Vec<_> = lex(text, &limits, false).await?.into_iter().filter(|t| !t.kind.is_trivia() && t.kind != TokenKind::Eof).collect();
     let [token] = tokens.as_slice() else {
         return Err(TextError::new("expected a single slash-path ident", tokens.get(1).map(|t| t.span).unwrap_or(TextSpan::at(1, 1))));
     };
@@ -31,7 +31,7 @@ pub fn parse_slash_path_text(text: &str) -> Result<Vec<String>, TextError> {
 }
 
 /// @emoji 🖨️ Canonical printer — the inverse of [`parse_slash_path_text`].
-pub fn print_slash_path(segments: &[String]) -> String {
+pub async fn print_slash_path(segments: &[String]) -> String {
     segments.join("/")
 }
 //#endregion 🔖️SlashPath
@@ -41,9 +41,9 @@ pub fn print_slash_path(segments: &[String]) -> String {
 /// (`x` is alphabetic, the digits are alphanumeric — nothing distinguishes it from any other ident
 /// at the lexer level), so this checks the shape explicitly: a leading `x` followed by one or more
 /// ASCII digits and nothing else.
-pub fn parse_count_text(text: &str) -> Result<u64, TextError> {
+pub async fn parse_count_text(text: &str) -> Result<u64, TextError> {
     let limits = Limits::default();
-    let tokens: Vec<_> = lex(text, &limits, false)?.into_iter().filter(|t| !t.kind.is_trivia() && t.kind != TokenKind::Eof).collect();
+    let tokens: Vec<_> = lex(text, &limits, false).await?.into_iter().filter(|t| !t.kind.is_trivia() && t.kind != TokenKind::Eof).collect();
     let [token] = tokens.as_slice() else {
         return Err(TextError::new("expected a single count literal", tokens.get(1).map(|t| t.span).unwrap_or(TextSpan::at(1, 1))));
     };
@@ -59,7 +59,7 @@ pub fn parse_count_text(text: &str) -> Result<u64, TextError> {
 }
 
 /// @emoji 🖨️ Canonical printer — the inverse of [`parse_count_text`].
-pub fn print_count(n: u64) -> String {
+pub async fn print_count(n: u64) -> String {
     format!("x{n}")
 }
 //#endregion 🔖️Count
@@ -69,50 +69,50 @@ pub fn print_count(n: u64) -> String {
 mod tests {
     use super::*;
 
-    #[test]
-    fn parses_and_prints_a_slash_path() {
+    #[semio_framework_async_macros::async_test]
+    async fn parses_and_prints_a_slash_path() {
         let segments = parse_slash_path_text("beams/solid-timber/glulam").expect("parse_slash_path_text");
         assert_eq!(segments, vec!["beams".to_string(), "solid-timber".to_string(), "glulam".to_string()]);
         assert_eq!(print_slash_path(&segments), "beams/solid-timber/glulam");
     }
 
-    #[test]
-    fn single_segment_path_round_trips() {
+    #[semio_framework_async_macros::async_test]
+    async fn single_segment_path_round_trips() {
         let segments = parse_slash_path_text("beams").expect("parse_slash_path_text");
         assert_eq!(segments, vec!["beams".to_string()]);
         assert_eq!(print_slash_path(&segments), "beams");
     }
 
-    #[test]
-    fn rejects_empty_segments() {
+    #[semio_framework_async_macros::async_test]
+    async fn rejects_empty_segments() {
         assert!(parse_slash_path_text("a//b").is_err());
     }
 
-    #[test]
-    fn rejects_more_than_one_token() {
+    #[semio_framework_async_macros::async_test]
+    async fn rejects_more_than_one_token() {
         assert!(parse_slash_path_text("a b").is_err());
     }
 
-    #[test]
-    fn parses_and_prints_a_count_literal() {
+    #[semio_framework_async_macros::async_test]
+    async fn parses_and_prints_a_count_literal() {
         let n = parse_count_text("x24").expect("parse_count_text");
         assert_eq!(n, 24);
         assert_eq!(print_count(n), "x24");
     }
 
-    #[test]
-    fn rejects_a_non_count_ident() {
+    #[semio_framework_async_macros::async_test]
+    async fn rejects_a_non_count_ident() {
         let err = parse_count_text("beam").unwrap_err();
         assert!(err.message.contains("count literal"), "unexpected message: {}", err.message);
     }
 
-    #[test]
-    fn rejects_bare_x_with_no_digits() {
+    #[semio_framework_async_macros::async_test]
+    async fn rejects_bare_x_with_no_digits() {
         assert!(parse_count_text("x").is_err());
     }
 
-    #[test]
-    fn compat_pair_reuses_the_edge_grammar_directly() {
+    #[semio_framework_async_macros::async_test]
+    async fn compat_pair_reuses_the_edge_grammar_directly() {
         let value = crate::os_dsl::notation::parse_edge_text("b-l--b-s").expect("parse_edge_text");
         assert_eq!(value.from, EdgeNode { id: "b-l".to_string(), kind: None, port: None });
         let printed = print_edge(&value);
@@ -123,8 +123,8 @@ mod tests {
     }
 
     /// @emoji 📖️ The fragment's `.grammar` file must at least parse under `dsl_grammar`'s parser.
-    #[test]
-    fn grammar_file_is_syntactically_valid() {
+    #[semio_framework_async_macros::async_test]
+    async fn grammar_file_is_syntactically_valid() {
         let source = include_str!("📖️family-catalog.grammar.semio");
         let grammar = crate::os_dsl::grammar::parse_grammar(source).expect("family-catalog.grammar must parse");
         assert_eq!(grammar.id, "family-catalog");

@@ -25,7 +25,7 @@ pub struct XlsxArtifact {
 
 //#region Conversions
 impl Default for XlsxArtifact {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self::from_snapshot(XlsxSnapshot::default())
     }
 }
@@ -327,7 +327,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn column_letters_follow_spreadsheet_convention() {
         assert_eq!(column_letter(0), "A");
         assert_eq!(column_letter(25), "Z");
@@ -337,7 +337,7 @@ mod tests {
         assert_eq!(column_letter(52), "BA");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn column_index_is_the_real_inverse_of_column_letter() {
         for i in [0u32, 1, 25, 26, 27, 51, 52, 700] {
             assert_eq!(column_index(&column_letter(i)), Some(i), "round trip failed for {i}");
@@ -346,7 +346,7 @@ mod tests {
         assert_eq!(column_index("1A"), None);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn builder_produces_minimal_valid_package_that_decodes_back() {
         let snap = build_minimal_xlsx(sample_workbook());
         let bytes = encode_xlsx(&snap).expect("encode minimal package");
@@ -356,7 +356,7 @@ mod tests {
         assert_eq!(decoded.workbook, sample_workbook());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn shared_strings_are_carried_verbatim_never_resolved_or_deduped() {
         // 🎯️ The engine no longer resolves `SharedString(idx)` into literal text, nor dedupes on
         // encode -- `workbook.shared_strings` IS the SST, passed through directly. Confirms the
@@ -376,7 +376,7 @@ mod tests {
         assert_eq!(re_decoded.workbook.sheets[1].cells[0].value, XlsxCellValue::SharedString(2));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn decode_resolves_real_hand_built_package_with_every_cell_type() {
         // Hand-built OOXML: real workbook.xml + worksheet + sharedStrings.xml + all rels wired
         // by hand, not a generator shortcut. Exercises every `XlsxCellValue` variant: shared
@@ -428,7 +428,7 @@ mod tests {
         assert_eq!(at(4, 0), Some(&XlsxCellValue::Formula { expr: "SUM(A2:B2)".into(), cached: Some(Box::new(XlsxCellValue::Number(127.5))) }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn decode_rejects_out_of_range_shared_string_index() {
         let mut opc = OpcPackage::empty();
         opc.content_types.set_default("rels", RELS_CONTENT_TYPE);
@@ -449,7 +449,7 @@ mod tests {
         assert!(matches!(err, XlsxError::Malformed(_)));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn unmodeled_parts_survive_decode_encode_verbatim() {
         let snap = build_minimal_xlsx(sample_workbook());
         let mut opc = snap.opc.clone();
@@ -464,7 +464,7 @@ mod tests {
         assert_eq!(re_decoded.workbook, sample_workbook());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn analyzer_builder_round_trip() {
         let original = build_minimal_xlsx(sample_workbook());
         let bytes = encode_xlsx(&original).expect("encode");
@@ -475,7 +475,7 @@ mod tests {
         assert_eq!(reanalyzed.workbook, analyzed.workbook);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn shrinking_sheet_count_drops_stale_worksheet_parts() {
         let mut wide = sample_workbook();
         let snap_wide = build_minimal_xlsx(wide.clone());
@@ -488,7 +488,7 @@ mod tests {
         assert_eq!(decoded.workbook.sheets.len(), 1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn decode_recognizes_strict_office_document_and_shared_strings_relationship_types() {
         // 🏅️ ticket 26/08/11/ARTIFACT-STANDARD-SUBSETS-REAL-VOCABULARIES W3: a genuinely
         // ISO/IEC 29500-1 Strict-shaped package uses the purl.oclc.org relationship TYPE URIs for
@@ -540,7 +540,7 @@ mod tests {
         /// parse under the real dialect -- independent of, and cheaper than, the two
         /// `recognize`/`walk_protocol` laws below (a parse failure here fails fast with a clearer
         /// message).
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn committed_facet_files_parse() {
             for (label, text) in [("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO)] {
                 let grammar = dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
@@ -564,7 +564,7 @@ mod tests {
         /// direct proof the grammar matches this artifact's own real per-part XML bytes, not an
         /// invented approximation. `worksheet-part`'s own production is generic over the sheet
         /// index, so both `xl/worksheets/sheet1.xml` and `sheet2.xml` are checked against it.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn grammar_conformance_law() {
             let grammar = dsl::parse_grammar(snapshot::text::COMPONENT_GRAMMAR_SEMIO).expect("parse snapshot grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
@@ -590,7 +590,7 @@ mod tests {
 
         /// ✅️ `ops_grammar_conformance_law`: the mutations grammar recognizes real `print_op`
         /// output for every `XlsxMutation` variant (`mutations::demo_mutation_cases()`).
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn ops_grammar_conformance_law() {
             let grammar = dsl::parse_grammar(mutations::text::COMPONENT_GRAMMAR_SEMIO).expect("parse mutations grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
@@ -602,7 +602,7 @@ mod tests {
 
         /// ✅️ `diff_grammar_conformance_law`: the diff grammar recognizes real `print_diff` output
         /// for every representative `XlsxDiff` (`diff::demo_diff_cases()`).
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn diff_grammar_conformance_law() {
             let grammar = dsl::parse_grammar(diff::text::COMPONENT_GRAMMAR_SEMIO).expect("parse diff grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
@@ -621,7 +621,7 @@ mod tests {
         /// exception, `📖️grammar-recipe.md` §2.3) -- assert a sane in-range `consumed` there
         /// instead, same as zip's/docx's own `protocol_walk_law` does; the op/diff protocols have
         /// no such exception and must consume every byte.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn protocol_walk_law() {
             let pack_spec = dsl::parse_protocol(snapshot::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
             let demo = demo_xlsx_snapshot();
@@ -650,7 +650,7 @@ mod tests {
         /// demo()`, `print_dsl(demo()) == fixture` (byte-for-byte), and the pack twin -- so the
         /// fixtures can never silently drift back to a fake `"68656c6c6f"`-style placeholder again
         /// (see this ticket's own recon note on the pre-FG-wave state of these two files).
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn fixture_honesty_law() {
             const FIXTURE_DSL: &str = include_str!("../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
             const FIXTURE_PACK: &[u8] = include_bytes!("../📚️examples/🎬️demo/🖼️assets/🎒️example.pack.semio");

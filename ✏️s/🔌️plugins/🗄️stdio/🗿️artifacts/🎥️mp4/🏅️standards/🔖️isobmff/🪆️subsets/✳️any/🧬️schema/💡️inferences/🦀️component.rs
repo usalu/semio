@@ -33,7 +33,7 @@ impl protocol::Inference<Mp4Snapshot> for Mp4Inference {
 /// `Mp4Snapshot::default()`'s `tracks` ever stop being empty (its own hand-rolled `Default`
 /// already picks a real minimal `ftyp`, not a zeroed struct).
 impl Default for Mp4Inference {
-    async fn default() -> Self {
+    fn default() -> Self {
         <Self as protocol::Inference<Mp4Snapshot>>::infer(&Mp4Snapshot::default())
     }
 }
@@ -85,13 +85,13 @@ mod tests {
     use super::*;
     use protocol::Inference;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = Mp4Snapshot::default();
         assert_eq!(Mp4Inference::infer(&snapshot), Mp4Inference::infer(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(Mp4Inference::infer(&Mp4Snapshot::default()), Mp4Inference::default());
     }

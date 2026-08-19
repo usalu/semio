@@ -16,7 +16,7 @@ pub struct SemioArtifact {
 }
 
 impl Default for SemioArtifact {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self::from_snapshot(SemioSnapshot::default())
     }
 }

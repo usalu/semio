@@ -170,7 +170,7 @@ mod tests {
         forward
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn change_exchange_process_round_trips() {
         let base = Iso16757Snapshot::reference_fixture();
         let mutation = Iso16757Mutation::ChangeExchangeProcess(change_exchange_process::mutation::ChangeExchangeProcess { new_exchange_process: part_5::ExchangeProcess::ProvideCatalogue });
@@ -178,7 +178,7 @@ mod tests {
         assert_eq!(after.exchange_process, part_5::ExchangeProcess::ProvideCatalogue);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn update_script_limits_round_trips() {
         let base = Iso16757Snapshot::reference_fixture();
         let mutation = Iso16757Mutation::UpdateScriptLimits(update_script_limits::mutation::UpdateScriptLimits { new_max_steps: 1, new_max_recursion: 2, new_timeout_ms: 3 });
@@ -186,7 +186,7 @@ mod tests {
         assert_eq!(after.script_limits, part_5::ScriptLimits { max_steps: 1, max_recursion: 2, timeout_ms: 3 });
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn change_and_remove_part_number_input_round_trip() {
         let base = Iso16757Snapshot::reference_fixture();
         let change = Iso16757Mutation::ChangePartNumberInput(change_part_number_input::mutation::ChangePartNumberInput { key: "new-key".into(), new_value: crate::artifacts::iso16757::CatalogueValue::Decimal { value: 7.0 } });
@@ -198,7 +198,7 @@ mod tests {
         assert!(!after_remove.part_number_inputs.contains_key("dn"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn change_part_number_input_undo_of_a_fresh_key_is_remove() {
         let base = Iso16757Snapshot::reference_fixture();
         let change = Iso16757Mutation::ChangePartNumberInput(change_part_number_input::mutation::ChangePartNumberInput { key: "fresh".into(), new_value: crate::artifacts::iso16757::CatalogueValue::Boolean { value: true } });
@@ -206,7 +206,7 @@ mod tests {
         assert_eq!(undo, vec![Iso16757Mutation::RemovePartNumberInput(remove_part_number_input::mutation::RemovePartNumberInput { key: "fresh".into() })]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn selection_class_and_constraints_round_trip() {
         let base = Iso16757Snapshot::reference_fixture();
         let change_class = Iso16757Mutation::ChangeSelectionClass(change_selection_class::mutation::ChangeSelectionClass { new_class_id: "class.other".into() });
@@ -223,7 +223,7 @@ mod tests {
         assert_eq!(after_remove.selection.constraints.len(), base.selection.constraints.len() - 1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn rename_catalogue_and_manufacturer_round_trip() {
         let base = Iso16757Snapshot::reference_fixture();
         let rename_catalogue = Iso16757Mutation::RenameCatalogue(rename_catalogue::mutation::RenameCatalogue { new_name: "Renamed Catalogue".into() });
@@ -235,7 +235,7 @@ mod tests {
         assert_eq!(after.catalogue.manufacturer.names.preferred.text, "Renamed Mfg");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_then_delete_product_group_round_trips() {
         let base = Iso16757Snapshot::reference_fixture();
         let product_group = part_1::ProductGroup { id: "group.new".into(), names: Names { preferred: LocalizedText { locale: "en".into(), text: "New Group".into() }, short_name: None, alternatives: Vec::new() }, dictionary_subject_id: None };
@@ -255,14 +255,14 @@ mod tests {
         assert!(!after_delete.catalogue.product_groups.iter().any(|group| group.id == "group.valves"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn delete_product_group_of_a_missing_id_has_an_empty_inverse() {
         let base = Iso16757Snapshot::reference_fixture();
         let delete = Iso16757Mutation::DeleteProductGroup(delete_product_group::mutation::DeleteProductGroup { id: "nope".into() });
         assert!(delete.inverse(&base).is_empty(), "deleting an absent id has nothing to undo");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_rename_delete_product_round_trips() {
         let base = Iso16757Snapshot::reference_fixture();
         let product = part_1::Product {
@@ -288,7 +288,7 @@ mod tests {
         assert_eq!(undo.len(), 1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_then_delete_property_definition_round_trips() {
         let base = Iso16757Snapshot::reference_fixture();
         let definition = part_1::PropertyDefinition {
@@ -309,7 +309,7 @@ mod tests {
         assert!(!after_delete.catalogue.property_definitions.iter().any(|d| d.id == "prop.new"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_then_delete_subject_round_trips() {
         let base = Iso16757Snapshot::reference_fixture();
         let subject = part_4::Subject {
@@ -331,7 +331,7 @@ mod tests {
         assert!(delete_missing.inverse(&base).is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn semantic_kinds_cover_every_variant() {
         assert_eq!(Iso16757Mutation::kinds().len(), 21);
         let mutation = Iso16757Mutation::RenameCatalogue(rename_catalogue::mutation::RenameCatalogue { new_name: "x".into() });

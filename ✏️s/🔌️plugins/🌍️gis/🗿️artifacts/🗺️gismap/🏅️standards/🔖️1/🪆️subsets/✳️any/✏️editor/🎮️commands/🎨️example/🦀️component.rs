@@ -54,7 +54,7 @@ mod tests {
     use crate::editor::gis2d::Gis2dCommand;
     use semio_framework_plugin::PluginApp;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_active_example_empty_then_reuse_round_trips_document() {
         let mut app = app();
         assert!(!app.snapshot().expect("projection").positions.is_empty());
@@ -70,7 +70,7 @@ mod tests {
     /// operations, so it MUST be declared as an Operation. Under the real registry the View/Shell →
     /// emits-operations guard rejects a mis-declaration; this proves the corrected declaration lets
     /// the document-replacing edit flow through without erroring.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_active_example_is_operation_under_registry_kind_discipline() {
         let definition = crate::editor::gis2d::create_gis2d_app().definition;
         let action = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|action| action.id == "setActiveExample").expect("setActiveExample declared");

@@ -49,7 +49,7 @@ pub struct DirectoryReadModel {
 /// 🔗️ Upserts `user_id`/`role` into `space.members`, joining `email`/`display_name` from
 /// `model.users` when known (falls back to empty strings for a member added before their own
 /// `user.created` — sequencing hygiene the hub's command handler guarantees never happens live).
-fn upsert_member(space: &mut DirectorySpace, email: String, display_name: String, user_id: &str, role: DirectorySpaceRole, updated_at_ms: i64) {
+async fn upsert_member(space: &mut DirectorySpace, email: String, display_name: String, user_id: &str, role: DirectorySpaceRole, updated_at_ms: i64) {
     match space.members.iter_mut().find(|member| member.user_id == user_id) {
         Some(existing) => existing.role = role,
         None => space.members.push(MemberView { user_id: user_id.to_string(), email, display_name, role }),
@@ -60,6 +60,9 @@ fn upsert_member(space: &mut DirectorySpace, email: String, display_name: String
 
 /// 🧮️ Pure fold: `model × event -> model`. Idempotent — an event whose `seq` does not strictly
 /// advance `model.cursor` (already-applied or out-of-order-old) is ignored wholesale.
+// 🚫️async: E1 pure accessor — the only real caller is `Iterator::fold` below (`FnMut(B, Item) -> B`,
+// signature fixed outside this repo); the TS twin (`🟦️component.ts` `export function fold`) is
+// already sync too — see R9, R10 residue #1.
 pub fn fold(model: DirectoryReadModel, event: &DirectoryEvent) -> DirectoryReadModel {
     let mut next = model;
     if event.seq <= next.cursor {
@@ -137,7 +140,7 @@ pub fn fold(model: DirectoryReadModel, event: &DirectoryEvent) -> DirectoryReadM
 
 /// 🔁️ Folds every event in order — `events.iter().fold(model, fold)` spelled out for callers that
 /// do not want to import `Iterator::fold` alongside this crate's own `fold`.
-pub fn fold_all(model: DirectoryReadModel, events: &[DirectoryEvent]) -> DirectoryReadModel {
+pub async fn fold_all(model: DirectoryReadModel, events: &[DirectoryEvent]) -> DirectoryReadModel {
     events.iter().fold(model, fold)
 }
 //#endregion 🔖️ReadModel
@@ -147,7 +150,7 @@ pub fn fold_all(model: DirectoryReadModel, events: &[DirectoryEvent]) -> Directo
 mod tests {
     use super::*;
 
-    fn fixture_events() -> Vec<DirectoryEvent> {
+    async fn fixture_events() -> Vec<DirectoryEvent> {
         #[derive(serde::Deserialize)]
         struct Fixture {
             events: Vec<DirectoryEvent>,
@@ -157,7 +160,7 @@ mod tests {
     }
 
     #[test]
-    fn folds_the_golden_fixture_into_the_expected_projection() {
+    async fn folds_the_golden_fixture_into_the_expected_projection() {
         let model = fold_all(DirectoryReadModel::default(), &fixture_events());
 
         assert_eq!(model.cursor, 16, "cursor tracks the last folded seq");
@@ -179,7 +182,7 @@ mod tests {
     }
 
     #[test]
-    fn folding_is_idempotent_on_replay() {
+    async fn folding_is_idempotent_on_replay() {
         let events = fixture_events();
         let once = fold_all(DirectoryReadModel::default(), &events);
         let twice = fold_all(once.clone(), &events);

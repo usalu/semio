@@ -125,7 +125,7 @@ mod tests {
 
     /// 🧪️ Real round trip through dxf's own real Part-21-style ASCII writer/reader
     /// (`print_dxf_document`/`parse_dxf_document`) AND the sibling import leaf's mapping.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn real_text_round_trip_through_dxf_codec() {
         let cad = sample_cad();
         let dxf = semio_framework_plugin::resolve_ready(SemioCadToDxf::serialize(&cad)).expect("serialize");

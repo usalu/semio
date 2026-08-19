@@ -15,7 +15,7 @@ pub struct JsonIntoVcs;
 impl Deserializer<VcsSnapshot> for JsonIntoVcs {
     const FROM: Dialect = JSON_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Exact;
-    async fn deserialize(payload: &IoPayload) -> IoResult<VcsSnapshot> {
+    fn deserialize(payload: &IoPayload) -> IoResult<VcsSnapshot> {
         let IoPayload::Binary(bytes) = payload else {
             return Err(IoError { message: "JsonIntoVcs: expected a binary json payload".to_string(), diagnostics: Vec::new() });
         };

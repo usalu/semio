@@ -33,7 +33,7 @@ pub struct DeflateArtifact {
 
 //#region 🔖️Conversions
 impl Default for DeflateArtifact {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self::from_snapshot(DeflateSnapshot::default())
     }
 }

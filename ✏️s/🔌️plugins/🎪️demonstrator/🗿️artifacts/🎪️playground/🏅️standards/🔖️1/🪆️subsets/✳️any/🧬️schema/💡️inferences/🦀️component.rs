@@ -48,7 +48,7 @@ impl protocol::Inference<PlaygroundSnapshot> for PlaygroundInference {
 /// 🌱 Defined in terms of `infer` (not derived) so this stays correct regardless of what
 /// `PlaygroundSnapshot::default()` happens to contain.
 impl Default for PlaygroundInference {
-    async fn default() -> Self {
+    fn default() -> Self {
         <Self as protocol::Inference<PlaygroundSnapshot>>::infer(&PlaygroundSnapshot::default())
     }
 }
@@ -96,18 +96,18 @@ mod tests {
     use super::*;
     use protocol::Inference;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = PlaygroundSnapshot::default();
         assert_eq!(PlaygroundInference::infer(&snapshot), PlaygroundInference::infer(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(PlaygroundInference::infer(&PlaygroundSnapshot::default()), PlaygroundInference::default());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn topology_is_the_vacuous_empty_graph() {
         let topology = infer_topology(&PlaygroundSnapshot::default());
         assert!(topology.topo_order.is_empty());

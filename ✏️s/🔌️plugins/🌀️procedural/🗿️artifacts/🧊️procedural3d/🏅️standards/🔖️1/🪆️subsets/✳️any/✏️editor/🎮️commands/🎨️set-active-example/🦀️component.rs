@@ -59,7 +59,7 @@ mod tests {
     use flow::Widget;
     use semio_framework_plugin::PluginApp;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_active_example_via_string_action_loads_fixture() {
         let _serial = crate::editor::procedural3d::test_support::lock();
         let mut app = app_with_registry();
@@ -68,7 +68,7 @@ mod tests {
         assert!(projection.fixture.widgets.iter().any(|widget| crate::artifacts::procedural3d::widget_id(widget).contains("fillet") || matches!(widget, Widget::Neuron { neuron_kind, .. } if neuron_kind.contains("fillet") || neuron_kind.contains("box"))));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn unknown_example_id_is_a_no_op() {
         let _serial = crate::editor::procedural3d::test_support::lock();
         let mut app = app();

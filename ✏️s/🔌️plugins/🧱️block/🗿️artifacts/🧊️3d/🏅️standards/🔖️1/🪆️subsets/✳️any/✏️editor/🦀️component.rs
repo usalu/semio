@@ -481,7 +481,7 @@ mod tests {
         ]
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn command_ids_are_unique_and_cover_every_row() {
         let commands = every_command();
         let ids: Vec<&str> = commands.iter().map(Block3dCommand::command_id).collect();
@@ -492,7 +492,7 @@ mod tests {
         assert_eq!(ids.len(), 23, "every Block3dCommand row must be covered by every_command()");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn every_command_round_trips_text_and_binary() {
         for command in every_command() {
             store::os_store::test_support::assert_op_text_binary_equivalence(&command);
@@ -505,7 +505,7 @@ mod tests {
     /// sat BEFORE `LeaveSurface` in the row order) shifts every later row's binary ordinal down by
     /// one — an intentional, greenfield wire-format break (row order IS the ordinal, per this enum's
     /// own doc comment), not a preserved-bytes regression. `LeaveSurface`'s ordinal moves 0x14 -> 0x13.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn divergent_key_rows_keep_their_pre_migration_bytes() {
         let hex = |command: &Block3dCommand| protocol::OpBinary::encode_op(command).expect("encode").iter().map(|b| format!("{b:02x}")).collect::<String>();
         assert_eq!(protocol::OpText::print_op(&Block3dCommand::LeaveSurface(leave_surface::LeaveSurface {})), "leaveSurface");
@@ -514,7 +514,7 @@ mod tests {
 
     /// 🌉️ Every surface-declared action must bridge through `command_from_action` and round-trip
     /// `command_id`.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn command_from_action_covers_every_declared_action_and_rejects_unknown_ones() {
         semio_framework_plugin::testkit::assert_declared_actions_bridge_to_commands::<semio_framework_plugin::EditorApp<Block3dPlayApp>>(testkit::block3d_app_manifest_for_testkit);
         assert!(<Block3dPlayApp as ArtifactEditor>::command_from_action("noSuchAction", None).is_err());
@@ -522,7 +522,7 @@ mod tests {
     //#endregion 🔖️CommandSurface
 
     //#region 🔖️Manifest
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn the_manifest_stitches_every_taxonomy_node() {
         let definition = create_block3d_app();
         assert_eq!(definition.modes.len(), 1);
@@ -537,7 +537,7 @@ mod tests {
     /// once, with both granularities, a `Topology` hierarchy, and scoped to the world window kind —
     /// the framework auto-injects the six interaction actions for it (asserted separately below via
     /// `assert_declared_actions_bridge_to_commands`'s injected-action allowance).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn declares_the_vortex_interaction_domain_scoped_to_the_world_window() {
         let definition = create_block3d_app();
         let interaction = definition.interactions.iter().find(|def| def.id == BLOCK3D_INTERACTION_VORTEX).expect("vortex domain declared");
@@ -550,7 +550,7 @@ mod tests {
     /// 🕹️ `interaction_topology` returns one flat root per representation (`surface` granularity) and
     /// per vortex template (`vortex` granularity) — enough structure for `validate_state` to prune a
     /// stale selection the moment `removeRepresentation`/`removeVortex` deletes its target.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn interaction_topology_covers_every_representation_and_vortex() {
         let mut app: Block3dApp = new_app();
         testkit::dispatch(&mut app, Block3dCommand::AddRepresentation(add_representation::AddRepresentation {}));
@@ -569,7 +569,7 @@ mod tests {
         assert!(domain.contains(&format!("vortex:{vortex_id}")));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn block3d_io_declares_the_catalog_out_port() {
         let io = block3d_io();
         assert_eq!(io.document_schema, BLOCK_3D_SCHEMA);
@@ -582,7 +582,7 @@ mod tests {
         assert_eq!(catalog.multiplicity, semio_framework_plugin::PortMultiplicity::Many);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn renders_document_tree_and_inspector() {
         let mut app: Block3dApp = new_app();
         let json = testkit::render(&mut app, document_panel::BLOCK3D_BODY_DOCUMENT);
@@ -595,7 +595,7 @@ mod tests {
     //#endregion 🔖️Manifest
 
     //#region 🔖️Behavior
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_representation_then_set_active_then_render_world_shows_mesh() {
         let mut app: Block3dApp = new_app();
         testkit::dispatch(&mut app, Block3dCommand::AddRepresentation(add_representation::AddRepresentation {}));
@@ -605,7 +605,7 @@ mod tests {
         assert!(json.contains("\"type\":\"componentScene\""), "world body must render a 3d scene");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_vortex_kind_then_add_vortex_then_remove_round_trips() {
         let mut app: Block3dApp = new_app();
         testkit::dispatch(&mut app, Block3dCommand::AddVortexKind(add_vortex_kind::AddVortexKind {}));
@@ -617,7 +617,7 @@ mod tests {
         assert_eq!(app.snapshot().expect("snapshot").vortices.len(), 0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_active_example_loads_capsule_fixture() {
         let mut app: Block3dApp = new_app();
         testkit::dispatch(&mut app, Block3dCommand::SetActiveExample(set_active_example::SetActiveExample { id: set_active_example::BLOCK3D_EXAMPLE_CAPSULE.into() }));
@@ -626,7 +626,7 @@ mod tests {
         assert_eq!(projection.representations.len(), 2);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn undo_redo_round_trips_through_the_wrapper() {
         let mut app: Block3dApp = new_app();
         testkit::dispatch(&mut app, Block3dCommand::AddVortexKind(add_vortex_kind::AddVortexKind {}));
@@ -640,7 +640,7 @@ mod tests {
     /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: `setSelection`/`selectVortex`/
     /// `hoverVortex` are gone — the still-config-only `setActiveRepresentation` view action now
     /// exercises the "view action never touches the document" contract this test used to cover.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_active_representation_writes_config_not_document() {
         let mut app: Block3dApp = new_app();
         let result = app
@@ -649,7 +649,7 @@ mod tests {
         assert!(result.mutations.is_empty(), "setActiveRepresentation is config-only and must emit no document operations");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn export_media_catalog_out_wraps_the_puzzle3d_fragment() {
         let mut app: Block3dApp = new_app();
         testkit::dispatch(&mut app, Block3dCommand::SetActiveExample(set_active_example::SetActiveExample { id: set_active_example::BLOCK3D_EXAMPLE_CAPSULE.into() }));
@@ -665,7 +665,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn place_vortex_on_surface_auto_creates_kind_and_vortex() {
         let mut app: Block3dApp = new_app();
         testkit::dispatch(&mut app, Block3dCommand::SetActiveExample(set_active_example::SetActiveExample { id: set_active_example::BLOCK3D_EXAMPLE_CAPSULE.into() }));
@@ -678,7 +678,7 @@ mod tests {
         assert_eq!(projection.vortices.len(), 2);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn command_from_action_bridges_set_active_example() {
         assert!(matches!(<Block3dPlayApp as ArtifactEditor>::command_from_action("setActiveExample", Some(&serde_json::json!({ "exampleId": "capsule" }))), Ok(Block3dCommand::SetActiveExample(set_active_example::SetActiveExample { id })) if id == "capsule"));
     }
@@ -688,7 +688,7 @@ mod tests {
     /// 🧬️ Kind-discipline wrapper: the real registry enforces View actions never emit document
     /// operations. Exercising it here (rather than only the plain `new_app()`) is the reason
     /// `testkit::app_with_registry` exists.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn view_actions_never_emit_artifact_mutations_under_the_real_registry() {
         let mut app = testkit::app_with_registry();
         let result = testkit::dispatch(&mut app, Block3dCommand::SetActiveRepresentation(set_active_representation::SetActiveRepresentation { representation_id: Some("r0".into()) }));
@@ -697,7 +697,7 @@ mod tests {
 
     /// 🎚️ The world window collects its five option measures (representations/quick-pick/arrangement/
     /// spacing/brush) fresh per frame — never frozen into the manifest.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn world_window_measures_collect_all_five_options() {
         let mut app: Block3dApp = new_app();
         testkit::dispatch(&mut app, Block3dCommand::AddRepresentation(add_representation::AddRepresentation {}));

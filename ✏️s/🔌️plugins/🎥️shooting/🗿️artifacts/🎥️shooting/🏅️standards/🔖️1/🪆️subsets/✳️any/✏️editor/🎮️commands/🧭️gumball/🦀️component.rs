@@ -100,7 +100,7 @@ mod tests {
     use crate::editor::shooting::ShootingCommand;
     use semio_framework_plugin::PluginApp;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn gumball_transform_drag_coalesces_into_one_edit() {
         let mut app = shooting_app();
         let asset_id = app.snapshot().expect("snapshot").assets[0].id.clone();
@@ -113,7 +113,7 @@ mod tests {
         assert_eq!(restored.assets.iter().find(|asset| asset.id == asset_id).unwrap().origin, original, "undoing the coalesced drag restores the pre-drag origin");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn empty_selection_is_a_no_operation() {
         let mut app = shooting_app();
         // No explicit ids and an empty config selection: nothing to transform.

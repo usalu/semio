@@ -61,7 +61,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn duration_is_the_max_across_every_stream() {
         let duration = compute_semio_video_duration(&populated());
         // video stream: 59 / (30/1) ≈ 1.9667s; audio stream: 96000 / (48000/1) = 2.0s — audio wins.
@@ -70,7 +70,7 @@ mod tests {
         assert_eq!(duration.sample_count, 3);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn zero_rate_stream_contributes_zero_not_a_panic() {
         let snapshot = SemioVideoSnapshot {
             schema: STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA.into(),
@@ -81,13 +81,13 @@ mod tests {
         assert_eq!(duration.sample_count, 1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = populated();
         assert_eq!(compute_semio_video_duration(&snapshot), compute_semio_video_duration(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(compute_semio_video_duration(&SemioVideoSnapshot::default()), SemioVideoDuration::default());
     }

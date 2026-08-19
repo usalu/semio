@@ -102,7 +102,7 @@ pub async fn restore(state: &[u8]) -> Result<CheckpointPack, Fault> {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn checkpoint_of_no_instances_round_trips_through_json() {
         let bytes = checkpoint(&[], vec![1, 2], vec![7], Vec::new()).expect("an empty instance list must still encode");
         let pack: CheckpointPack = serde_json::from_slice(&bytes).expect("checkpoint bytes must be valid CheckpointPack json");
@@ -112,7 +112,7 @@ mod tests {
         assert!(pack.task_restarts.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn task_restarts_round_trip_through_json_and_are_exposed_by_the_accessor() {
         let restarts = vec![TaskRestart { instance: 5, command: vec![1, 2, 3] }, TaskRestart { instance: 6, command: vec![4] }];
         let bytes = checkpoint(&[], Vec::new(), Vec::new(), restarts.clone()).expect("must encode");
@@ -123,7 +123,7 @@ mod tests {
         assert_eq!(pack.task_restarts()[1].instance, 6);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn a_checkpoint_pack_encoded_before_task_restarts_existed_still_decodes() {
         // 🧬️ `#[serde(default)]` on `task_restarts` — an older pack (or a hand-built JSON blob
         // missing the field entirely) must not fail to restore just because this wave added a

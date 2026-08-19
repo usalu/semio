@@ -20,7 +20,7 @@ impl FourCc {
 }
 
 impl std::fmt::Debug for FourCc {
-    async fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "FourCc({:?})", self.as_str())
     }
 }
@@ -33,7 +33,7 @@ pub enum BoxError {
 }
 
 impl std::fmt::Display for BoxError {
-    async fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Truncated => write!(f, "mp4: truncated box stream"),
             Self::Bad(msg) => write!(f, "mp4: malformed box: {msg}"),
@@ -109,7 +109,7 @@ pub async fn iter_boxes(data: &[u8]) -> Mp4BoxIter<'_> {
 
 impl<'a> Iterator for Mp4BoxIter<'a> {
     type Item = Result<Mp4BoxRef<'a>, BoxError>;
-    async fn next(&mut self) -> Option<Self::Item> {
+    fn next(&mut self) -> Option<Self::Item> {
         if self.pos >= self.data.len() {
             return None;
         }
@@ -191,7 +191,7 @@ pub async fn write_box(fourcc: &[u8; 4], payload: &[u8]) -> Vec<u8> {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn iterates_two_sibling_boxes_and_resolves_sizes() {
         let ftyp = write_box(b"ftyp", b"isom");
         let free = write_box(b"free", &[0, 0]);
@@ -206,7 +206,7 @@ mod tests {
         assert_eq!(find_box(&bytes, b"nope").unwrap(), None);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn require_box_errors_when_absent() {
         let bytes = write_box(b"ftyp", b"isom");
         assert!(require_box(&bytes, b"moov", "missing moov").is_err());

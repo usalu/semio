@@ -685,7 +685,7 @@ mod tests {
         ]
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mutation_diff_law() {
         let base = base_snapshot();
         for m in all_variants(&base) {
@@ -695,7 +695,7 @@ mod tests {
     //#endregion 🔖️mutation_diff_law
 
     //#region 🔖️inverse_law
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inverse_law() {
         let base = base_snapshot();
         for m in all_variants(&base) {
@@ -728,7 +728,7 @@ mod tests {
         assert_eq!(merged.apply(base).expect("merged diff must apply to base"), sequential, "absorb(d1,d2).apply(base) must equal sequential application for {m1:?} + {m2:?}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_law() {
         let base = base_snapshot();
 
@@ -755,7 +755,7 @@ mod tests {
         assert_absorb_law(&base, JpgMutation::SetReEncodeQuality { quality: Some(10) }, JpgMutation::SetReEncodeQuality { quality: None });
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_law_associativity() {
         let base = base_snapshot();
         let d1 = JpgMutation::SetQuantTable { table: quant(7, 1) }.diff(&base);
@@ -783,7 +783,7 @@ mod tests {
     //#endregion 🔖️absorb_law
 
     //#region 🔖️between_roundtrip_law
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn between_roundtrip_law() {
         let a = base_snapshot();
         let mut b = base_snapshot();
@@ -800,7 +800,7 @@ mod tests {
     //#endregion 🔖️between_roundtrip_law
 
     //#region 🔖️codec_retention_law
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn codec_retention_law() {
         let bytes = std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🗿️artifacts/📷️jpg/📚️examples/🎬️demo/🖼️assets/📷️example.jpg"));
         let bytes = match bytes {
@@ -834,7 +834,7 @@ mod tests {
     //#endregion 🔖️codec_retention_law
 
     //#region 🔖️field_sweep
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn field_sweep_covers_every_mutable_field() {
         let a = sweep_a();
         let b = sweep_b();
@@ -925,7 +925,7 @@ mod tests {
     }
     //#endregion 🔖️field_sweep
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn out_of_range_mutation_is_noop_not_panic() {
         let base = base_snapshot();
         let mut snap = base.clone();
@@ -942,7 +942,7 @@ mod tests {
     /// exercises every variant incl. `SetSnapshot`'s full nested `JpgFrameHeader`/`JpgFrameComponent`
     /// tree and every collection-item struct (`JpgQuantTable`/`JpgHuffmanTable`/`JpgSegment`), plus
     /// both `Some`/`None` legs of every `Option<T>`-shaped mutation argument.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_text_binary_roundtrip_law() {
         let base = base_snapshot();
         let mutations = vec![

@@ -290,7 +290,7 @@ mod tests {
         <HtmlSnapshot as store::ArtifactDsl>::parse_dsl("<!DOCTYPE html>\n<html><body><p id=\"x\" width=\"5\">hi</p></body></html>\n").unwrap()
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn insert_then_remove_node_apply_and_inverse() {
         let base = fixture();
         let insert = HtmlMutation::InsertNode { parent: vec![0], index: 1, node: el("span", vec![HtmlAttr::new("class", "x")], vec![]) };
@@ -308,7 +308,7 @@ mod tests {
         assert_eq!(restored, base);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_attribute_tristate_apply_and_inverse_round_trip() {
         let base = fixture();
         // Some(Some(v)): modify existing value.
@@ -353,7 +353,7 @@ mod tests {
         assert_eq!(write_html_document(&after4), write_html_document(&base));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn remove_node_inverse_restores_removed_node() {
         let base = fixture();
         let remove = HtmlMutation::RemoveNode { parent: vec![0], index: 0 };
@@ -369,7 +369,7 @@ mod tests {
         assert_eq!(write_html_document(&after), write_html_document(&base));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_element_name_apply_and_inverse() {
         let base = fixture();
         let mutation = HtmlMutation::SetElementName { path: vec![0, 0], name: "div".into() };
@@ -434,7 +434,7 @@ mod tests {
         ]
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mutation_diff_law() {
         for mutation in sample_mutations() {
             let base = fixture();
@@ -451,7 +451,7 @@ mod tests {
     //#endregion 🔖️MutationDiffLaw
 
     //#region 🔖️InverseLaw
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inverse_law() {
         for mutation in sample_mutations() {
             let base = fixture();
@@ -492,7 +492,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_law() {
         {
             let base = two_child_root("a", "b");
@@ -573,7 +573,7 @@ mod tests {
     //#endregion 🔖️AbsorbLaw
 
     //#region 🔖️BetweenRoundtripLaw
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn between_roundtrip_law() {
         let a = sweep_a();
         let b = sweep_b();
@@ -593,7 +593,7 @@ mod tests {
     //#endregion 🔖️BetweenRoundtripLaw
 
     //#region 🔖️FieldSweep
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn field_sweep() {
         let a = sweep_a();
         let b = sweep_b();
@@ -630,7 +630,7 @@ mod tests {
     /// 🧪️ op_text_binary_roundtrip_law: round-trip laws for the hand-rolled `HtmlMutation` grammar
     /// — exercises every variant incl. `InsertNode`'s bare `HtmlNode` payload and `SetAttribute`'s
     /// tri-state value.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_text_binary_roundtrip_law() {
         let base = fixture();
         let mutations = vec![

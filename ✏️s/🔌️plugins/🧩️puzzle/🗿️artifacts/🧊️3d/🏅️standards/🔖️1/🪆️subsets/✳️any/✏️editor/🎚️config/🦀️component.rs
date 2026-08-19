@@ -112,7 +112,7 @@ pub struct Puzzle3dSelectableKinds {
 }
 
 impl Default for Puzzle3dSelectableKinds {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { objects: true, vortices: true, attractions: true }
     }
 }
@@ -216,7 +216,7 @@ pub struct Puzzle3dConfig {
 impl Default for Puzzle3dConfig {
     /// 🎛️ Mirrors every `#[serde(default = "...")]` above — `#[derive(Default)]` would silently ignore
     /// them and zero out fields like `overlap_budget`/`selection_method`/`lod_automatic` in Rust-constructed runtimes.
-    async fn default() -> Self {
+    fn default() -> Self {
         Self {
             suggestion_menu: None,
             overlap_budget: default_overlap_budget(),
@@ -312,7 +312,7 @@ pub struct Puzzle3dWindowOptions {
 }
 
 impl Default for Puzzle3dWindowOptions {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self {
             lod_automatic: default_true(),
             lod_depth_variable: false,

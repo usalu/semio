@@ -144,7 +144,7 @@ pub mod tests {
         ]
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inverse_inverts_every_variant_against_a_populated_scene() {
         let base = sample_scene();
         for op in every_mutation() {
@@ -159,7 +159,7 @@ pub mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn every_variant_registers_an_approved_semantic_descriptor() {
         for op in every_mutation() {
             let descriptor = protocol::SemanticMutation::semantics(&op);
@@ -175,7 +175,7 @@ pub mod tests {
     /// three most structurally distinct new variants: a fixed-slot create/delete pair
     /// (`create-shape-model`), a Vec-collection create/delete pair (`create-drawing`), and a
     /// nested-address scalar setter (`change-reference-hidden`) carried over unchanged.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_shape_model_satisfies_the_inverse_and_absorb_laws() {
         let base = sample_scene();
         let sample = sample_model_child("law-model-1");
@@ -186,7 +186,7 @@ pub mod tests {
         protocol::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_drawing_satisfies_the_inverse_and_absorb_laws() {
         let base = sample_scene();
         let sample = sample_model_child("law-drawing-1");
@@ -197,7 +197,7 @@ pub mod tests {
         protocol::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn change_reference_hidden_satisfies_the_inverse_and_absorb_laws() {
         let base = sample_scene();
         let mutation = CadMutation::ChangeReferenceHidden(ChangeReferenceHidden { model_definition_id: "spatial.shape".into(), reference_id: "ref-1".into(), new_hidden: true });
@@ -211,38 +211,38 @@ pub mod tests {
     //#region 🧪️OutcomeLaws
     /// ⚖️ `📋️contract-freeze.md` §C2 laws, per verb family (`assert_outcome_policy_matrix` is not yet
     /// landed in `📡️spr/🧪️testkit` — TODO(1-D testkit laws pending) once it lands).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn delete_missing_node_is_a_target_missing_error() {
         let base = sample_scene();
         protocol::testkit::assert_missing_target_is_error(&base, &CadMutation::DeleteNode(DeleteNode { node_id: "does-not-exist".into() }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn rename_missing_node_is_a_target_missing_error() {
         let base = sample_scene();
         protocol::testkit::assert_missing_target_is_error(&base, &CadMutation::RenameNode(RenameNode { node_id: "does-not-exist".into(), new_label: "New".into() }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn change_hidden_on_missing_reference_is_a_target_missing_error() {
         let base = sample_scene();
         protocol::testkit::assert_missing_target_is_error(&base, &CadMutation::ChangeReferenceHidden(ChangeReferenceHidden { model_definition_id: "spatial.shape".into(), reference_id: "does-not-exist".into(), new_hidden: true }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_node_duplicate_id_never_applies() {
         let base = sample_scene();
         let duplicate = CadMutation::CreateNode(CreateNode { node: crate::artifacts::cad::CadNode { id: "node-1".into(), label: "Dup".into(), kind: "group".into() } });
         protocol::testkit::assert_fatal_never_applies(&duplicate.diff(&base));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn delete_missing_drawing_is_a_target_missing_error() {
         let base = sample_scene();
         protocol::testkit::assert_missing_target_is_error(&base, &CadMutation::DeleteDrawing(DeleteDrawing { child_id: "does-not-exist".into() }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_drawing_duplicate_id_never_applies() {
         let sample = sample_model_child("dup-drawing-1");
         let mut base = sample_scene();

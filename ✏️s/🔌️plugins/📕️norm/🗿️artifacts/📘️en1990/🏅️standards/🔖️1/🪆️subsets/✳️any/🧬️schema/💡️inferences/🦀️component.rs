@@ -72,13 +72,13 @@ mod tests {
     use super::*;
     use protocol::Inference;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = En1990Snapshot::default();
         assert_eq!(En1990Inference::infer(&snapshot), En1990Inference::infer(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(En1990Inference::infer(&En1990Snapshot::default()), En1990Inference::default());
     }
@@ -86,7 +86,7 @@ mod tests {
 //#endregion 🧪️Tests
 
 //#region 🔖️ComplianceReport
-use crate::artifacts::en1990::standards::v1::subsets::any::schema::{append_combination_set, check_reliability_index, check_seismic_situation, ActionSet, NaDe, NaEn, NationalAnnex};
+use crate::artifacts::en1990::standards::v1::subsets::any::schema::{append_combination_set, check_reliability_index, check_seismic_situation, ActionSet, NaDe, NaEn, NationalAnnexes};
 use crate::artifacts::en1990::En1990QkEntry;
 /// 📋️ Full EN 1990 compliance-report conformance law (ticket
 /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — relocated verbatim from the deleted
@@ -105,11 +105,13 @@ async fn action_set_from_document(document: &En1990Snapshot) -> ActionSet {
 /// 📋️ `En1990Snapshot -> CheckReport` conformance law — the artifact's compliance evaluation.
 pub async fn evaluate(document: &En1990Snapshot) -> CheckReport {
     let actions = action_set_from_document(document);
-    let annex: &dyn NationalAnnex = if document.annex == AnnexChoice::De { &NaDe } else { &NaEn };
+    // 🔀️ O1 de-dyn: runtime-chosen concrete type (was `&dyn NationalAnnex`) — the closed-set enum
+    // `NationalAnnexes` (`dyn_enum_close!` in en1990's schema module) replaces the trait object.
+    let annex: NationalAnnexes = if document.annex == AnnexChoice::De { NaDe.into() } else { NaEn.into() };
     let mut report = CheckReport::default();
-    append_combination_set(&mut report, annex, DesignSituation::Persistent, &actions, document.resistance_kn);
-    append_combination_set(&mut report, annex, DesignSituation::Accidental, &actions, document.resistance_kn);
-    report.push(check_seismic_situation(annex, &actions, document.seismic_a_ed_kn, document.resistance_kn));
+    append_combination_set(&mut report, &annex, DesignSituation::Persistent, &actions, document.resistance_kn);
+    append_combination_set(&mut report, &annex, DesignSituation::Accidental, &actions, document.resistance_kn);
+    report.push(check_seismic_situation(&annex, &actions, document.seismic_a_ed_kn, document.resistance_kn));
     report.push(check_reliability_index(3.9, document.consequence_class));
     report
 }
@@ -121,7 +123,7 @@ mod compliance_report_tests {
     use super::*;
     use crate::artifacts::en1990::standards::v1::subsets::any::schema::{check_combination_set, combination_uls, CombinationRule};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn evaluate_accidental_situation_numeric() {
         let doc = En1990Snapshot::default();
         let actions = action_set_from_document(&doc);
@@ -134,7 +136,7 @@ mod compliance_report_tests {
         assert!(report.checks.iter().any(|c| (c.computed.value / 1000.0 - accidental_ed).abs() < 1e-6));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn evaluate_seismic_situation_numeric() {
         let doc = En1990Snapshot::default();
         let report = evaluate(&doc);

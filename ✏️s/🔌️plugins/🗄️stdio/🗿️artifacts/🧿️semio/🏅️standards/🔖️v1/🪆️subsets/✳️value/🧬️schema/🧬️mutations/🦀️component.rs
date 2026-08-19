@@ -108,7 +108,7 @@ pub enum SemioValueMutation {
 }
 
 impl Default for SemioValueMutation {
-    async fn default() -> Self {
+    fn default() -> Self {
         SemioValueMutation::NoMutation
     }
 }
@@ -622,7 +622,7 @@ mod tests {
     }
 
     //#region mutation_diff_law
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mutation_diff_law_all_variants() {
         let base = base_fixture();
 
@@ -639,14 +639,14 @@ mod tests {
         apply_and_check(&base, SemioValueMutation::RemoveNode { id: ValueId::new("n1") });
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_map_entry_on_missing_key_adds_at_end() {
         let base = snap(mapv(vec![("a", intv("1"))]), vec![]);
         let (result, _) = apply_and_check(&base, SemioValueMutation::SetMapEntry { path: vec![], key: "b".into(), value: intv("2") });
         assert_eq!(result.root, mapv(vec![("a", intv("1")), ("b", intv("2"))]));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn remove_map_entry_missing_key_is_noop() {
         let base = snap(mapv(vec![("a", intv("1"))]), vec![]);
         let (result, diff) = apply_and_check(&base, SemioValueMutation::RemoveMapEntry { path: vec![], key: "missing".into() });
@@ -654,14 +654,14 @@ mod tests {
         assert!(diff.diff().is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn nested_path_targets_inner_entry() {
         let base = snap(mapv(vec![("outer", mapv(vec![("inner", intv("1"))]))]), vec![]);
         let (result, _) = apply_and_check(&base, SemioValueMutation::SetMapEntry { path: vec![SemioValuePathSegment::Key { key: "outer".into() }], key: "inner".into(), value: intv("42") });
         assert_eq!(result.root, mapv(vec![("outer", mapv(vec![("inner", intv("42"))]))]));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_node_on_missing_id_inserts() {
         let base = snap(SemioValue::Null, vec![node("n1", strv("a"))]);
         let (result, _) = apply_and_check(&base, SemioValueMutation::SetNode { id: ValueId::new("n2"), value: strv("b") });
@@ -670,7 +670,7 @@ mod tests {
     //#endregion mutation_diff_law
 
     //#region inverse_law
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inverse_law_mutation_level_round_trips() {
         let base = base_fixture();
         let mutations = vec![
@@ -694,7 +694,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inverse_law_diff_level_matches_mutation_diff() {
         let base = snap(mapv(vec![("a", intv("1"))]), vec![]);
         let mutation = SemioValueMutation::SetMapEntry { path: vec![], key: "a".into(), value: intv("2") };
@@ -709,7 +709,7 @@ mod tests {
     /// 🧪️ op_text_binary_roundtrip_law: exercises every variant, incl. nested/list/map payload
     /// values, a `Ref`/`Bytes` payload, and a multi-segment `SemioValuePath` mixing both segment
     /// kinds.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_text_binary_roundtrip_law() {
         use protocol::{OpBinary, OpText};
 

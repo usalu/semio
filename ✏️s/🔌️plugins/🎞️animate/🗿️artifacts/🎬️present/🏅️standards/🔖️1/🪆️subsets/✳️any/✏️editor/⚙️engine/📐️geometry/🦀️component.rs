@@ -7,7 +7,7 @@ pub mod geometry {
     //! 📐️ Two-dimensional shape catalog as VSobjects.
 
     use crate::editor::animate::engine::text::color::Color;
-    use crate::editor::animate::engine::scene::sobject::{Group, Sobject, VSobject};
+    use crate::editor::animate::engine::scene::sobject::{Group, Sobject, Sobjects, VSobject};
     use geometry::{append_shape_to_path, Arc, BezPath, Circle, Line, Point, Rect, RoundedRect, RoundedRectRadii, Vec2};
     use std::f64::consts::PI;
 
@@ -255,7 +255,9 @@ pub mod geometry {
     }
 
     /// ▢️ Rectangle around an Sobject's bounds.
-    pub async fn surrounding_rectangle(mobject: &dyn Sobject, buff: f64, fill: Color, stroke: Option<Color>, stroke_width: f64) -> VSobject {
+    // 🔀️ R11 "trivially generic" case: a single erased receiver, no heterogeneous storage — stays
+    // generic over `S: Sobject` rather than routed through `Sobjects` (matches `AnimateBuilder`).
+    pub async fn surrounding_rectangle<S: Sobject>(mobject: &S, buff: f64, fill: Color, stroke: Option<Color>, stroke_width: f64) -> VSobject {
         let b = mobject.bounds();
         rectangle(b.width() + buff * 2.0, b.height() + buff * 2.0, b.center(), fill, stroke, stroke_width)
     }
@@ -293,7 +295,7 @@ pub mod geometry {
         let rows = rows.max(1);
         let dx = (x_range.1 - x_range.0) / cols as f64;
         let dy = (y_range.1 - y_range.0) / rows as f64;
-        let mut children: Vec<Box<dyn Sobject>> = Vec::new();
+        let mut children: Vec<Sobjects> = Vec::new();
         for row in 0..rows {
             for col in 0..cols {
                 let x = x_range.0 + (col as f64 + 0.5) * dx;
@@ -306,7 +308,7 @@ pub mod geometry {
                 }
                 let u = v / len;
                 let tip = start + u * arrow_scale;
-                children.push(Box::new(arrow(start, tip, color, 1.5, arrow_scale * 0.2)));
+                children.push((arrow(start, tip, color, 1.5, arrow_scale * 0.2)).into());
             }
         }
         Group::new(children)
@@ -318,7 +320,7 @@ pub mod geometry {
         F: Fn(f64, f64) -> Vec2,
     {
         let steps = steps.max(2);
-        let mut children: Vec<Box<dyn Sobject>> = Vec::new();
+        let mut children: Vec<Sobjects> = Vec::new();
         for &(sx, sy) in seeds {
             let mut path = BezPath::new();
             let mut x = sx;
@@ -339,7 +341,7 @@ pub mod geometry {
             v.style.fill = None;
             v.style.stroke = Some(color);
             v.style.stroke_width = 1.5;
-            children.push(Box::new(v));
+            children.push((v).into());
         }
         Group::new(children)
     }
@@ -348,7 +350,7 @@ pub mod geometry {
     mod tests {
         use super::*;
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn shapes_produce_paths() {
             let c = circle(Point::ZERO, 1.0, Color::BLUE, None, 0.0);
             assert!(!c.paths.is_empty());
@@ -356,13 +358,13 @@ pub mod geometry {
             assert!(!a.paths.is_empty());
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn star_has_vertices() {
             let s = star(5, 1.0, 0.4, Point::ZERO, Color::YELLOW, None, 0.0);
             assert!(s.paths[0].elements().len() > 4);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn ellipse_and_regular_polygon_build() {
             let e = ellipse(Point::ZERO, 2.0, 1.0, Color::BLUE, None, 0.0);
             assert!(!e.paths.is_empty());
@@ -370,13 +372,13 @@ pub mod geometry {
             assert!(!p.paths.is_empty());
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn dashed_line_has_multiple_segments() {
             let d = dashed_line(Point::ZERO, Point::new(4.0, 0.0), Color::WHITE, 2.0, 0.3, 0.2);
             assert!(d.paths.len() > 1);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn boolean_ops_combine_paths() {
             let a = circle(Point::ZERO, 1.0, Color::BLUE, None, 0.0);
             let b = circle(Point::new(0.5, 0.0), 1.0, Color::RED, None, 0.0);
@@ -386,7 +388,7 @@ pub mod geometry {
             assert!(diff.paths.len() >= 2);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn vector_field_helpers_build() {
             let vf = arrow_vector_field((-1.0, 1.0), (-1.0, 1.0), 3, 3, |x, _| Vec2::new(x, 1.0), Color::TEAL, 0.2);
             assert!(!vf.children.is_empty());
@@ -394,19 +396,19 @@ pub mod geometry {
             assert!(!sl.children.is_empty());
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn vector_field_skips_zero_length_vectors() {
             let vf = arrow_vector_field((-1.0, 1.0), (-1.0, 1.0), 2, 2, |_, _| Vec2::new(0.0, 0.0), Color::TEAL, 0.2);
             assert!(vf.children.is_empty());
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn stream_lines_stops_on_zero_length_field() {
             let sl = stream_lines(&[(0.0, 0.0)], |_, _| Vec2::new(0.0, 0.0), Color::WHITE, 8, 0.1);
             assert_eq!(sl.children.len(), 1);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn point_dot_and_line_build_paths() {
             let p = point(Point::ZERO, 0.1, Color::RED);
             assert!(!p.paths.is_empty());
@@ -416,7 +418,7 @@ pub mod geometry {
             assert!(!l.paths.is_empty());
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn square_triangle_and_polygon_build() {
             let sq = square(2.0, Point::ZERO, Color::RED, None, 0.0);
             assert!(!sq.paths.is_empty());
@@ -426,7 +428,7 @@ pub mod geometry {
             assert!(empty_poly.paths[0].elements().is_empty());
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn annulus_and_sector_build() {
             let a = annulus(Point::ZERO, 0.5, 1.0, Color::BLUE, None, 0.0);
             assert!(!a.paths.is_empty());
@@ -434,7 +436,7 @@ pub mod geometry {
             assert!(!s.paths.is_empty());
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn brace_and_angle_build() {
             let b = brace(Point::new(-1.0, 0.0), Point::new(1.0, 0.0), Vec2::new(0.0, -1.0), Color::WHITE, 1.0);
             assert!(!b.paths.is_empty());
@@ -444,14 +446,14 @@ pub mod geometry {
             assert!(!ang.paths.is_empty());
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn surrounding_rectangle_pads_bounds() {
             let c = circle(Point::ZERO, 1.0, Color::BLUE, None, 0.0);
             let r = surrounding_rectangle(&c, 0.5, Color::TRANSPARENT, Some(Color::WHITE), 1.0);
             assert!(!r.paths.is_empty());
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn dashed_line_degenerate_endpoints_falls_back_to_line() {
             let d = dashed_line(Point::new(1.0, 1.0), Point::new(1.0, 1.0), Color::WHITE, 2.0, 0.3, 0.2);
             assert_eq!(d.paths.len(), 1);
@@ -464,7 +466,7 @@ pub mod three_d {
 
     use crate::editor::animate::engine::text::color::Color;
     use crate::editor::animate::engine::geometry::geometry::{circle, line, polygon, rectangle};
-    use crate::editor::animate::engine::scene::sobject::{Bounds, Group, Sobject, Style, VSobject};
+    use crate::editor::animate::engine::scene::sobject::{Bounds, Group, Sobject, Sobjects, Style, VSobject};
     use crate::editor::animate::engine::rate::updater::Updater;
     use geometry::{Affine, BezPath, Point};
 
@@ -537,13 +539,13 @@ pub mod three_d {
         async fn paths(&self) -> Vec<BezPath> {
             self.inner.paths()
         }
-        async fn children(&self) -> Vec<&dyn Sobject> {
+        async fn children(&self) -> Vec<&Sobjects> {
             self.inner.children()
         }
-        async fn visit_children_mut(&mut self, f: &mut dyn FnMut(&mut dyn Sobject)) {
+        async fn visit_children_mut(&mut self, f: &mut dyn FnMut(&mut Sobjects)) {
             self.inner.visit_children_mut(f);
         }
-        async fn add_child(&mut self, child: Box<dyn Sobject>) {
+        async fn add_child(&mut self, child: Sobjects) {
             self.inner.add_child(child);
         }
         async fn updaters(&self) -> &[Updater] {
@@ -567,8 +569,8 @@ pub mod three_d {
         async fn apply_target(&mut self) {
             self.inner.apply_target();
         }
-        async fn clone_box(&self) -> Box<dyn Sobject> {
-            Box::new(self.clone())
+        async fn clone_box(&self) -> Sobjects {
+            self.clone().into()
         }
         async fn as_any(&self) -> &dyn std::any::Any {
             self
@@ -596,7 +598,7 @@ pub mod three_d {
     impl Surface {
         pub async fn paraboloid(radius: f64, color: Color) -> Self {
             let steps = 12;
-            let mut children: Vec<Box<dyn Sobject>> = Vec::new();
+            let mut children: Vec<Sobjects> = Vec::new();
             for i in 0..steps {
                 let t = i as f64 / steps as f64 * std::f64::consts::TAU;
                 let mut prev = None;
@@ -608,7 +610,7 @@ pub mod three_d {
                     let td = ThreeDVSobject::new(VSobject::new());
                     let p = td.project_point((x, y, z));
                     if let Some(prev_p) = prev {
-                        children.push(Box::new(line(prev_p, p, color.with_alpha(0.5), 1.0)));
+                        children.push((line(prev_p, p, color.with_alpha(0.5), 1.0)).into());
                     }
                     prev = Some(p);
                 }
@@ -620,7 +622,7 @@ pub mod three_d {
     /// ⚪️ Sphere wireframe.
     pub async fn sphere(radius: f64, center: (f64, f64, f64), color: Color) -> Group {
         let steps = 16;
-        let mut children: Vec<Box<dyn Sobject>> = Vec::new();
+        let mut children: Vec<Sobjects> = Vec::new();
         let td = ThreeDVSobject::new(VSobject::new());
         for i in 0..steps {
             let phi = i as f64 / steps as f64 * std::f64::consts::PI;
@@ -632,7 +634,7 @@ pub mod three_d {
                 let z = center.2 + radius * phi.sin() * theta.sin();
                 let p = td.project_point((x, y, z));
                 if let Some(prev_p) = prev {
-                    children.push(Box::new(line(prev_p, p, color.with_alpha(0.6), 1.0)));
+                    children.push((line(prev_p, p, color.with_alpha(0.6), 1.0)).into());
                 }
                 prev = Some(p);
             }
@@ -647,7 +649,7 @@ pub mod three_d {
         let td = ThreeDVSobject::new(VSobject::new());
         let pts: Vec<Point> = corners.iter().map(|(x, y, z)| td.project_point((center.0 + x, center.1 + y, center.2 + z))).collect();
         let edges = [(0, 1), (1, 2), (2, 3), (3, 0), (4, 5), (5, 6), (6, 7), (7, 4), (0, 4), (1, 5), (2, 6), (3, 7)];
-        let children: Vec<Box<dyn Sobject>> = edges.iter().map(|(a, b)| Box::new(line(pts[*a], pts[*b], color, 2.0)) as Box<dyn Sobject>).collect();
+        let children: Vec<Sobjects> = edges.iter().map(|(a, b)| (line(pts[*a], pts[*b], color, 2.0)).into()).collect();
         Group::new(children)
     }
 
@@ -658,14 +660,14 @@ pub mod three_d {
         let td = ThreeDVSobject::new(VSobject::new());
         let pts: Vec<Point> = corners.iter().map(|(x, y, z)| td.project_point((center.0 + x, center.1 + y, center.2 + z))).collect();
         let faces: [(&[usize], f64); 6] = [(&[0, 1, 2, 3], 0.85), (&[4, 5, 6, 7], 0.85), (&[0, 1, 5, 4], 0.7), (&[2, 3, 7, 6], 0.7), (&[1, 2, 6, 5], 0.55), (&[0, 3, 7, 4], 0.55)];
-        let mut children: Vec<Box<dyn Sobject>> = Vec::new();
+        let mut children: Vec<Sobjects> = Vec::new();
         for (indices, alpha) in faces {
             let verts: Vec<Point> = indices.iter().map(|&i| pts[i]).collect();
-            children.push(Box::new(polygon(&verts, fill.with_alpha(alpha), stroke, stroke_width)));
+            children.push((polygon(&verts, fill.with_alpha(alpha), stroke, stroke_width)).into());
         }
         let edges = [(0, 1), (1, 2), (2, 3), (3, 0), (4, 5), (5, 6), (6, 7), (7, 4), (0, 4), (1, 5), (2, 6), (3, 7)];
         for (a, b) in edges {
-            children.push(Box::new(line(pts[a], pts[b], stroke.unwrap_or(fill), stroke_width)));
+            children.push((line(pts[a], pts[b], stroke.unwrap_or(fill), stroke_width)).into());
         }
         Group::new(children)
     }
@@ -684,38 +686,38 @@ pub mod three_d {
     mod tests {
         use super::*;
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn cube_has_twelve_edges() {
             let g = cube(2.0, (0.0, 0.0, 0.0), Color::WHITE);
             assert_eq!(g.children.len(), 12);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn projection_moves_points() {
             let td = ThreeDVSobject::new(VSobject::new());
             let p = td.project_point((1.0, 0.0, 0.0));
             assert!(p.x().is_finite());
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn three_d_vobject_is_sobject() {
             let td = ThreeDVSobject::new(VSobject::new());
             assert_eq!(td.opacity(), 1.0);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn solid_cube_has_faces() {
             let g = solid_cube(2.0, (0.0, 0.0, 0.0), Color::BLUE, Some(Color::WHITE), 1.0);
             assert!(g.children.len() >= 6);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn sphere_builds_wireframe_lines() {
             let g = sphere(1.0, (0.0, 0.0, 0.0), Color::WHITE);
             assert!(!g.children.is_empty());
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn face_and_disc_build_projected_shapes() {
             let f = face(2.0, 1.0, Point::ZERO, Color::RED);
             assert!(!f.paths.is_empty());
@@ -730,7 +732,7 @@ pub mod axes {
 
     use crate::editor::animate::engine::text::color::Color;
     use crate::editor::animate::engine::geometry::geometry::{arrow, dot, line};
-    use crate::editor::animate::engine::scene::sobject::{Group, Sobject, VSobject};
+    use crate::editor::animate::engine::scene::sobject::{Group, Sobject, Sobjects, VSobject};
     use crate::editor::animate::engine::text::text::Text;
     use geometry::{BezPath, Point};
 
@@ -746,7 +748,7 @@ pub mod axes {
         pub async fn new(x_length: f64, y_length: f64, origin: Point, color: Color) -> Self {
             let x_axis = arrow(origin, Point::new(origin.x() + x_length, origin.y()), color, 3.0, 0.2);
             let y_axis = arrow(origin, Point::new(origin.x(), origin.y() + y_length), color, 3.0, 0.2);
-            let group = Group::new(vec![Box::new(x_axis), Box::new(y_axis)]);
+            let group = Group::new(vec![(x_axis).into(), (y_axis).into()]);
             Self { group, x_length, y_length, origin }
         }
 
@@ -755,15 +757,15 @@ pub mod axes {
                 let p = self.coords_to_point(x, 0.0);
                 let mut label = Text::new(format!("{x:.1}"), color);
                 label.inner.move_to(Point::new(p.x(), p.y() - 0.25));
-                self.group.add_child(Box::new(label.inner));
-                self.group.add_child(Box::new(line(Point::new(p.x(), p.y() - 0.08), Point::new(p.x(), p.y() + 0.08), color.with_alpha(0.6), 1.0)));
+                self.group.add_child((label.inner).into());
+                self.group.add_child((line(Point::new(p.x(), p.y() - 0.08), Point::new(p.x(), p.y() + 0.08), color.with_alpha(0.6), 1.0)).into());
             }
             for &y in y_ticks {
                 let p = self.coords_to_point(0.0, y);
                 let mut label = Text::new(format!("{y:.1}"), color);
                 label.inner.move_to(Point::new(p.x() - 0.35, p.y()));
-                self.group.add_child(Box::new(label.inner));
-                self.group.add_child(Box::new(line(Point::new(p.x() - 0.08, p.y()), Point::new(p.x() + 0.08, p.y()), color.with_alpha(0.6), 1.0)));
+                self.group.add_child((label.inner).into());
+                self.group.add_child((line(Point::new(p.x() - 0.08, p.y()), Point::new(p.x() + 0.08, p.y()), color.with_alpha(0.6), 1.0)).into());
             }
             self
         }
@@ -851,17 +853,17 @@ pub mod axes {
             let x_len = (x_range.1 - x_range.0) * unit_size;
             let y_len = (y_range.1 - y_range.0) * unit_size;
             let axes = Axes::new(x_len, y_len, origin, color);
-            let mut children: Vec<Box<dyn Sobject>> = vec![Box::new(arrow(origin, Point::new(origin.x() + x_len, origin.y()), color, 3.0, 0.2)), Box::new(arrow(origin, Point::new(origin.x(), origin.y() + y_len), color, 3.0, 0.2))];
+            let mut children: Vec<Sobjects> = vec![(arrow(origin, Point::new(origin.x() + x_len, origin.y()), color, 3.0, 0.2)).into(), (arrow(origin, Point::new(origin.x(), origin.y() + y_len), color, 3.0, 0.2)).into()];
             let grid_color = color.with_alpha(0.25);
             let x_steps = ((x_range.1 - x_range.0) as i32).abs().max(1);
             let y_steps = ((y_range.1 - y_range.0) as i32).abs().max(1);
             for i in 0..=x_steps {
                 let x = origin.x() + i as f64 * unit_size;
-                children.push(Box::new(line(Point::new(x, origin.y()), Point::new(x, origin.y() + y_len), grid_color, 1.0)));
+                children.push((line(Point::new(x, origin.y()), Point::new(x, origin.y() + y_len), grid_color, 1.0)).into());
             }
             for j in 0..=y_steps {
                 let y = origin.y() + j as f64 * unit_size;
-                children.push(Box::new(line(Point::new(origin.x(), y), Point::new(origin.x() + x_len, y), grid_color, 1.0)));
+                children.push((line(Point::new(origin.x(), y), Point::new(origin.x() + x_len, y), grid_color, 1.0)).into());
             }
             let group = Group::new(children);
             Self { axes, group, unit_size }
@@ -879,10 +881,10 @@ pub mod axes {
         pub async fn new(start: Point, length: f64, color: Color) -> Self {
             let axis = line(start, Point::new(start.x() + length, start.y()), color, 3.0);
             let tick_count = 10;
-            let mut children: Vec<Box<dyn Sobject>> = vec![Box::new(axis)];
+            let mut children: Vec<Sobjects> = vec![(axis).into()];
             for i in 0..=tick_count {
                 let x = start.x() + length * i as f64 / tick_count as f64;
-                children.push(Box::new(line(Point::new(x, start.y() - 0.1), Point::new(x, start.y() + 0.1), color, 1.5)));
+                children.push((line(Point::new(x, start.y() - 0.1), Point::new(x, start.y() + 0.1), color, 1.5)).into());
             }
             Self { group: Group::new(children), start, length }
         }
@@ -906,12 +908,12 @@ pub mod axes {
             let span = (max - min).max(1) as f64;
             let length = span * unit_size;
             let axis = line(start, Point::new(start.x() + length, start.y()), color, 3.0);
-            let mut children: Vec<Box<dyn Sobject>> = vec![Box::new(axis)];
+            let mut children: Vec<Sobjects> = vec![(axis).into()];
             for value in min..=max {
                 let x = start.x() + (value - min) as f64 * unit_size;
-                children.push(Box::new(line(Point::new(x, start.y() - 0.12), Point::new(x, start.y() + 0.12), color, 1.5)));
+                children.push((line(Point::new(x, start.y() - 0.12), Point::new(x, start.y() + 0.12), color, 1.5)).into());
                 if value % 5 == 0 {
-                    children.push(Box::new(dot(Point::new(x, start.y()), 0.04, color)));
+                    children.push((dot(Point::new(x, start.y()), 0.04, color)).into());
                 }
             }
             Self { group: Group::new(children), start, unit_size, min, max }
@@ -946,7 +948,7 @@ pub mod axes {
     mod tests {
         use super::*;
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn axes_map_coordinates() {
             let axes = Axes::new(4.0, 3.0, Point::ZERO, Color::WHITE);
             let p = axes.coords_to_point(1.0, 2.0);
@@ -954,19 +956,19 @@ pub mod axes {
             assert!((p.y() - 2.0).abs() < 1e-9);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn number_line_maps_values() {
             let nl = NumberLine::new(Point::ZERO, 10.0, Color::WHITE);
             assert!((nl.number_to_point(5.0).x() - 5.0).abs() < 1e-9);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn integer_line_maps_values() {
             let il = IntegerLine::new(Point::ZERO, 0, 10, 1.0, Color::WHITE);
             assert!((il.integer_to_point(5).x() - 5.0).abs() < 1e-9);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn axes_tick_labels_and_graphs() {
             let axes = Axes::new(4.0, 3.0, Point::ZERO, Color::WHITE).with_tick_labels(&[1.0, 2.0], &[1.0], Color::WHITE);
             assert!(axes.group.children.len() > 2);

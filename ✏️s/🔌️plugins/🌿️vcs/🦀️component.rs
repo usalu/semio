@@ -35,12 +35,12 @@ mod surface_tests {
     //! rather than writing local stand-ins.
     use semio_framework_plugin::testkit::{assert_editor_and_viewer_share_dialect, assert_viewer_never_mutates};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn vcs_viewer_never_mutates() {
         assert_viewer_never_mutates::<crate::viewer::vcs::VcsViewer>();
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn vcs_editor_and_viewer_share_dialect() {
         assert_editor_and_viewer_share_dialect::<crate::editor::vcs::VcsPlayApp, crate::viewer::vcs::VcsViewer>();
     }

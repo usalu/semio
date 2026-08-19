@@ -22,7 +22,7 @@ mod tests {
     use crate::editor::forms::testkit::{building_component_contributions, dispatch, forms_app, render};
     use crate::editor::forms::{FormsCommand, FORMS_PLAY_BODY_CATALOGUE};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_contributions_extends_the_catalogue_with_the_contributed_kind() {
         let mut app = forms_app();
         let before = render(&mut app, FORMS_PLAY_BODY_CATALOGUE);

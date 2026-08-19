@@ -17,7 +17,7 @@ pub struct NoteIntoSvg;
 impl Serializer<NoteSnapshot> for NoteIntoSvg {
     const INTO: Dialect = SVG_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    async fn serialize(from: &NoteSnapshot) -> IoResult<IoPayload> {
+    fn serialize(from: &NoteSnapshot) -> IoResult<IoPayload> {
         let (svg, _width, _height) = crate::artifacts::note::io::note_document_to_svg(from).map_err(|error| IoError { message: format!("NoteIntoSvg: {error}"), diagnostics: Vec::new() })?;
         Ok(IoOutcome::clean(IoPayload::Text(svg)))
     }

@@ -6,9 +6,11 @@
 //!
 //! Written so the identical type can later be driven over stdio by a helper process (packet P1,
 //! `ProcessTransport`) — the only thing that changes between "thread shard" and "process shard" is
-//! which [`ShardTransport`] impl `ShardLoop::new` receives; this file never branches on which one it
-//! got. `ProcessTransport` itself is out of this packet's scope (`📌️important.md`'s sequencing:
-//! "`semio-shard` `[[bin]]` runs over stdio" is P1, not B1b) — this is the seam, not the process.
+//! which [`ShardTransports`] variant `ShardLoop::new` receives; `pump`'s own body never branches on
+//! which one it got (only the closed-set enum's own delegation impl does — O1/R1's dyn replacement,
+//! packet host-dedyn). `ProcessTransport` itself is out of this packet's scope (`📌️important.md`'s
+//! sequencing: "`semio-shard` `[[bin]]` runs over stdio" is P1, not B1b) — this is the seam, not the
+//! process.
 //!
 //! terra-shard-grants: the wire carries [`ShardFrame`], not raw [`Envelope`] bytes — the kernel's
 //! DRR-computed, throttle-scaled per-turn budget now travels WITH the envelopes it grants
@@ -23,11 +25,13 @@ pub mod executor;
 
 #[cfg(test)]
 use super::{GuestInstanceState, MockGuestRuntime, PackageHash, PackageId, PackageRef};
-use super::{poll_ready, GuestInstance, GuestRuntime, JobBudget, JobStep, PluginHostError, TurnFault};
+use super::{GuestInstance, GuestRuntime, GuestRuntimes, JobBudget, JobStep, PluginHostError, TurnFault};
 use semio_framework::kernel::{Budget, Effect, Event, JobPlacement, RequestOutcome, TurnResult};
 use semio_framework_actor::{ActorId, Envelope, Payload, ShardTransport};
 use std::collections::{BTreeSet, HashMap};
 use std::sync::Arc;
+#[cfg(test)]
+use std::sync::Mutex;
 
 //#region 📨️ShardFrame
 /// 📨️ terra-shard-grants: what actually crosses a [`ShardTransport`] INBOUND (host → shard) —
@@ -187,8 +191,8 @@ pub enum ShardOutcome {
 /// P1) — never shared across shards, since [`super::GuestRuntime`] instances are `Send + Sync` but a
 /// [`GuestInstance`] is pinned to whichever shard activated it (`ShardTable`'s own pinning rule).
 pub struct ShardLoop {
-    runtime: Arc<dyn GuestRuntime>,
-    transport: Box<dyn ShardTransport>,
+    runtime: Arc<GuestRuntimes>,
+    transport: ShardTransports,
     instances: HashMap<u64, GuestInstance>,
     /// 💼️ `(actor, job)` pairs admitted from an `Effect::SpawnJob` and not yet `Done`/`Failed` —
     /// MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME J1, the generic host-side executor
@@ -224,7 +228,7 @@ pub struct ShardLoop {
 }
 
 impl ShardLoop {
-    pub fn new(runtime: Arc<dyn GuestRuntime>, transport: Box<dyn ShardTransport>) -> Self {
+    pub fn new(runtime: Arc<GuestRuntimes>, transport: ShardTransports) -> Self {
         Self { runtime, transport, instances: HashMap::new(), running_jobs: BTreeSet::new(), job_placement: HashMap::new(), pending_completions: HashMap::new(), granted_budgets: HashMap::new() }
     }
 
@@ -272,8 +276,8 @@ impl ShardLoop {
     /// &[Event]`, i.e. one call per actor per pump, not per envelope), and runs exactly one
     /// `execute_turn`/`step_job` per actor that had at least one envelope or running job. Returns
     /// the number of actors driven this pump. Equivalent to `self.pump_primed(None)`.
-    pub fn pump(&mut self) -> Result<usize, PluginHostError> {
-        self.pump_primed(None)
+    pub async fn pump(&mut self) -> Result<usize, PluginHostError> {
+        self.pump_primed(None).await
     }
 
     /// 🅿️ Same as [`Self::pump`], but takes one frame's bytes that were ALREADY read off the
@@ -282,7 +286,7 @@ impl ShardLoop {
     /// non-blocking drain share the exact same transport without losing whatever woke the wait.
     /// `primed: None` (what [`Self::pump`] passes) behaves identically to the pre-`ShardFrame`
     /// `pump()`.
-    pub fn pump_primed(&mut self, primed: Option<Vec<u8>>) -> Result<usize, PluginHostError> {
+    pub async fn pump_primed(&mut self, primed: Option<Vec<u8>>) -> Result<usize, PluginHostError> {
         // 💼️ Completions queued by the PREVIOUS `pump()` call (bottom of this function) are
         // delivered as ordinary events on THIS call — the same channel envelope-sourced events
         // arrive on, so the originating actor's `execute_turn` sees `Event::JobCompleted` exactly
@@ -291,10 +295,10 @@ impl ShardLoop {
         let mut jobs_by_actor: Vec<(u64, u64)> = Vec::new();
 
         if let Some(bytes) = primed {
-            self.consume_frame(&bytes, &mut events_by_actor, &mut jobs_by_actor)?;
+            self.consume_frame(&bytes, &mut events_by_actor, &mut jobs_by_actor).await?;
         }
-        while let Some(bytes) = self.transport.recv() {
-            self.consume_frame(&bytes, &mut events_by_actor, &mut jobs_by_actor)?;
+        while let Some(bytes) = self.transport.recv().await {
+            self.consume_frame(&bytes, &mut events_by_actor, &mut jobs_by_actor).await?;
         }
 
         let mut driven = 0usize;
@@ -304,15 +308,16 @@ impl ShardLoop {
             // holds for the rest of this iteration (E0502).
             let turn_budget = turn_budget_from_grant(self.granted_budget(actor_id));
             let Some(instance) = self.instances.get_mut(&actor_id) else {
-                self.send_outcome(&ShardOutcome::Fault { actor: actor_id, message: format!("ShardLoop::pump: actor {actor_id} is not registered on this shard") })?;
+                self.send_outcome(&ShardOutcome::Fault { actor: actor_id, message: format!("ShardLoop::pump: actor {actor_id} is not registered on this shard") }).await?;
                 continue;
             };
-            // ⏳️ terra-trait-asyncify: `GuestRuntime::execute_turn` now returns a `HostFuture` — this
-            // loop has no executor of its own (a plain per-shard OS thread, `🏃️executor.rs`), so
-            // `poll_ready` consumes it by polling once with a no-op waker. Sound because every impl
-            // `ShardLoop` is ever handed is eagerly-ready by construction — see `poll_ready`'s own
-            // doc comment in `🖥️host/🦀️component.rs`.
-            let outcome = match poll_ready(self.runtime.execute_turn(instance, &events, turn_budget)) {
+            // 👶️ host-dedyn: `GuestRuntime::execute_turn` is plain AFIT now (double-future
+            // collapsed) — `.await`ed directly. This loop's own thread root (`🏃️executor.rs`'s
+            // `ShardExecutor::spawn`, `👶️child/🦀️main.rs`'s `main`) is the `block_on` boundary that
+            // turns the plain OS thread into an executor; every impl `ShardLoop` is ever handed
+            // resolves on its first poll (see `GuestRuntime`'s own doc comment), so this never
+            // actually parks.
+            let outcome = match self.runtime.execute_turn(instance, &events, turn_budget).await {
                 Ok(result) => {
                     // 🔀️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (J1, placement routing added K1):
                     // the generic `Effect::SpawnJob`/`Effect::CancelJob` admission this packet
@@ -326,7 +331,7 @@ impl ShardLoop {
                     // lease-request).
                     for effect in &result.effects {
                         match effect {
-                            Effect::SpawnJob { job, kind, input, placement } => match poll_ready(self.runtime.start_job(instance, *job, kind, input.clone())) {
+                            Effect::SpawnJob { job, kind, input, placement } => match self.runtime.start_job(instance, *job, kind, input.clone()).await {
                                 Ok(()) => {
                                     self.running_jobs.insert((actor_id, *job));
                                     self.job_placement.insert((actor_id, *job), *placement);
@@ -338,7 +343,7 @@ impl ShardLoop {
                             Effect::CancelJob { job } => {
                                 if self.running_jobs.remove(&(actor_id, *job)) {
                                     self.job_placement.remove(&(actor_id, *job));
-                                    let _ = poll_ready(self.runtime.cancel_job(instance, *job));
+                                    let _ = self.runtime.cancel_job(instance, *job).await;
                                 }
                             }
                             _ => {}
@@ -348,7 +353,7 @@ impl ShardLoop {
                 }
                 Err(fault) => ShardOutcome::Fault { actor: actor_id, message: turn_fault_message(&fault) },
             };
-            self.send_outcome(&outcome)?;
+            self.send_outcome(&outcome).await?;
             driven += 1;
         }
 
@@ -380,10 +385,10 @@ impl ShardLoop {
             // 🔀️ Same E0502 reason as the turn-execution loop above — computed before `get_mut`.
             let job_budget = job_budget_from_grant(self.granted_budget(actor_id));
             let Some(instance) = self.instances.get_mut(&actor_id) else {
-                self.send_outcome(&ShardOutcome::Fault { actor: actor_id, message: format!("ShardLoop::pump: actor {actor_id} is not registered on this shard") })?;
+                self.send_outcome(&ShardOutcome::Fault { actor: actor_id, message: format!("ShardLoop::pump: actor {actor_id} is not registered on this shard") }).await?;
                 continue;
             };
-            let outcome = match poll_ready(self.runtime.step_job(instance, job, job_budget)) {
+            let outcome = match self.runtime.step_job(instance, job, job_budget).await {
                 Ok(step) => {
                     match &step {
                         JobStep::Running { .. } => {}
@@ -407,7 +412,7 @@ impl ShardLoop {
                     ShardOutcome::Fault { actor: actor_id, message: turn_fault_message(&fault) }
                 }
             };
-            self.send_outcome(&outcome)?;
+            self.send_outcome(&outcome).await?;
             driven += 1;
         }
 
@@ -417,7 +422,7 @@ impl ShardLoop {
     /// 📨️ Decodes one [`ShardFrame`] and dispatches it — the drain loop's per-frame body, factored
     /// out so both [`Self::pump_primed`]'s "one primed frame, then the non-blocking drain" shape
     /// and `ShardFrame::Grant`'s own per-envelope loop (below) can share it.
-    fn consume_frame(&mut self, bytes: &[u8], events_by_actor: &mut HashMap<u64, Vec<Event>>, jobs_by_actor: &mut Vec<(u64, u64)>) -> Result<(), PluginHostError> {
+    async fn consume_frame(&mut self, bytes: &[u8], events_by_actor: &mut HashMap<u64, Vec<Event>>, jobs_by_actor: &mut Vec<(u64, u64)>) -> Result<(), PluginHostError> {
         let mut pos = 0usize;
         let frame = ShardFrame::pack_decode(bytes, &mut pos).map_err(|error| PluginHostError::Plugin(format!("ShardLoop::pump: malformed frame: {error:?}")))?;
         match frame {
@@ -428,10 +433,10 @@ impl ShardLoop {
             ShardFrame::Grant { actor, budget, envelopes } => {
                 self.granted_budgets.insert(actor.0, budget);
                 for envelope in envelopes {
-                    self.dispatch_envelope(envelope, events_by_actor, jobs_by_actor)?;
+                    self.dispatch_envelope(envelope, events_by_actor, jobs_by_actor).await?;
                 }
             }
-            ShardFrame::Envelope(envelope) => self.dispatch_envelope(envelope, events_by_actor, jobs_by_actor)?,
+            ShardFrame::Envelope(envelope) => self.dispatch_envelope(envelope, events_by_actor, jobs_by_actor).await?,
         }
         Ok(())
     }
@@ -447,7 +452,7 @@ impl ShardLoop {
     /// (not yet built, `🎠️kernel` is out of this packet's `path_scope`); JSON is what every OTHER
     /// wire boundary in this crate already uses (`IoRouter`/`EffectEventMarshal`), so this is a
     /// documented, consistent placeholder, not an invented one-off.
-    fn dispatch_envelope(&mut self, envelope: Envelope, events_by_actor: &mut HashMap<u64, Vec<Event>>, jobs_by_actor: &mut Vec<(u64, u64)>) -> Result<(), PluginHostError> {
+    async fn dispatch_envelope(&mut self, envelope: Envelope, events_by_actor: &mut HashMap<u64, Vec<Event>>, jobs_by_actor: &mut Vec<(u64, u64)>) -> Result<(), PluginHostError> {
         match envelope.payload {
             Payload::Event { bytes: event_bytes } => {
                 let event: Event = serde_json::from_slice(&event_bytes)?;
@@ -465,13 +470,13 @@ impl ShardLoop {
                 let actor_id = envelope.to.0;
                 let outcome = match self.instances.get_mut(&actor_id) {
                     None => ShardOutcome::Fault { actor: actor_id, message: format!("ShardLoop::pump: Suspend for actor {actor_id} which is not registered on this shard") },
-                    Some(instance) if checkpoint => match poll_ready(self.runtime.checkpoint(instance)) {
+                    Some(instance) if checkpoint => match self.runtime.checkpoint(instance).await {
                         Ok(state) => ShardOutcome::Checkpoint { actor: actor_id, state },
                         Err(error) => ShardOutcome::Fault { actor: actor_id, message: format!("ShardLoop::pump: Suspend checkpoint failed for actor {actor_id}: {error}") },
                     },
                     Some(_) => ShardOutcome::Checkpoint { actor: actor_id, state: Vec::new() },
                 };
-                self.send_outcome(&outcome)?;
+                self.send_outcome(&outcome).await?;
             }
             // ▶️ Mirrors `Suspend`: `checkpoint: None` means "resume as-is, nothing to restore"
             // (the actor was never asked for a snapshot, or the caller intentionally cold-starts
@@ -481,14 +486,14 @@ impl ShardLoop {
                 let outcome = match self.instances.get_mut(&actor_id) {
                     None => ShardOutcome::Fault { actor: actor_id, message: format!("ShardLoop::pump: Resume for actor {actor_id} which is not registered on this shard") },
                     Some(instance) => match checkpoint {
-                        Some(state) => match poll_ready(self.runtime.restore(instance, &state)) {
+                        Some(state) => match self.runtime.restore(instance, &state).await {
                             Ok(()) => ShardOutcome::Resumed { actor: actor_id },
                             Err(error) => ShardOutcome::Fault { actor: actor_id, message: format!("ShardLoop::pump: Resume restore failed for actor {actor_id}: {error}") },
                         },
                         None => ShardOutcome::Resumed { actor: actor_id },
                     },
                 };
-                self.send_outcome(&outcome)?;
+                self.send_outcome(&outcome).await?;
             }
             // 🛑️ `Payload::Cancel { seq }` carries no doc comment of its own beyond the enum-level
             // one (`✉️Envelope` region, `🎭️actor/🦀️component.rs`) and there is no OTHER caller
@@ -506,27 +511,27 @@ impl ShardLoop {
                     let jobs: Vec<u64> = self.running_jobs.iter().filter(|&&(job_actor, _)| job_actor == actor_id).map(|&(_, job)| job).collect();
                     if let Some(instance) = self.instances.get_mut(&actor_id) {
                         for job in jobs {
-                            let _ = poll_ready(self.runtime.cancel_job(instance, job));
+                            let _ = self.runtime.cancel_job(instance, job).await;
                         }
                     }
                     self.unregister(ActorId(actor_id));
-                    self.send_outcome(&ShardOutcome::Cancelled { actor: actor_id })?;
+                    self.send_outcome(&ShardOutcome::Cancelled { actor: actor_id }).await?;
                 } else {
-                    self.send_outcome(&ShardOutcome::Fault { actor: actor_id, message: format!("ShardLoop::pump: Cancel for actor {actor_id} which is not registered on this shard") })?;
+                    self.send_outcome(&ShardOutcome::Fault { actor: actor_id, message: format!("ShardLoop::pump: Cancel for actor {actor_id} which is not registered on this shard") }).await?;
                 }
             }
         }
         Ok(())
     }
 
-    fn send_outcome(&self, outcome: &ShardOutcome) -> Result<(), PluginHostError> {
+    async fn send_outcome(&self, outcome: &ShardOutcome) -> Result<(), PluginHostError> {
         let bytes = serde_json::to_vec(outcome)?;
-        self.transport.send(&bytes);
+        self.transport.send(&bytes).await;
         Ok(())
     }
 
-    pub fn heartbeat(&self) -> u64 {
-        self.transport.heartbeat()
+    pub async fn heartbeat(&self) -> u64 {
+        self.transport.heartbeat().await
     }
 }
 
@@ -543,37 +548,192 @@ fn start_job_fault_bytes(fault: &TurnFault) -> Vec<u8> {
     dsl::encode_fault_bytes(&semio_framework::Fault::new(semio_framework::FaultOrigin::Os, semio_framework::FaultCode::new("job.host-fault"), fault.to_string()))
 }
 
+//#region 🚚️ShardTransports
+/// 🚚️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (host-dedyn): the closed-set enum replacing every
+/// `Box<dyn ShardTransport>` in this crate. `ShardTransport` (O1/R1: `async fn` in a trait cannot be
+/// `dyn`-dispatched) is declared OUTSIDE this crate (`semio_framework_actor::ShardTransport`, this
+/// packet's path scope forbids touching `🔌️plugin/**` outside `🖥️host/`), so `#[dyn_enum]` cannot be
+/// applied to it — the macro's bare-invocation mechanism (`📓️terra-dyn-enum-macro-report.md`,
+/// finding 1) only works when the trait's OWN crate emits the captured delegation macro. This family
+/// is therefore hand-written unconditionally, not merely because of cfg-gated variants (`GuestRuntimes`'
+/// own reason, next region) — a second, independent reason the macro doesn't apply here, worth
+/// recording for the ~50 remaining families since some of them will hit this exact wall.
+pub enum ShardTransports {
+    SharedThread(executor::SharedThreadTransport),
+    Process(super::process_transport::ProcessTransport),
+    Stdio(super::process_transport::StdioTransport),
+    #[cfg(test)]
+    Loopback(LoopbackTransport),
+}
+
+impl ShardTransport for ShardTransports {
+    async fn send(&self, bytes: &[u8]) {
+        match self {
+            Self::SharedThread(t) => t.send(bytes).await,
+            Self::Process(t) => t.send(bytes).await,
+            Self::Stdio(t) => t.send(bytes).await,
+            #[cfg(test)]
+            Self::Loopback(t) => t.send(bytes).await,
+        }
+    }
+
+    async fn recv(&self) -> Option<Vec<u8>> {
+        match self {
+            Self::SharedThread(t) => t.recv().await,
+            Self::Process(t) => t.recv().await,
+            Self::Stdio(t) => t.recv().await,
+            #[cfg(test)]
+            Self::Loopback(t) => t.recv().await,
+        }
+    }
+
+    async fn heartbeat(&self) -> u64 {
+        match self {
+            Self::SharedThread(t) => t.heartbeat().await,
+            Self::Process(t) => t.heartbeat().await,
+            Self::Stdio(t) => t.heartbeat().await,
+            #[cfg(test)]
+            Self::Loopback(t) => t.heartbeat().await,
+        }
+    }
+
+    async fn kill(&self) {
+        match self {
+            Self::SharedThread(t) => t.kill().await,
+            Self::Process(t) => t.kill().await,
+            Self::Stdio(t) => t.kill().await,
+            #[cfg(test)]
+            Self::Loopback(t) => t.kill().await,
+        }
+    }
+}
+
+impl From<executor::SharedThreadTransport> for ShardTransports {
+    fn from(t: executor::SharedThreadTransport) -> Self {
+        Self::SharedThread(t)
+    }
+}
+impl From<super::process_transport::ProcessTransport> for ShardTransports {
+    fn from(t: super::process_transport::ProcessTransport) -> Self {
+        Self::Process(t)
+    }
+}
+impl From<super::process_transport::StdioTransport> for ShardTransports {
+    fn from(t: super::process_transport::StdioTransport) -> Self {
+        Self::Stdio(t)
+    }
+}
+#[cfg(test)]
+impl From<LoopbackTransport> for ShardTransports {
+    fn from(t: LoopbackTransport) -> Self {
+        Self::Loopback(t)
+    }
+}
+//#endregion 🚚️ShardTransports
+
+//#region 🧪️TestDoubles
+/// 🧵️ In-process, single-actor loopback transport — an `mpsc`-free stand-in for
+/// `design-runtime.md`'s `ThreadTransport`, precise enough to exercise `ShardLoop::pump`'s real
+/// drain/group/dispatch/send logic end to end without needing a real thread. Its two buffers are
+/// `Arc<Mutex<..>>` INTERNALLY (not the struct itself behind an `Arc`) so `LoopbackProbe::new` can
+/// hand `ShardLoop::new` sole ownership of a [`ShardTransports::Loopback`] while keeping a separate
+/// handle that can still inspect `outbound` afterward — `impl ShardTransport for
+/// Arc<LoopbackTransport>` would hit `E0117` (neither `Arc` nor `ShardTransport` is local to this
+/// crate, and `Arc` is not `#[fundamental]` the way `Box` is). `pub(crate)`, not private — moved out
+/// of `mod tests` (below) so [`ShardTransports`] can name it in its own `#[cfg(test)]` variant.
+#[cfg(test)]
+#[derive(Default)]
+pub(crate) struct LoopbackTransport {
+    inbound: Arc<std::sync::Mutex<Vec<Vec<u8>>>>,
+    outbound: Arc<std::sync::Mutex<Vec<Vec<u8>>>>,
+}
+
+#[cfg(test)]
+impl LoopbackTransport {
+    /// Returns `(the transport ShardLoop::new takes ownership of, a probe this test keeps)`.
+    fn paired() -> (Self, tests::LoopbackProbe) {
+        let transport = Self::default();
+        let probe = tests::LoopbackProbe { inbound: transport.inbound.clone(), outbound: transport.outbound.clone() };
+        (transport, probe)
+    }
+}
+
+#[cfg(test)]
+impl ShardTransport for LoopbackTransport {
+    async fn send(&self, bytes: &[u8]) {
+        self.outbound.lock().expect("loopback lock").push(bytes.to_vec());
+    }
+    async fn recv(&self) -> Option<Vec<u8>> {
+        self.inbound.lock().expect("loopback lock").pop()
+    }
+    async fn heartbeat(&self) -> u64 {
+        0
+    }
+    async fn kill(&self) {}
+}
+
+/// 🧪️ A `GuestRuntime` that records the EXACT `Budget`/`JobBudget` it was invoked with — unlike
+/// `MockGuestRuntime` (owned by `🖥️host/🦀️component.rs`, out of this packet's edit scope, and which
+/// ignores its `budget` parameter entirely), this proves the property terra-shard-grants demanded:
+/// "a Grant's budget is what the turn actually executes under (prove the constants are gone, not
+/// merely unused)". `pub(crate)`, not private — moved out of `mod tests` so `GuestRuntimes::
+/// Recording` (`🖥️host/🦀️component.rs`) can name it.
+#[cfg(test)]
+pub(crate) struct RecordingRuntime {
+    last_turn_budget: Mutex<Option<Budget>>,
+    last_job_budget: Mutex<Option<JobBudget>>,
+}
+
+#[cfg(test)]
+impl RecordingRuntime {
+    pub(crate) fn new() -> Self {
+        Self { last_turn_budget: Mutex::new(None), last_job_budget: Mutex::new(None) }
+    }
+}
+
+#[cfg(test)]
+impl GuestRuntime for RecordingRuntime {
+    fn compile(&self, package: &PackageRef, _bytes: &[u8]) -> Result<super::CompiledHandle, PluginHostError> {
+        Ok(super::CompiledHandle { package_hash: package.hash.0, component: None })
+    }
+    fn instantiate(&self, _compiled: &super::CompiledHandle, actor: ActorId, _caps: &[super::BrokerCapabilityGrant], _budget: &Budget) -> Result<GuestInstance, PluginHostError> {
+        Ok(GuestInstance { actor, state: GuestInstanceState::Mock(super::MockInstanceState::default()) })
+    }
+    fn drop_instance(&self, _inst: GuestInstance) {}
+    async fn execute_turn(&self, _inst: &mut GuestInstance, _events: &[Event], budget: Budget) -> Result<TurnResult, TurnFault> {
+        *self.last_turn_budget.lock().expect("lock") = Some(budget);
+        Ok(TurnResult { ui_patches: vec![], effects: vec![], next_wake: None, status: semio_framework::kernel::TurnStatus::Idle, fuel_used: 0 })
+    }
+    async fn start_job(&self, _inst: &mut GuestInstance, _job: u64, _kind: &str, _input: Vec<u8>) -> Result<(), TurnFault> {
+        Ok(())
+    }
+    async fn step_job(&self, _inst: &mut GuestInstance, _job: u64, budget: JobBudget) -> Result<JobStep, TurnFault> {
+        *self.last_job_budget.lock().expect("lock") = Some(budget);
+        Ok(JobStep::Running { progress: None })
+    }
+    async fn cancel_job(&self, _inst: &mut GuestInstance, _job: u64) -> Result<(), TurnFault> {
+        Ok(())
+    }
+    async fn checkpoint(&self, _inst: &mut GuestInstance) -> Result<Vec<u8>, PluginHostError> {
+        Ok(vec![])
+    }
+    async fn restore(&self, _inst: &mut GuestInstance, _state: &[u8]) -> Result<(), PluginHostError> {
+        Ok(())
+    }
+}
+//#endregion 🧪️TestDoubles
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use std::sync::Mutex;
 
-    /// 🧵️ In-process, single-actor loopback transport — an `mpsc`-free stand-in for
-    /// `design-runtime.md`'s `ThreadTransport`, precise enough to exercise `ShardLoop::pump`'s real
-    /// drain/group/dispatch/send logic end to end without needing a real thread. Its two buffers are
-    /// `Arc<Mutex<..>>` INTERNALLY (not the struct itself behind an `Arc`) so `LoopbackProbe::new`
-    /// can hand `ShardLoop::new` sole ownership of a `Box<dyn ShardTransport>` while keeping a
-    /// separate handle that can still inspect `outbound` afterward — `impl ShardTransport for
-    /// Arc<LoopbackTransport>` would hit `E0117` (neither `Arc` nor `ShardTransport` is local to this
-    /// crate, and `Arc` is not `#[fundamental]` the way `Box` is).
-    #[derive(Default)]
-    struct LoopbackTransport {
-        inbound: Arc<Mutex<Vec<Vec<u8>>>>,
-        outbound: Arc<Mutex<Vec<Vec<u8>>>>,
-    }
-
-    struct LoopbackProbe {
-        inbound: Arc<Mutex<Vec<Vec<u8>>>>,
-        outbound: Arc<Mutex<Vec<Vec<u8>>>>,
-    }
-
-    impl LoopbackTransport {
-        /// Returns `(the transport ShardLoop::new takes ownership of, a probe this test keeps)`.
-        fn paired() -> (Self, LoopbackProbe) {
-            let transport = Self::default();
-            let probe = LoopbackProbe { inbound: transport.inbound.clone(), outbound: transport.outbound.clone() };
-            (transport, probe)
-        }
+    /// 🧪️ [`LoopbackTransport`] (module level, above — moved there so [`ShardTransports`] can name
+    /// it) hands this back from `paired()`; `pub(super)` so the parent `shard` module's own
+    /// `LoopbackTransport::paired` can construct it.
+    pub(super) struct LoopbackProbe {
+        pub(super) inbound: Arc<Mutex<Vec<Vec<u8>>>>,
+        pub(super) outbound: Arc<Mutex<Vec<Vec<u8>>>>,
     }
 
     impl LoopbackProbe {
@@ -585,17 +745,12 @@ mod tests {
         }
     }
 
-    impl ShardTransport for LoopbackTransport {
-        fn send(&self, bytes: &[u8]) {
-            self.outbound.lock().expect("loopback lock").push(bytes.to_vec());
-        }
-        fn recv(&self) -> Option<Vec<u8>> {
-            self.inbound.lock().expect("loopback lock").pop()
-        }
-        fn heartbeat(&self) -> u64 {
-            0
-        }
-        fn kill(&self) {}
+    /// 👶️ host-dedyn: every `ShardLoop::pump()`/`pump_primed()` call below is wrapped in
+    /// `semio_framework_async::block_on` — a `#[test] fn` body is a sanctioned executor entry point
+    /// (R4 clause 5); every `GuestRuntime`/`ShardTransport` impl these tests drive resolves on its
+    /// first poll, so `block_on` never actually parks.
+    fn pump(shard: &mut ShardLoop) -> Result<usize, PluginHostError> {
+        semio_framework_async::block_on(shard.pump())
     }
 
     fn encode_event_envelope(to: ActorId, seq: u64, event: &Event) -> Vec<u8> {
@@ -627,11 +782,11 @@ mod tests {
         let (transport, probe) = LoopbackTransport::paired();
         probe.push_inbound(encode_event_envelope(actor, 1, &Event::InstanceClose));
 
-        let mut shard = ShardLoop::new(mock.clone(), Box::new(transport));
+        let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock.clone())), ShardTransports::Loopback(transport));
         shard.register(actor, instance);
         assert!(shard.is_registered(actor));
 
-        let driven = shard.pump().expect("pump succeeds");
+        let driven = pump(&mut shard).expect("pump succeeds");
         assert_eq!(driven, 1, "exactly one actor had a buffered envelope");
 
         let outbound = probe.take_outbound();
@@ -653,8 +808,8 @@ mod tests {
         let stranger = ActorId(99);
         probe.push_inbound(encode_event_envelope(stranger, 1, &Event::InstanceClose));
 
-        let mut shard = ShardLoop::new(mock, Box::new(transport));
-        let driven = shard.pump().expect("pump succeeds even with an unknown actor");
+        let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock)), ShardTransports::Loopback(transport));
+        let driven = pump(&mut shard).expect("pump succeeds even with an unknown actor");
         assert_eq!(driven, 0, "an envelope for an unregistered actor drives nothing");
 
         let outbound = probe.take_outbound();
@@ -671,7 +826,7 @@ mod tests {
         let compiled = mock.compile(&package, &[]).expect("mock compile");
         let instance = mock.instantiate(&compiled, actor, &[], &Budget { fuel: 1, deadline_ms: 1, max_effects: 1, max_patch_bytes: 1, max_frames: 1 }).expect("mock instantiate");
         let (transport, _probe) = LoopbackTransport::paired();
-        let mut shard = ShardLoop::new(mock, Box::new(transport));
+        let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock)), ShardTransports::Loopback(transport));
         shard.register(actor, instance);
         assert_eq!(shard.actor_count(), 1);
         shard.unregister(actor);
@@ -713,25 +868,25 @@ mod tests {
         let (transport, probe) = LoopbackTransport::paired();
         probe.push_inbound(encode_event_envelope(actor, 1, &Event::InstanceClose));
 
-        let mut shard = ShardLoop::new(mock.clone(), Box::new(transport));
+        let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock.clone())), ShardTransports::Loopback(transport));
         shard.register(actor, instance);
 
         // Pump 1: runs the spawning turn, admits `Effect::SpawnJob` (`start_job`), and — because
         // the job lands in `running_jobs` before the step phase runs — takes its FIRST step in
         // this SAME pump (`Running`).
-        let driven1 = shard.pump().expect("pump 1");
+        let driven1 = pump(&mut shard).expect("pump 1");
         assert_eq!(driven1, 2, "one turn (the spawn) plus one job step (the first Running) this pump");
 
         // Pump 2 and 3: no new envelopes at all — the job is driven PURELY from `running_jobs`,
         // proving `pump()` self-drives an admitted job without needing external re-arming.
-        let driven2 = shard.pump().expect("pump 2");
+        let driven2 = pump(&mut shard).expect("pump 2");
         assert_eq!(driven2, 1, "only the second Running step — no envelope, so no turn this pump");
-        let driven3 = shard.pump().expect("pump 3");
+        let driven3 = pump(&mut shard).expect("pump 3");
         assert_eq!(driven3, 1, "the terminal Done step");
 
         // Pump 4: still no new envelope — but the Done step queued an `Event::JobCompleted` for
         // delivery, so the actor is driven ONE more time purely to receive it.
-        let driven4 = shard.pump().expect("pump 4");
+        let driven4 = pump(&mut shard).expect("pump 4");
         assert_eq!(driven4, 1, "the queued completion drives one more turn, with no job left to step");
 
         let outbound = probe.take_outbound();
@@ -780,10 +935,10 @@ mod tests {
 
         let (transport, probe) = LoopbackTransport::paired();
         probe.push_inbound(encode_event_envelope(actor, 1, &Event::InstanceClose));
-        let mut shard = ShardLoop::new(mock, Box::new(transport));
+        let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock)), ShardTransports::Loopback(transport));
         shard.register(actor, instance);
 
-        let driven = shard.pump().expect("pump");
+        let driven = pump(&mut shard).expect("pump");
         assert_eq!(driven, 1, "only the turn itself — the job was cancelled before the step phase, so no step_job call happened");
 
         let outbound = probe.take_outbound();
@@ -806,10 +961,10 @@ mod tests {
         let (transport, probe) = LoopbackTransport::paired();
         probe.push_inbound(encode_payload_envelope(actor, 1, Payload::Suspend { checkpoint: true }));
 
-        let mut shard = ShardLoop::new(mock, Box::new(transport));
+        let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock)), ShardTransports::Loopback(transport));
         shard.register(actor, instance);
 
-        let driven = shard.pump().expect("pump");
+        let driven = pump(&mut shard).expect("pump");
         assert_eq!(driven, 0, "Suspend is handled entirely in the drain loop, not the turn/step phases");
 
         let outbound = probe.take_outbound();
@@ -841,9 +996,9 @@ mod tests {
 
         let (transport, probe) = LoopbackTransport::paired();
         probe.push_inbound(encode_payload_envelope(actor, 1, Payload::Suspend { checkpoint: true }));
-        let mut shard = ShardLoop::new(mock, Box::new(transport));
+        let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock)), ShardTransports::Loopback(transport));
         shard.register(actor, instance);
-        shard.pump().expect("pump suspend");
+        pump(&mut shard).expect("pump suspend");
 
         let suspend_outbound = probe.take_outbound();
         let checkpoint_bytes = match serde_json::from_slice(&suspend_outbound[0]).expect("decode suspend outcome") {
@@ -852,7 +1007,7 @@ mod tests {
         };
 
         probe.push_inbound(encode_payload_envelope(actor, 2, Payload::Resume { checkpoint: Some(checkpoint_bytes.clone()) }));
-        shard.pump().expect("pump resume");
+        pump(&mut shard).expect("pump resume");
 
         let resume_outbound = probe.take_outbound();
         let resume_outcome: ShardOutcome = serde_json::from_slice(&resume_outbound[0]).expect("decode resume outcome");
@@ -883,15 +1038,15 @@ mod tests {
 
         let (transport, probe) = LoopbackTransport::paired();
         probe.push_inbound(encode_event_envelope(actor, 1, &Event::InstanceClose));
-        let mut shard = ShardLoop::new(mock, Box::new(transport));
+        let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock)), ShardTransports::Loopback(transport));
         shard.register(actor, instance);
 
-        let driven1 = shard.pump().expect("pump 1");
+        let driven1 = pump(&mut shard).expect("pump 1");
         assert_eq!(driven1, 2, "the spawning turn plus the job's first (only scripted) step");
         probe.take_outbound();
 
         probe.push_inbound(encode_payload_envelope(actor, 2, Payload::Cancel { seq: 0 }));
-        let driven2 = shard.pump().expect("pump 2 (cancel)");
+        let driven2 = pump(&mut shard).expect("pump 2 (cancel)");
         assert_eq!(driven2, 0, "Cancel is handled in the drain loop; the actor is unregistered before the turn/step phases run");
         assert!(!shard.is_registered(actor), "Cancel must unregister the actor's instance");
         assert_eq!(shard.actor_count(), 0);
@@ -904,7 +1059,7 @@ mod tests {
         // 🎯️ A third pump proves the job is truly dead: if `running_jobs` still held it, `step_job`
         // would be called again with an EMPTY scripted queue and fault loudly (`TurnFault::
         // Exhausted`) rather than silently succeeding — no such outcome appears.
-        let driven3 = shard.pump().expect("pump 3");
+        let driven3 = pump(&mut shard).expect("pump 3");
         assert_eq!(driven3, 0, "nothing left to drive: no envelopes, no running_jobs, no registered instance");
         assert!(probe.take_outbound().is_empty(), "no further outcome of any kind for the cancelled job");
     }
@@ -941,10 +1096,10 @@ mod tests {
 
         let (transport, probe) = LoopbackTransport::paired();
         probe.push_inbound(encode_event_envelope(actor, 1, &Event::InstanceClose));
-        let mut shard = ShardLoop::new(mock, Box::new(transport));
+        let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock)), ShardTransports::Loopback(transport));
         shard.register(actor, instance);
 
-        let driven = shard.pump().expect("pump");
+        let driven = pump(&mut shard).expect("pump");
         assert_eq!(driven, 3, "one turn plus two job steps this pump");
 
         let outbound = probe.take_outbound();
@@ -1029,60 +1184,17 @@ mod tests {
         ShardFrame::Grant { actor, budget, envelopes: vec![] }.pack_encode(&mut bytes);
         probe.push_inbound(bytes);
 
-        let mut shard = ShardLoop::new(mock, Box::new(transport));
+        let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock)), ShardTransports::Loopback(transport));
         shard.register(actor, instance);
-        let driven = shard.pump().expect("pump");
+        let driven = pump(&mut shard).expect("pump");
         assert_eq!(driven, 0, "no envelopes bundled — nothing to drive yet");
         assert_eq!(shard.granted_budget(actor.0).fuel, 123_456, "the Grant's budget must be recorded even with no envelopes");
     }
     //#endregion 🔖️ShardFrameRoundTrips
 
     //#region 🔖️GrantBudgetExecution
-    /// 🧪️ A `GuestRuntime` that records the EXACT `Budget`/`JobBudget` it was invoked with — unlike
-    /// `MockGuestRuntime` (owned by `🖥️host/🦀️component.rs`, out of this packet's edit scope, and
-    /// which ignores its `budget` parameter entirely), this proves the property the packet brief
-    /// demands: "a Grant's budget is what the turn actually executes under (prove the constants
-    /// are gone, not merely unused)".
-    struct RecordingRuntime {
-        last_turn_budget: Mutex<Option<Budget>>,
-        last_job_budget: Mutex<Option<JobBudget>>,
-    }
-
-    impl RecordingRuntime {
-        fn new() -> Self {
-            Self { last_turn_budget: Mutex::new(None), last_job_budget: Mutex::new(None) }
-        }
-    }
-
-    impl GuestRuntime for RecordingRuntime {
-        fn compile(&self, package: &PackageRef, _bytes: &[u8]) -> Result<super::super::CompiledHandle, PluginHostError> {
-            Ok(super::super::CompiledHandle { package_hash: package.hash.0, component: None })
-        }
-        fn instantiate(&self, _compiled: &super::super::CompiledHandle, actor: ActorId, _caps: &[super::super::BrokerCapabilityGrant], _budget: &Budget) -> Result<GuestInstance, PluginHostError> {
-            Ok(GuestInstance { actor, state: GuestInstanceState::Mock(super::super::MockInstanceState::default()) })
-        }
-        fn drop_instance(&self, _inst: GuestInstance) {}
-        fn execute_turn(&self, _inst: &mut GuestInstance, _events: &[Event], budget: Budget) -> semio_framework_async::HostFuture<Result<TurnResult, TurnFault>> {
-            *self.last_turn_budget.lock().expect("lock") = Some(budget);
-            Box::pin(std::future::ready(Ok(TurnResult { ui_patches: vec![], effects: vec![], next_wake: None, status: semio_framework::kernel::TurnStatus::Idle, fuel_used: 0 })))
-        }
-        fn start_job(&self, _inst: &mut GuestInstance, _job: u64, _kind: &str, _input: Vec<u8>) -> semio_framework_async::HostFuture<Result<(), TurnFault>> {
-            Box::pin(std::future::ready(Ok(())))
-        }
-        fn step_job(&self, _inst: &mut GuestInstance, _job: u64, budget: JobBudget) -> semio_framework_async::HostFuture<Result<JobStep, TurnFault>> {
-            *self.last_job_budget.lock().expect("lock") = Some(budget);
-            Box::pin(std::future::ready(Ok(JobStep::Running { progress: None })))
-        }
-        fn cancel_job(&self, _inst: &mut GuestInstance, _job: u64) -> semio_framework_async::HostFuture<Result<(), TurnFault>> {
-            Box::pin(std::future::ready(Ok(())))
-        }
-        fn checkpoint(&self, _inst: &mut GuestInstance) -> semio_framework_async::HostFuture<Result<Vec<u8>, PluginHostError>> {
-            Box::pin(std::future::ready(Ok(vec![])))
-        }
-        fn restore(&self, _inst: &mut GuestInstance, _state: &[u8]) -> semio_framework_async::HostFuture<Result<(), PluginHostError>> {
-            Box::pin(std::future::ready(Ok(())))
-        }
-    }
+    // 👶️ host-dedyn: `RecordingRuntime` moved to module level (above `mod tests`) so
+    // `GuestRuntimes::Recording` (`🖥️host/🦀️component.rs`) can name it — see that region's own doc.
 
     /// 🎯️ Headline property test for terra-shard-grants Part B: a `Grant`'s budget — NOT any
     /// leftover constant, since `TURN_BUDGET`/`JOB_STEP_BUDGET` are deleted from this file entirely
@@ -1098,7 +1210,7 @@ mod tests {
         let instance = runtime.instantiate(&compiled, actor, &[], &Budget { fuel: 1, deadline_ms: 1, max_effects: 1, max_patch_bytes: 1, max_frames: 1 }).expect("instantiate");
 
         let (transport, probe) = LoopbackTransport::paired();
-        let mut shard = ShardLoop::new(runtime.clone(), Box::new(transport));
+        let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Recording(runtime.clone())), ShardTransports::Loopback(transport));
         shard.register(actor, instance);
 
         let mut first_budget = semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Interactive);
@@ -1107,7 +1219,7 @@ mod tests {
         let mut bytes = Vec::new();
         ShardFrame::Grant { actor, budget: first_budget, envelopes: vec![envelope] }.pack_encode(&mut bytes);
         probe.push_inbound(bytes);
-        shard.pump().expect("pump 1");
+        pump(&mut shard).expect("pump 1");
         assert_eq!(runtime.last_turn_budget.lock().unwrap().expect("execute_turn must have been called").fuel, 111_111, "the FIRST Grant's own fuel must reach execute_turn, not a constant");
 
         let mut second_budget = semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Background);
@@ -1116,7 +1228,7 @@ mod tests {
         let mut bytes2 = Vec::new();
         ShardFrame::Grant { actor, budget: second_budget, envelopes: vec![envelope2] }.pack_encode(&mut bytes2);
         probe.push_inbound(bytes2);
-        shard.pump().expect("pump 2");
+        pump(&mut shard).expect("pump 2");
         assert_eq!(runtime.last_turn_budget.lock().unwrap().expect("execute_turn must have been called again").fuel, 222_222, "a DIFFERENT second Grant's fuel must reach execute_turn too — proving it travels per-Grant, not a fixed constant");
 
         let _ = probe.take_outbound();
@@ -1134,7 +1246,7 @@ mod tests {
         let instance = runtime.instantiate(&compiled, actor, &[], &Budget { fuel: 1, deadline_ms: 1, max_effects: 1, max_patch_bytes: 1, max_frames: 1 }).expect("instantiate");
 
         let (transport, probe) = LoopbackTransport::paired();
-        let mut shard = ShardLoop::new(runtime.clone(), Box::new(transport));
+        let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Recording(runtime.clone())), ShardTransports::Loopback(transport));
         shard.register(actor, instance);
 
         let mut budget = semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Maintenance);
@@ -1153,7 +1265,7 @@ mod tests {
         };
         probe.push_inbound(job_bytes);
 
-        shard.pump().expect("pump");
+        pump(&mut shard).expect("pump");
         assert_eq!(runtime.last_job_budget.lock().unwrap().expect("step_job must have been called").fuel, 333_333, "step_job must run under the SAME actor's last granted budget, not a deleted JOB_STEP_BUDGET constant");
         let _ = probe.take_outbound();
     }
@@ -1164,7 +1276,7 @@ mod tests {
     fn an_actor_never_granted_a_budget_falls_back_to_the_maintenance_lane_default() {
         let mock = Arc::new(MockGuestRuntime::new());
         let actor = ActorId(73);
-        let shard = ShardLoop::new(mock, Box::new(LoopbackTransport::default()));
+        let shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock)), ShardTransports::Loopback(LoopbackTransport::default()));
         let expected = semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Maintenance);
         assert_eq!(shard.granted_budget(actor.0), expected);
     }
@@ -1182,14 +1294,14 @@ mod tests {
         let compiled = mock.compile(&package, &[]).expect("mock compile");
         let instance = mock.instantiate(&compiled, actor, &[], &Budget { fuel: 1, deadline_ms: 1, max_effects: 1, max_patch_bytes: 1, max_frames: 1 }).expect("mock instantiate");
         let (transport, probe) = LoopbackTransport::paired();
-        let mut shard = ShardLoop::new(mock, Box::new(transport));
+        let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock)), ShardTransports::Loopback(transport));
         shard.register(actor, instance);
         assert!(shard.is_registered(actor));
 
         let mut bytes = Vec::new();
         ShardFrame::Unregister { actor }.pack_encode(&mut bytes);
         probe.push_inbound(bytes);
-        let driven = shard.pump().expect("pump");
+        let driven = pump(&mut shard).expect("pump");
         assert_eq!(driven, 0, "Unregister is handled entirely in the drain loop");
         assert!(!shard.is_registered(actor), "an incoming Unregister frame must drop the instance");
     }
@@ -1204,8 +1316,8 @@ mod tests {
         let mut bytes = Vec::new();
         ShardFrame::Register { actor }.pack_encode(&mut bytes);
         probe.push_inbound(bytes);
-        let mut shard = ShardLoop::new(mock, Box::new(transport));
-        let driven = shard.pump().expect("pump must not error on a Register frame");
+        let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock)), ShardTransports::Loopback(transport));
+        let driven = pump(&mut shard).expect("pump must not error on a Register frame");
         assert_eq!(driven, 0);
         assert!(!shard.is_registered(actor), "Register never instantiates locally — see its own doc");
     }

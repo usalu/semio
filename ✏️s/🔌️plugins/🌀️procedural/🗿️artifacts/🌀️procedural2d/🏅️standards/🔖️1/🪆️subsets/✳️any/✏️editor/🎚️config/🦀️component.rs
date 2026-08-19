@@ -97,7 +97,7 @@ impl store::ArtifactPack for Procedural2dConfig {
 
 
 impl Default for Procedural2dConfig {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { camera: CameraJson { x: 0.0, y: 0.0, zoom: 1.0 }, show_mode: default_show_mode(), selected_generation_id: None, generation_preview_text: None, locale: "en-US".into() }
     }
 }
@@ -227,7 +227,7 @@ impl Mutation<Procedural2dConfig> for Procedural2dConfigMutation {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn config_set_camera_round_trips_and_restores() {
         let base = Procedural2dConfig::default();
         let camera = CameraJson { x: 9.0, y: -3.0, zoom: 2.5 };
@@ -235,21 +235,21 @@ mod tests {
         assert_eq!(forward.camera, camera);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn config_set_show_mode_round_trips_and_restores() {
         let base = Procedural2dConfig::default();
         let forward = Procedural2dConfigMutation::SetShowMode { value: "wire".into() }.diff(&base).into_parts().0;
         assert_eq!(forward.show_mode, "wire");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn config_set_locale_round_trips_and_restores() {
         let base = Procedural2dConfig::default();
         let forward = Procedural2dConfigMutation::SetLocale { value: "de-DE".into() }.diff(&base).into_parts().0;
         assert_eq!(forward.locale, "de-DE");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn config_op_text_round_trips_every_variant() {
         let config = Procedural2dConfig { locale: "de-DE".into(), ..Procedural2dConfig::default() };
         semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Procedural2dConfigMutation::Snapshot { config });

@@ -128,7 +128,7 @@ mod tests {
     }
 
     //#region 🧪️Honesty
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn a_fair_binary_column_has_one_bit_of_entropy() {
         let values = store::infer_field::<SemioTableSnapshot, ColumnEntropy>(&two_column_snapshot(), None);
         let e = values.get("coin").expect("coin entropy present");
@@ -137,7 +137,7 @@ mod tests {
         assert!((e.bits - 1.0).abs() < 1e-9, "fair coin must be exactly 1 bit, got {}", e.bits);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn a_constant_column_has_zero_entropy() {
         let values = store::infer_field::<SemioTableSnapshot, ColumnEntropy>(&two_column_snapshot(), None);
         let e = values.get("always_a").expect("always_a entropy present");
@@ -145,13 +145,13 @@ mod tests {
         assert!(e.bits.abs() < 1e-9, "single-symbol column must have zero entropy, got {}", e.bits);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn every_declared_column_appears_regardless_of_kind() {
         let values = store::infer_field::<SemioTableSnapshot, ColumnEntropy>(&two_column_snapshot(), None);
         assert_eq!(values.len(), 2, "entropy is defined over any symbol alphabet, unlike moments' numeric-only gate");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn an_all_empty_snapshot_yields_an_empty_plan() {
         let values = store::infer_field::<SemioTableSnapshot, ColumnEntropy>(&SemioTableSnapshot::default(), None);
         assert!(values.is_empty());
@@ -159,7 +159,7 @@ mod tests {
     //#endregion 🧪️Honesty
 
     //#region 🧪️CacheTransparencyLaw
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn disabled_cache_matches_pure_recompute() {
         let snapshot = two_column_snapshot();
         let pure = store::infer_field::<SemioTableSnapshot, ColumnEntropy>(&snapshot, None);
@@ -170,7 +170,7 @@ mod tests {
     //#endregion 🧪️CacheTransparencyLaw
 
     //#region 🧪️IncrementalityLaw
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn identical_snapshot_recompute_is_a_cache_hit() {
         let mut cache = InferenceCache::new(InferenceCacheConfig { enabled: true, record_stats: true, ..Default::default() });
         let base = two_column_snapshot();
@@ -182,7 +182,7 @@ mod tests {
         assert_eq!(after.hits - before.hits, 2, "both columns must be cache hits");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn changing_one_columns_cells_misses_only_that_columns_cache_entry() {
         let mut cache = InferenceCache::new(InferenceCacheConfig { enabled: true, record_stats: true, ..Default::default() });
         let base = two_column_snapshot();
@@ -198,7 +198,7 @@ mod tests {
         assert_eq!(values.get("always_a").map(|e| e.distinct), Some(1), "always_a's entropy must be untouched");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn changing_the_other_column_misses_only_its_own_entry() {
         // 🔁️ Unlike `📊moments` (which has a non-numeric column genuinely OFF the plan to edit for a
         // zero-miss control), `entropy` tracks EVERY declared column, so this fixture has no untracked

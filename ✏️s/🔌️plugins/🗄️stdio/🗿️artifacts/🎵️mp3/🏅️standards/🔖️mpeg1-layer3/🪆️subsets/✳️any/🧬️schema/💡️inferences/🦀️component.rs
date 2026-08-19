@@ -32,7 +32,7 @@ impl protocol::Inference<Mp3Snapshot> for Mp3Inference {
 /// 🌱 Defined in terms of `infer` (not derived) — keeps the law correct regardless of whether
 /// `Mp3Snapshot::default()`'s `frames` ever stop being empty.
 impl Default for Mp3Inference {
-    async fn default() -> Self {
+    fn default() -> Self {
         <Self as protocol::Inference<Mp3Snapshot>>::infer(&Mp3Snapshot::default())
     }
 }
@@ -84,13 +84,13 @@ mod tests {
     use super::*;
     use protocol::Inference;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = Mp3Snapshot::default();
         assert_eq!(Mp3Inference::infer(&snapshot), Mp3Inference::infer(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(Mp3Inference::infer(&Mp3Snapshot::default()), Mp3Inference::default());
     }

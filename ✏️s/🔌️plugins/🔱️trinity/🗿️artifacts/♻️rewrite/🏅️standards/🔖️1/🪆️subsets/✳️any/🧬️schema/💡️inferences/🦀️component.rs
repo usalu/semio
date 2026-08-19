@@ -88,18 +88,18 @@ mod tests {
     //#endregion 🧸️Fixtures
 
     //#region 🧪️InferenceLaws
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = two_point_snapshot();
         assert_eq!(RewriteInference::infer(&snapshot), RewriteInference::infer(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(RewriteInference::infer(&RewriteSnapshot::default()), RewriteInference::default());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_bounds_matches_rule_layout_extents() {
         let snapshot = two_point_snapshot();
         let inferred = RewriteInference::infer(&snapshot);

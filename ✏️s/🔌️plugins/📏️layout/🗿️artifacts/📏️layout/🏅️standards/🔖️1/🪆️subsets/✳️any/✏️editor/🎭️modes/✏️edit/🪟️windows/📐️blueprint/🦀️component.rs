@@ -49,13 +49,13 @@ mod tests {
     use super::*;
     use crate::editor::layout::testkit::{layout_app, render as render_body};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn renders_blueprint_canvas_scene() {
         let mut app = layout_app();
         assert!(render_body(&mut app, LAYOUT_PLAY_BODY_BLUEPRINT).contains("canvas-2d"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn blueprint_scene_has_page_background_and_guides() {
         // 🧷️ `layers_json` is a `String` field (`Canvas2dScene.layers_json`), so the render's own JSON
         // encoding escapes its embedded quotes — assert on the unquoted substrings that survive either
@@ -71,14 +71,14 @@ mod tests {
         assert!(!json.contains("linkId"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inherited_frame_gets_dashed_stroke_in_blueprint() {
         let mut app = layout_app();
         let json = render_body(&mut app, LAYOUT_PLAY_BODY_BLUEPRINT);
         assert!(json.contains("dash") && json.contains("4.0") && json.contains("3.0"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn definition_declares_the_canvas_2d_surface_and_body_key() {
         let definition = definition();
         assert_eq!(definition.body_key, LAYOUT_PLAY_BODY_BLUEPRINT);

@@ -93,7 +93,7 @@ pub mod derived_composition {
             "<!DOCTYPE root>\n<root/>".to_string()
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn conforming_document_composes_and_stamps_valid() {
             let text = conforming_xml_text();
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Text(&text) }];
@@ -101,7 +101,7 @@ pub mod derived_composition {
             assert!(composed.diagnostics.iter().all(|d| d.severity != Severity::Error), "no hard diagnostics expected: {:?}", composed.diagnostics);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn missing_doctype_fails_compose_with_real_diagnostic() {
             let text = "<root/>".to_string();
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Text(&text) }];
@@ -109,7 +109,7 @@ pub mod derived_composition {
             assert!(err.diagnostics.iter().any(|d| d.code.0 == "stdio.xml.valid.doctype-missing" && d.severity == Severity::Error), "got {:?}", err.diagnostics);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn root_name_mismatch_fails_compose_with_real_diagnostic() {
             let text = "<!DOCTYPE book>\n<root/>".to_string();
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Text(&text) }];
@@ -117,7 +117,7 @@ pub mod derived_composition {
             assert!(err.diagnostics.iter().any(|d| d.code.0 == "stdio.xml.valid.root-name-mismatch" && d.severity == Severity::Error), "got {:?}", err.diagnostics);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn subset_validator_recheck_flags_only_soft_diagnostics_for_a_clean_document() {
             let text = conforming_xml_text();
             let snapshot = <XmlSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parses");
@@ -126,7 +126,7 @@ pub mod derived_composition {
             assert!(diagnostics.iter().all(|d| d.severity != Severity::Error), "wire recheck must never report a hard violation for a composer-clean document: {diagnostics:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn negative_no_doctype_example_fails_compose_with_declared_hard_code() {
             let text = crate::artifacts::xml::standards::v1_0::subsets::valid::examples::no_doctype::PRIMARY_TEXT;
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Text(text) }];
@@ -199,7 +199,7 @@ pub mod derived_composition {
             }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn xml_valid_subset_integrated_roundtrip() {
             let text = crate::artifacts::xml::standards::v1_0::subsets::any::examples::demo::PRIMARY_TEXT;
             let positive = store::os_store::test_support::ExampleAsset { bytes: text.as_bytes(), text: Some(text), provenance: "✳️any/📚️examples/🎬️demo (conforming doctype for valid)" };

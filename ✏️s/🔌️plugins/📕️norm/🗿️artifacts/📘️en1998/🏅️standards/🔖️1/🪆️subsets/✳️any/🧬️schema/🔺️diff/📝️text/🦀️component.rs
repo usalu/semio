@@ -410,7 +410,7 @@ mod tests {
     use crate::artifacts::en1998::mutations::En1998Mutation;
     use protocol::{Mutation as _, MutationDiff};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn change_mutation_diff_updates_only_its_field() {
         let base = En1998Snapshot::default();
         let mutation = En1998Mutation::ChangeSeismicZone(crate::artifacts::en1998::mutations::change_seismic_zone::mutation::ChangeSeismicZone { new_seismic_zone: 3 });

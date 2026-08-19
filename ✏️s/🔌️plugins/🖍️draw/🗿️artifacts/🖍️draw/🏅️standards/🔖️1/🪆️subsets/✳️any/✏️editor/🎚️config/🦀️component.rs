@@ -97,7 +97,7 @@ impl store::ArtifactPack for DrawConfig {
 
 
 impl Default for DrawConfig {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { engagement_input: String::new(), camera: DrawCamera::default(), active_utility_id: "selectDirect".into(), locale: "en-US".into() }
     }
 }
@@ -230,14 +230,14 @@ impl Mutation<DrawConfig> for DrawConfigMutation {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn draw_config_default_matches_ui_selectdirect_utility() {
         let config = DrawConfig::default();
         assert_eq!(config.active_utility_id, "selectDirect");
         assert_eq!(config.locale, "en-US");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn draw_config_dsl_round_trips() {
         let config = DrawConfig {
             engagement_input: "Renaming \"layer\"".into(),
@@ -248,7 +248,7 @@ mod tests {
         store::os_store::test_support::assert_dsl_round_trip(&config);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn draw_config_operation_round_trips_and_backwards_restores_snapshot() {
         let base = DrawConfig { active_utility_id: "selectDirect".into(), ..Default::default() };
         let operation = DrawConfigMutation::SetActiveUtility { utility_id: "pen".into() };
@@ -260,7 +260,7 @@ mod tests {
         assert_eq!(restored, base);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn draw_config_operation_op_text_round_trips_every_variant() {
         store::os_store::test_support::assert_op_line_round_trip(&DrawConfigMutation::Snapshot { config: DrawConfig::default() });
         store::os_store::test_support::assert_op_line_round_trip(&DrawConfigMutation::SetEngagementInput { value: "New \"Name\"".into() });

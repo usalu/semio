@@ -27,7 +27,7 @@ mod tests {
     use super::*;
     use crate::artifacts::remodel::default_remodel_scene;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_binary_round_trips_and_agrees_with_text() {
         let scene = default_remodel_scene();
         let operation = crate::artifacts::remodel::mutations::update_feature_params(scene.params.feature);
@@ -38,7 +38,7 @@ mod tests {
 
     /// 📄️ Full `print_document_text`/`parse_document_text` round trip through a live `ArtifactStore`
     /// with an applied edit, the ground-truth contract for replacing the JSON envelope with text files.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn store_roundtrips_through_document_text() {
         let initial = default_remodel_scene();
         let envelope = store::create_document_envelope("test/v1", "test", initial, None);

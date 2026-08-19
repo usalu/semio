@@ -29,18 +29,18 @@ mod tests {
     use flow::Widget;
     use semio_framework_os_kernel::os_store::test_support;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dsl_pack_equivalence_empty_projection() {
         test_support::assert_dsl_pack_equivalence(&Procedural2dSnapshot::default());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dsl_pack_equivalence_example_fixture() {
         let projection = dsl::parse_dsl(dsl::PROCEDURAL2D_EXAMPLE_TEXT).expect("parse 🌀️default.procedural2d fixture");
         test_support::assert_dsl_pack_equivalence(&projection);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dsl_pack_equivalence_with_generation_state() {
         let mut projection = Procedural2dSnapshot::default();
         let mut values = serde_json::Map::new();
@@ -54,7 +54,7 @@ mod tests {
         test_support::assert_dsl_pack_equivalence(&projection);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dsl_pack_equivalence_covers_every_widget_kind() {
         let mut projection = Procedural2dSnapshot::default();
         projection.fixture.widgets = vec![
@@ -69,7 +69,7 @@ mod tests {
         test_support::assert_dsl_pack_equivalence(&projection);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn pack_round_trips() {
         let projection = dsl::parse_dsl(dsl::PROCEDURAL2D_EXAMPLE_TEXT).expect("parse fixture");
         let bytes = encode(&projection);

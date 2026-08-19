@@ -759,7 +759,7 @@ mod handcrafted_diff_codec_tests {
         EpwSnapshot { location: location(city), records: vec![record("1"), record("2"), record("3")], ..EpwSnapshot::default() }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn diff_codec_text_binary_roundtrip_law() {
         let a = snapshot("Hannover");
         let mut b = snapshot("Berlin");

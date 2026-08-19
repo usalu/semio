@@ -41,19 +41,19 @@ async fn assert_logical_cos_retained(snapshot: &PdfSnapshot) {
     assert!(snapshot.trailer.iter().any(|entry| entry.key == "Root"));
 }
 
-#[test]
+#[semio_framework_async_macros::async_test]
 async fn fixture_is_real_pdf_not_a_stub() {
     assert!(FIXTURE_BYTES.len() > 1_000_000, "bachelor-thesis.pdf must be the real ~6.3MB fixture, got {} bytes", FIXTURE_BYTES.len());
     assert_eq!(&FIXTURE_BYTES[0..5], b"%PDF-", "fixture must start with the PDF magic header");
 }
 
-#[test]
+#[semio_framework_async_macros::async_test]
 async fn source_nonempty() {
     let _ = source();
 }
 
 //#region (a) RealDecodeNonTrivialInvariants
-#[test]
+#[semio_framework_async_macros::async_test]
 async fn real_decode_has_many_pages_and_real_extracted_text() {
     let snap = decode_pdf(FIXTURE_BYTES).expect("real 1.7 engine must decode the real fixture");
     assert_eq!(snap.declared_version, "1.5", "1.7's lenient reader must report the fixture's own declared version, not overwrite it");
@@ -80,7 +80,7 @@ async fn real_decode_has_many_pages_and_real_extracted_text() {
 //#region (b) DecodeEncodeDecodeStructuralEquality
 /// 🧪️ `codec_retention_law` (real-fixture instance, per the ticket's test-law naming
 /// convention): decode→writer reconstruction reaches a deterministic logical fixed point.
-#[test]
+#[semio_framework_async_macros::async_test]
 async fn codec_retention_law_bachelor_thesis_decode_encode_decode() {
     let original = decode_pdf(FIXTURE_BYTES).expect("decode");
     let rewritten_bytes = encode_pdf(&original).expect("encode");
@@ -94,7 +94,7 @@ async fn codec_retention_law_bachelor_thesis_decode_encode_decode() {
     }
 }
 
-#[test]
+#[semio_framework_async_macros::async_test]
 async fn lossless_structural_flow_law_bachelor_thesis_snapshot_mutation_diff_io_and_inverse() {
     let original = decode_pdf(FIXTURE_BYTES).expect("decode exact fixture");
     assert_logical_cos_retained(&original);
@@ -153,7 +153,7 @@ async fn lossless_structural_flow_law_bachelor_thesis_snapshot_mutation_diff_io_
     assert_eq!(encode_pdf(&mutation_dirty).expect("mutation inverse logical export"), canonical);
 }
 
-#[test]
+#[semio_framework_async_macros::async_test]
 async fn decode_encode_decode_is_structurally_equal_at_page_level() {
     // 📏 The logical writer deterministically materializes a fresh PDF serialization.
     let original = decode_pdf(FIXTURE_BYTES).expect("decode");
@@ -173,7 +173,7 @@ async fn decode_encode_decode_is_structurally_equal_at_page_level() {
 //#endregion (b) DecodeEncodeDecodeStructuralEquality
 
 //#region (c) AnalyzerBuilderRoundTrip
-#[test]
+#[semio_framework_async_macros::async_test]
 async fn analyzer_to_builder_round_trip_reproduces_equivalent_pages() {
     // 🎯 The project's core acceptance test: walk the real decode's page-tree view, reconstruct
     // an equivalent document using ONLY typed builder calls (`PdfBuilder::add_page`,
@@ -203,7 +203,7 @@ async fn analyzer_to_builder_round_trip_reproduces_equivalent_pages() {
 /// 🧪️ (d) `infer` on the real 65-page fixture is deterministic — two calls over the same decoded
 /// snapshot produce byte-equal results. Ticket
 /// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING.
-#[test]
+#[semio_framework_async_macros::async_test]
 async fn inference_determinism_law() {
     let snapshot = decode_pdf(FIXTURE_BYTES).expect("decode real fixture");
     assert_eq!(Pdf17Inference::infer(&snapshot), Pdf17Inference::infer(&snapshot));
@@ -211,14 +211,14 @@ async fn inference_determinism_law() {
 
 /// 🧪️ (e) `infer(&PdfSnapshot::default())` matches `Pdf17Inference::default()` — the hand-written
 /// `Default` impl (`💡️inferences/🦀️component.rs`) must stay in lockstep with `infer` itself.
-#[test]
+#[semio_framework_async_macros::async_test]
 async fn inference_default_law() {
     assert_eq!(Pdf17Inference::infer(&PdfSnapshot::default()), Pdf17Inference::default());
 }
 
 /// 🧪️ `outline` on the real fixture matches the independently-verified page count/text volume
 /// `real_decode_has_many_pages_and_real_extracted_text` above already asserts.
-#[test]
+#[semio_framework_async_macros::async_test]
 async fn outline_matches_real_fixture_page_count() {
     let snapshot = decode_pdf(FIXTURE_BYTES).expect("decode real fixture");
     let inferred = Pdf17Inference::infer(&snapshot);

@@ -94,7 +94,7 @@ mod json_serializers_tests {
     use super::*;
     use crate::artifacts::iso16757::Iso16757Snapshot;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn catalogue_json_round_trip() {
         let doc = Iso16757Snapshot::default();
         let json = io::catalogue_to_json(&doc.catalogue).expect("json");
@@ -102,7 +102,7 @@ mod json_serializers_tests {
         assert_eq!(restored.id, doc.catalogue.id);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dictionary_json_round_trip() {
         let doc = Iso16757Snapshot::default();
         let json = io::dictionary_to_json(&doc.dictionary).expect("json");

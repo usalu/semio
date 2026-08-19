@@ -33,14 +33,14 @@ pub async fn render(document: &TsvSnapshot) -> UiNode {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn definition_declares_a_table_window() {
         let def = definition();
         assert_eq!(def.id, WINDOW_KIND_ID);
         assert_eq!(def.body_key, BODY_KEY);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn render_lists_one_row_per_record() {
         let document = TsvSnapshot { schema: "stdio.tsv".into(), records: vec![vec!["a".into(), "b".into()]], trailing_newline: false, line_ending: Default::default() };
         let UiNode::ComponentScene(node) = render(&document) else { panic!("expected ComponentScene") };

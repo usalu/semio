@@ -48,7 +48,7 @@ mod tests {
     use crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::default_document;
     use semio_framework_plugin::ArtifactView;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn cad_labels_translate_catalogue_typologies_in_german() {
         let app = CadPlayApp::default();
         let scene = default_document();

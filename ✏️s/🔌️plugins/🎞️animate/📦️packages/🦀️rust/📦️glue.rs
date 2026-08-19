@@ -8,6 +8,12 @@
 //! `TaxonomyLibShape` policy lint both fail on it (see master ticket
 //! `26/08/05/CRATE-CONSOLIDATION-AND-PLUGIN-TAXONOMY-RESTRUCTURE`, Single-File-Repo hazard ruling).
 
+// 🌀️ R7 — `async fn` in public traits (`Sobject`, `Animation`) is deliberate under O1's universal-async
+// ruling; callers cannot assume `Send` from the lint's suggested fix, and R3 answers that structurally
+// (every dyn seam here is a `dyn_enum_close!`-generated enum, so `Send` falls out of the concrete
+// variant types). Never resolved by `+ Send` on the trait method or by making the method sync.
+#![allow(async_fn_in_trait)]
+
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;

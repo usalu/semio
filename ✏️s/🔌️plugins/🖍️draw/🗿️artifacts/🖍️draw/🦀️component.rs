@@ -27,7 +27,7 @@ pub struct DrawCamera {
 
 impl Default for DrawCamera {
     /// 🎯️ Matches the pre-migration `default_draw_document` camera: centered on its 1024x1024 artboard.
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { x: 512.0, y: 512.0, zoom: 0.75 }
     }
 }

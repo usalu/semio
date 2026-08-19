@@ -21,7 +21,7 @@ pub enum PptxError {
 }
 
 impl std::fmt::Display for PptxError {
-    async fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Opc(e) => write!(f, "pptx: {e}"),
             Self::Zip(e) => write!(f, "pptx: {e}"),
@@ -36,12 +36,12 @@ impl std::fmt::Display for PptxError {
 impl std::error::Error for PptxError {}
 
 impl From<crate::artifacts::zip::opc::OpcError> for PptxError {
-    async fn from(e: crate::artifacts::zip::opc::OpcError) -> Self {
+    fn from(e: crate::artifacts::zip::opc::OpcError) -> Self {
         Self::Opc(e)
     }
 }
 impl From<crate::artifacts::zip::standards::v2_0::subsets::any::io::ZipError> for PptxError {
-    async fn from(e: crate::artifacts::zip::standards::v2_0::subsets::any::io::ZipError) -> Self {
+    fn from(e: crate::artifacts::zip::standards::v2_0::subsets::any::io::ZipError) -> Self {
         Self::Zip(e)
     }
 }

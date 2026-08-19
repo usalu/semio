@@ -116,14 +116,14 @@ pub async fn render(doc: &Fem2dSnapshot) -> UiNode {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn renders_a_canvas_2d_scene_for_the_default_document() {
         let document = crate::artifacts::fem2d::schema::empty_fem2d_snapshot();
         let json = serde_json::to_string(&render(&document)).expect("render json");
         assert!(json.contains("canvas-2d"), "expected a valid canvas-2d scene, got: {json}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn renders_mesh_edge_preview_for_the_default_example() {
         use store::ArtifactDsl;
         let document = Fem2dSnapshot::parse_dsl(crate::artifacts::fem2d::dsl::FEM2D_EXAMPLE_TEXT).expect("parse default example");

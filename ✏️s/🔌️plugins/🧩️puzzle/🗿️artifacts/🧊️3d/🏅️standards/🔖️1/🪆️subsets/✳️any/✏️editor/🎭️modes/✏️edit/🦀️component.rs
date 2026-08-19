@@ -46,7 +46,7 @@ mod tests {
     use super::*;
     use crate::editor::puzzle3d::create_puzzle3d_app;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn default_layout_is_top_left_third_and_perspective_right_two_thirds() {
         let app = create_puzzle3d_app();
         let layout = app.definition.default_layout.as_ref().expect("default layout");

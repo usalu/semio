@@ -124,7 +124,7 @@ pub mod derived_composition {
             bytes.iter().map(|b| format!("{b:02x}")).collect()
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn conforming_builder_snapshot_composes_and_stamps_x() {
             let bytes = minimal_conforming_x_pdf();
             let hex = hex_encode(&bytes);
@@ -133,7 +133,7 @@ pub mod derived_composition {
             assert!(composed.diagnostics.iter().all(|d| d.severity != Severity::Error), "no hard diagnostics expected: {:?}", composed.diagnostics);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn missing_output_intent_fails_compose() {
             let snapshot = PdfSnapshot::default();
             let bytes = <PdfSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
@@ -142,7 +142,7 @@ pub mod derived_composition {
             assert!(err.diagnostics.iter().any(|d| d.code.0 == crate::artifacts::pdf::standards::v1_7::subsets::x::schema::CODE_OUTPUT_INTENT), "got {:?}", err.diagnostics);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn subset_validator_recheck_runs_the_same_check() {
             let snapshot = PdfXBuilder::new("sRGB IEC61966-2.1").add_page(crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::PdfPage::new(50.0, 50.0)).build().unwrap();
             let bytes = <PdfSnapshot as store::ArtifactPack>::encode_pack(&snapshot);

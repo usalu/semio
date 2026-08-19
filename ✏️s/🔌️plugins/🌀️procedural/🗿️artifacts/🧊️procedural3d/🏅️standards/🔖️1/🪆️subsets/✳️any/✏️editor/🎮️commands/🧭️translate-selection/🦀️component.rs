@@ -99,7 +99,7 @@ mod tests {
     use crate::artifacts::procedural3d::widget_id;
     use flow::Widget;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn translate_selection_persists_transform_into_flow_graph() {
         let _serial = crate::editor::procedural3d::test_support::lock();
         let mut app = app();
@@ -120,7 +120,7 @@ mod tests {
         assert_eq!(gumball_widget_offset(&host_from_fixture(&projection2.fixture), transform_id), [2.0, 2.0, 3.0]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn rotate_and_scale_selection_persist_into_flow_graph() {
         let _serial = crate::editor::procedural3d::test_support::lock();
         let mut rotate_app = app();

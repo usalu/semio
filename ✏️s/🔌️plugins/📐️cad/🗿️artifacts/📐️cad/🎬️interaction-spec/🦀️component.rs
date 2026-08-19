@@ -584,7 +584,7 @@ impl InteractionSpec {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn interaction_spec_parses_box_asset() {
         let raw = include_str!("../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️interactions/🔣️box.json");
         let spec: InteractionSpec = serde_json::from_str(raw).expect("🔣️box.json parses as InteractionSpec");
@@ -599,7 +599,7 @@ mod tests {
         assert_eq!(spec.commit.from_states, vec!["ready".to_string()]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn interaction_spec_parses_sphere_asset_with_command_finish() {
         let raw = include_str!("../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🎬️interactions/🔣️sphere.json");
         let spec: InteractionSpec = serde_json::from_str(raw).expect("🔣️sphere.json parses as InteractionSpec");
@@ -608,7 +608,7 @@ mod tests {
         assert!(spec.display.states.iter().any(|s| s.state == "radius"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn interaction_spec_parses_all_energy_and_structure_classic_assets() {
         let sources = [
             include_str!("../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🎬️interactions/🔣️constructBasePlate.json"),
@@ -633,7 +633,7 @@ mod tests {
 
     /// Regression guard: every `interaction/*.json` asset in the tree must parse as
     /// `InteractionSpec` — catches schema drift between the JSON assets and these Rust types.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn every_interaction_asset_on_disk_parses_as_interaction_spec() {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions");
         async fn walk(dir: &std::path::Path, out: &mut Vec<std::path::PathBuf>) {
@@ -660,7 +660,7 @@ mod tests {
         assert!(failures.is_empty(), "{} interaction assets failed to parse:\n{}", failures.len(), failures.join("\n"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn evaluate_expr_supports_path_const_var_and_boolean_combinators() {
         let mut context = std::collections::HashMap::new();
         context.insert("height".to_string(), json!(2.5));
@@ -690,7 +690,7 @@ mod tests {
         assert_eq!(evaluate_expr(&let_expr, &env, &vars), json!(5.0));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn interaction_spec_guard_evaluates_against_context() {
         let raw = include_str!("../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🎬️interactions/🔣️constructExternalWall.json");
         let spec: InteractionSpec = serde_json::from_str(raw).expect("parses");

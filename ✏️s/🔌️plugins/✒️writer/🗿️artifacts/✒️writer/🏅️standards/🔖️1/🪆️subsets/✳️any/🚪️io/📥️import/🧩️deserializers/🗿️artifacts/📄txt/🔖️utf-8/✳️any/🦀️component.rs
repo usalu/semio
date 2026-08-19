@@ -21,7 +21,7 @@ impl Deserializer<WriterSnapshot> for TxtIntoWriter {
     /// writer document it seeds is a fresh one (`"txt-import"`), never a restoration of a prior
     /// writer document's full identity.
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    async fn deserialize(payload: &IoPayload) -> IoResult<WriterSnapshot> {
+    fn deserialize(payload: &IoPayload) -> IoResult<WriterSnapshot> {
         let IoPayload::Text(text) = payload else {
             return Err(IoError { message: "TxtIntoWriter: expected a text payload".to_string(), diagnostics: Vec::new() });
         };
@@ -36,7 +36,7 @@ impl Deserializer<WriterSnapshot> for TxtIntoWriter {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn txt_into_writer_uses_the_raw_body_as_document_text() {
         let outcome = TxtIntoWriter::deserialize(&IoPayload::Text("hello\nworld".into())).expect("deserialize");
         assert_eq!(crate::artifacts::writer::writer_text(&outcome.value), "hello\nworld");

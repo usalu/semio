@@ -333,7 +333,7 @@ impl protocol::Inference<GltfSnapshot> for GltfInference {
 }
 
 impl Default for GltfInference {
-    async fn default() -> Self {
+    fn default() -> Self {
         <Self as protocol::Inference<GltfSnapshot>>::infer(&GltfSnapshot::default())
     }
 }
@@ -1035,7 +1035,7 @@ pub async fn gltf_artifact_inference_descriptors() -> Vec<schema::ArtifactInfere
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn manifest_requires_exactly_one_fully_faceted_service_per_leaf() {
         let field_ids = GLTF_INFERENCE_FIELDS.iter().map(|field| field.id).collect::<std::collections::BTreeSet<_>>();
         let service_ids = GLTF_INFERENCE_LEAF_SERVICE_DESCRIPTORS.iter().map(|descriptor| descriptor.id).collect::<std::collections::BTreeSet<_>>();

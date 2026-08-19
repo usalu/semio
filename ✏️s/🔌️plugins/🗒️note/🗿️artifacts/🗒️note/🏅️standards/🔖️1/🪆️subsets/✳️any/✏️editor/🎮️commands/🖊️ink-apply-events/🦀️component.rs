@@ -185,7 +185,7 @@ mod tests {
     use semio_framework_plugin::PluginApp;
     use serde_json::json;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn gesture_begin_live_commit_produces_single_undo_step() {
         let mut app = note_app();
         let block = create_block_by_kind("text", 10.0, 10.0);
@@ -221,7 +221,7 @@ mod tests {
         assert!(app.snapshot().expect("snapshot").blocks.is_empty(), "a single undo should erase the whole gesture");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn gesture_with_no_changes_creates_no_edit() {
         let mut app = note_app();
         dispatch(&mut app, NoteCommand::InkApplyEvents(InkApplyEvents { events_json: "[]".into(), phase: "begin".into(), select_ids: None }));

@@ -10,7 +10,7 @@ mod tests {
     use crate::editor::puzzle2d::engine::{handle_position_on_circle, BoardHost, HandleDescJson, NodeDescJson, SceneDescriptorJson};
     use serde_json::json;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn board_host_brush_slot_emits_preview_and_place_on_leave() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
@@ -82,7 +82,7 @@ mod tests {
         assert!(ev2.contains("edgeId"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn board_host_brush_open_slot_suggestions_commit_and_cancel() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
@@ -158,7 +158,7 @@ mod tests {
         assert!(!ev_cancel.contains("brushPlace"), "cancel should not place, got: {ev_cancel}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn board_host_brush_slot_commit_survives_pointer_move_out_of_slot() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
@@ -192,7 +192,7 @@ mod tests {
         assert!(ev.contains("brushPlace"), "expected brushPlace when leaving slot with Alt, got: {ev}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn board_host_brush_slot_skips_place_on_leave_without_alt() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
@@ -224,7 +224,7 @@ mod tests {
         assert!(!ev.contains("brushPlace"), "expected no brushPlace without Alt, got: {ev}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn board_host_brush_fill_frontier_deterministic_and_collision_limited() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
@@ -262,7 +262,7 @@ mod tests {
         assert!(many_n < 1000, "collision should cap fill before 1000 on a tight scene");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn board_host_brush_fill_session_step_matches_brush_fill_json() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
@@ -302,7 +302,7 @@ mod tests {
         assert_eq!(stepped, expected.get("placements").and_then(|x| x.as_array()).cloned().unwrap_or_default());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn board_host_fixture_drop_preview_json_paints_while_select_utility_active() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
@@ -315,7 +315,7 @@ mod tests {
         assert!(h.encoded_scene_hint() > 0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn board_host_fixture_drop_preview_uses_catalog_shape_and_icon_at_overview_lod() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
@@ -342,7 +342,7 @@ mod tests {
         assert!(hint_cleared != hint_with_preview || hint_with_preview > 0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn board_host_brush_session_mirror_json_shows_preview_without_pointer() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
@@ -383,7 +383,7 @@ mod tests {
         assert!(h.encoded_scene_hint() > 0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn board_host_brush_candidates_sorted_by_handle_proximity() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
@@ -431,7 +431,7 @@ mod tests {
         assert_eq!(first_kind, Some("heavy"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn board_host_brush_lists_every_compatible_handle_per_node_kind() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
@@ -474,7 +474,7 @@ mod tests {
         assert!(indices.contains(&1));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn board_host_fill_base_core_rectangular_excludes_cylindric_tambour() {
         const BASE_KIND: &str = "Base";
         const CYLINDRIC_TAMBOUR_KIND: &str = "Cylindric Tambour";
@@ -556,7 +556,7 @@ mod tests {
         assert_eq!(node_kind, FIRST_STOREY_KIND, "first storey tambour matches rectangular core stack");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn board_host_brush_door_tambour_left_excludes_capital_with_metabolism_compat_rules() {
         const DOOR_TAMBOUR_LEFT: &str = "door tambour left";
         const CAPITAL_KIND: &str = "Capital";
@@ -641,7 +641,7 @@ mod tests {
         assert!(!ids.iter().any(|id| id == CAPITAL_KIND), "door tambour left must not suggest Capital, got: {ids:?}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn board_host_brush_slot_accepts_pointer_on_node_body_at_overview_lod() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
@@ -673,7 +673,7 @@ mod tests {
         assert!(ev.contains("brushCandidates"), "expected brushCandidates, got: {ev}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn board_host_brush_slot_accepts_pointer_on_indirect_ring_anchor() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);

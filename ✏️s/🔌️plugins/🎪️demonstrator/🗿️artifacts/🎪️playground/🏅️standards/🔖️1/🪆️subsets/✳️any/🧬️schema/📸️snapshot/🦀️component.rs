@@ -17,7 +17,7 @@ pub struct PlaygroundSnapshot {
 }
 
 impl Default for PlaygroundSnapshot {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self {
             schema: PLAYGROUND_DOCUMENT_SCHEMA.into(),
         }

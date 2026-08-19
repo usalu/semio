@@ -90,7 +90,7 @@ impl store::ArtifactPack for PresentConfig {
 
 
 impl Default for PresentConfig {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { engagement_input: String::new(), locale: "en-US".into() }
     }
 }
@@ -210,14 +210,14 @@ impl Mutation<PresentConfig> for PresentConfigMutation {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn present_config_default_matches_the_existing_runtime_defaults() {
         let config = PresentConfig::default();
         assert!(config.engagement_input.is_empty());
         assert_eq!(config.locale, "en-US");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn present_config_dsl_round_trips() {
         let config = PresentConfig { engagement_input: "2x2".into(), locale: "de-DE".into() };
         let text = store::ArtifactDsl::print_dsl(&config);
@@ -225,7 +225,7 @@ mod tests {
         assert_eq!(parsed, config);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn present_config_pack_round_trips() {
         let config = PresentConfig { engagement_input: "add".into(), locale: "en-US".into() };
         let bytes = store::ArtifactPack::encode_pack(&config);
@@ -243,21 +243,21 @@ mod tests {
         forward
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn config_set_engagement_input_round_trips() {
         let config = PresentConfig::default();
         let next = round_trip_config(&config, &PresentConfigMutation::SetEngagementInput { value: "2x2".into() });
         assert_eq!(next.engagement_input, "2x2");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn config_set_locale_round_trips() {
         let config = PresentConfig::default();
         let next = round_trip_config(&config, &PresentConfigMutation::SetLocale { value: "de-DE".into() });
         assert_eq!(next.locale, "de-DE");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn config_op_text_round_trips_every_variant() {
         store::os_store::test_support::assert_op_line_round_trip(&PresentConfigMutation::SetEngagementInput { value: "add".into() });
         store::os_store::test_support::assert_op_line_round_trip(&PresentConfigMutation::SetLocale { value: "en-US".into() });

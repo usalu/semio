@@ -166,7 +166,7 @@ mod tests {
     use super::*;
     use crate::artifacts::imperative::ImperativeSnapshot;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_binary_round_trips_and_agrees_with_text() {
         let operation = delete_step(PathRef::default(), "step-1".into());
         store::os_store::test_support::assert_op_text_binary_equivalence(&operation);
@@ -174,7 +174,7 @@ mod tests {
         assert_eq!(decode_op(&bytes).expect("decode"), operation);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn document_text_round_trip_with_applied_operation() {
         use crate::artifacts::imperative::{Dictionary, Step};
         use std::collections::BTreeMap;
@@ -189,13 +189,13 @@ mod tests {
         store::os_store::test_support::assert_document_pack_round_trip(&doc_store);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_text_rejects_unknown_operation_keyword() {
         let line = r#"frobnicate owner=- slot=- id="step-1""#;
         assert!(<ImperativeMutation as protocol::OpText>::parse_op(line).is_err());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_text_round_trips_create_step_with_owner_and_slot() {
         use crate::artifacts::imperative::{Dictionary, Step};
         use std::collections::BTreeMap;
@@ -208,7 +208,7 @@ mod tests {
         assert_eq!(parsed, operation);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_text_round_trips_reorder_steps() {
         let operation = reorder_steps(PathRef::default(), "step-2".into(), 0);
         let printed = <ImperativeMutation as protocol::OpText>::print_op(&operation);
@@ -216,7 +216,7 @@ mod tests {
         assert_eq!(parsed, operation);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_text_round_trips_edit_step_params() {
         use crate::artifacts::imperative::Dictionary;
         use neural_engine::{Atom, Value};

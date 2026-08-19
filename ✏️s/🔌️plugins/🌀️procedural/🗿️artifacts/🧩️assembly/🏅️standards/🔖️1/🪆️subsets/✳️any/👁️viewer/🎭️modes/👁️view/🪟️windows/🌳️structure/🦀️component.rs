@@ -61,14 +61,14 @@ pub async fn render(document: &AssemblySnapshot) -> UiNode {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn definition_declares_a_tree_window() {
         let def = definition();
         assert_eq!(def.id, WINDOW_KIND_ID);
         assert_eq!(def.body_key, BODY_KEY);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn render_lists_every_collection_branch() {
         let mut document = AssemblySnapshot::default();
         document.slots.push(AssemblySlot { id: "s1".into(), x: 1.0, y: 2.0, z: 0.0, pinned_module_id: None });

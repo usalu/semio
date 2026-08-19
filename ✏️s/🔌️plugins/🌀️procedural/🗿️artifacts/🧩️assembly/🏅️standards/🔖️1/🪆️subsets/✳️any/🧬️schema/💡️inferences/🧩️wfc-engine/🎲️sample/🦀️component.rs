@@ -63,7 +63,7 @@ mod tests {
         (model, domain)
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn uniform_only_ever_returns_live_patterns() {
         let (model, domain) = model_and_domain(&[1.0, 1.0, 1.0]);
         let mut rng = Rng::from_seed(1);
@@ -73,7 +73,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn weighted_roulette_only_ever_returns_live_patterns() {
         let (model, domain) = model_and_domain(&[1.0, 5.0, 10.0]);
         let mut rng = Rng::from_seed(2);
@@ -83,7 +83,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn weighted_roulette_is_biased_toward_heavier_pattern() {
         let (model, domain) = model_and_domain(&[1.0, 99.0]);
         let mut rng = Rng::from_seed(3);
@@ -95,7 +95,7 @@ mod tests {
         assert!(counts[1] > counts[0] * 10);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn same_seed_produces_same_sequence() {
         let (model, domain) = model_and_domain(&[1.0, 2.0, 3.0]);
         let mut r1 = Rng::from_seed(42);

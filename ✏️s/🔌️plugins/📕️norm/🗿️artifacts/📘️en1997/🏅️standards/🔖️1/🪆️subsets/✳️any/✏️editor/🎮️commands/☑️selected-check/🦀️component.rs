@@ -31,7 +31,7 @@ mod tests {
     use super::*;
     use semio_framework_plugin::HistoryView;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn handle_emits_only_a_config_operation() {
         let projection = En1997Snapshot::default();
         let config = NormConfig::default();

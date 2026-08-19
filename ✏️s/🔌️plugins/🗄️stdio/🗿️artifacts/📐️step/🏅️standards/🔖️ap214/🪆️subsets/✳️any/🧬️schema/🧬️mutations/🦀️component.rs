@@ -440,7 +440,7 @@ mod tests {
         assert_eq!(actual_state, expected_state, "applied state must match for {m:?}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mutation_diff_law_covers_every_variant() {
         let base = base_snapshot();
         assert_mutation_diff_law(&base, StepMutation::NoMutation);
@@ -458,7 +458,7 @@ mod tests {
         assert_mutation_diff_law(&base, StepMutation::RemoveEntityArg { id: 1, arg_index: 0 });
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn missing_and_out_of_range_targets_are_rejected_without_mutating() {
         let base = base_snapshot();
         let mut snapshot = base.clone();
@@ -471,7 +471,7 @@ mod tests {
     }
 
     /// 🧪️ `inverse_law` (mutation level): every variant's `inverse()` round-trips.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inverse_law_mutation_level_round_trips_every_variant() {
         let base = base_snapshot();
         let variants = vec![
@@ -499,7 +499,7 @@ mod tests {
     /// exercises every variant incl. `InsertEntity`'s bare `StepEntity` payload and
     /// `SetEntityArg`/`InsertEntityArg`'s bare `StepValue` payload (every `StepValue` variant,
     /// incl. the recursive `Aggregate`/`TypedValue` cases).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_text_binary_roundtrip_law() {
         let base = base_snapshot();
         let mutations = vec![

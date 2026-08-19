@@ -32,7 +32,7 @@ mod tests {
     use crate::artifacts::flow::schema::FLOW_DEFAULT_PROXIMITY_DISTANCE;
     use crate::editor::flow::terminology::flow_play_labels;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn the_slider_range_brackets_the_default_distance() {
         let config = FlowConfig::default();
         match measure(&config, flow_play_labels(&config)) {

@@ -212,7 +212,7 @@ mod tests {
         forward
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn every_variant_registers_an_approved_semantic_descriptor() {
         for mutation in every_mutation() {
             let descriptor = protocol::SemanticMutation::semantics(&mutation);
@@ -221,7 +221,7 @@ mod tests {
         assert_eq!(<En1992Mutation as protocol::SemanticMutation<En1992Snapshot>>::kinds().len(), every_mutation().len(), "kinds() must register exactly one descriptor per dispatch variant");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn every_variant_round_trips_via_inverse() {
         let base = En1992Snapshot::default();
         for mutation in every_mutation() {
@@ -234,7 +234,7 @@ mod tests {
     /// (reachable here as `protocol::testkit`), exercised against the three most structurally
     /// distinct variants: the enum-typed scalar (`change-annex`), a typical `f64` scalar
     /// (`change-m-ed-knm`), and a `bool` scalar (`change-use-fem`).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn change_annex_satisfies_the_inverse_and_absorb_laws() {
         let base = En1992Snapshot::default();
         let mutation = En1992Mutation::ChangeAnnex(set_snapshot::mutation::ChangeAnnex { new_annex: crate::document::AnnexChoice::En });
@@ -243,7 +243,7 @@ mod tests {
         let d2 = En1992Mutation::ChangeFireRating(change_fire_rating::mutation::ChangeFireRating { new_fire_rating: crate::artifacts::en1992::part_1_2::FireRating::R90 }).diff(&base).diff().clone();
         protocol::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn change_m_ed_knm_satisfies_the_inverse_and_absorb_laws() {
         let base = En1992Snapshot::default();
         let mutation = En1992Mutation::ChangeMEdKnm(change_m_ed_knm::mutation::ChangeMEdKnm { new_m_ed_knm: 150.0 });
@@ -252,7 +252,7 @@ mod tests {
         let d2 = En1992Mutation::ChangeVEdKn(change_v_ed_kn::mutation::ChangeVEdKn { new_v_ed_kn: 95.0 }).diff(&base).diff().clone();
         protocol::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn change_use_fem_satisfies_the_inverse_and_absorb_laws() {
         let base = En1992Snapshot::default();
         let mutation = En1992Mutation::ChangeUseFem(change_use_fem::mutation::ChangeUseFem { new_use_fem: true });
@@ -271,7 +271,7 @@ mod tests {
     /// scalar that always exists, never an id-keyed/addressable target. `assert_outcome_policy_matrix`
     /// is not landed under that literal name yet (only the differently-shaped `assert_policy_matrix`
     /// exists) — flagged for the coordinator/lane 1-D, not improvised around.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn change_m_ed_knm_non_finite_is_fatal() {
         let base = En1992Snapshot::default();
         let mutation = En1992Mutation::ChangeMEdKnm(change_m_ed_knm::mutation::ChangeMEdKnm { new_m_ed_knm: f64::NAN });
@@ -280,7 +280,7 @@ mod tests {
         assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn change_annex_same_value_is_no_op() {
         let base = En1992Snapshot::default();
         let mutation = En1992Mutation::ChangeAnnex(set_snapshot::mutation::ChangeAnnex { new_annex: base.annex });
@@ -289,7 +289,7 @@ mod tests {
         assert_eq!(outcome.diff(), &En1992Diff::default());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn change_m_ed_knm_is_deterministic() {
         let base = En1992Snapshot::default();
         let mutation = En1992Mutation::ChangeMEdKnm(change_m_ed_knm::mutation::ChangeMEdKnm { new_m_ed_knm: 150.0 });

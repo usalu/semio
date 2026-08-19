@@ -82,7 +82,7 @@ mod tests {
     use crate::editor::remodel::RemodelCommand;
     use crate::artifacts::remodel::default_remodel_scene;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn every_dataset_name_yields_its_own_column_set_and_unknown_falls_back_to_frames() {
         let scene = default_remodel_scene();
         for (table, marker) in [("cameras", "RMS (px)"), ("tracks", "Mean Speed (m/s)"), ("gcps", "Observations"), ("qcStages", "Status"), ("matches", "Note"), ("nonsense", "Timestamp (ms)")] {
@@ -91,7 +91,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn switching_the_selected_table_changes_the_rendered_columns() {
         let mut app = app();
         dispatch(&mut app, RemodelCommand::SetReportTable(SetReportTable { table: "gcps".into() }));

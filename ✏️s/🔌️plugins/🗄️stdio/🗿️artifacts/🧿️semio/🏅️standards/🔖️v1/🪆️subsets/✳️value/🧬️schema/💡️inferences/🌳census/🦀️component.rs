@@ -33,7 +33,7 @@ pub struct SemioValueCensus {
 /// `inference_default_law` below) — the same non-empty-default correction `flow`'s own
 /// `SemioFlowTopology::default()` documents for its own zero case.
 impl Default for SemioValueCensus {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { null_count: 1, bool_count: 0, int_count: 0, float_count: 0, str_count: 0, bytes_count: 0, list_count: 0, map_count: 0, ref_count: 0, node_count: 0, max_depth: 1 }
     }
 }
@@ -118,7 +118,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn tallies_every_variant_and_finds_the_true_max_depth() {
         let census = compute_semio_value_census(&populated());
         assert_eq!(census.map_count, 2, "root map + node's own map");
@@ -132,13 +132,13 @@ mod tests {
         assert_eq!(census.max_depth, 3, "root: Map(1) -> List(2) -> Str(3)");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = populated();
         assert_eq!(compute_semio_value_census(&snapshot), compute_semio_value_census(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(compute_semio_value_census(&SemioValueSnapshot::default()), SemioValueCensus::default());
     }

@@ -53,7 +53,7 @@ pub(crate) async fn gis_map_content_key(positions: &[MapFeature], routes: &[MapF
 }
 
 impl Default for GisMapSnapshot {
-    async fn default() -> Self {
+    fn default() -> Self {
         let content_key = gis_map_content_key(&[], &[], &[]);
         Self {
             positions: Vec::new(),

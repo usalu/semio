@@ -67,7 +67,16 @@ export interface PooledActorRuntime {
  * calls make two independent pools; that choice belongs to the renderer target, not this module (a
  * single JS realm hosting more than one renderer target is out of scope here, same limitation
  * `PluginRuntime`'s own `currentPluginRuntimeActor` doc already flags for actor identity). */
-export function createPooledActorRuntime(options: { readonly onActorTrap?: ShardClientOptions["onActorTrap"]; readonly onShardLost: ShardClientOptions["onShardLost"]; readonly createWorker?: ShardClientOptions["createWorker"] }): PooledActorRuntime {
+export function createPooledActorRuntime(options: {
+  readonly onActorTrap?: ShardClientOptions["onActorTrap"];
+  readonly onShardLost: ShardClientOptions["onShardLost"];
+  readonly createWorker?: ShardClientOptions["createWorker"];
+  /** 🌉️ terra-shard-effect-bridge: passed straight through to {@link ShardClient} — see that class's
+   * own `onHostEffect`/`maxOutstandingEffectsPerActor` doc. Omitted here means every host-import
+   * effect-request fails fast with "no host effect handler installed", same as omitting it directly. */
+  readonly onHostEffect?: ShardClientOptions["onHostEffect"];
+  readonly maxOutstandingEffectsPerActor?: ShardClientOptions["maxOutstandingEffectsPerActor"];
+}): PooledActorRuntime {
   const shardClient = new ShardClient(buildShardClientOptions(options));
   // 🚑️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-web-plugin-runtime): before that packet, neither
   // `checkHeartbeats` nor `pollHeartbeatSab` had a production caller anywhere in the repo — a wedged

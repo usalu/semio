@@ -1,0 +1,125 @@
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1188:12: warning: unexpected `cfg` condition value: `typegen`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1215:12: warning: unexpected `cfg` condition value: `typegen`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1234:12: warning: unexpected `cfg` condition value: `typegen`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1249:12: warning: unexpected `cfg` condition value: `typegen`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1258:12: warning: unexpected `cfg` condition value: `typegen`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1268:12: warning: unexpected `cfg` condition value: `typegen`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1292:12: warning: unexpected `cfg` condition value: `typegen`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1302:12: warning: unexpected `cfg` condition value: `typegen`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1315:12: warning: unexpected `cfg` condition value: `typegen`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1325:12: warning: unexpected `cfg` condition value: `typegen`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1338:12: warning: unexpected `cfg` condition value: `typegen`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1351:12: warning: unexpected `cfg` condition value: `typegen`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1413:12: warning: unexpected `cfg` condition value: `typegen`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1424:12: warning: unexpected `cfg` condition value: `typegen`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1527:12: warning: unexpected `cfg` condition value: `typegen`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1569:12: warning: unexpected `cfg` condition value: `typegen`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1644:12: warning: unexpected `cfg` condition value: `typegen`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1654:12: warning: unexpected `cfg` condition value: `typegen`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1308:16: warning: unexpected `cfg` condition value: `typegen`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1344:16: warning: unexpected `cfg` condition value: `typegen`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../⚙️codec/🦀️component.rs:308:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../⚙️codec/🦀️component.rs:310:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../⚙️codec/🦀️component.rs:312:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🚰️source/🦀️component.rs:9:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🚰️source/🦀️component.rs:11:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🚰️source/🦀️component.rs:15:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🚰️source/🦀️component.rs:17:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🚰️source/🦀️component.rs:61:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🚰️source/🦀️component.rs:63:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🚰️source/🦀️component.rs:65:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🔐️crypto/🦀️component.rs:12:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🔐️crypto/🦀️component.rs:17:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🔐️crypto/🦀️component.rs:18:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🔐️crypto/🦀️component.rs:19:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🔐️crypto/🦀️component.rs:24:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🎮️mutation/🦀️component.rs:52:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🎮️mutation/🦀️component.rs:67:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🎮️mutation/🦀️component.rs:81:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🎮️mutation/🦀️component.rs:83:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🎮️mutation/🦀️component.rs:85:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🎮️mutation/🦀️component.rs:101:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🎮️mutation/🦀️component.rs:102:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🎮️mutation/🦀️component.rs:104:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🎮️mutation/🦀️component.rs:107:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🎮️mutation/🦀️component.rs:110:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🎮️mutation/🦀️component.rs:113:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🎮️mutation/🦀️component.rs:116:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🎮️mutation/🦀️component.rs:119:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🎮️mutation/🦀️component.rs:123:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🎮️mutation/🦀️component.rs:130:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🎮️mutation/🦀️component.rs:330:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🎮️mutation/🦀️component.rs:331:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🎮️mutation/🦀️component.rs:344:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🎮️mutation/🦀️component.rs:345:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🎮️mutation/🦀️component.rs:364:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🎮️mutation/🦀️component.rs:365:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🎮️mutation/🦀️component.rs:366:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🎮️mutation/🦀️component.rs:367:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🔗️causal/🦀️component.rs:240:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+warning: `semio-framework-replication` (lib) generated 59 warnings
+🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/../../🦀️component.rs:382:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/../../🦀️component.rs:387:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/../../🦀️component.rs:391:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/../../🦀️component.rs:399:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/../../🦀️component.rs:405:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/../../🦀️component.rs:410:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+warning: `semio-framework-async` (lib) generated 6 warnings
+    Checking semio-framework-os-kernel v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust)
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12993:6: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12994:48: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12994:103: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12995:64: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12996:9: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12998:55: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12998:107: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12999:21: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:13000:55: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:629:38: error[E0728]: `await` is only allowed inside `async` functions and blocks: only allowed inside `async` functions and blocks
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:623:58: error[E0308]: mismatched types: expected `u32`, found future
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🧬️schema/🦀️component.rs:97:12: error[E0600]: cannot apply unary operator `!` to type `impl Future<Output = bool>`: cannot apply unary operator `!`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🧬️schema/🦀️component.rs:161:44: error[E0277]: `impl Future<Output = std::string::String>` doesn't implement `std::fmt::Display`: `impl Future<Output = std::string::String>` cannot be formatted with the default formatter
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:642:38: error[E0308]: mismatched types: expected fn pointer, found fn item
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:689:38: error[E0308]: mismatched types: expected fn pointer, found fn item
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:771:38: error[E0308]: mismatched types: expected fn pointer, found fn item
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:788:161: error[E0308]: mismatched types: expected fn pointer, found fn item
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:818:38: error[E0308]: mismatched types: expected fn pointer, found fn item
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:2226:35: error[E0308]: mismatched types: expected `Shape`, found future, arguments to this function are incorrect
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:2226:35: error[E0599]: no method named `positional` found for opaque type `impl Future<Output = os_dsl::schema::FieldSpec>` in the current scope: method not found in `impl Future<Output = os_dsl::schema::FieldSpec>`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:2226:35: error[E0308]: mismatched types: expected `RecordSpec`, found future
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:2226:35: error[E0308]: mismatched types: expected `FieldValue`, found future, arguments to this method are incorrect
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:2226:35: error[E0599]: no method named `map_err` found for opaque type `impl Future<Output = Result<std::string::String, std::string::String>>` in the current scope: method not found in `impl Future<Output = Result<std::string::String, std::string::String>>`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:2226:35: error[E0308]: mismatched types: expected fn pointer, found fn item, arguments to this enum variant are incorrect
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:2226:35: error[E0308]: mismatched types: expected `RecordValue`, found future, arguments to this enum variant are incorrect
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:2226:35: error[E0599]: no method named `map_err` found for opaque type `impl Future<Output = Result<OpsAuthor, protocol::TextError>>` in the current scope: method not found in `impl Future<Output = Result<OpsAuthor, protocol::TextError>>`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:2255:35: error[E0308]: mismatched types: expected `Shape`, found future, arguments to this function are incorrect
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:2255:35: error[E0599]: no method named `positional` found for opaque type `impl Future<Output = os_dsl::schema::FieldSpec>` in the current scope: method not found in `impl Future<Output = os_dsl::schema::FieldSpec>`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:2255:35: error[E0308]: mismatched types: expected `RecordSpec`, found future
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:2255:35: error[E0599]: no method named `optional` found for opaque type `impl Future<Output = os_dsl::schema::FieldSpec>` in the current scope: method not found in `impl Future<Output = os_dsl::schema::FieldSpec>`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:2255:35: error[E0308]: mismatched types: expected `FieldSpec`, found future
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:2255:35: error[E0308]: mismatched types: expected `FieldValue`, found future, arguments to this method are incorrect
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:2255:35: error[E0308]: mismatched types: expected `FieldValue`, found future
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:2255:35: error[E0277]: a value of type `Vec<os_dsl::schema::FieldValue>` cannot be built from an iterator over elements of type `impl Future<Output = os_dsl::schema::FieldValue>`: value of type `Vec<os_dsl::schema::FieldValue>` cannot be built from `std::iter::Iterator<Item=impl Future<Output = os_dsl::schema::FieldValue>>`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:2255:35: error[E0599]: no method named `map_err` found for opaque type `impl Future<Output = Result<std::string::String, std::string::String>>` in the current scope: method not found in `impl Future<Output = Result<std::string::String, std::string::String>>`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:2255:35: error[E0599]: no method named `map_err` found for opaque type `impl Future<Output = Result<i32, std::string::String>>` in the current scope: method not found in `impl Future<Output = Result<i32, std::string::String>>`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:2255:35: error[E0277]: a value of type `Result<Vec<_>, std::string::String>` cannot be built from an iterator over elements of type `impl Future<Output = Result<std::string::String, std::string::String>>`: value of type `Result<Vec<_>, std::string::String>` cannot be built from `std::iter::Iterator<Item=impl Future<Output = Result<std::string::String, std::string::String>>>`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:2255:35: error[E0277]: a value of type `Result<Vec<_>, std::string::String>` cannot be built from an iterator over elements of type `impl Future<Output = Result<OpsAuthor, std::string::String>>`: value of type `Result<Vec<_>, std::string::String>` cannot be built from `std::iter::Iterator<Item=impl Future<Output = Result<OpsAuthor, std::string::String>>>`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:2255:35: error[E0599]: no method named `map_err` found for opaque type `impl Future<Output = Result<u32, std::string::String>>` in the current scope: method not found in `impl Future<Output = Result<u32, std::string::String>>`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:3488:35: error[E0308]: mismatched types: expected `Shape`, found future, arguments to this function are incorrect
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:3488:35: error[E0599]: no method named `optional` found for opaque type `impl Future<Output = os_dsl::schema::FieldSpec>` in the current scope: method not found in `impl Future<Output = os_dsl::schema::FieldSpec>`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:3488:35: error[E0308]: mismatched types: expected `RecordSpec`, found future
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:3488:35: error[E0308]: mismatched types: expected `FieldSpec`, found future
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:3488:35: error[E0599]: no method named `positional` found for opaque type `impl Future<Output = os_dsl::schema::FieldSpec>` in the current scope: method not found in `impl Future<Output = os_dsl::schema::FieldSpec>`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:3488:35: error[E0308]: mismatched types: expected `FieldValue`, found future
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:3488:35: error[E0277]: a value of type `Vec<os_dsl::schema::FieldValue>` cannot be built from an iterator over elements of type `impl Future<Output = os_dsl::schema::FieldValue>`: value of type `Vec<os_dsl::schema::FieldValue>` cannot be built from `std::iter::Iterator<Item=impl Future<Output = os_dsl::schema::FieldValue>>`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:3488:35: error[E0308]: mismatched types: expected `FieldValue`, found future, arguments to this method are incorrect
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:3488:35: error[E0599]: no method named `map_err` found for opaque type `impl Future<Output = Result<std::string::String, std::string::String>>` in the current scope: method not found in `impl Future<Output = Result<std::string::String, std::string::String>>`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:3488:35: error[E0277]: a value of type `Result<Vec<_>, std::string::String>` cannot be built from an iterator over elements of type `impl Future<Output = Result<OpsAuthor, std::string::String>>`: value of type `Result<Vec<_>, std::string::String>` cannot be built from `std::iter::Iterator<Item=impl Future<Output = Result<OpsAuthor, std::string::String>>>`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:6364:35: error[E0308]: mismatched types: expected `FieldSpec`, found future
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:6364:35: error[E0308]: mismatched types: expected `RecordSpec`, found future
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:6364:35: error[E0308]: mismatched types: expected `Shape`, found future, arguments to this function are incorrect
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:6364:35: error[E0277]: a value of type `Vec<os_dsl::schema::FieldValue>` cannot be built from an iterator over elements of type `impl Future<Output = os_dsl::schema::FieldValue>`: value of type `Vec<os_dsl::schema::FieldValue>` cannot be built from `std::iter::Iterator<Item=impl Future<Output = os_dsl::schema::FieldValue>>`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:6364:35: error[E0277]: a value of type `Result<Vec<_>, std::string::String>` cannot be built from an iterator over elements of type `impl Future<Output = Result<std::string::String, std::string::String>>`: value of type `Result<Vec<_>, std::string::String>` cannot be built from `std::iter::Iterator<Item=impl Future<Output = Result<std::string::String, std::string::String>>>`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:3477:58: error[E0599]: no method named `map_err` found for opaque type `impl Future<Output = Result<protocol::MutationEnvelope, protocol::ProtocolError>>` in the current scope: method not found in `impl Future<Output = Result<protocol::MutationEnvelope, protocol::ProtocolError>>`
+warning: `semio-framework-os-kernel` (lib) generated 9 warnings
+error: could not compile `semio-framework-os-kernel` (lib) due to 49 previous errors; 9 warnings emitted

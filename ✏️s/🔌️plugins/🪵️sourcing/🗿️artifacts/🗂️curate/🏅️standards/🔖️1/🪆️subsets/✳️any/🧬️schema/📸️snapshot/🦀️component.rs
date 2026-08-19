@@ -33,7 +33,7 @@ impl Default for CurateSnapshot {
     /// 🌱 `ArtifactChild<S>` has no blanket `Default` (its target is content-addressed, never
     /// arbitrary), so this is hand-written rather than derived — mints the same empty-stock handle
     /// `catalog_child_handle(&[])` would, matching an explicitly-built empty document.
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { catalog: crate::artifacts::curate::catalog_child_handle(&[]), stock_extra: Vec::new(), curated: Vec::new() }
     }
 }

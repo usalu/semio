@@ -37,3 +37,6 @@ wasmtime = { version = "47.0.3", features = ["cranelift", "component-model"] }
 wasmtime-wasi = "47.0.3"
 sha2 = "0.10"
 serde_json = "1.0.140"
+
+[dev-dependencies]
+semio-framework-async-macros = { path = "../../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }

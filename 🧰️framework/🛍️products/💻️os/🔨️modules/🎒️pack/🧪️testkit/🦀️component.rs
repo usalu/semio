@@ -32,7 +32,7 @@ pub struct RecordValueGen {
 }
 
 impl RecordValueGen {
-    pub fn new(seed: u64) -> Self {
+    pub async fn new(seed: u64) -> Self {
         Self { state: seed }
     }
 
@@ -41,14 +41,14 @@ impl RecordValueGen {
     /// [`Self::shallow_value`] takes over so genuinely self-referential specs (a recursive
     /// `Statements` table whose own variant list names itself) terminate instead of looping
     /// forever.
-    pub fn generate(&mut self, spec: &RecordSpec, max_depth: u16) -> RecordValue {
-        self.generate_record(spec, 0, max_depth)
+    pub async fn generate(&mut self, spec: &RecordSpec, max_depth: u16) -> RecordValue {
+        self.generate_record(spec, 0, max_depth).await
     }
 
     //#region 🔖️Prng
     /// @emoji 🌀️ splitmix64 — see <https://prng.di.unimi.it/splitmix64.c>. Small, dependency-free,
     /// good enough statistical spread for test-data generation (not cryptography).
-    fn next_u64(&mut self) -> u64 {
+    async fn next_u64(&mut self) -> u64 {
         self.state = self.state.wrapping_add(0x9E37_79B9_7F4A_7C15);
         let mut z = self.state;
         z = (z ^ (z >> 30)).wrapping_mul(0xBF58_476D_1CE4_E5B9);
@@ -56,26 +56,26 @@ impl RecordValueGen {
         z ^ (z >> 31)
     }
 
-    fn next_bool(&mut self) -> bool {
-        self.next_u64() & 1 == 1
+    async fn next_bool(&mut self) -> bool {
+        self.next_u64().await & 1 == 1
     }
 
     /// @emoji 🎯️ Uniform-ish `[0, bound)`; `0` for `bound == 0` (modulo bias is irrelevant for
     /// test-data spread).
-    fn next_range(&mut self, bound: u64) -> u64 {
+    async fn next_range(&mut self, bound: u64) -> u64 {
         if bound == 0 {
             0
         } else {
-            self.next_u64() % bound
+            self.next_u64().await % bound
         }
     }
 
-    fn next_int(&mut self) -> i64 {
-        self.next_range(2001) as i64 - 1000
+    async fn next_int(&mut self) -> i64 {
+        self.next_range(2001).await as i64 - 1000
     }
 
-    fn next_uint(&mut self) -> u64 {
-        self.next_range(1_000_000)
+    async fn next_uint(&mut self) -> u64 {
+        self.next_range(1_000_000).await
     }
 
     /// @emoji 🔢️ Deliberately never NaN/Infinity — `FieldValue`'s derived `PartialEq` uses `==`,
@@ -84,36 +84,46 @@ impl RecordValueGen {
     /// `crate::os_dsl::format_f64`/`parse_f64` so every generated float is also exactly
     /// DSL-representable — load-bearing for any future `assert_dsl_pack_bidirectional` caller that
     /// seeds its sample from this generator.
-    fn next_f64(&mut self) -> f64 {
-        let magnitude = self.next_range(1_000_000) as f64 / 100.0;
-        let sign = if self.next_bool() { -1.0 } else { 1.0 };
+    async fn next_f64(&mut self) -> f64 {
+        let magnitude = self.next_range(1_000_000).await as f64 / 100.0;
+        let sign = if self.next_bool().await { -1.0 } else { 1.0 };
         let raw = sign * magnitude;
-        crate::os_dsl::parse_f64(&crate::os_dsl::format_f64(raw)).unwrap_or(raw)
+        crate::os_dsl::parse_f64(&crate::os_dsl::format_f64(raw)).await.unwrap_or(raw)
     }
 
     const ALPHABET: &'static [u8] = b"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_ ";
 
-    fn next_string(&mut self, max_len: usize) -> String {
-        let len = self.next_range(max_len as u64 + 1) as usize;
-        (0..len)
-            .map(|_| {
-                let idx = self.next_range(Self::ALPHABET.len() as u64) as usize;
-                Self::ALPHABET[idx] as char
-            })
-            .collect()
+    // 🔁️ `.map(...).collect()` here would need an `async` closure over a `&mut self` PRNG draw —
+    // sync closures can't `.await` (R10 residue shape 1) — so the draws are sequenced by hand.
+    async fn next_string(&mut self, max_len: usize) -> String {
+        let len = self.next_range(max_len as u64 + 1).await as usize;
+        let mut out = String::with_capacity(len);
+        for _ in 0..len {
+            let idx = self.next_range(Self::ALPHABET.len() as u64).await as usize;
+            out.push(Self::ALPHABET[idx] as char);
+        }
+        out
     }
 
-    fn next_bytes(&mut self, max_len: usize) -> Vec<u8> {
-        let len = self.next_range(max_len as u64 + 1) as usize;
-        (0..len).map(|_| (self.next_u64() & 0xFF) as u8).collect()
+    async fn next_bytes(&mut self, max_len: usize) -> Vec<u8> {
+        let len = self.next_range(max_len as u64 + 1).await as usize;
+        let mut out = Vec::with_capacity(len);
+        for _ in 0..len {
+            out.push((self.next_u64().await & 0xFF) as u8);
+        }
+        out
     }
     //#endregion 🔖️Prng
 
     //#region 🔖️Shapes
-    fn generate_record(&mut self, spec: &RecordSpec, depth: u16, max_depth: u16) -> RecordValue {
+    // 🔁️ Mutually recursive with `generate_value` (which also recurses into itself directly for
+    // `Tuple`/`List`/`Map`/`Block`) — every edge in that cycle is `Box::pin(...).await` because an
+    // `async fn`'s own opaque `Future` type cannot embed itself or a cycle-partner's opaque type at
+    // an unboxed, unbounded size (R10 residue shape 3).
+    async fn generate_record(&mut self, spec: &RecordSpec, depth: u16, max_depth: u16) -> RecordValue {
         let mut fields = HashMap::with_capacity(spec.fields.len());
         for field in &spec.fields {
-            let value = if field.optional && self.next_range(4) == 0 { FieldValue::Absent } else { self.generate_value(&field.shape, depth, max_depth) };
+            let value = if field.optional && self.next_range(4).await == 0 { FieldValue::Absent } else { Box::pin(self.generate_value(&field.shape, depth, max_depth)).await };
             fields.insert(field.id, value);
         }
         RecordValue { fields }
@@ -123,75 +133,114 @@ impl RecordValueGen {
     /// always accepts it. `depth > max_depth` defers to [`Self::shallow_value`] — the recursion
     /// backstop for lazy `fn() -> RecordSpec` shapes (`Record`/`Statements`/`Table`) that could
     /// otherwise recurse forever on a self-referential grammar.
-    fn generate_value(&mut self, shape: &Shape, depth: u16, max_depth: u16) -> FieldValue {
+    async fn generate_value(&mut self, shape: &Shape, depth: u16, max_depth: u16) -> FieldValue {
         if depth > max_depth {
-            return self.shallow_value(shape);
+            return self.shallow_value(shape).await;
         }
         match shape {
-            Shape::Bool => FieldValue::Bool(self.next_bool()),
-            Shape::Int => FieldValue::Int(self.next_int()),
-            Shape::UInt => FieldValue::UInt(self.next_uint()),
-            Shape::Float => FieldValue::Float(self.next_f64()),
-            Shape::Text => FieldValue::Text(self.next_string(12)),
-            Shape::Bytes64 => FieldValue::Bytes64(self.next_bytes(16)),
+            Shape::Bool => FieldValue::Bool(self.next_bool().await),
+            Shape::Int => FieldValue::Int(self.next_int().await),
+            Shape::UInt => FieldValue::UInt(self.next_uint().await),
+            Shape::Float => FieldValue::Float(self.next_f64().await),
+            Shape::Text => FieldValue::Text(self.next_string(12).await),
+            Shape::Bytes64 => FieldValue::Bytes64(self.next_bytes(16).await),
             Shape::Enum(variants) => {
                 if variants.is_empty() {
                     FieldValue::Enum(0)
                 } else {
-                    let idx = self.next_range(variants.len() as u64) as usize;
+                    let idx = self.next_range(variants.len() as u64).await as usize;
                     FieldValue::Enum(variants[idx].1)
                 }
             }
+            // 🔁️ Every arm below that used to be `.map(|_| self.generate_value(...)).collect()`
+            // is rewritten as an explicit loop: the closure would need to `.await` a `&mut self`
+            // draw, and `Iterator::map`'s closure is sync (R10 residue shape 1).
             Shape::Tuple(elem, len) => {
-                let n = len.unwrap_or_else(|| 1 + self.next_range(3) as usize);
-                let items = (0..n).map(|_| self.generate_value(elem, depth + 1, max_depth)).collect();
+                let n = match len {
+                    Some(n) => *n,
+                    None => 1 + self.next_range(3).await as usize,
+                };
+                let mut items = Vec::with_capacity(n);
+                for _ in 0..n {
+                    items.push(Box::pin(self.generate_value(elem, depth + 1, max_depth)).await);
+                }
                 FieldValue::Tuple(items)
             }
             Shape::List(elem) => {
-                let n = self.next_range(4) as usize;
-                let items = (0..n).map(|_| self.generate_value(elem, depth + 1, max_depth)).collect();
+                let n = self.next_range(4).await as usize;
+                let mut items = Vec::with_capacity(n);
+                for _ in 0..n {
+                    items.push(Box::pin(self.generate_value(elem, depth + 1, max_depth)).await);
+                }
                 FieldValue::List(items)
             }
-            Shape::Record(spec_fn) => FieldValue::Record(self.generate_record(&spec_fn(), depth + 1, max_depth)),
-            Shape::Block(inner) => FieldValue::Block(Box::new(self.generate_value(inner, depth + 1, max_depth))),
+            Shape::Record(spec_fn) => FieldValue::Record(Box::pin(self.generate_record(&spec_fn(), depth + 1, max_depth)).await),
+            Shape::Block(inner) => FieldValue::Block(Box::new(Box::pin(self.generate_value(inner, depth + 1, max_depth)).await)),
             Shape::Statements(variants) => {
                 if variants.is_empty() {
                     FieldValue::Statements(Vec::new())
                 } else {
-                    let n = self.next_range(3) as usize;
-                    let items = (0..n)
-                        .map(|_| {
-                            let idx = self.next_range(variants.len() as u64) as usize;
-                            let (keyword, spec_fn) = &variants[idx];
-                            (keyword.clone(), self.generate_record(&spec_fn(), depth + 1, max_depth))
-                        })
-                        .collect();
+                    let n = self.next_range(3).await as usize;
+                    let mut items = Vec::with_capacity(n);
+                    for _ in 0..n {
+                        let idx = self.next_range(variants.len() as u64).await as usize;
+                        let (keyword, spec_fn) = &variants[idx];
+                        let keyword = keyword.clone();
+                        let record = Box::pin(self.generate_record(&spec_fn(), depth + 1, max_depth)).await;
+                        items.push((keyword, record));
+                    }
                     FieldValue::Statements(items)
                 }
             }
             Shape::Map(inner) => {
-                let n = self.next_range(3) as usize;
-                let entries = (0..n).map(|_| (self.next_string(6), self.generate_value(inner, depth + 1, max_depth))).collect();
+                let n = self.next_range(3).await as usize;
+                let mut entries = Vec::with_capacity(n);
+                for _ in 0..n {
+                    let key = self.next_string(6).await;
+                    let value = Box::pin(self.generate_value(inner, depth + 1, max_depth)).await;
+                    entries.push((key, value));
+                }
                 FieldValue::Map(entries)
             }
-            Shape::Value => FieldValue::Value(self.generate_dsl_value(depth + 1, max_depth)),
+            Shape::Value => FieldValue::Value(self.generate_dsl_value(depth + 1, max_depth).await),
             Shape::Table(spec_fn) => {
                 let row_spec = spec_fn();
-                let n = self.next_range(3) as usize;
-                let rows = (0..n).map(|_| FieldValue::Record(self.generate_record(&row_spec, depth + 1, max_depth))).collect();
+                let n = self.next_range(3).await as usize;
+                let mut rows = Vec::with_capacity(n);
+                for _ in 0..n {
+                    rows.push(FieldValue::Record(Box::pin(self.generate_record(&row_spec, depth + 1, max_depth)).await));
+                }
                 FieldValue::List(rows)
             }
-            Shape::Wire => FieldValue::Wire(self.generate_wire(depth + 1, max_depth)),
-            Shape::Quantity(_) | Shape::Angle(_) => FieldValue::Float(self.next_f64()),
-            Shape::Ref(_) => FieldValue::Text(self.next_string(6)),
-            Shape::Coord(dims) => FieldValue::Tuple((0..*dims).map(|_| FieldValue::Float(self.next_f64())).collect()),
-            Shape::Dir => FieldValue::Tuple((0..3).map(|_| FieldValue::Float(self.next_f64())).collect()),
-            Shape::Dim(dims) => FieldValue::Tuple((0..*dims).map(|_| FieldValue::Float(self.next_f64())).collect()),
-            Shape::Range => FieldValue::Tuple(vec![FieldValue::Float(self.next_f64()), FieldValue::Float(self.next_f64())]),
-            Shape::Count => FieldValue::UInt(self.next_uint()),
-            Shape::Expr => FieldValue::Expr(ExprValue::Num(self.next_f64())),
-            Shape::Embed(_) => FieldValue::Text(self.next_string(8)),
-            Shape::EmbedFrom(_) => FieldValue::Text(self.next_string(8)),
+            Shape::Wire => FieldValue::Wire(self.generate_wire(depth + 1, max_depth).await),
+            Shape::Quantity(_) | Shape::Angle(_) => FieldValue::Float(self.next_f64().await),
+            Shape::Ref(_) => FieldValue::Text(self.next_string(6).await),
+            Shape::Coord(dims) => {
+                let mut items = Vec::new();
+                for _ in 0..*dims {
+                    items.push(FieldValue::Float(self.next_f64().await));
+                }
+                FieldValue::Tuple(items)
+            }
+            Shape::Dir => {
+                let mut items = Vec::new();
+                for _ in 0..3 {
+                    items.push(FieldValue::Float(self.next_f64().await));
+                }
+                FieldValue::Tuple(items)
+            }
+            Shape::Dim(dims) => {
+                let mut items = Vec::new();
+                for _ in 0..*dims {
+                    items.push(FieldValue::Float(self.next_f64().await));
+                }
+                FieldValue::Tuple(items)
+            }
+            Shape::Range => FieldValue::Tuple(vec![FieldValue::Float(self.next_f64().await), FieldValue::Float(self.next_f64().await)]),
+            Shape::Count => FieldValue::UInt(self.next_uint().await),
+            Shape::Expr => FieldValue::Expr(ExprValue::Num(self.next_f64().await)),
+            Shape::Embed(_) => FieldValue::Text(self.next_string(8).await),
+            Shape::EmbedFrom(_) => FieldValue::Text(self.next_string(8).await),
         }
     }
 
@@ -199,66 +248,106 @@ impl RecordValueGen {
     /// Safe to call unconditionally: `Tuple`/`List`/`Map`/`Block` are structurally finite Rust
     /// values (no lazy indirection), so only `Record`/`Statements`/`Table` — the three genuinely
     /// self-referential shapes — need the empty/default fallback rather than real recursion.
-    fn shallow_value(&mut self, shape: &Shape) -> FieldValue {
+    async fn shallow_value(&mut self, shape: &Shape) -> FieldValue {
         match shape {
-            Shape::Bool => FieldValue::Bool(self.next_bool()),
-            Shape::Int => FieldValue::Int(self.next_int()),
-            Shape::UInt => FieldValue::UInt(self.next_uint()),
-            Shape::Float => FieldValue::Float(self.next_f64()),
-            Shape::Text => FieldValue::Text(self.next_string(6)),
+            Shape::Bool => FieldValue::Bool(self.next_bool().await),
+            Shape::Int => FieldValue::Int(self.next_int().await),
+            Shape::UInt => FieldValue::UInt(self.next_uint().await),
+            Shape::Float => FieldValue::Float(self.next_f64().await),
+            Shape::Text => FieldValue::Text(self.next_string(6).await),
             Shape::Bytes64 => FieldValue::Bytes64(Vec::new()),
             Shape::Enum(variants) => FieldValue::Enum(variants.first().map(|(_, ordinal)| *ordinal).unwrap_or(0)),
             Shape::Tuple(_, _) => FieldValue::Tuple(Vec::new()),
             Shape::List(_) => FieldValue::List(Vec::new()),
             Shape::Record(_) => FieldValue::Record(RecordValue::default()),
-            Shape::Block(inner) => FieldValue::Block(Box::new(self.shallow_value(inner))),
+            Shape::Block(inner) => FieldValue::Block(Box::new(Box::pin(self.shallow_value(inner)).await)),
             Shape::Statements(_) => FieldValue::Statements(Vec::new()),
             Shape::Map(_) => FieldValue::Map(Vec::new()),
             Shape::Value => FieldValue::Value(DslValue::Null),
             Shape::Table(_) => FieldValue::List(Vec::new()),
             Shape::Wire => FieldValue::Wire(WireValue { from: WireNode { id: "n".to_string(), kind: None, port: None }, edge: None, edge_label: WireEdgeLabel::default(), properties: DslValue::Null }),
-            Shape::Quantity(_) | Shape::Angle(_) => FieldValue::Float(self.next_f64()),
-            Shape::Ref(_) => FieldValue::Text(self.next_string(6)),
-            Shape::Coord(dims) => FieldValue::Tuple((0..*dims).map(|_| FieldValue::Float(self.next_f64())).collect()),
-            Shape::Dir => FieldValue::Tuple((0..3).map(|_| FieldValue::Float(self.next_f64())).collect()),
-            Shape::Dim(dims) => FieldValue::Tuple((0..*dims).map(|_| FieldValue::Float(self.next_f64())).collect()),
-            Shape::Range => FieldValue::Tuple(vec![FieldValue::Float(self.next_f64()), FieldValue::Float(self.next_f64())]),
-            Shape::Count => FieldValue::UInt(self.next_uint()),
-            Shape::Expr => FieldValue::Expr(ExprValue::Num(self.next_f64())),
-            Shape::Embed(_) => FieldValue::Text(self.next_string(8)),
-            Shape::EmbedFrom(_) => FieldValue::Text(self.next_string(8)),
+            Shape::Quantity(_) | Shape::Angle(_) => FieldValue::Float(self.next_f64().await),
+            Shape::Ref(_) => FieldValue::Text(self.next_string(6).await),
+            Shape::Coord(dims) => {
+                let mut items = Vec::new();
+                for _ in 0..*dims {
+                    items.push(FieldValue::Float(self.next_f64().await));
+                }
+                FieldValue::Tuple(items)
+            }
+            Shape::Dir => {
+                let mut items = Vec::new();
+                for _ in 0..3 {
+                    items.push(FieldValue::Float(self.next_f64().await));
+                }
+                FieldValue::Tuple(items)
+            }
+            Shape::Dim(dims) => {
+                let mut items = Vec::new();
+                for _ in 0..*dims {
+                    items.push(FieldValue::Float(self.next_f64().await));
+                }
+                FieldValue::Tuple(items)
+            }
+            Shape::Range => FieldValue::Tuple(vec![FieldValue::Float(self.next_f64().await), FieldValue::Float(self.next_f64().await)]),
+            Shape::Count => FieldValue::UInt(self.next_uint().await),
+            Shape::Expr => FieldValue::Expr(ExprValue::Num(self.next_f64().await)),
+            Shape::Embed(_) => FieldValue::Text(self.next_string(8).await),
+            Shape::EmbedFrom(_) => FieldValue::Text(self.next_string(8).await),
         }
     }
 
-    fn generate_dsl_value(&mut self, depth: u16, max_depth: u16) -> DslValue {
+    // 🔁️ Self-recursive (`Array`/`Object` arms) — boxed for the same reason as `generate_value`.
+    async fn generate_dsl_value(&mut self, depth: u16, max_depth: u16) -> DslValue {
         if depth > max_depth {
             return DslValue::Null;
         }
-        match self.next_range(6) {
+        match self.next_range(6).await {
             0 => DslValue::Null,
-            1 => DslValue::Bool(self.next_bool()),
-            2 => DslValue::Number(self.next_f64()),
-            3 => DslValue::String(self.next_string(8)),
+            1 => DslValue::Bool(self.next_bool().await),
+            2 => DslValue::Number(self.next_f64().await),
+            3 => DslValue::String(self.next_string(8).await),
             4 => {
-                let n = self.next_range(3) as usize;
-                DslValue::Array((0..n).map(|_| self.generate_dsl_value(depth + 1, max_depth)).collect())
+                let n = self.next_range(3).await as usize;
+                let mut items = Vec::with_capacity(n);
+                for _ in 0..n {
+                    items.push(Box::pin(self.generate_dsl_value(depth + 1, max_depth)).await);
+                }
+                DslValue::Array(items)
             }
             _ => {
-                let n = self.next_range(3) as usize;
-                DslValue::Object((0..n).map(|_| (self.next_string(6), self.generate_dsl_value(depth + 1, max_depth))).collect())
+                let n = self.next_range(3).await as usize;
+                let mut entries = Vec::with_capacity(n);
+                for _ in 0..n {
+                    let key = self.next_string(6).await;
+                    let value = Box::pin(self.generate_dsl_value(depth + 1, max_depth)).await;
+                    entries.push((key, value));
+                }
+                DslValue::Object(entries)
             }
         }
     }
 
-    fn generate_wire_node(&mut self) -> WireNode {
-        let id = self.next_string(6);
-        WireNode { id: if id.trim().is_empty() { "n".to_string() } else { id }, kind: if self.next_bool() { Some(self.next_string(4)) } else { None }, port: if self.next_bool() { Some(self.next_string(4)) } else { None } }
+    async fn generate_wire_node(&mut self) -> WireNode {
+        let id = self.next_string(6).await;
+        let id = if id.trim().is_empty() { "n".to_string() } else { id };
+        WireNode {
+            id,
+            kind: if self.next_bool().await { Some(self.next_string(4).await) } else { None },
+            port: if self.next_bool().await { Some(self.next_string(4).await) } else { None },
+        }
     }
 
-    fn generate_wire(&mut self, depth: u16, max_depth: u16) -> WireValue {
-        let from = self.generate_wire_node();
-        let edge = if self.next_bool() { Some((self.next_bool(), self.generate_wire_node())) } else { None };
-        let properties = self.generate_dsl_value(depth, max_depth);
+    async fn generate_wire(&mut self, depth: u16, max_depth: u16) -> WireValue {
+        let from = self.generate_wire_node().await;
+        let edge = if self.next_bool().await {
+            let directed = self.next_bool().await;
+            let node = self.generate_wire_node().await;
+            Some((directed, node))
+        } else {
+            None
+        };
+        let properties = self.generate_dsl_value(depth, max_depth).await;
         WireValue { from, edge, edge_label: WireEdgeLabel::default(), properties }
     }
     //#endregion 🔖️Shapes
@@ -273,26 +362,51 @@ impl RecordValueGen {
 /// unconditionally, per `pack_value`'s purity LAW — a generator that inserted map entries in
 /// non-canonical order would otherwise fail this comparison on ordering alone, not content).
 /// Shared by every LAW below that compares an original `RecordValue` against a decoded one.
-fn normalize_record(record: &RecordValue) -> RecordValue {
+// 🔁️ Mutually recursive (`normalize_record` <-> `normalize_value`, plus `normalize_value`'s own
+// self-recursion for `Tuple`/`List`/`Block`) — every edge is `Box::pin(...).await` (R10 residue
+// shape 3), and the `.iter().map(normalize_value).collect()` shapes are rewritten as loops since
+// `Iterator::map`'s closure can't `.await` (R10 residue shape 1).
+async fn normalize_record(record: &RecordValue) -> RecordValue {
     let mut fields = HashMap::with_capacity(record.fields.len());
     for (id, value) in &record.fields {
         if matches!(value, FieldValue::Absent) {
             continue;
         }
-        fields.insert(*id, normalize_value(value));
+        fields.insert(*id, Box::pin(normalize_value(value)).await);
     }
     RecordValue { fields }
 }
 
-fn normalize_value(value: &FieldValue) -> FieldValue {
+async fn normalize_value(value: &FieldValue) -> FieldValue {
     match value {
-        FieldValue::Record(r) => FieldValue::Record(normalize_record(r)),
-        FieldValue::Tuple(items) => FieldValue::Tuple(items.iter().map(normalize_value).collect()),
-        FieldValue::List(items) => FieldValue::List(items.iter().map(normalize_value).collect()),
-        FieldValue::Block(inner) => FieldValue::Block(Box::new(normalize_value(inner))),
-        FieldValue::Statements(items) => FieldValue::Statements(items.iter().map(|(k, r)| (k.clone(), normalize_record(r))).collect()),
+        FieldValue::Record(r) => FieldValue::Record(Box::pin(normalize_record(r)).await),
+        FieldValue::Tuple(items) => {
+            let mut out = Vec::with_capacity(items.len());
+            for item in items {
+                out.push(Box::pin(normalize_value(item)).await);
+            }
+            FieldValue::Tuple(out)
+        }
+        FieldValue::List(items) => {
+            let mut out = Vec::with_capacity(items.len());
+            for item in items {
+                out.push(Box::pin(normalize_value(item)).await);
+            }
+            FieldValue::List(out)
+        }
+        FieldValue::Block(inner) => FieldValue::Block(Box::new(Box::pin(normalize_value(inner)).await)),
+        FieldValue::Statements(items) => {
+            let mut out = Vec::with_capacity(items.len());
+            for (k, r) in items {
+                out.push((k.clone(), Box::pin(normalize_record(r)).await));
+            }
+            FieldValue::Statements(out)
+        }
         FieldValue::Map(entries) => {
-            let mut sorted: Vec<(String, FieldValue)> = entries.iter().map(|(k, v)| (k.clone(), normalize_value(v))).collect();
+            let mut sorted: Vec<(String, FieldValue)> = Vec::with_capacity(entries.len());
+            for (k, v) in entries {
+                sorted.push((k.clone(), Box::pin(normalize_value(v)).await));
+            }
             sorted.sort_by(|a, b| a.0.as_bytes().cmp(b.0.as_bytes()));
             FieldValue::Map(sorted)
         }
@@ -302,29 +416,29 @@ fn normalize_value(value: &FieldValue) -> FieldValue {
 
 /// @emoji 🔁️ LAW: `decode_document(encode_document(spec, record)) == record`, modulo the
 /// pure-Absent noise [`normalize_record`] strips.
-pub fn assert_encode_decode_identity(spec: &RecordSpec, record: &RecordValue) {
+pub async fn assert_encode_decode_identity(spec: &RecordSpec, record: &RecordValue) {
     let options = crate::os_pack::EncodeOptions::default();
-    let bytes = crate::os_pack::encode_document(spec, record, &options).expect("encode_document should succeed for a well-formed record");
-    let (decoded, _report) = crate::os_pack::decode_document(&bytes, spec, &crate::os_pack::DecodeOptions::default()).expect("decode_document should succeed for a just-encoded pack file");
-    assert_eq!(normalize_record(&decoded), normalize_record(record), "encode/decode round trip diverged (ignoring pure-Absent noise)");
+    let bytes = crate::os_pack::encode_document(spec, record, &options).await.expect("encode_document should succeed for a well-formed record");
+    let (decoded, _report) = crate::os_pack::decode_document(&bytes, spec, &crate::os_pack::DecodeOptions::default()).await.expect("decode_document should succeed for a just-encoded pack file");
+    assert_eq!(normalize_record(&decoded).await, normalize_record(record).await, "encode/decode round trip diverged (ignoring pure-Absent noise)");
 }
 
 /// @emoji 🧊️ LAW: `encode_document` is a pure function of `(spec, record)` — byte-identical
 /// output across repeated calls, regardless of `HashMap` iteration order inside `record.fields`.
-pub fn assert_canonical_stable(spec: &RecordSpec, record: &RecordValue) {
+pub async fn assert_canonical_stable(spec: &RecordSpec, record: &RecordValue) {
     let options = crate::os_pack::EncodeOptions::default();
-    let a = crate::os_pack::encode_document(spec, record, &options).expect("first encode_document call");
-    let b = crate::os_pack::encode_document(spec, record, &options).expect("second encode_document call");
+    let a = crate::os_pack::encode_document(spec, record, &options).await.expect("first encode_document call");
+    let b = crate::os_pack::encode_document(spec, record, &options).await.expect("second encode_document call");
     assert_eq!(a, b, "encode_document must be byte-identical across repeated calls (canonical determinism law)");
 }
 
 /// @emoji 🕳️ LAW: field ids present in `record_with_extra_fields` but absent from `spec` still
 /// round-trip through the wire and are reported in `DecodeReport.unknown_field_ids` — the
 /// mechanism that lets an older reader tolerate a newer writer's additive schema evolution.
-pub fn assert_unknown_field_preserved(spec: &RecordSpec, record_with_extra_fields: &RecordValue, extra_ids: &[u16]) {
+pub async fn assert_unknown_field_preserved(spec: &RecordSpec, record_with_extra_fields: &RecordValue, extra_ids: &[u16]) {
     let options = crate::os_pack::EncodeOptions::default();
-    let bytes = crate::os_pack::encode_document(spec, record_with_extra_fields, &options).expect("encode_document with extra fields");
-    let (decoded, report) = crate::os_pack::decode_document(&bytes, spec, &crate::os_pack::DecodeOptions::default()).expect("decode_document with extra fields");
+    let bytes = crate::os_pack::encode_document(spec, record_with_extra_fields, &options).await.expect("encode_document with extra fields");
+    let (decoded, report) = crate::os_pack::decode_document(&bytes, spec, &crate::os_pack::DecodeOptions::default()).await.expect("decode_document with extra fields");
 
     let mut expected_extra: Vec<u16> = extra_ids.to_vec();
     expected_extra.sort_unstable();
@@ -335,7 +449,7 @@ pub fn assert_unknown_field_preserved(spec: &RecordSpec, record_with_extra_field
     for id in extra_ids {
         let expected_value = record_with_extra_fields.fields.get(id).expect("extra_ids must reference fields present in record_with_extra_fields");
         let actual_value = decoded.fields.get(id).expect("an unknown field must still be preserved in the decoded RecordValue");
-        assert_eq!(normalize_value(actual_value), normalize_value(expected_value), "unknown field {id} must round-trip unchanged");
+        assert_eq!(normalize_value(actual_value).await, normalize_value(expected_value).await, "unknown field {id} must round-trip unchanged");
     }
 }
 
@@ -343,19 +457,19 @@ pub fn assert_unknown_field_preserved(spec: &RecordSpec, record_with_extra_field
 /// encode, `frame_size = 1`) decodes to the exact same `RecordValue` as encoding it as one large
 /// frame (a "buffered" encode) — `decode_document` must reassemble frames transparently
 /// regardless of how many the encoder chose to emit.
-pub fn assert_streamed_equals_buffered(spec: &RecordSpec, record: &RecordValue) {
+pub async fn assert_streamed_equals_buffered(spec: &RecordSpec, record: &RecordValue) {
     let mut buffered_options = crate::os_pack::EncodeOptions::default();
     buffered_options.frame_size = 8 * 1024 * 1024;
     let mut streamed_options = crate::os_pack::EncodeOptions::default();
     streamed_options.frame_size = 1;
 
-    let buffered_bytes = crate::os_pack::encode_document(spec, record, &buffered_options).expect("buffered (single-frame) encode_document");
-    let streamed_bytes = crate::os_pack::encode_document(spec, record, &streamed_options).expect("streamed (many-frame) encode_document");
+    let buffered_bytes = crate::os_pack::encode_document(spec, record, &buffered_options).await.expect("buffered (single-frame) encode_document");
+    let streamed_bytes = crate::os_pack::encode_document(spec, record, &streamed_options).await.expect("streamed (many-frame) encode_document");
 
-    let (buffered_decoded, _) = crate::os_pack::decode_document(&buffered_bytes, spec, &crate::os_pack::DecodeOptions::default()).expect("decode buffered encoding");
-    let (streamed_decoded, _) = crate::os_pack::decode_document(&streamed_bytes, spec, &crate::os_pack::DecodeOptions::default()).expect("decode streamed encoding");
+    let (buffered_decoded, _) = crate::os_pack::decode_document(&buffered_bytes, spec, &crate::os_pack::DecodeOptions::default()).await.expect("decode buffered encoding");
+    let (streamed_decoded, _) = crate::os_pack::decode_document(&streamed_bytes, spec, &crate::os_pack::DecodeOptions::default()).await.expect("decode streamed encoding");
 
-    assert_eq!(normalize_record(&buffered_decoded), normalize_record(&streamed_decoded), "single-frame and many-small-frame encodings of the same document must decode identically");
+    assert_eq!(normalize_record(&buffered_decoded).await, normalize_record(&streamed_decoded).await, "single-frame and many-small-frame encodings of the same document must decode identically");
 }
 
 /// @emoji 🔀️ LAW: `decode_pack(encode_pack(sample)) == parse_dsl(print_dsl(sample)) == sample` —
@@ -363,7 +477,7 @@ pub fn assert_streamed_equals_buffered(spec: &RecordSpec, record: &RecordValue) 
 /// the original. Kept generic over closures so this crate needs no dependency on `vcs`/
 /// `dsl_derive`; their own `test_support` wraps this with concrete `P: ArtifactDsl + ArtifactPack`
 /// bounds in wave 1.
-pub fn assert_dsl_pack_bidirectional<P>(parse_dsl: impl Fn(&str) -> P, print_dsl: impl Fn(&P) -> String, encode_pack: impl Fn(&P) -> Vec<u8>, decode_pack: impl Fn(&[u8]) -> P, sample: &P)
+pub async fn assert_dsl_pack_bidirectional<P>(parse_dsl: impl Fn(&str) -> P, print_dsl: impl Fn(&P) -> String, encode_pack: impl Fn(&P) -> Vec<u8>, decode_pack: impl Fn(&[u8]) -> P, sample: &P)
 where
     P: PartialEq + std::fmt::Debug,
 {
@@ -381,7 +495,7 @@ where
 /// @emoji 🔑️ `hex(blake3(bytes))` — for committing an expected pack encoding's hash as a text
 /// constant in a caller's own test, so a future unintended encoding change is caught by a one-line
 /// diff instead of a giant byte-literal.
-pub fn golden_hash_hex(bytes: &[u8]) -> String {
+pub async fn golden_hash_hex(bytes: &[u8]) -> String {
     blake3::hash(bytes).to_hex().to_string()
 }
 //#endregion 🔖️Golden
@@ -396,11 +510,11 @@ mod tests {
     /// @emoji 🧬️ One field of most scalar `Shape` variants plus a nested `Record`, a `List`, a
     /// `Map`, and a `Tuple` — enough shape variety to exercise `RecordValueGen` and the round-trip
     /// laws without duplicating `pack_value`'s own exhaustive per-tag coverage.
-    fn nested_point_spec() -> RecordSpec {
+    async fn nested_point_spec() -> RecordSpec {
         RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(0, "x", Shape::Float), FieldSpec::new(1, "y", Shape::Float)])
     }
 
-    fn mixed_spec() -> RecordSpec {
+    async fn mixed_spec() -> RecordSpec {
         RecordSpec::new(
             None,
             RecordLayout::Lines,
@@ -423,11 +537,11 @@ mod tests {
 
     /// @emoji 📷️ Simple scalar spec, small enough to print/parse deterministically for
     /// `assert_dsl_pack_bidirectional`.
-    fn camera_spec() -> RecordSpec {
+    async fn camera_spec() -> RecordSpec {
         RecordSpec::new(Some("camera"), RecordLayout::Inline, vec![FieldSpec::new(0, "x", Shape::Float), FieldSpec::new(1, "y", Shape::Float), FieldSpec::new(2, "zoom", Shape::Float), FieldSpec::new(3, "label", Shape::Text).optional()])
     }
 
-    fn camera_sample() -> RecordValue {
+    async fn camera_sample() -> RecordValue {
         let mut fields = HashMap::new();
         fields.insert(0, FieldValue::Float(1.0));
         fields.insert(1, FieldValue::Float(2.5));
@@ -439,7 +553,7 @@ mod tests {
 
     //#region 🔖️Arbitrary
     #[test]
-    fn record_value_gen_is_deterministic_for_the_same_seed() {
+    async fn record_value_gen_is_deterministic_for_the_same_seed() {
         let spec = mixed_spec();
         let mut a = RecordValueGen::new(42);
         let mut b = RecordValueGen::new(42);
@@ -447,7 +561,7 @@ mod tests {
     }
 
     #[test]
-    fn record_value_gen_differs_across_seeds() {
+    async fn record_value_gen_differs_across_seeds() {
         let spec = mixed_spec();
         let mut a = RecordValueGen::new(1);
         let mut b = RecordValueGen::new(2);
@@ -455,7 +569,7 @@ mod tests {
     }
 
     #[test]
-    fn record_value_gen_produces_values_the_pack_codec_accepts() {
+    async fn record_value_gen_produces_values_the_pack_codec_accepts() {
         let spec = mixed_spec();
         for seed in 0..20u64 {
             let record = RecordValueGen::new(seed).generate(&spec, 4);
@@ -465,10 +579,10 @@ mod tests {
     }
 
     #[test]
-    fn record_value_gen_bounds_recursion_by_max_depth() {
+    async fn record_value_gen_bounds_recursion_by_max_depth() {
         // 🌳️ `group_spec`-style self-referential Statements table: its own single variant's spec
         // points right back at itself. A generator that ignored `max_depth` would stack-overflow.
-        fn recursive_spec() -> RecordSpec {
+        async fn recursive_spec() -> RecordSpec {
             RecordSpec::new(Some("group"), RecordLayout::Inline, vec![FieldSpec::new(0, "id", Shape::Text), FieldSpec::new(1, "children", Shape::Statements(vec![("group".to_string(), recursive_spec)]))])
         }
         let spec = recursive_spec();
@@ -482,7 +596,7 @@ mod tests {
 
     //#region 🔖️Laws
     #[test]
-    fn law_encode_decode_identity_holds_for_generated_records() {
+    async fn law_encode_decode_identity_holds_for_generated_records() {
         let spec = mixed_spec();
         for seed in 0..12u64 {
             let record = RecordValueGen::new(seed).generate(&spec, 4);
@@ -491,7 +605,7 @@ mod tests {
     }
 
     #[test]
-    fn law_canonical_stable_holds_for_generated_records() {
+    async fn law_canonical_stable_holds_for_generated_records() {
         let spec = mixed_spec();
         for seed in 0..12u64 {
             let record = RecordValueGen::new(seed).generate(&spec, 4);
@@ -500,7 +614,7 @@ mod tests {
     }
 
     #[test]
-    fn law_unknown_field_preserved_holds() {
+    async fn law_unknown_field_preserved_holds() {
         let spec = mixed_spec();
         let mut record = RecordValueGen::new(3).generate(&spec, 3);
         record.fields.insert(999, FieldValue::Text("from-the-future".to_string()));
@@ -509,7 +623,7 @@ mod tests {
     }
 
     #[test]
-    fn law_streamed_equals_buffered_holds() {
+    async fn law_streamed_equals_buffered_holds() {
         let spec = mixed_spec();
         for seed in 0..6u64 {
             let record = RecordValueGen::new(seed).generate(&spec, 4);
@@ -518,7 +632,7 @@ mod tests {
     }
 
     #[test]
-    fn law_dsl_pack_bidirectional_holds_for_a_hand_built_sample() {
+    async fn law_dsl_pack_bidirectional_holds_for_a_hand_built_sample() {
         let spec = camera_spec();
         let parse_dsl = |text: &str| crate::os_dsl::schema::parse(text, &spec, &ParseOptions::default()).unwrap_or_else(|e| panic!("parse failed: {e}"));
         let print_dsl = |value: &RecordValue| crate::os_dsl::schema::print(value, &spec, JoinMode::Document);
@@ -529,12 +643,12 @@ mod tests {
     //#endregion 🔖️Laws
 
     //#region 🔖️Corrupt
-    fn decode_closure(spec: RecordSpec) -> impl Fn(&[u8]) -> Result<(), String> {
+    async fn decode_closure(spec: RecordSpec) -> impl Fn(&[u8]) -> Result<(), String> {
         move |bytes: &[u8]| crate::os_pack::decode_document(bytes, &spec, &crate::os_pack::DecodeOptions::default()).map(|_| ()).map_err(|e| e.to_string())
     }
 
     #[test]
-    fn fuzz_truncation_never_panics_on_a_real_encoded_document() {
+    async fn fuzz_truncation_never_panics_on_a_real_encoded_document() {
         let spec = mixed_spec();
         let record = RecordValueGen::new(9).generate(&spec, 4);
         let bytes = crate::os_pack::encode_document(&spec, &record, &crate::os_pack::EncodeOptions::default()).expect("encode_document");
@@ -544,7 +658,7 @@ mod tests {
     }
 
     #[test]
-    fn fuzz_bit_flips_never_panics_on_a_real_encoded_document() {
+    async fn fuzz_bit_flips_never_panics_on_a_real_encoded_document() {
         let spec = mixed_spec();
         let record = RecordValueGen::new(11).generate(&spec, 4);
         let bytes = crate::os_pack::encode_document(&spec, &record, &crate::os_pack::EncodeOptions::default()).expect("encode_document");
@@ -554,7 +668,7 @@ mod tests {
     }
 
     #[test]
-    fn fuzz_truncation_and_bit_flips_report_zero_cases_for_empty_input() {
+    async fn fuzz_truncation_and_bit_flips_report_zero_cases_for_empty_input() {
         let decode: fn(&[u8]) -> Result<(), String> = |_| Ok(());
         let truncation_report = fuzz_truncation(&[], CorruptionLevel::Quick, decode);
         let bit_flip_report = fuzz_bit_flips(&[], CorruptionLevel::Quick, decode);
@@ -565,7 +679,7 @@ mod tests {
     }
 
     #[test]
-    fn fuzz_harness_catches_a_panicking_decoder_instead_of_crashing_the_process() {
+    async fn fuzz_harness_catches_a_panicking_decoder_instead_of_crashing_the_process() {
         let always_panics: fn(&[u8]) -> Result<(), String> = |_| panic!("intentional panic for harness self-test");
         let report = fuzz_truncation(&[1, 2, 3, 4], CorruptionLevel::Quick, always_panics);
         assert_eq!(report.cases_panicked.len() as u64, report.cases_run, "every case should have been caught as a panic");
@@ -575,7 +689,7 @@ mod tests {
 
     //#region 🔖️Golden
     #[test]
-    fn golden_hash_hex_is_deterministic_and_sensitive_to_content() {
+    async fn golden_hash_hex_is_deterministic_and_sensitive_to_content() {
         let a = golden_hash_hex(b"hello pack");
         let b = golden_hash_hex(b"hello pack");
         let c = golden_hash_hex(b"hello pack!");
@@ -586,7 +700,7 @@ mod tests {
     }
 
     #[test]
-    fn golden_hash_hex_matches_a_real_encoded_document_across_two_encodes() {
+    async fn golden_hash_hex_matches_a_real_encoded_document_across_two_encodes() {
         let spec = mixed_spec();
         let record = RecordValueGen::new(5).generate(&spec, 4);
         let a = crate::os_pack::encode_document(&spec, &record, &crate::os_pack::EncodeOptions::default()).unwrap();
@@ -600,7 +714,7 @@ mod tests {
         use super::*;
 
         #[test]
-        fn fuzz_truncation_and_bit_flips_never_panic_at_long_density() {
+        async fn fuzz_truncation_and_bit_flips_never_panic_at_long_density() {
             let spec = mixed_spec();
             let record = RecordValueGen::new(21).generate(&spec, 5);
             let bytes = crate::os_pack::encode_document(&spec, &record, &crate::os_pack::EncodeOptions::default()).expect("encode_document");
@@ -619,7 +733,7 @@ mod tests {
         use super::*;
 
         #[test]
-        fn fuzz_truncation_never_panics_at_every_single_byte_offset() {
+        async fn fuzz_truncation_never_panics_at_every_single_byte_offset() {
             let spec = mixed_spec();
             let record = RecordValueGen::new(33).generate(&spec, 5);
             let bytes = crate::os_pack::encode_document(&spec, &record, &crate::os_pack::EncodeOptions::default()).expect("encode_document");
@@ -629,7 +743,7 @@ mod tests {
         }
 
         #[test]
-        fn fuzz_bit_flips_never_panics_at_every_single_bit() {
+        async fn fuzz_bit_flips_never_panics_at_every_single_bit() {
             let spec = mixed_spec();
             let record = RecordValueGen::new(34).generate(&spec, 3);
             let bytes = crate::os_pack::encode_document(&spec, &record, &crate::os_pack::EncodeOptions::default()).expect("encode_document");

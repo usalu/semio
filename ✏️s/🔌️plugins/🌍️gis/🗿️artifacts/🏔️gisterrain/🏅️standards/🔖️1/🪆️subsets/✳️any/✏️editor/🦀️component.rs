@@ -343,7 +343,7 @@ mod tests {
     /// manifest action id.
     const WIRE_KEYWORDS: &[&str] = &["exaggeration", "camera", "locale"];
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn command_ids_are_unique_and_cover_every_row() {
         let commands = every_command();
         let ids: Vec<&str> = commands.iter().map(Gis3dCommand::command_id).collect();
@@ -354,7 +354,7 @@ mod tests {
         assert_eq!(ids.len(), 3, "every Gis3dCommand row must be covered by every_command()");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn every_command_round_trips_text_and_binary_under_its_declared_wire_keyword() {
         assert_eq!(every_command().len(), WIRE_KEYWORDS.len());
         for (command, keyword) in every_command().iter().zip(WIRE_KEYWORDS) {
@@ -375,13 +375,13 @@ mod tests {
     /// 🩹️ This is the test that would have caught the pre-migration gap: `gis3d_ui` had NO
     /// `command_from_action` override, so every declared action fell through to the trait default's
     /// hard error and the whole `{action,args}` host wire was dead.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn command_from_action_covers_every_declared_action_and_rejects_unknown_ones() {
         semio_framework_plugin::testkit::assert_declared_actions_bridge_to_commands::<EditorApp<Gis3dPlayApp>>(gis3d_app_manifest_for_testkit);
         assert!(Gis3dPlayApp::command_from_action("noSuchAction", None).is_err());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn command_from_action_reads_the_nested_camera_object() {
         let app = Gis3dPlayApp;
         let camera = Gis3dPlayApp::command_from_action("setCamera", Some(&json!({ "camera": { "position": [1.0, 2.0, 3.0] } }))).expect("setCamera");
@@ -390,7 +390,7 @@ mod tests {
     //#endregion 🔖️CommandSurface
 
     //#region 🔖️Manifest
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn the_manifest_stitches_every_taxonomy_node() {
         let definition = create_gis3d_app().definition;
         assert_eq!(definition.modes.len(), 1);
@@ -406,13 +406,13 @@ mod tests {
         assert!(!definition.artifact_kinds.iter().any(|kind| kind.id == "3d.mesh"), "3d.mesh is composed via GisTerrainSnapshot.mesh now, never a standalone ArtifactKindSpec");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn an_unknown_body_key_falls_back_to_a_text_node() {
         let mut app = app();
         assert!(render(&mut app, "gis3d.play.nope").contains("Unknown body"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn view_actions_emit_no_ops_under_registry_kind_discipline() {
         let mut app = app_with_registry();
         assert!(dispatch(&mut app, Gis3dCommand::SetCamera(set_camera::SetCamera { camera_json: "{}".into() })).mutations.is_empty());
@@ -421,7 +421,7 @@ mod tests {
     //#endregion 🔖️Manifest
 
     //#region 🔖️Media
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn export_media_scene_out_produces_a_3d_mesh_structured_payload() {
         let app = app();
         let document = app.snapshot().expect("projection");
@@ -433,7 +433,7 @@ mod tests {
         assert!(json.contains("exaggeration"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn import_media_map_in_writes_the_imported_features_operation() {
         let app = app();
         let document = app.snapshot().expect("projection");
@@ -446,7 +446,7 @@ mod tests {
         assert_eq!(emit.artifact_mutations, vec![GisTerrainMutation::ChangeImportedFeatures(ChangeImportedFeatures { new_imported_features_json: incoming })]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn media_ports_declare_map_in_and_scene_out() {
         let app = Gis3dPlayApp;
         let ports = Gis3dPlayApp::media_ports();
@@ -456,7 +456,7 @@ mod tests {
 
     /// 🧭️ Relocated from the artifact's `⚙️engine` tests (ticket
     /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) alongside `gis3d_io`/`gis3d_scene_media`.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn gis3d_io_declares_the_map_in_and_scene_out_ports() {
         let io = gis3d_io();
         assert_eq!(io.document_schema, GIS_3D_TERRAIN_SCHEMA);
@@ -469,7 +469,7 @@ mod tests {
         assert_eq!(scene_out.kind_id.as_deref(), Some("3d.mesh"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn gis3d_scene_media_exports_the_terrain_descriptor() {
         let document = default_terrain_document();
         let media = gis3d_scene_media(&document);

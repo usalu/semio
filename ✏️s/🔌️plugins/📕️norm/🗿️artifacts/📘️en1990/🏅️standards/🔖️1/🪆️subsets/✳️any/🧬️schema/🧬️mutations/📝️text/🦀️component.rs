@@ -275,7 +275,7 @@ mod tests {
     use super::*;
     use protocol::{OpBinary, OpText};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_text_binary_roundtrip_law() {
         for mutation in demo_mutation_cases() {
             let printed = mutation.print_op();

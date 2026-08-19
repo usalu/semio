@@ -142,20 +142,20 @@ pub mod derived_composition {
             FlowEdge { id: id.into(), from: PortRef { node: from.into(), port: "out".into() }, to: PortRef { node: to.into(), port: "in".into() }, kind: "data".into() }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn well_formed_graph_has_no_diagnostics() {
             let snap = SemioFlowSnapshot { nodes: vec![node("a"), node("b")], edges: vec![edge("e1", "a", "b")], ..SemioFlowSnapshot::default() };
             assert!(check_flow_referential_invariants(&snap).is_empty());
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn dangling_edge_endpoint_is_flagged() {
             let snap = SemioFlowSnapshot { nodes: vec![node("a")], edges: vec![edge("e1", "a", "missing")], ..SemioFlowSnapshot::default() };
             let diagnostics = check_flow_referential_invariants(&snap);
             assert!(diagnostics.iter().any(|d| d.code.0 == "stdio.semio_flow.dangling-edge-endpoint"), "got {diagnostics:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn duplicate_node_and_edge_ids_are_flagged() {
             let snap = SemioFlowSnapshot { nodes: vec![node("a"), node("a")], edges: vec![edge("e1", "a", "a"), edge("e1", "a", "a")], ..SemioFlowSnapshot::default() };
             let diagnostics = check_flow_referential_invariants(&snap);
@@ -163,7 +163,7 @@ pub mod derived_composition {
             assert!(diagnostics.iter().any(|d| d.code.0 == "stdio.semio_flow.duplicate-edge-id"), "got {diagnostics:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn validator_recheck_on_wire_payload_flags_the_same_invariants() {
             let snap = SemioFlowSnapshot { nodes: vec![node("a")], edges: vec![edge("e1", "a", "ghost")], ..SemioFlowSnapshot::default() };
             let bytes = <SemioFlowSnapshot as store::ArtifactPack>::encode_pack(&snap);
@@ -174,7 +174,7 @@ pub mod derived_composition {
         /// 🔁️ W4 G6 fixture-backed round trip: json1 -(deserialize)-> semio1 -(serialize)-> json2
         /// -(deserialize)-> semio2, asserting semio1 == semio2 — this pair is lossless (every field
         /// has a direct JSON member), so the round trip is exact, not just "modulo documented losses".
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn json_round_trip_is_stable() {
             let semio1 = SemioFlowSnapshot { schema: crate::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::STDIO_SEMIOFLOW_DOCUMENT_SCHEMA.into(), nodes: vec![node("a"), node("b")], edges: vec![edge("e1", "a", "b")] };
             let json1 = semio_framework_plugin::resolve_ready(SemioFlowToJson::serialize(&semio1)).expect("serialize");
@@ -198,7 +198,7 @@ pub mod derived_composition {
             /// ✅️ "committed files parse": all 6 handcrafted `.grammar.semio`/`.protocol.semio` files
             /// parse under the real dialect — independent of, and cheaper than, the two `recognize`/
             /// `walk_protocol` laws below.
-            #[test]
+            #[semio_framework_async_macros::async_test]
             async fn committed_facet_files_parse() {
                 for (label, text) in [("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO)] {
                     let grammar = dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
@@ -214,7 +214,7 @@ pub mod derived_composition {
             /// `m5_handcrafted_grammar_conformance` harness uses (envelope id prepended as the bare
             /// `artifact-mark` token), so this is a direct proof this facet will pass that harness once
             /// graduated.
-            #[test]
+            #[semio_framework_async_macros::async_test]
             async fn grammar_conformance_law() {
                 let grammar = dsl::parse_grammar(snapshot::text::COMPONENT_GRAMMAR_SEMIO).expect("parse snapshot grammar");
                 let recognizer = dsl::Recognizer::compile(&grammar);
@@ -226,7 +226,7 @@ pub mod derived_composition {
 
             /// ✅️ `ops_grammar_conformance_law`: the mutations grammar recognizes real `print_op` output
             /// for every `SemioFlowMutation` variant (`mutations::demo_mutation_cases()`).
-            #[test]
+            #[semio_framework_async_macros::async_test]
             async fn ops_grammar_conformance_law() {
                 let grammar = dsl::parse_grammar(mutations::text::COMPONENT_GRAMMAR_SEMIO).expect("parse mutations grammar");
                 let recognizer = dsl::Recognizer::compile(&grammar);
@@ -239,7 +239,7 @@ pub mod derived_composition {
             /// ✅️ `diff_grammar_conformance_law`: the diff grammar recognizes real `print_diff` output
             /// for every representative `SemioFlowDiff` (`diff::demo_diff_cases()`), incl. the
             /// empty (no-op) diff.
-            #[test]
+            #[semio_framework_async_macros::async_test]
             async fn diff_grammar_conformance_law() {
                 let grammar = dsl::parse_grammar(diff::text::COMPONENT_GRAMMAR_SEMIO).expect("parse diff grammar");
                 let recognizer = dsl::Recognizer::compile(&grammar);
@@ -252,7 +252,7 @@ pub mod derived_composition {
             /// ✅️ `protocol_walk_law`: `walk_protocol` against REAL bytes for all three facets —
             /// snapshot pack (`encode_pack`, envelope-unwrapped first), every demo mutation's
             /// `encode_op`, and every demo diff's `encode_diff` — asserting `consumed == bytes.len()`.
-            #[test]
+            #[semio_framework_async_macros::async_test]
             async fn protocol_walk_law() {
                 let pack_spec = dsl::parse_protocol(snapshot::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
                 let packed = store::ArtifactPack::encode_pack(&snapshot::demo_flow_snapshot());
@@ -279,7 +279,7 @@ pub mod derived_composition {
             /// `print_dsl`/`encode_pack` output of `snapshot::demo_flow_snapshot()` —
             /// `parse_dsl(fixture) == demo()`, `print_dsl(demo()) == fixture` (byte-for-byte), and the
             /// pack twin — so the fixtures can never silently drift back to a fake.
-            #[test]
+            #[semio_framework_async_macros::async_test]
             async fn fixture_honesty_law() {
                 const FIXTURE_DSL: &str = include_str!("../../✳️any/📚️examples/🌊️pipeline/🖼️assets/🗣️example.dsl.semio");
                 const FIXTURE_PACK: &[u8] = include_bytes!("../../✳️any/📚️examples/🌊️pipeline/🖼️assets/🎒️example.pack.semio");

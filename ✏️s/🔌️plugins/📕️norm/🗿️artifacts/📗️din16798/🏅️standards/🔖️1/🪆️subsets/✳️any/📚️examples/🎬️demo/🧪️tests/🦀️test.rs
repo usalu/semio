@@ -1,10 +1,10 @@
-#[test]
+#[semio_framework_async_macros::async_test]
 async fn primary_asset_is_nonempty() {
     let text = include_str!("../🖼️assets/🗣️example.dsl.semio");
     assert!(text.len() > 8);
 }
 
-#[test]
+#[semio_framework_async_macros::async_test]
 async fn inference_determinism_law() {
     use crate::artifacts::din16798::schema::inferences::Din16798Inference;
     use crate::artifacts::din16798::Din16798Snapshot;
@@ -13,7 +13,7 @@ async fn inference_determinism_law() {
     assert_eq!(Din16798Inference::infer(&snapshot), Din16798Inference::infer(&snapshot));
 }
 
-#[test]
+#[semio_framework_async_macros::async_test]
 async fn inference_default_law() {
     use crate::artifacts::din16798::schema::inferences::Din16798Inference;
     use crate::artifacts::din16798::Din16798Snapshot;

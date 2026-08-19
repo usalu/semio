@@ -71,7 +71,7 @@ mod tests {
         (model, tb.build().unwrap(), arcs)
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn chunk_seed_is_deterministic_and_varies_by_coordinate_and_model() {
         assert_eq!(chunk_seed(1, 3, 4, 99), chunk_seed(1, 3, 4, 99));
         assert_ne!(chunk_seed(1, 3, 4, 99), chunk_seed(1, 3, 5, 99));
@@ -83,7 +83,7 @@ mod tests {
         assert_ne!(chunk_seed(1, -3, 4, 99), chunk_seed(1, 3, 4, 99));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn solve_chunk_reproduces_identical_content_on_repeated_calls() {
         let (model, topo, arcs) = checkerboard(10);
         let config = SearchConfig::default();
@@ -98,7 +98,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn solve_chunk_respects_seam_pins_from_a_committed_neighbor() {
         let (model, topo, _arcs) = checkerboard(6);
         let config = SearchConfig::default();
@@ -110,7 +110,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn different_chunk_coordinates_can_yield_different_content_for_an_underconstrained_model() {
         // A single isolated node with two equally-likely patterns and no seam pins: different
         // chunk coordinates should be free to (though aren't guaranteed to) land on different

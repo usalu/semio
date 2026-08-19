@@ -196,27 +196,27 @@ mod tests {
     use store::{create_document_envelope, ArtifactCommand};
 
     //#region 🔖️OpTextTests
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_text_round_trip_create_widget() {
         test_support::assert_op_line_round_trip(&create_widget(2, Widget::InputNote { id: "note-9".into(), text: "hello \"world\"".into() }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_text_round_trip_delete_widget() {
         test_support::assert_op_line_round_trip(&delete_widget("note-9".into()));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_text_round_trip_connect_synapse() {
         test_support::assert_op_line_round_trip(&connect_synapse(1, SynapseSpec { id: "s1".into(), from: "rect".into(), to: "fill".into(), from_port: "draw.drawing".into(), to_port: String::new() }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_text_round_trip_change_schema() {
         test_support::assert_op_line_round_trip(&change_schema("flow.fixture".into()));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_text_round_trip_create_generation() {
         let generation = flow::playbook::FormGeneration { id: "generation-1".into(), name: "Generation 1".into(), values: serde_json::Map::new() };
         test_support::assert_op_line_round_trip(&create_generation(generation));
@@ -224,27 +224,27 @@ mod tests {
     //#endregion 🔖️OpTextTests
 
     //#region 🔖️OpTextErrorTests
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_text_parse_rejects_unknown_operation() {
         let error = Procedural2dMutation::parse_op("bogus-op id=\"x\"").unwrap_err();
         assert!(error.message.contains("unknown operation"), "unexpected error: {}", error.message);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_text_parse_rejects_non_integer_index() {
         let error = Procedural2dMutation::parse_op("create-widget index=abc note text=\"\" id=\"x\"").unwrap_err();
         assert!(error.message.contains("expected Int"), "unexpected error: {}", error.message);
     }
     //#endregion 🔖️OpTextErrorTests
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_binary_round_trips_via_wrapper_fns() {
         let operation = change_schema("flow.fixture".into());
         let bytes = encode_op(&operation).expect("encode");
         assert_eq!(decode_op(&bytes).expect("decode"), operation);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn document_text_round_trip_with_operation_applied() {
         let mut store = store::ArtifactStore::<Procedural2dSnapshot, Procedural2dMutation>::new(create_document_envelope(PROCEDURAL_2D_SCHEMA, "procedural2d", Procedural2dSnapshot::default(), None)).expect("valid artifact store fixture");
         store.dispatch(ArtifactCommand::Apply { mutations: vec![create_widget(3, Widget::InputNote { id: "note-9".into(), text: String::new() })], description: None }).expect("apply");

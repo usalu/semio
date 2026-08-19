@@ -56,7 +56,7 @@ mod tests {
     /// directly against `🔨️modules/⚡️simulation/⚙️engine/🔋️model/🦀️component.rs`'s `struct Model`.
     const MODEL_FIELD_COUNT: u32 = 40;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn default_model_yields_the_full_field_count_and_a_real_byte_size() {
         let entries = compute_energy_model_entries(&EnergyModelSnapshot::default());
         assert_eq!(entries.entry_count, MODEL_FIELD_COUNT);
@@ -64,7 +64,7 @@ mod tests {
         assert_eq!(entries.byte_size, expected_bytes);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn top_level_field_count_is_stable_regardless_of_content() {
         let snapshot = crate::artifacts::model::energy_snapshot_with_state(
             "energy.model",
@@ -79,14 +79,14 @@ mod tests {
     /// in a new process) still yields a deterministic census — `energy_model` fails soft to
     /// `Model::default()`, never a panic; this is the honest staleness-gap consequence
     /// `🔖️WorkingScene`'s own doc comment documents, exercised for real here.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn cache_miss_still_yields_a_deterministic_census() {
         let snapshot = EnergyModelSnapshot::default();
         let entries = compute_energy_model_entries(&snapshot);
         assert_eq!(entries, compute_energy_model_entries(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn different_bodies_yield_different_digests() {
         let a = crate::artifacts::model::energy_snapshot_with_state("energy.model", crate::model::Model::default(), None);
         let b = crate::artifacts::model::energy_snapshot_with_state(

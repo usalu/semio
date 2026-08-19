@@ -39,14 +39,14 @@ pub async fn render(document: &CsvSnapshot) -> UiNode {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn definition_declares_a_table_window() {
         let def = definition();
         assert_eq!(def.id, WINDOW_KIND_ID);
         assert_eq!(def.body_key, BODY_KEY);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn render_splits_header_from_data_rows() {
         let document = CsvSnapshot {
             schema: "stdio.csv".into(),

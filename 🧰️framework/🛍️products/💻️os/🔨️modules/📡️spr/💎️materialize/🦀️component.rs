@@ -40,11 +40,13 @@ pub struct SnapshotRecord {
 /// are decoded standalone (no absolute file position in scope) — callers threading through
 /// `resolve_plan` see the frame's real offset via the propagated `ProtocolError` from
 /// `protocol_format` itself when the surrounding frame is malformed.
+// 🚫️async: R9 pure accessor — most call sites are inside `.ok_or_else`/`.map_err`'s sync
+// closure; no suspension point exists in the body either.
 fn malformed(what: &'static str, detail: impl Into<String>) -> ProtocolError {
     ProtocolError::Malformed { what, offset: 0, detail: detail.into() }
 }
 
-fn body_kind_to_byte(kind: SnapshotBodyKind) -> u8 {
+async fn body_kind_to_byte(kind: SnapshotBodyKind) -> u8 {
     match kind {
         SnapshotBodyKind::EmbeddedPack => 0,
         SnapshotBodyKind::SidecarPack => 1,
@@ -52,7 +54,7 @@ fn body_kind_to_byte(kind: SnapshotBodyKind) -> u8 {
     }
 }
 
-fn body_kind_from_byte(byte: u8) -> Result<SnapshotBodyKind, ProtocolError> {
+async fn body_kind_from_byte(byte: u8) -> Result<SnapshotBodyKind, ProtocolError> {
     match byte {
         0 => Ok(SnapshotBodyKind::EmbeddedPack),
         1 => Ok(SnapshotBodyKind::SidecarPack),
@@ -75,29 +77,29 @@ struct SnapshotHeader {
 /// @emoji 👓️ Parses a `REC_PROJECTION` payload's header, returning the `(start, len)` span of the
 /// embedded body *within `payload`* (so a caller already holding a `&'a [u8]` payload can slice it
 /// zero-copy) — `None` iff `body_kind == SidecarPack`, which never embeds a body.
-fn parse_snapshot(payload: &[u8]) -> Result<(SnapshotHeader, Option<(usize, usize)>), ProtocolError> {
-    let mut input = ByteReader::new(payload);
-    let format = input.read_u8()?;
+async fn parse_snapshot(payload: &[u8]) -> Result<(SnapshotHeader, Option<(usize, usize)>), ProtocolError> {
+    let mut input = ByteReader::new(payload).await;
+    let format = input.read_u8().await?;
     if format != 1 {
         return Err(malformed("snapshot format", format!("unsupported format {format}")));
     }
-    let anchor_tag = input.read_u8()?;
+    let anchor_tag = input.read_u8().await?;
     let anchor_checkpoint_id = match anchor_tag {
         0 => {
-            let len = input.read_varint_u64()? as usize;
-            let bytes = input.read_bytes(len)?;
+            let len = input.read_varint_u64().await? as usize;
+            let bytes = input.read_bytes(len).await?;
             Some(std::str::from_utf8(bytes).map_err(|_| malformed("snapshot checkpoint_id utf8", "invalid utf-8"))?.to_string())
         }
         1 => None,
         other => return Err(malformed("snapshot anchor_tag", format!("unknown anchor tag {other:#x}"))),
     };
-    let edit_ordinal = input.read_varint_u64()?;
-    let body_kind = body_kind_from_byte(input.read_u8()?)?;
-    let body_hash = input.read_array32()?;
+    let edit_ordinal = input.read_varint_u64().await?;
+    let body_kind = body_kind_from_byte(input.read_u8().await?).await?;
+    let body_hash = input.read_array32().await?;
     let body_span = if body_kind != SnapshotBodyKind::SidecarPack {
-        let len = input.read_varint_u64()? as usize;
-        let start = input.position();
-        input.read_bytes(len)?; // bounds-checked; establishes the span is actually present
+        let len = input.read_varint_u64().await? as usize;
+        let start = input.position().await;
+        input.read_bytes(len).await?; // bounds-checked; establishes the span is actually present
         Some((start, len))
     } else {
         None
@@ -110,32 +112,32 @@ fn parse_snapshot(payload: &[u8]) -> Result<(SnapshotHeader, Option<(usize, usiz
 /// parameter (unlike `protocol_history`'s per-kind codecs) since a snapshot anchor is written at
 /// most once per snapshot and gains nothing from dictionary interning; `checkpoint_id` is always
 /// tag-0 raw text.
-pub fn encode_snapshot(record: &SnapshotRecord) -> Vec<u8> {
-    let mut out = ByteWriter::new();
-    out.write_u8(1);
+pub async fn encode_snapshot(record: &SnapshotRecord) -> Vec<u8> {
+    let mut out = ByteWriter::new().await;
+    out.write_u8(1).await;
     match &record.anchor_checkpoint_id {
         Some(id) => {
-            out.write_u8(0);
-            out.write_varint_u64(id.len() as u64);
-            out.write_bytes(id.as_bytes());
+            out.write_u8(0).await;
+            out.write_varint_u64(id.len() as u64).await;
+            out.write_bytes(id.as_bytes()).await;
         }
-        None => out.write_u8(1),
+        None => out.write_u8(1).await,
     }
-    out.write_varint_u64(record.edit_ordinal);
-    out.write_u8(body_kind_to_byte(record.body_kind));
-    out.write_bytes(&record.body_hash);
+    out.write_varint_u64(record.edit_ordinal).await;
+    out.write_u8(body_kind_to_byte(record.body_kind).await).await;
+    out.write_bytes(&record.body_hash).await;
     if record.body_kind != SnapshotBodyKind::SidecarPack {
         let body = record.body.as_deref().unwrap_or(&[]);
-        out.write_varint_u64(body.len() as u64);
-        out.write_bytes(body);
+        out.write_varint_u64(body.len() as u64).await;
+        out.write_bytes(body).await;
     }
-    out.into_bytes()
+    out.into_bytes().await
 }
 
 /// @emoji 👓️ The owning twin of `parse_snapshot`, for callers (e.g. `protocol_cli inspect`) that
 /// want a self-contained `SnapshotRecord` rather than a zero-copy span.
-pub fn decode_snapshot(payload: &[u8]) -> Result<SnapshotRecord, ProtocolError> {
-    let (header, body_span) = parse_snapshot(payload)?;
+pub async fn decode_snapshot(payload: &[u8]) -> Result<SnapshotRecord, ProtocolError> {
+    let (header, body_span) = parse_snapshot(payload).await?;
     let body = body_span.map(|(start, len)| payload[start..start + len].to_vec());
     Ok(SnapshotRecord { anchor_checkpoint_id: header.anchor_checkpoint_id, edit_ordinal: header.edit_ordinal, body_kind: header.body_kind, body_hash: header.body_hash, body })
 }
@@ -145,24 +147,24 @@ pub fn decode_snapshot(payload: &[u8]) -> Result<SnapshotRecord, ProtocolError> 
 /// than imported because it is a private implementation detail of `protocol_history`; the wire shape
 /// is fully pinned by that crate's own `//#region 🔖️Codec` doc comment, so this stays in lockstep by
 /// construction, not by convention.
-fn apply_dict_record(dict: &mut DictReader, payload: &[u8]) -> Result<(), ProtocolError> {
-    let mut input = ByteReader::new(payload);
-    let format = input.read_u8()?;
+async fn apply_dict_record(dict: &mut DictReader, payload: &[u8]) -> Result<(), ProtocolError> {
+    let mut input = ByteReader::new(payload).await;
+    let format = input.read_u8().await?;
     if format > 1 {
         return Err(malformed("dict record format", format!("unsupported format {format}")));
     }
-    let base_count = input.read_varint_u64()? as u32;
-    let count = input.read_varint_u64()?;
+    let base_count = input.read_varint_u64().await? as u32;
+    let count = input.read_varint_u64().await?;
     // 🎯️ Never `Vec::with_capacity(count)`: `count` is untrusted input read before any bound check
     // against the (already frame-limited) payload — an adversarial huge varint must not itself
     // trigger a huge allocation before the loop's own bounds-checked reads would fail it anyway.
     let mut entries: Vec<String> = Vec::new();
     for _ in 0..count {
-        let len = input.read_varint_u64()? as usize;
-        let bytes = input.read_bytes(len)?;
+        let len = input.read_varint_u64().await? as usize;
+        let bytes = input.read_bytes(len).await?;
         entries.push(std::str::from_utf8(bytes).map_err(|_| malformed("dict entry utf8", "invalid utf-8"))?.to_string());
     }
-    dict.extend(base_count, entries)
+    dict.extend(base_count, entries).await
 }
 //#endregion 🔖️Snapshot
 
@@ -187,13 +189,13 @@ impl Default for CheckpointPolicy {
 
 impl CheckpointPolicy {
     /// @emoji ✅️ Whether a snapshot is due given how much has accumulated since the last one.
-    pub fn should_checkpoint(&self, edits_since_last: u64, bytes_since_last: u64, is_checkpoint_commit: bool) -> bool {
+    pub async fn should_checkpoint(&self, edits_since_last: u64, bytes_since_last: u64, is_checkpoint_commit: bool) -> bool {
         (self.on_checkpoint_commit && is_checkpoint_commit) || edits_since_last >= self.every_edits || bytes_since_last >= self.every_bytes
     }
 
     /// @emoji 📦️ Whether a body of `body_len` bytes should be embedded inline vs. written as a
     /// `.sprc` sidecar (`SnapshotBodyKind::SidecarPack`).
-    pub fn should_embed(&self, body_len: u64) -> bool {
+    pub async fn should_embed(&self, body_len: u64) -> bool {
         body_len < self.embed_below
     }
 }
@@ -251,9 +253,9 @@ struct Candidate<'a> {
     payload: &'a [u8],
 }
 
-fn verify_candidate(hasher: &Blake3Hasher, candidate: &Candidate<'_>) -> bool {
+async fn verify_candidate(hasher: &Blake3Hasher, candidate: &Candidate<'_>) -> bool {
     match candidate.body_span {
-        Some((start, len)) => hasher.hash(&candidate.payload[start..start + len]) == candidate.header.body_hash,
+        Some((start, len)) => hasher.hash(&candidate.payload[start..start + len]).await == candidate.header.body_hash,
         // A sidecar body lives outside `trusted` entirely; nothing here to hash against.
         None => true,
     }
@@ -261,14 +263,14 @@ fn verify_candidate(hasher: &Blake3Hasher, candidate: &Candidate<'_>) -> bool {
 
 /// @emoji 👓️ Reads and header-parses the `REC_PROJECTION` frame expected at an absolute offset
 /// (as recorded by a `crate::os_spr::history::IndexReader`'s `SEC_SNAPSHOT_OFFSETS` section).
-fn read_snapshot_at(trusted: &[u8], offset: u64) -> Result<Candidate<'_>, ProtocolError> {
-    let mut cursor = FrameCursor::new(trusted, offset);
-    let frame = cursor.next_frame()?.ok_or_else(|| malformed("snapshot frame", "missing frame at indexed offset"))?;
+async fn read_snapshot_at(trusted: &[u8], offset: u64) -> Result<Candidate<'_>, ProtocolError> {
+    let mut cursor = FrameCursor::new(trusted, offset).await;
+    let frame = cursor.next_frame().await?.ok_or_else(|| malformed("snapshot frame", "missing frame at indexed offset"))?;
     if frame.kind != crate::os_spr::REC_PROJECTION {
         return Err(malformed("snapshot frame", "kind mismatch at indexed offset"));
     }
-    let (header, body_span) = parse_snapshot(frame.payload())?;
-    Ok(Candidate { offset, frame_len: frame.frame_len(), header, body_span, payload: frame.payload() })
+    let (header, body_span) = parse_snapshot(frame.payload().await).await?;
+    Ok(Candidate { offset, frame_len: frame.frame_len().await, header, body_span, payload: frame.payload().await })
 }
 
 /// @emoji 🔎️ Reverse-scans the whole trusted record stream for the LATEST `REC_INDEX` frame — the
@@ -276,12 +278,12 @@ fn read_snapshot_at(trusted: &[u8], offset: u64) -> Result<Candidate<'_>, Protoc
 /// `SEC_CHECKPOINT_OFFSETS` are exactly what `resolve_plan` consults. `None` if no valid `REC_INDEX`
 /// frame exists (a file that has never been compacted/indexed), signalling the reverse-frame-scan
 /// fallback below.
-fn locate_index(trusted: &[u8]) -> Option<crate::os_spr::history::IndexReader<'_>> {
+async fn locate_index(trusted: &[u8]) -> Option<crate::os_spr::history::IndexReader<'_>> {
     let record_stream = &trusted[HEADER_SIZE..];
-    let mut cursor = ReverseFrameCursor::at_end(record_stream);
-    while let Ok(Some(frame)) = cursor.prev_frame() {
+    let mut cursor = ReverseFrameCursor::at_end(record_stream).await;
+    while let Ok(Some(frame)) = cursor.prev_frame().await {
         if frame.kind == crate::os_spr::REC_INDEX {
-            if let Ok(reader) = crate::os_spr::history::IndexReader::open(frame.payload()) {
+            if let Ok(reader) = crate::os_spr::history::IndexReader::open(frame.payload().await).await {
                 return Some(reader);
             }
         }
@@ -293,13 +295,13 @@ fn locate_index(trusted: &[u8]) -> Option<crate::os_spr::history::IndexReader<'_
 /// corruption retries at a strictly lower ordinal cap (jumping straight past the corrupt entry when
 /// its own ordinal is known, else stepping down by one) until a valid candidate is found or the
 /// index is exhausted.
-fn find_snapshot_via_index<'a>(trusted: &'a [u8], index: &crate::os_spr::history::IndexReader<'_>, cap: u64, skipped: &mut u32) -> Option<Candidate<'a>> {
+async fn find_snapshot_via_index<'a>(trusted: &'a [u8], index: &crate::os_spr::history::IndexReader<'_>, cap: u64, skipped: &mut u32) -> Option<Candidate<'a>> {
     let hasher = Blake3Hasher;
     let mut remaining_cap = cap;
     loop {
-        let offset = index.latest_snapshot_offset_at_or_before(remaining_cap)?;
-        match read_snapshot_at(trusted, offset) {
-            Ok(candidate) if verify_candidate(&hasher, &candidate) => return Some(candidate),
+        let offset = index.latest_snapshot_offset_at_or_before(remaining_cap).await?;
+        match read_snapshot_at(trusted, offset).await {
+            Ok(candidate) if verify_candidate(&hasher, &candidate).await => return Some(candidate),
             Ok(candidate) => {
                 *skipped += 1;
                 remaining_cap = candidate.header.edit_ordinal.checked_sub(1)?;
@@ -315,18 +317,18 @@ fn find_snapshot_via_index<'a>(trusted: &'a [u8], index: &crate::os_spr::history
 /// @emoji 🔁️ Reverse-frame-scan fallback for when no usable `REC_INDEX` exists (or it doesn't cover
 /// the snapshot actually needed): walks every frame back from the trusted end, returning the
 /// first valid `REC_PROJECTION` at or before `cap`.
-fn find_snapshot_by_scan<'a>(trusted: &'a [u8], cap: u64, skipped: &mut u32) -> Option<Candidate<'a>> {
+async fn find_snapshot_by_scan<'a>(trusted: &'a [u8], cap: u64, skipped: &mut u32) -> Option<Candidate<'a>> {
     let hasher = Blake3Hasher;
     let record_stream = &trusted[HEADER_SIZE..];
-    let mut cursor = ReverseFrameCursor::at_end(record_stream);
-    while let Ok(Some(frame)) = cursor.prev_frame() {
+    let mut cursor = ReverseFrameCursor::at_end(record_stream).await;
+    while let Ok(Some(frame)) = cursor.prev_frame().await {
         if frame.kind != crate::os_spr::REC_PROJECTION {
             continue;
         }
-        match parse_snapshot(frame.payload()) {
+        match parse_snapshot(frame.payload().await).await {
             Ok((header, body_span)) if header.edit_ordinal <= cap => {
-                let candidate = Candidate { offset: frame.offset + HEADER_SIZE as u64, frame_len: frame.frame_len(), header, body_span, payload: frame.payload() };
-                if verify_candidate(&hasher, &candidate) {
+                let candidate = Candidate { offset: frame.offset + HEADER_SIZE as u64, frame_len: frame.frame_len().await, header, body_span, payload: frame.payload().await };
+                if verify_candidate(&hasher, &candidate).await {
                     return Some(candidate);
                 }
                 *skipped += 1;
@@ -338,27 +340,27 @@ fn find_snapshot_by_scan<'a>(trusted: &'a [u8], cap: u64, skipped: &mut u32) -> 
     None
 }
 
-fn find_best_snapshot<'a>(trusted: &'a [u8], cap: u64, skipped: &mut u32) -> Option<Candidate<'a>> {
-    if let Some(index) = locate_index(trusted) {
-        if let Some(candidate) = find_snapshot_via_index(trusted, &index, cap, skipped) {
+async fn find_best_snapshot<'a>(trusted: &'a [u8], cap: u64, skipped: &mut u32) -> Option<Candidate<'a>> {
+    if let Some(index) = locate_index(trusted).await {
+        if let Some(candidate) = find_snapshot_via_index(trusted, &index, cap, skipped).await {
             return Some(candidate);
         }
     }
-    find_snapshot_by_scan(trusted, cap, skipped)
+    find_snapshot_by_scan(trusted, cap, skipped).await
 }
 
 /// @emoji 🧮️ Resolves a checkpoint id to the 0-based edit ordinal of the last edit it covers, via
 /// the advisory index when available, else a full decode-and-walk fallback (checkpoint ->
 /// change_ids -> each change's edit_ids -> max ordinal by position in `log.edits`, matching
 /// `crate::os_spr::history::encode_history`'s own ordinal assignment).
-fn resolve_checkpoint_edit_ordinal(trusted: &[u8], checkpoint_id: &str, limits: &ProtocolLimits) -> Result<Option<u64>, ProtocolError> {
-    if let Some(index) = locate_index(trusted) {
-        if let Some((_, ordinal)) = index.checkpoint_offset(checkpoint_id) {
+async fn resolve_checkpoint_edit_ordinal(trusted: &[u8], checkpoint_id: &str, limits: &ProtocolLimits) -> Result<Option<u64>, ProtocolError> {
+    if let Some(index) = locate_index(trusted).await {
+        if let Some((_, ordinal)) = index.checkpoint_offset(checkpoint_id).await {
             return Ok(Some(ordinal));
         }
     }
     let options = crate::os_spr::history::DecodeOptions { verification: VerificationLevel::Standard, limits: limits.clone() };
-    let log = crate::os_spr::history::decode_history(trusted, &options)?;
+    let log = crate::os_spr::history::decode_history(trusted, &options).await?;
     let checkpoint = log.checkpoints.iter().find(|c| c.id == checkpoint_id).ok_or_else(|| malformed("checkpoint", format!("checkpoint '{checkpoint_id}' not found")))?;
     let ordinals: HashMap<&str, u64> = log.edits.iter().enumerate().map(|(i, e)| (e.id.as_str(), i as u64)).collect();
     let mut max_ordinal: Option<u64> = None;
@@ -373,14 +375,14 @@ fn resolve_checkpoint_edit_ordinal(trusted: &[u8], checkpoint_id: &str, limits: 
     Ok(max_ordinal)
 }
 
-fn resolve_target_edit_ordinal(trusted: &[u8], target: &MaterializeTarget, limits: &ProtocolLimits) -> Result<Option<u64>, ProtocolError> {
+async fn resolve_target_edit_ordinal(trusted: &[u8], target: &MaterializeTarget, limits: &ProtocolLimits) -> Result<Option<u64>, ProtocolError> {
     match target {
         // 🎯️ Design choice: "latest" has no ordinal cap — alternatives in this data model name sets
         // of checkpoints, not forked edit sequences (`HistoryLog::edits` is one flat, shared log), so
         // "latest on the active alternative" and "latest, full stop" resolve identically here.
         MaterializeTarget::LatestOnActive => Ok(None),
         MaterializeTarget::AtEditOrdinal(ordinal) => Ok(Some(*ordinal)),
-        MaterializeTarget::AtCheckpoint(id) => resolve_checkpoint_edit_ordinal(trusted, id, limits),
+        MaterializeTarget::AtCheckpoint(id) => resolve_checkpoint_edit_ordinal(trusted, id, limits).await,
     }
 }
 
@@ -392,17 +394,17 @@ fn resolve_target_edit_ordinal(trusted: &[u8], target: &MaterializeTarget, limit
 // 🔒️ `target` is by-value per the frozen contract signature (downstream callers pass an owned
 // enum they're done with); it happens to be read-only in this implementation.
 #[allow(clippy::needless_pass_by_value)]
-pub fn resolve_plan<'a>(protocol_bytes: &'a [u8], initial_pack: &'a [u8], target: MaterializeTarget, limits: &ProtocolLimits) -> Result<MaterializePlan<'a>, ProtocolError> {
-    let recovery = crate::os_spr::format::recover(&protocol_bytes, limits, RecoveryMode::LastCommit)?;
+pub async fn resolve_plan<'a>(protocol_bytes: &'a [u8], initial_pack: &'a [u8], target: MaterializeTarget, limits: &ProtocolLimits) -> Result<MaterializePlan<'a>, ProtocolError> {
+    let recovery = crate::os_spr::format::recover(&protocol_bytes, limits, RecoveryMode::LastCommit).await?;
     let trusted: &'a [u8] = &protocol_bytes[..recovery.bytes_recovered as usize];
 
-    let target_edit_ordinal = resolve_target_edit_ordinal(trusted, &target, limits)?;
+    let target_edit_ordinal = resolve_target_edit_ordinal(trusted, &target, limits).await?;
     let cap = target_edit_ordinal.unwrap_or(u64::MAX);
 
     let mut skipped_corrupt = 0u32;
     let candidate = find_best_snapshot(trusted, cap, &mut skipped_corrupt);
 
-    let (base, tail_start_offset) = match candidate {
+    let (base, tail_start_offset) = match candidate.await {
         Some(candidate) => {
             let bytes = match candidate.header.body_kind {
                 SnapshotBodyKind::SidecarPack => BaseBytes::Sidecar { expected_hash: candidate.header.body_hash },
@@ -441,20 +443,20 @@ pub struct MaterializeReport {
 /// `REC_EDIT` frame strictly before `up_to_offset` — needed before decoding any tail `REC_EDIT`
 /// frame, since its `id`/dependency fields may reference dictionary entries or edit ordinals
 /// introduced anywhere earlier in the file, including inside the base snapshot's own coverage.
-fn prescan_dict_and_edits(trusted: &[u8], up_to_offset: u64) -> Result<(DictReader, Vec<String>), ProtocolError> {
-    let mut dict = DictReader::new();
+async fn prescan_dict_and_edits(trusted: &[u8], up_to_offset: u64) -> Result<(DictReader, Vec<String>), ProtocolError> {
+    let mut dict = DictReader::new().await;
     let mut edit_ids = Vec::new();
-    let mut cursor = FrameCursor::new(trusted, HEADER_SIZE as u64);
-    while let Some(frame) = cursor.next_frame()? {
+    let mut cursor = FrameCursor::new(trusted, HEADER_SIZE as u64).await;
+    while let Some(frame) = cursor.next_frame().await? {
         if frame.offset >= up_to_offset {
             break;
         }
         match frame.kind {
-            crate::os_spr::REC_STR_DICT => apply_dict_record(&mut dict, frame.payload())?,
+            crate::os_spr::REC_STR_DICT => apply_dict_record(&mut dict, frame.payload().await).await?,
             crate::os_spr::REC_EDIT => {
                 let edit_ids_ref = &edit_ids;
                 let dict_ref = &dict;
-                let edit = crate::os_spr::history::decode_edit(frame.payload(), dict_ref, |ord| edit_ids_ref.get(ord as usize).map(String::as_str).ok_or(ProtocolError::DictMiss(ord as u32)))?;
+                let edit = crate::os_spr::history::decode_edit(frame.payload().await, dict_ref, |ord| edit_ids_ref.get(ord as usize).map(String::as_str).ok_or(ProtocolError::DictMiss(ord as u32))).await?;
                 edit_ids.push(edit.id);
             }
             _ => {}
@@ -471,7 +473,7 @@ fn prescan_dict_and_edits(trusted: &[u8], up_to_offset: u64) -> Result<(DictRead
 /// (default limits — no `limits` parameter on this frozen signature) so a torn live tail is silently
 /// excluded rather than surfaced as an error, matching how every other reader in this crate family
 /// treats the boundary `crate::os_spr::format::recover` establishes.
-pub fn materialize_with<P, E>(plan: MaterializePlan<'_>, protocol_bytes: &[u8], decode_base: impl FnOnce(&[u8]) -> Result<P, E>, mut apply_edit: impl FnMut(&mut P, &crate::os_spr::history::HistoryEdit) -> Result<(), E>) -> Result<(P, MaterializeReport), E>
+pub async fn materialize_with<P, E>(plan: MaterializePlan<'_>, protocol_bytes: &[u8], decode_base: impl FnOnce(&[u8]) -> Result<P, E>, mut apply_edit: impl FnMut(&mut P, &crate::os_spr::history::HistoryEdit) -> Result<(), E>) -> Result<(P, MaterializeReport), E>
 where
     E: From<ProtocolError>,
 {
@@ -482,20 +484,20 @@ where
     let mut snapshot = decode_base(base_bytes)?;
 
     let limits = ProtocolLimits::default();
-    let recovery = crate::os_spr::format::recover(&protocol_bytes, &limits, RecoveryMode::LastCommit).map_err(E::from)?;
+    let recovery = crate::os_spr::format::recover(&protocol_bytes, &limits, RecoveryMode::LastCommit).await.map_err(E::from)?;
     let trusted = &protocol_bytes[..recovery.bytes_recovered as usize];
 
-    let (mut dict, mut edit_ids) = prescan_dict_and_edits(trusted, plan.tail_start_offset).map_err(E::from)?;
+    let (mut dict, mut edit_ids) = prescan_dict_and_edits(trusted, plan.tail_start_offset).await.map_err(E::from)?;
     let mut edit_ordinal = edit_ids.len() as u64;
 
-    let mut cursor = FrameCursor::new(trusted, plan.tail_start_offset);
+    let mut cursor = FrameCursor::new(trusted, plan.tail_start_offset).await;
     let mut edits_replayed = 0u64;
     let mut bytes_read = 0u64;
 
-    while let Some(frame) = cursor.next_frame().map_err(E::from)? {
-        bytes_read += frame.frame_len();
+    while let Some(frame) = cursor.next_frame().await.map_err(E::from)? {
+        bytes_read += frame.frame_len().await;
         match frame.kind {
-            crate::os_spr::REC_STR_DICT => apply_dict_record(&mut dict, frame.payload()).map_err(E::from)?,
+            crate::os_spr::REC_STR_DICT => apply_dict_record(&mut dict, frame.payload().await).await.map_err(E::from)?,
             crate::os_spr::REC_EDIT => {
                 if let Some(target) = plan.target_edit_ordinal {
                     if edit_ordinal > target {
@@ -504,7 +506,7 @@ where
                 }
                 let edit_ids_ref = &edit_ids;
                 let dict_ref = &dict;
-                let edit = crate::os_spr::history::decode_edit(frame.payload(), dict_ref, |ord| edit_ids_ref.get(ord as usize).map(String::as_str).ok_or(ProtocolError::DictMiss(ord as u32))).map_err(E::from)?;
+                let edit = crate::os_spr::history::decode_edit(frame.payload().await, dict_ref, |ord| edit_ids_ref.get(ord as usize).map(String::as_str).ok_or(ProtocolError::DictMiss(ord as u32))).await.map_err(E::from)?;
                 apply_edit(&mut snapshot, &edit)?;
                 edit_ids.push(edit.id);
                 edit_ordinal += 1;
@@ -531,29 +533,29 @@ mod tests {
     use crate::os_spr::history::{HistoryChange, HistoryCheckpoint, HistoryEdit, HistoryLog, OpPayload};
 
     //#region 🔖️Snapshot
-    fn sample_record(anchor: Option<&str>, ordinal: u64, kind: SnapshotBodyKind, body: Option<Vec<u8>>) -> SnapshotRecord {
+    async fn sample_record(anchor: Option<&str>, ordinal: u64, kind: SnapshotBodyKind, body: Option<Vec<u8>>) -> SnapshotRecord {
         let body_hash = body.as_deref().map_or([0u8; 32], |b| Blake3Hasher.hash(b));
         SnapshotRecord { anchor_checkpoint_id: anchor.map(str::to_string), edit_ordinal: ordinal, body_kind: kind, body_hash, body }
     }
 
-    #[test]
-    fn snapshot_round_trips_embedded_with_checkpoint_anchor() {
+    #[semio_framework_async_macros::async_test]
+    async fn snapshot_round_trips_embedded_with_checkpoint_anchor() {
         let record = sample_record(Some("cp-1"), 7, SnapshotBodyKind::EmbeddedPack, Some(vec![1, 2, 3, 4]));
         let bytes = encode_snapshot(&record);
         let decoded = decode_snapshot(&bytes).unwrap();
         assert_eq!(decoded, record);
     }
 
-    #[test]
-    fn snapshot_round_trips_embedded_dsl_with_ordinal_only_anchor() {
+    #[semio_framework_async_macros::async_test]
+    async fn snapshot_round_trips_embedded_dsl_with_ordinal_only_anchor() {
         let record = sample_record(None, 0, SnapshotBodyKind::EmbeddedDsl, Some(b"(doc)".to_vec()));
         let bytes = encode_snapshot(&record);
         let decoded = decode_snapshot(&bytes).unwrap();
         assert_eq!(decoded, record);
     }
 
-    #[test]
-    fn snapshot_round_trips_sidecar_without_body() {
+    #[semio_framework_async_macros::async_test]
+    async fn snapshot_round_trips_sidecar_without_body() {
         let record = sample_record(Some("cp-9"), 42, SnapshotBodyKind::SidecarPack, None);
         let bytes = encode_snapshot(&record);
         let decoded = decode_snapshot(&bytes).unwrap();
@@ -561,8 +563,8 @@ mod tests {
         assert_eq!(decoded, record);
     }
 
-    #[test]
-    fn snapshot_rejects_unknown_format() {
+    #[semio_framework_async_macros::async_test]
+    async fn snapshot_rejects_unknown_format() {
         let mut bytes = encode_snapshot(&sample_record(None, 0, SnapshotBodyKind::EmbeddedPack, Some(vec![9])));
         bytes[0] = 7;
         assert!(matches!(decode_snapshot(&bytes), Err(ProtocolError::Malformed { .. })));
@@ -570,7 +572,7 @@ mod tests {
     //#endregion 🔖️Snapshot
 
     //#region 🔖️Plan
-    fn sample_edit(id: &str, op_text: &str) -> HistoryEdit {
+    async fn sample_edit(id: &str, op_text: &str) -> HistoryEdit {
         HistoryEdit {
             id: id.to_string(),
             actor: None,
@@ -584,19 +586,19 @@ mod tests {
         }
     }
 
-    fn flush_dict_delta<S: crate::os_pack::PackSink>(writer: &mut SprWriter<S>, dict: &DictBuilder, base: &mut u32) {
+    async fn flush_dict_delta<S: crate::os_pack::PackSink>(writer: &mut SprWriter<S>, dict: &DictBuilder, base: &mut u32) {
         let len = dict.len();
         if len > *base {
             let entries = dict.entries_since(*base);
-            let mut payload = ByteWriter::new();
-            payload.write_u8(1);
-            payload.write_varint_u64(*base as u64);
-            payload.write_varint_u64(entries.len() as u64);
+            let mut payload = ByteWriter::new().await;
+            payload.write_u8(1).await;
+            payload.write_varint_u64(*base as u64).await;
+            payload.write_varint_u64(entries.len() as u64).await;
             for entry in entries {
-                payload.write_varint_u64(entry.len() as u64);
-                payload.write_bytes(entry.as_bytes());
+                payload.write_varint_u64(entry.len() as u64).await;
+                payload.write_bytes(entry.as_bytes()).await;
             }
-            writer.write_record(crate::os_spr::REC_STR_DICT, true, &payload.into_bytes(), CodecId(0)).unwrap();
+            writer.write_record(crate::os_spr::REC_STR_DICT, true, &payload.into_bytes().await, CodecId(0)).unwrap();
             *base = len;
         }
     }
@@ -604,7 +606,7 @@ mod tests {
     /// @emoji 🏗️ Hand-assembles a `.spr` stream with 4 edits and one embedded-pack `REC_PROJECTION`
     /// taken right after edit ordinal 1 (i.e. covering edits 0 and 1) — the shape `resolve_plan`'s
     /// index-free reverse-scan fallback and `materialize_with`'s tail replay are exercised against.
-    fn build_stream_with_snapshot(snapshot_body: &[u8]) -> Vec<u8> {
+    async fn build_stream_with_snapshot(snapshot_body: &[u8]) -> Vec<u8> {
         let write_options = WriteOptions { required_flags: REQUIRED_HASH_CHAIN, optional_flags: 0 };
         let mut writer = SprWriter::begin(Vec::<u8>::new(), &write_options).unwrap();
         let mut dict = DictBuilder::new();
@@ -616,7 +618,7 @@ mod tests {
 
         for (i, edit) in [sample_edit("edit-0", "op-0"), sample_edit("edit-1", "op-1")].iter().enumerate() {
             let _ = i;
-            let payload = crate::os_spr::history::encode_edit(edit, &mut dict, |_| None).unwrap();
+            let payload = crate::os_spr::history::encode_edit(edit, &mut dict, |_| None).unwrap().await;
             flush_dict_delta(&mut writer, &dict, &mut dict_base);
             writer.write_record(REC_EDIT, true, &payload, CodecId(0)).unwrap();
         }
@@ -625,7 +627,7 @@ mod tests {
         writer.write_record(crate::os_spr::REC_PROJECTION, false, &encode_snapshot(&snapshot), CodecId(0)).unwrap();
 
         for edit in [sample_edit("edit-2", "op-2"), sample_edit("edit-3", "op-3")] {
-            let payload = crate::os_spr::history::encode_edit(&edit, &mut dict, |_| None).unwrap();
+            let payload = crate::os_spr::history::encode_edit(&edit, &mut dict, |_| None).unwrap().await;
             flush_dict_delta(&mut writer, &dict, &mut dict_base);
             writer.write_record(REC_EDIT, true, &payload, CodecId(0)).unwrap();
         }
@@ -639,13 +641,13 @@ mod tests {
     // 🔒️ Must return `Result` to satisfy `materialize_with`'s `apply_edit` closure bound even
     // though this particular collector never fails.
     #[allow(clippy::unnecessary_wraps)]
-    fn collect_ids(p: &mut Collected, edit: &HistoryEdit) -> Result<(), ProtocolError> {
+    async fn collect_ids(p: &mut Collected, edit: &HistoryEdit) -> Result<(), ProtocolError> {
         p.1.push(edit.id.clone());
         Ok(())
     }
 
-    #[test]
-    fn resolve_plan_picks_snapshot_and_replays_only_the_tail() {
+    #[semio_framework_async_macros::async_test]
+    async fn resolve_plan_picks_snapshot_and_replays_only_the_tail() {
         let body = vec![0xAA, 0xBB, 0xCC];
         let bytes = build_stream_with_snapshot(&body);
 
@@ -668,8 +670,8 @@ mod tests {
         assert!(report.bytes_read > 0);
     }
 
-    #[test]
-    fn resolve_plan_falls_back_to_initial_pack_when_target_precedes_every_snapshot() {
+    #[semio_framework_async_macros::async_test]
+    async fn resolve_plan_falls_back_to_initial_pack_when_target_precedes_every_snapshot() {
         let bytes = build_stream_with_snapshot(&[0xAA, 0xBB, 0xCC]);
         let initial_pack = b"INIT";
 
@@ -688,8 +690,8 @@ mod tests {
         assert_eq!(report.edits_replayed, 1);
     }
 
-    #[test]
-    fn resolve_plan_at_edit_ordinal_beyond_snapshot_replays_full_tail() {
+    #[semio_framework_async_macros::async_test]
+    async fn resolve_plan_at_edit_ordinal_beyond_snapshot_replays_full_tail() {
         let body = vec![0xAA, 0xBB, 0xCC];
         let bytes = build_stream_with_snapshot(&body);
 
@@ -699,8 +701,8 @@ mod tests {
         assert_eq!(report.edits_replayed, 2);
     }
 
-    #[test]
-    fn resolve_plan_at_checkpoint_falls_back_to_full_decode_without_an_index() {
+    #[semio_framework_async_macros::async_test]
+    async fn resolve_plan_at_checkpoint_falls_back_to_full_decode_without_an_index() {
         let mut log = HistoryLog { doc_id: "doc-2".to_string(), schema: "schema-2".to_string(), ..Default::default() };
         log.edits.push(sample_edit("edit-0", "op-0"));
         log.edits.push(sample_edit("edit-1", "op-1"));
@@ -719,8 +721,8 @@ mod tests {
         assert_eq!(result.1, vec!["edit-0".to_string(), "edit-1".to_string()]);
     }
 
-    #[test]
-    fn resolve_plan_skips_a_corrupt_snapshot_and_falls_back_to_initial_pack() {
+    #[semio_framework_async_macros::async_test]
+    async fn resolve_plan_skips_a_corrupt_snapshot_and_falls_back_to_initial_pack() {
         let write_options = WriteOptions { required_flags: REQUIRED_HASH_CHAIN, optional_flags: 0 };
         let mut writer = SprWriter::begin(Vec::<u8>::new(), &write_options).unwrap();
         let mut dict = DictBuilder::new();
@@ -735,7 +737,7 @@ mod tests {
         bad_record.body_hash = [0xFFu8; 32];
         writer.write_record(crate::os_spr::REC_PROJECTION, false, &encode_snapshot(&bad_record), CodecId(0)).unwrap();
 
-        let payload = crate::os_spr::history::encode_edit(&sample_edit("edit-0", "op-0"), &mut dict, |_| None).unwrap();
+        let payload = crate::os_spr::history::encode_edit(&sample_edit("edit-0", "op-0"), &mut dict, |_| None).unwrap().await;
         flush_dict_delta(&mut writer, &dict, &mut dict_base);
         writer.write_record(REC_EDIT, true, &payload, CodecId(0)).unwrap();
         writer.commit().unwrap();
@@ -752,8 +754,8 @@ mod tests {
     //#endregion 🔖️Plan
 
     //#region 🔖️Policy
-    #[test]
-    fn checkpoint_policy_default_matches_documented_values() {
+    #[semio_framework_async_macros::async_test]
+    async fn checkpoint_policy_default_matches_documented_values() {
         let policy = CheckpointPolicy::default();
         assert_eq!(policy.every_edits, 512);
         assert_eq!(policy.every_bytes, 4 * 1024 * 1024);
@@ -761,8 +763,8 @@ mod tests {
         assert_eq!(policy.embed_below, 1024 * 1024);
     }
 
-    #[test]
-    fn checkpoint_policy_triggers_on_any_threshold() {
+    #[semio_framework_async_macros::async_test]
+    async fn checkpoint_policy_triggers_on_any_threshold() {
         let policy = CheckpointPolicy::default();
         assert!(policy.should_checkpoint(512, 0, false));
         assert!(policy.should_checkpoint(0, 4 * 1024 * 1024, false));

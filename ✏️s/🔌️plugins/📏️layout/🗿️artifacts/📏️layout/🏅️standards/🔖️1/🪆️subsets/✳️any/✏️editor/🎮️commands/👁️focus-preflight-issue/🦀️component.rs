@@ -36,7 +36,7 @@ mod tests {
     use semio_framework::kernel::Effect;
     use semio_framework_plugin::INTERACTION_SELECT_ACTION_ID;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn focus_preflight_issue_requests_a_select_effect_and_sets_active_page() {
         let mut app = layout_app();
         let result = dispatch(&mut app, LayoutCommand::FocusPreflightIssue(FocusPreflightIssue { object_id: Some("frame-1".into()), page_id: Some("page-2".into()) }));
@@ -44,7 +44,7 @@ mod tests {
         assert!(result.requested_effects.iter().any(|effect| matches!(effect, Effect::DispatchAction { action, .. } if action == INTERACTION_SELECT_ACTION_ID)), "must ask the host to redispatch interactionSelect");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn focus_preflight_issue_without_an_object_id_only_sets_active_page() {
         let mut app = layout_app();
         let result = dispatch(&mut app, LayoutCommand::FocusPreflightIssue(FocusPreflightIssue { object_id: None, page_id: Some("page-2".into()) }));

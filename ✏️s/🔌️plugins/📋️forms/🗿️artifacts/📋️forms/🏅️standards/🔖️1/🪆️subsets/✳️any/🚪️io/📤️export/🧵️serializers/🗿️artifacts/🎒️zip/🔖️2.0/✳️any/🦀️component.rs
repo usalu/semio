@@ -14,7 +14,7 @@ pub struct FormsIntoZip;
 impl Serializer<FormsSnapshot> for FormsIntoZip {
     const INTO: Dialect = ZIP_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    async fn serialize(_from: &FormsSnapshot) -> IoResult<IoPayload> {
+    fn serialize(_from: &FormsSnapshot) -> IoResult<IoPayload> {
         Err(IoError { message: "FormsIntoZip: not implemented".to_string(), diagnostics: Vec::new() })
     }
 }

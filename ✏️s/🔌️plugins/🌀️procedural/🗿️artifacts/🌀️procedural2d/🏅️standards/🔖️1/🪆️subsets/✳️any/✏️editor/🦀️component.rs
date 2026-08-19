@@ -488,7 +488,7 @@ mod tests {
     use semio_framework_plugin::PluginApp;
 
     //#region 🔖️CommandSurface
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn command_ids_are_unique_and_cover_every_row() {
         let commands = every_command();
         let ids: Vec<&str> = commands.iter().map(|command| command.command_id()).collect();
@@ -499,7 +499,7 @@ mod tests {
         assert_eq!(ids.len(), 21, "every Procedural2dCommand row must be covered by every_command()");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn every_command_round_trips_through_text_and_binary() {
         for command in every_command() {
             semio_framework_os_kernel::os_store::test_support::assert_op_text_binary_equivalence(&command);
@@ -510,7 +510,7 @@ mod tests {
     /// explicitly per row (not derived from the command id) since `setLocale`/`locale` is the one row
     /// where the two vocabularies genuinely diverge. This is what a missing `#[dsl(keyword = ..)]` on a
     /// payload struct silently breaks (the record prints with no keyword at all and fails to re-parse).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
         let expected_keywords = [
             "node-graph-edit",
@@ -572,7 +572,7 @@ mod tests {
     //#endregion 🔖️CommandSurface
 
     //#region 🔖️ManifestSanity
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn the_manifest_stitches_every_taxonomy_node() {
         let json = serde_json::to_string(&create_procedural2d_app()).expect("app definition json");
         for id in [flow_window::PROCEDURAL2D_PLAY_WINDOW_MAIN, edit_preview::PROCEDURAL2D_PLAY_WINDOW_PREVIEW, generations::PROCEDURAL2D_PLAY_WINDOW_GENERATIONS, form::PROCEDURAL2D_PLAY_WINDOW_GENERATE_FORM, generate_preview::PROCEDURAL2D_PLAY_WINDOW_GENERATE_PREVIEW] {
@@ -589,12 +589,12 @@ mod tests {
     //#endregion 🔖️ManifestSanity
 
     //#region 🔖️CrossCutting
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn declared_actions_bridge_to_commands() {
         semio_framework_plugin::testkit::assert_declared_actions_bridge_to_commands::<semio_framework_plugin::EditorApp<Procedural2dPlayApp>>(crate::editor::procedural2d::testkit::procedural2d_manifest_for_testkit);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_widget_materializes_declared_kind_default_into_an_operation() {
         let mut app = app_with_registry();
         let before = app.snapshot().expect("snapshot").fixture.widgets.len();
@@ -602,14 +602,14 @@ mod tests {
         assert_eq!(app.snapshot().expect("snapshot").fixture.widgets.len(), before + 1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_widget_undo_redo_round_trip() {
         let mut app = app();
         let before = app.snapshot().expect("snapshot").fixture.widgets.len();
         assert_undo_redo_round_trip(&mut app, Procedural2dCommand::AddWidget(add_widget::AddWidget { kind: "inputNote".into(), neuron_kind: None, x: None, y: None }), |app| app.snapshot().expect("snapshot").fixture.widgets.len(), before, before + 1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn two_instances_converge_disjoint_widget_moves() {
         let widgets: Vec<String> = app().snapshot().expect("snapshot").fixture.widgets.iter().map(|widget| crate::artifacts::procedural2d::widget_id(widget).to_string()).collect();
         assert!(widgets.len() >= 2, "default fixture needs two widgets for the test");
@@ -625,7 +625,7 @@ mod tests {
         );
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
         use crate::editor::procedural2d::testkit::render;
         let mut app = app();
@@ -640,7 +640,7 @@ mod tests {
     /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM, same discovered gap as `render`), so the
     /// destructive `delete-selection` row — conditioned on a real selection — never appears; this test
     /// now only pins the disclosure budget.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn context_menu_stays_within_disclosure_budget() {
         let mut app = app_with_registry();
         let request = semio_framework_plugin::ContextMenuRequest { menu: semio_framework_plugin::UiMenuRef { id: "nodeGraph".into(), args: None }, surface: None, window_instance_id: None, point: None };
@@ -651,14 +651,14 @@ mod tests {
     //#endregion 🔖️ContextMenuTests
 
     //#region 🔖️PortTests
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn export_drawing_out_returns_vector_media() {
         let mut app = app();
         let media = semio_framework_plugin::resolve_ready(app.export_media("drawing:out")).expect("export drawing:out");
         assert_eq!(media.media_type, MediaType { class: MediaClass::TwoD, form: MediaForm::Vector });
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn export_document_out_returns_flow_media() {
         let mut app = app();
         let media = semio_framework_plugin::resolve_ready(app.export_media("document:out")).expect("export document:out");
@@ -666,7 +666,7 @@ mod tests {
         assert!(matches!(media.payload, semio_framework_plugin::MediaPayload::Structured { schema, .. } if schema == PROCEDURAL_2D_SCHEMA));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn import_params_in_patches_matching_input_slider() {
         let mut app = app();
         app.dispatch_typed(Procedural2dCommand::AddWidget(add_widget::AddWidget { kind: "inputSlider".into(), neuron_kind: None, x: None, y: None }), &semio_framework_plugin::testkit::meta("local")).expect("add slider");
@@ -690,7 +690,7 @@ mod tests {
         assert_eq!(value, Some(42.0));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn media_ports_declare_params_in_and_drawing_out() {
         let ports = <Procedural2dPlayApp as ArtifactEditor>::media_ports();
         assert!(ports.iter().any(|port| port.id == "document:in"));
@@ -702,7 +702,7 @@ mod tests {
         assert_eq!(drawing_out.kind_id.as_deref(), Some("2d.drawing"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn procedural2d_io_declares_the_params_and_drawing_ports() {
         let io = procedural2d_io();
         assert_eq!(io.document_schema, "procedural.2d");

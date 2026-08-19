@@ -36,7 +36,7 @@ impl protocol::Inference<SemioTextSnapshot> for SemioTextInference {
 /// `infer` keeps the law correct even if that default ever stops being all-empty (the same
 /// defensive pattern raster's `RasterInference` documents).
 impl Default for SemioTextInference {
-    async fn default() -> Self {
+    fn default() -> Self {
         <Self as protocol::Inference<SemioTextSnapshot>>::infer(&SemioTextSnapshot::default())
     }
 }
@@ -87,13 +87,13 @@ mod tests {
     use super::*;
     use protocol::Inference;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = SemioTextSnapshot::default();
         assert_eq!(SemioTextInference::infer(&snapshot), SemioTextInference::infer(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(SemioTextInference::infer(&SemioTextSnapshot::default()), SemioTextInference::default());
     }

@@ -424,7 +424,7 @@ pub mod part_1_1 {
         category.q_k_kn_m2()
     }
 
-    pub async fn check_imposed(area_m2: f64, category: ImposedCategory, annex: &dyn NationalAnnex) -> CheckResult {
+    pub async fn check_imposed<A: NationalAnnex>(area_m2: f64, category: ImposedCategory, annex: &A) -> CheckResult {
         let q = imposed_load_kn_m2(category) * area_m2;
         let psi = annex.psi_0(category.label());
         CheckResult::from_utilization(ClauseId::new("EN 1991-1-1", "Table 6.1", "q"), Quantity::force_kn(q * psi), Quantity::force_kn(q), "imposed load", annex.choice())
@@ -524,7 +524,7 @@ pub mod part_1_3 {
         }
     }
 
-    pub async fn check_snow(s_kn_m2: f64, limit: f64, annex: &dyn NationalAnnex) -> CheckResult {
+    pub async fn check_snow<A: NationalAnnex>(s_kn_m2: f64, limit: f64, annex: &A) -> CheckResult {
         CheckResult::from_utilization(
             ClauseId::new("EN 1991-1-3", "§5", "5.1"),
             Quantity::new(crate::document::QuantityKind::Pressure, s_kn_m2 * 1000.0),
@@ -611,7 +611,7 @@ pub mod part_1_4 {
         }
     }
 
-    pub async fn check_wind(w_p_kn_m2: f64, limit: f64, annex: &dyn NationalAnnex) -> CheckResult {
+    pub async fn check_wind<A: NationalAnnex>(w_p_kn_m2: f64, limit: f64, annex: &A) -> CheckResult {
         CheckResult::from_utilization(
             ClauseId::new("EN 1991-1-4", "§5", "5.1"),
             Quantity::new(crate::document::QuantityKind::Pressure, w_p_kn_m2 * 1000.0),
@@ -841,13 +841,13 @@ pub mod part_4 {
 mod compliance_helpers_tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn snow_zone_2_ground_load() {
         assert!((part_1_3::ground_snow_load_zone(2) - 0.85).abs() < 1e-9);
         assert!((na_de::SnowZone::Zone2.s_k_kn_m2() - 0.85).abs() < 1e-9);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn wind_peak_velocity_pressure_vb_25() {
         let q_b = part_1_4::basic_velocity_pressure(1.25, 25.0);
         assert!((q_b - 0.39).abs() < 0.01);
@@ -856,19 +856,19 @@ mod compliance_helpers_tests {
         assert!(q_p > q_b);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn imposed_categories_table_6_1() {
         assert_eq!(part_1_1::imposed_load_kn_m2(ImposedCategory::A), 2.0);
         assert_eq!(part_1_1::imposed_load_kn_m2(ImposedCategory::B), 2.5);
         assert_eq!(part_1_1::imposed_load_kn_m2(ImposedCategory::H), 20.0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn de_wind_zone_2_basic_velocity() {
         assert!((na_de::WindZone::Zone2.v_b_m_s() - 25.0).abs() < 1e-9);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn snow_and_wind_de_vs_en_diverge_at_altitude() {
         let doc = crate::artifacts::en1991::En1991Snapshot { snow_altitude_m: 400.0, annex: AnnexChoice::De, ..crate::artifacts::en1991::En1991Snapshot::default() };
         let de_s_k = part_1_3::design_ground_snow_load(doc.annex, doc.snow_zone, doc.snow_altitude_m, doc.en_s_k_kn_m2);
@@ -877,7 +877,7 @@ mod compliance_helpers_tests {
         assert!((en_s_k - doc.en_s_k_kn_m2).abs() < 1e-9);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn bridge_lm1_alpha_q_diverges_de_vs_en() {
         let de = part_2::check_lm1_moment(AnnexChoice::De, 20.0, 1, 3.0, 3000.0);
         let en = part_2::check_lm1_moment(AnnexChoice::En, 20.0, 1, 3.0, 3000.0);

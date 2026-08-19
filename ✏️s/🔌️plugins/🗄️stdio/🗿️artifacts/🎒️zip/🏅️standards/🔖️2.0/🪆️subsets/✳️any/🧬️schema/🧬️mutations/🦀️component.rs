@@ -139,7 +139,7 @@ mod tests {
     use super::*;
     use protocol::{MutationDiff as _, OpBinary as _, OpText as _};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn logical_mutations_diff_and_codecs_round_trip() {
         let base = base_snapshot();
         for mutation in demo_mutation_cases() {

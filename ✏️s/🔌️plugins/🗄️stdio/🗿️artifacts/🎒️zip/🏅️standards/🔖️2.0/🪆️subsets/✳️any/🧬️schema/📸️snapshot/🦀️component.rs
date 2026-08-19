@@ -34,7 +34,7 @@ pub struct ZipSnapshot {
 }
 
 impl Default for ZipSnapshot {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { schema: STDIO_ZIP_DOCUMENT_SCHEMA.into(), entries: Vec::new(), comment: String::new() }
     }
 }
@@ -95,7 +95,7 @@ impl store::ArtifactPack for ZipSnapshot {
 mod shadow_tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn logical_snapshot_and_facets_have_no_shadow_state() {
         let json = format!("{:?}", ZipSnapshot::default());
         for forbidden in ["localExtra", "centralExtra", "physical", "sourceBytes", "nativeArchive", "method", "dosDate", "flags", "versionMadeBy", "internalAttrs", "externalAttrs"] {

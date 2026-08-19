@@ -19,7 +19,7 @@ impl Deserializer<WriterSnapshot> for PdfIntoWriter {
     /// `schema`/`id`/`uri`/`language_id` have no home in a pdf page, and page layout/fonts/images
     /// are dropped entirely by the (documented, pre-existing) frozen-stub `PageDoc` model itself.
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    async fn deserialize(payload: &IoPayload) -> IoResult<WriterSnapshot> {
+    fn deserialize(payload: &IoPayload) -> IoResult<WriterSnapshot> {
         let IoPayload::Binary(bytes) = payload else {
             return Err(IoError { message: "PdfIntoWriter: expected a binary payload".to_string(), diagnostics: Vec::new() });
         };
@@ -35,7 +35,7 @@ mod tests {
     use super::*;
     use semio_s_plugin_stdio::artifacts::pdf::standards::v1_4::subsets::any::schema::snapshot::PageDoc;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn pdf_into_writer_extracts_page_text() {
         let pdf = PdfSnapshot { schema: "s.stdio.pdf".into(), page: PageDoc { width: 612.0, height: 792.0, text: "hello".into() } };
         let bytes = <PdfSnapshot as store::ArtifactPack>::encode_pack(&pdf);

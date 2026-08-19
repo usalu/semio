@@ -29,7 +29,7 @@ pub struct WriterSnapshot {
 }
 
 impl Default for WriterSnapshot {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self {
             schema: WRITER_DOCUMENT_SCHEMA.into(),
             id: String::new(),

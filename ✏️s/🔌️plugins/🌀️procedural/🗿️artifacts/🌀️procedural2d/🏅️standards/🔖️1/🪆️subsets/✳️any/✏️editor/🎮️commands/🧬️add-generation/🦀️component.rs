@@ -99,7 +99,7 @@ mod tests {
     use crate::editor::procedural2d::Procedural2dCommand;
     use crate::editor::procedural2d::commands::enter_generate;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_generation_records_an_undoable_generation_operation() {
         let mut app = app();
         let before = app.snapshot().expect("snapshot").generation.generations.len();
@@ -107,7 +107,7 @@ mod tests {
         assert_eq!(app.snapshot().expect("snapshot").generation.generations.len(), before + 1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn generate_is_a_view_action_with_no_artifact_mutations() {
         let mut app = app();
         let before = app.snapshot().expect("snapshot");

@@ -60,14 +60,14 @@ async fn node_view(path: Vec<usize>, node: &XmlNode) -> TreeNodeView {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn definition_declares_a_tree_window() {
         let def = definition();
         assert_eq!(def.id, WINDOW_KIND_ID);
         assert_eq!(def.body_key, BODY_KEY);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn render_walks_element_children() {
         let document = XmlSnapshot { schema: "stdio.xml".into(), doc: crate::artifacts::xml::schema::snapshot::XmlDocument { root: Some(XmlNode::Element { name: "root".into(), attrs: Vec::new(), children: vec![XmlNode::Text { text: "hi".into() }] }), doctype: None, declaration: None, prolog: Vec::new() } };
         let UiNode::Tree(node) = render(&document) else { panic!("expected Tree") };

@@ -35,7 +35,7 @@ impl LineEnding {
 }
 
 impl Default for LineEnding {
-    async fn default() -> Self {
+    fn default() -> Self {
         LineEnding::Lf
     }
 }
@@ -63,7 +63,7 @@ pub struct TsvSnapshot {
 }
 
 impl Default for TsvSnapshot {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { schema: STDIO_TSV_DOCUMENT_SCHEMA.into(), records: Vec::new(), trailing_newline: false, line_ending: LineEnding::default() }
     }
 }
@@ -151,7 +151,7 @@ mod tests {
 
     const REAL_FIXTURE: &str = include_str!("../../📚️examples/🎬️demo/🖼️assets/📑️example.tsv");
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn round_trips_a_real_shaped_tsv_body() {
         let text = "name\tage\nAda\t30\nGrace\t85\n";
         assert!(sniff_real_bytes(text.as_bytes()));
@@ -163,7 +163,7 @@ mod tests {
         assert_eq!(encode_tsv(&snap), text);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn detects_crlf_line_ending() {
         let text = "a\tb\r\n1\t2\r\n";
         let snap = decode_tsv(text);
@@ -171,12 +171,12 @@ mod tests {
         assert_eq!(encode_tsv(&snap), text);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn sniff_rejects_binary_noise() {
         assert!(!sniff_real_bytes(b"a\tb\0\x01\x02"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn embedded_backslash_t_is_not_a_real_tab() {
         // 🔒 Documents the honest IANA TSV limitation: a genuine tab byte inside a field is
         // indistinguishable from a column boundary (no quoting mechanism exists to escape it).
@@ -188,7 +188,7 @@ mod tests {
         assert_eq!(encode_tsv(&snap), text);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn decodes_the_real_fixture_with_6_rows_and_5_columns() {
         let snap = decode_tsv(REAL_FIXTURE);
         assert_eq!(snap.records.len(), 6, "1 header row + 5 data rows");
@@ -205,7 +205,7 @@ mod tests {
     /// 🔁️ decode→encode is byte-preserving on the real W0 fixture
     /// (`✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/📚️examples/🎬️demo/🖼️assets/📑️example.tsv`,
     /// verified upstream by `verify_tsv.py`'s own "byte-exact split/rejoin" check).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn codec_retention_law() {
         let snap = decode_tsv(REAL_FIXTURE);
         let reencoded = encode_tsv(&snap);

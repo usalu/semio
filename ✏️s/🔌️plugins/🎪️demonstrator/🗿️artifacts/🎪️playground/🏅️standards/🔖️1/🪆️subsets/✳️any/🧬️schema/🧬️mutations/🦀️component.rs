@@ -30,7 +30,7 @@ mod tests {
     use super::*;
     use protocol::{Mutation, MutationDiff, SemanticMutation};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn playground_mutation_round_trips_store() {
         let mut store = store::ArtifactStore::<PlaygroundSnapshot, PlaygroundMutation>::new(store::create_document_envelope(
             "playground.document",
@@ -47,7 +47,7 @@ mod tests {
         assert_eq!(store.snapshot().expect("snapshot").schema, "playground.custom");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn change_schema_inverse_round_trips() {
         let base = PlaygroundSnapshot::default();
         let mutation = PlaygroundMutation::ChangeSchema(super::super::change_schema::mutation::ChangeSchema { new_schema: "playground.custom".into() });
@@ -63,7 +63,7 @@ mod tests {
         assert_eq!(state, base);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn semantic_kinds_cover_every_variant() {
         assert_eq!(PlaygroundMutation::kinds().len(), 1);
         let mutation = PlaygroundMutation::ChangeSchema(super::super::change_schema::mutation::ChangeSchema { new_schema: "x".into() });
@@ -75,7 +75,7 @@ mod tests {
     /// ⚖️ `assert_mutation_inverse_law`/`assert_mutation_diff_absorb_law` (`protocol::os_spr::testkit`,
     /// reachable via this crate's existing `semio-framework-os-kernel` dependency — no new Cargo
     /// dependency needed) against the facet's one mutation kind.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn change_schema_obeys_the_inverse_and_absorb_laws() {
         let base = PlaygroundSnapshot { schema: "playground.base".into() };
         let change = PlaygroundMutation::ChangeSchema(super::super::change_schema::mutation::ChangeSchema { new_schema: "playground.changed".into() });
@@ -96,14 +96,14 @@ mod tests {
     /// `assert_outcome_policy_matrix` is not landed yet (checked at
     /// `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️testkit/🦀️component.rs`); TODO(1-D testkit
     /// laws pending): add a `MergePolicy` × `Severity` matrix test here once it lands.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn change_schema_outcome_is_deterministic() {
         let base = PlaygroundSnapshot { schema: "playground.base".into() };
         let mutation = PlaygroundMutation::ChangeSchema(super::super::change_schema::mutation::ChangeSchema { new_schema: "playground.changed".into() });
         protocol::os_spr::testkit::assert_outcome_deterministic(&base, &mutation);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn change_schema_no_op_when_unchanged() {
         let base = PlaygroundSnapshot { schema: "playground.same".into() };
         let mutation = PlaygroundMutation::ChangeSchema(super::super::change_schema::mutation::ChangeSchema { new_schema: "playground.same".into() });

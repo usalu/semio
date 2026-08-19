@@ -82,7 +82,7 @@ mod tests {
     use super::*;
     use crate::editor::procedural2d::testkit::{app, render as render_body};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn renders_preview_canvas_scene() {
         let mut app = app();
         assert!(render_body(&mut app, PROCEDURAL2D_PLAY_BODY_PREVIEW).contains("canvas-2d"));

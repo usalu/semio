@@ -36,7 +36,7 @@ pub async fn handle(payload: &CopyInviteLink, _doc: &ArtifactView<'_, SHomeSnaps
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn copy_invite_link_relays_share_link_with_default_ttl() {
         let history = semio_framework_plugin::HistoryView::empty();
         let doc_snapshot = SHomeSnapshot::default();
@@ -58,7 +58,7 @@ mod tests {
         assert_eq!(args_value["spaceId"], "sp-1");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn explicit_ttl_is_respected() {
         let history = semio_framework_plugin::HistoryView::empty();
         let doc_snapshot = SHomeSnapshot::default();

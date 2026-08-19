@@ -59,13 +59,13 @@ async fn history_tree_nodes(parent: &Option<String>, children_by_parent: &HashMa
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn definition_declares_a_tree_window() {
         let def = definition();
         assert_eq!(def.id, WINDOW_KIND_ID);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn render_nests_checkpoints_under_their_parent() {
         let history = HistoryView {
             columns: vec![

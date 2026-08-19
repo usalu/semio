@@ -407,7 +407,7 @@ TODO: Start new project `elements` that offers domain-agnostic primitives (such 
 
 `nakagin-capsule-tower-flat.snapshot.puzzle.v1.semio.cv.2x3.ifc` # uses defined protobuf schema with 2024 version
 `33-projektetage.presentation.v1.semio.a.2-0.pdf` # semio presentation artifact exported as pdf 2.0/a
-`33-projektetage.presentation.v1.semio.complete.isobmff.mp4` # semio presentation artifact exported as isobmff video
+`33-projektetage.presentation.v1.semio.h-264.isobmff.mp4` # semio presentation artifact exported as isobmff video h264 codec
 
 `bachelor-thesis.a.2-0.pdf` # pdf 2.0/a archive artifact
 

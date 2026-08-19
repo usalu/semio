@@ -21,13 +21,13 @@ pub struct BackboneWorkerHost {
 #[wasm_bindgen]
 impl BackboneWorkerHost {
     #[wasm_bindgen(constructor)]
-    pub fn new() -> Self {
+    pub async fn new() -> Self {
         console_error_panic_hook::set_once();
         Self { host: ArtifactHost::new(), documents: std::collections::HashMap::new() }
     }
 
     #[wasm_bindgen(js_name = handleRequestBytes)]
-    pub fn handle_request_bytes(&mut self, bytes: &[u8]) -> Result<(), JsValue> {
+    pub async fn handle_request_bytes(&mut self, bytes: &[u8]) -> Result<(), JsValue> {
         let request = backbone_worker_wire::decode_request(bytes).map_err(|error| JsValue::from_str(&error))?;
         match request {
             BackboneWorkerRequest::Open { document_id, schema, bindings, watch_external, actor } => {
@@ -66,7 +66,7 @@ impl BackboneWorkerHost {
     }
 
     #[wasm_bindgen(js_name = postReady)]
-    pub fn post_ready() {
+    pub async fn post_ready() {
         if let Ok(bytes) = backbone_worker_wire::encode_response(&BackboneWorkerResponse::Ready) {
             post_worker_message_bytes(&bytes);
         }
@@ -74,7 +74,7 @@ impl BackboneWorkerHost {
 }
 //#endregion 🔖️Worker
 
-fn post_worker_message_bytes(bytes: &[u8]) {
+async fn post_worker_message_bytes(bytes: &[u8]) {
     let global = js_sys::global();
     if let Ok(post_message) = js_sys::Reflect::get(&global, &JsValue::from_str("postMessage")) {
         if let Some(function) = post_message.dyn_ref::<js_sys::Function>() {

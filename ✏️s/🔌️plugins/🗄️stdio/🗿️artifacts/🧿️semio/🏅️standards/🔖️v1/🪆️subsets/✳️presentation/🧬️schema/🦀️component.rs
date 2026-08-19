@@ -23,7 +23,7 @@ pub struct SemioPresentationArtifact {
 }
 
 impl Default for SemioPresentationArtifact {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self::from_snapshot(SemioPresentationSnapshot::default())
     }
 }
@@ -123,7 +123,7 @@ pub mod derived_construction {
         use super::*;
         use crate::artifacts::semio::standards::v1::subsets::presentation::schema::snapshot::{Slide, SlideLayout, SlideMaster};
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn empty_from_snapshot_and_build_round_trip() {
             let builder = SemioPresentationBuilderConstruction::empty();
             assert_eq!(builder.clone().build().unwrap(), SemioPresentationSnapshot::default());
@@ -133,7 +133,7 @@ pub mod derived_construction {
             assert_eq!(builder2.build().unwrap(), populated);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn from_text_and_from_binary_round_trip_through_a_mutated_snapshot() {
             let mut snap = SemioPresentationSnapshot::default();
             snap.masters.push(SlideMaster { id: "m1".into(), shapes: Vec::new() });
@@ -149,7 +149,7 @@ pub mod derived_construction {
             assert_eq!(from_binary, snap);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn mutate_then_absorb_matches_direct_apply() {
             let builder = SemioPresentationBuilderConstruction::empty();
             let mutation = SemioPresentationMutation::InsertMaster { master: SlideMaster { id: "m1".into(), shapes: Vec::new() } };
@@ -238,7 +238,7 @@ pub mod derived_analysis {
             SemioPresentationSnapshot { masters: vec![SlideMaster { id: "m1".into(), shapes: Vec::new() }], ..Default::default() }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn sniff_reports_high_for_real_payloads_low_for_garbage() {
             let bytes = <SemioPresentationSnapshot as store::ArtifactPack>::encode_pack(&sample());
             assert_eq!(SemioPresentationAnalyzerAnalysis::sniff(&AnalyzeSource::Binary(&bytes)), IoConfidence::High);
@@ -249,7 +249,7 @@ pub mod derived_analysis {
             assert_eq!(SemioPresentationAnalyzerAnalysis::sniff(&AnalyzeSource::Text("garbage")), IoConfidence::Low);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn analyze_decodes_binary_and_text_sources() {
             let snap = sample();
             let bytes = <SemioPresentationSnapshot as store::ArtifactPack>::encode_pack(&snap);
@@ -262,7 +262,7 @@ pub mod derived_analysis {
             assert_eq!(analysis2.parts.snapshot, Some(snap));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn analyze_flags_low_confidence_on_undecodable_source() {
             let analysis = SemioPresentationAnalyzerAnalysis::analyze(&[AnalyzeSource::Binary(b"garbage")]);
             assert_eq!(analysis.confidence, IoConfidence::Low);

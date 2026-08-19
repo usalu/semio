@@ -28,7 +28,7 @@ pub struct Procedural2dPresence {
 }
 
 impl Default for Procedural2dPresence {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self {
             camera: CameraJson { x: 0.0, y: 0.0, zoom: 1.0 },
             show_mode: "preview".into(),

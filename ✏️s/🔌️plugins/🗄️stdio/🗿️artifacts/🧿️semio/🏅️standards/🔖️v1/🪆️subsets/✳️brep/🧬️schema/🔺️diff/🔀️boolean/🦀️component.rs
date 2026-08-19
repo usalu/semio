@@ -484,7 +484,7 @@ mod tests {
         make_convex_hull(body, &corners, rec).expect("offset cube hull")
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn disjoint_unit_boxes_fuse_volume_near_two() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
@@ -495,7 +495,7 @@ mod tests {
         assert!((vol - 2.0).abs() < 1e-3, "expected volume ≈ 2, got {vol}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn overlapping_aabb_intersect_volume_matches_dims() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
@@ -507,7 +507,7 @@ mod tests {
         assert!((vol - expected).abs() < 1e-3, "expected {expected}, got {vol}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn boolean_unite_is_deterministic() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
@@ -525,7 +525,7 @@ mod tests {
         assert_eq!(n1, n2);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn cut_disjoint_preserves_volume() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
@@ -537,7 +537,7 @@ mod tests {
         assert!((vol_cut - vol_a).abs() < 1e-3, "cut volume {vol_cut} vs A {vol_a}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn adversarial_scale_sweep_determinism() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
@@ -563,7 +563,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fuzz_random_aabb_intersect_volume_nonnegative() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();

@@ -215,7 +215,7 @@ mod carrier_law {
     use crate::artifacts::binary::BinarySnapshot;
     use store::{ArtifactDsl, ArtifactPack};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn carrier_native_is_raw() {
         for bytes in [Vec::<u8>::new(), vec![0x00, 0x01, 0xFF], b"hello".to_vec(), (0u8..=255).collect::<Vec<u8>>()] {
             let decoded = BinarySnapshot::decode_pack(&bytes).expect("decode");

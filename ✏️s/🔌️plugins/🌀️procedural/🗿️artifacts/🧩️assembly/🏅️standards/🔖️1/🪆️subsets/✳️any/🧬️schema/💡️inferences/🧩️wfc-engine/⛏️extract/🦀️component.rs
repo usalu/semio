@@ -39,7 +39,7 @@ pub struct Extract2dConfig {
 }
 
 impl Default for Extract2dConfig {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { window: 2, periodic_input: true, symmetry: SymmetryGroup2d::None }
     }
 }
@@ -182,13 +182,13 @@ mod tests {
         Sample2d::new(size, size, tiles)
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn extraction_rejects_empty_sample_list() {
         let cfg = Extract2dConfig::default();
         assert!(extract_2d(&[], &cfg).is_err());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn window_one_extracts_one_pattern_per_distinct_tile() {
         let sample = checkerboard_sample(4);
         let cfg = Extract2dConfig { window: 1, periodic_input: true, symmetry: SymmetryGroup2d::None };
@@ -196,7 +196,7 @@ mod tests {
         assert_eq!(extracted.model.pattern_count(), 2);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn window_two_deduplicates_repeated_windows() {
         let sample = checkerboard_sample(4);
         let cfg = Extract2dConfig { window: 2, periodic_input: true, symmetry: SymmetryGroup2d::None };
@@ -205,7 +205,7 @@ mod tests {
         assert_eq!(extracted.model.pattern_count(), 2);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn symmetry_expansion_can_only_add_patterns_never_remove() {
         let sample = checkerboard_sample(4);
         let cfg_none = Extract2dConfig { window: 2, periodic_input: true, symmetry: SymmetryGroup2d::None };
@@ -215,7 +215,7 @@ mod tests {
         assert!(d4.model.pattern_count() >= none.model.pattern_count());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn extracted_model_relations_match_von_neumann_stencil() {
         let sample = checkerboard_sample(4);
         let cfg = Extract2dConfig { window: 2, periodic_input: true, symmetry: SymmetryGroup2d::None };
@@ -223,7 +223,7 @@ mod tests {
         assert_eq!(extracted.model.relation_count(), 4);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn periodic_sample_solves_on_a_same_size_wrapped_grid() {
         // The canonical WFC sanity check: a periodic training sample's own tiling must remain a
         // satisfiable solution of the extracted model on a same-size, wrap-boundary grid — if
@@ -244,7 +244,7 @@ mod tests {
         assert!(matches!(outcome, crate::wfc_engine::outcome::SolveOutcome::Solved(_)), "extracted model must remain solvable on a same-size wrapped grid");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn window_content_is_preserved_for_decode() {
         let sample = checkerboard_sample(4);
         let cfg = Extract2dConfig { window: 2, periodic_input: true, symmetry: SymmetryGroup2d::None };
@@ -255,7 +255,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn multiple_samples_merge_frequencies() {
         let a = checkerboard_sample(4);
         let b = checkerboard_sample(4);

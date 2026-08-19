@@ -243,7 +243,7 @@ mod tests {
     /// 🧪️ Required proof: xml -> value -> xml -> value round trip preserves everything the
     /// value subset can represent (the whole document, structurally — nothing is lossy in THIS
     /// direction since the fixture already conforms to the tagged-map convention).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn xml_to_value_to_xml_round_trips_structurally() {
         let doc = XmlDocument {
             root: Some(XmlNode::Element {
@@ -263,12 +263,12 @@ mod tests {
         assert_eq!(round_trip(doc.clone()), doc);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn empty_document_round_trips() {
         assert_eq!(round_trip(XmlDocument::default()), XmlDocument::default());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn non_conforming_shape_is_a_hard_error_not_a_silent_default() {
         let nodes = HashMap::new();
         let mut visiting = HashSet::new();
@@ -276,7 +276,7 @@ mod tests {
         assert!(xml_document_from_semio(&bogus, &nodes, &mut visiting).is_err());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn ref_is_dereferenced_and_cycles_error() {
         let id = ValueId::new("self");
         let cyclic = SemioValue::Ref { id: id.clone() };

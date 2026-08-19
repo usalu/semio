@@ -13,7 +13,7 @@ mod tests {
     use crate::artifacts::flow::FlowSnapshot;
     use protocol::{Identified, Mutation, MutationDiff};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn move_widgets_inverse_restores_base() {
         let base = FlowSnapshot::default();
         let mutation = FlowMutation::MoveWidgets(crate::artifacts::flow::schema::mutations::move_widgets::mutation::MoveWidgets {
@@ -27,7 +27,7 @@ mod tests {
         assert_eq!(restored, base);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_widget_then_delete_widget_round_trips_to_base() {
         let base = FlowSnapshot::default();
         let widget = flow::Widget::InputNote { id: "note-1".into(), text: "hello".into() };
@@ -43,7 +43,7 @@ mod tests {
         assert_eq!(restored, after_create);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn connect_widgets_then_disconnect_widgets_round_trips_to_base() {
         let base = FlowSnapshot::default();
         let connect = FlowMutation::ConnectWidgets(crate::artifacts::flow::schema::mutations::connect_widgets::mutation::ConnectWidgets {
@@ -68,7 +68,7 @@ mod tests {
     /// 🌉️ The composite pilot: `duplicate-widget` plans `create-widget` then `connect-widgets` —
     /// applying it must land the same widget/synapse pair a hand-written create+connect would, and
     /// its `inverse` (folded from the SAME plan) must undo both in one shot.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn duplicate_widget_composite_round_trips_to_base() {
         let base = FlowSnapshot::default();
         let widget = flow::Widget::InputNote { id: "note-1".into(), text: "hello".into() };

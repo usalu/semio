@@ -105,7 +105,7 @@ mod tests {
     const ROUTE_A: &str = "bg_holz_fassade_botanique:bw_institut_botanique_ulg:0";
     const ROUTE_B: &str = "bg_stahl_mehrere_lycee_profiles_canopy:bw_lycee_block_3000:0";
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn patch_routes_emits_route_patch_ops_and_updates_document() {
         let mut app = app();
         let result = dispatch(&mut app, Gis2dCommand::PatchRoute(patch_route::PatchRoute { route_id: ROUTE_A.into(), field: "label".into(), value: "Renamed Route".into() }));
@@ -115,21 +115,21 @@ mod tests {
         assert_eq!(route.data.get("label").and_then(|value| value.as_str()), Some("Renamed Route"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn patch_routes_with_no_ids_emits_nothing() {
         let mut app = app();
         let result = dispatch(&mut app, Gis2dCommand::PatchRoutes(patch_routes::PatchRoutes { route_ids: Vec::new(), field: "label".into(), value: "x".into() }));
         assert!(result.mutations.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn patch_positions_with_malformed_json_emits_nothing() {
         let mut app = app();
         let result = dispatch(&mut app, Gis2dCommand::PatchPositions(patch_positions::PatchPositions { positions_json: "not json".into() }));
         assert!(result.mutations.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn patch_positions_diffs_the_incoming_array_into_granular_operations() {
         let mut app = app();
         dispatch(&mut app, Gis2dCommand::PatchPositions(patch_positions::PatchPositions { positions_json: r#"[{"id":"patched-1","lon":1.0,"lat":2.0}]"#.into() }));
@@ -140,7 +140,7 @@ mod tests {
 
     /// 🤝️ Definitional merge proof: two instances on one backbone patch DIFFERENT routes; after
     /// exchanging operations both converge and keep both edits — impossible under whole-map LWW snapshots.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn two_instances_converge_on_disjoint_route_edits() {
         let command_a = Gis2dCommand::PatchRoute(patch_route::PatchRoute { route_id: ROUTE_A.into(), field: "label".into(), value: "A".into() });
         let command_b = Gis2dCommand::PatchRoute(patch_route::PatchRoute { route_id: ROUTE_B.into(), field: "label".into(), value: "B".into() });

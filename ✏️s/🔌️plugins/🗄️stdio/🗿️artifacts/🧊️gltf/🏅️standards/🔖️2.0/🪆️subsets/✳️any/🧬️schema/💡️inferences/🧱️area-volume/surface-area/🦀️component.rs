@@ -31,7 +31,7 @@ pub async fn encode_result(indicators: &GltfEntityIndicators) -> Result<serde_js
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn descriptor_is_versioned_and_cacheable() {
         assert_eq!(descriptor().id, "s.stdio.gltf.inference.surface-area.v1");
         assert_eq!(descriptor().algorithm_version, 1);

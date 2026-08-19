@@ -27,7 +27,7 @@ struct KdHeapEntry {
 }
 
 impl PartialEq for KdHeapEntry {
-    async fn eq(&self, other: &Self) -> bool {
+    fn eq(&self, other: &Self) -> bool {
         self.cmp(other) == Ordering::Equal
     }
 }
@@ -35,13 +35,13 @@ impl PartialEq for KdHeapEntry {
 impl Eq for KdHeapEntry {}
 
 impl PartialOrd for KdHeapEntry {
-    async fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         Some(self.cmp(other))
     }
 }
 
 impl Ord for KdHeapEntry {
-    async fn cmp(&self, other: &Self) -> Ordering {
+    fn cmp(&self, other: &Self) -> Ordering {
         self.dist.total_cmp(&other.dist).then(self.id.cmp(&other.id))
     }
 }
@@ -515,12 +515,12 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn kd_nearest_and_k_nearest_match_brute_force_d2() {
         check_kd_nearest_parity::<2>(11);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn kd_nearest_and_k_nearest_match_brute_force_d3() {
         check_kd_nearest_parity::<3>(23);
     }
@@ -541,12 +541,12 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn kd_radius_matches_brute_force_d2() {
         check_kd_radius_parity::<2>(31);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn kd_radius_matches_brute_force_d3() {
         check_kd_radius_parity::<3>(41);
     }
@@ -572,17 +572,17 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn kd_aabb_visits_match_brute_force_d2() {
         check_kd_aabb_parity::<2>(51);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn kd_aabb_visits_match_brute_force_d3() {
         check_kd_aabb_parity::<3>(61);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn kd_empty_tree_is_safe() {
         let tree = KdTree::<3>::build(&[]);
         let q = [0.0; 3];
@@ -596,14 +596,14 @@ mod tests {
         assert!(full.k_nearest(&[0.0, 0.0], 0).is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn voxel_grid3_cell_of_floors_negative_coords() {
         let grid = VoxelGrid3::new(2.5);
         assert_eq!(grid.cell_of([-0.1, 0.0, 2.5]), (-1, 0, 1));
         assert_eq!(grid.cell_of([-2.5, -2.6, 4.9]), (-1, -2, 1));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn voxel_grid3_neighbors27_matches_brute_force() {
         let cell = 2.5;
         let mut grid = VoxelGrid3::new(cell);
@@ -636,7 +636,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn grid2_neighbors9_matches_brute_force() {
         let cell = 4.0;
         let mut grid = Grid2::new(cell);
@@ -666,7 +666,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn morton3_round_trips() {
         assert_eq!(morton3_encode(0, 0, 0), 0);
         assert_eq!(morton3_encode(1, 0, 0), 1);
@@ -681,7 +681,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn octree_downsample_preserves_counts_and_centroids() {
         let pts = make_cloud::<3>(2000, 99);
         let tree = PointOctree::build(&pts, 8);
@@ -717,7 +717,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn octree_range_matches_brute_force() {
         let pts = make_cloud::<3>(2000, 7);
         for &depth in &[0u32, 4, 8, 30] {
@@ -742,7 +742,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn octree_empty_build_is_safe() {
         let tree = PointOctree::build(&[], 8);
         assert!(tree.range([-1.0; 3], [1.0; 3]).is_empty());

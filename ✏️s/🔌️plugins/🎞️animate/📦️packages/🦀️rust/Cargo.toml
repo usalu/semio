@@ -40,6 +40,7 @@ semio-framework-os = { path = "../../../../../🧰️framework/🛍️products/�
 semio-framework-plugin = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", features = ["component-guest"], package = "semio-framework-plugin" }
 semio-framework-schema = { path = "../../../../../🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust", package = "semio-framework-schema" }
 framework_hash = { package = "semio-framework-hash", path = "../../../../../🧰️framework/🔨️modules/#⃣hash/📦️packages/🦀️rust" }
+semio-framework-dispatch-macros = { path = "../../../../../🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust" }
 serde.workspace = true
 serde_json.workspace = true
 blake3 = "1"
@@ -75,3 +76,6 @@ optional = true
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 wasm-bindgen.workspace = true
 
+
+[dev-dependencies]
+semio-framework-async-macros = { path = "../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }

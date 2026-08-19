@@ -50,13 +50,13 @@ mod tests {
     use crate::engine::space::SpaceCommand;
     use crate::demo_space_projection;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn space_command_op_text_round_trips_every_variant() {
         store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::OpenInstance(OpenInstance { node_id: Some("n1".into()) }));
         store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::CloseFocusedInstance(crate::engine::space::commands::close_focused_instance::CloseFocusedInstance {}));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn open_instance_emits_open_plugin_instance_effect_matching_instance() {
         seed_draw_plugin();
         let projection = demo_space_projection();
@@ -77,7 +77,7 @@ mod tests {
         assert_eq!(opened.2.as_deref(), Some(node.id.as_str()));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn open_and_close_focused_instance() {
         let projection = demo_space_projection();
         let config = SpaceConfig::default();

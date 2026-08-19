@@ -184,7 +184,7 @@ pub struct PptxSnapshot {
 }
 
 impl Default for PptxSnapshot {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { schema: STDIO_PPTX_DOCUMENT_SCHEMA.into(), opc: OpcPackage::default(), xml_parts: Vec::new(), presentation: PptxPresentation::default() }
     }
 }
@@ -313,7 +313,7 @@ impl store::ArtifactPack for PptxSnapshot {
 mod shadow_tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn logical_snapshot_and_facets_have_no_shadow_state() {
         let json = format!("{:?}", PptxSnapshot::default());
         for forbidden in ["physical", "sourceBytes", "nativeArchive", "semanticBlake3"] {

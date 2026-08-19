@@ -127,7 +127,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn deserialize_derives_real_sample_rate_and_channel_count_leaves_samples_empty() {
         let audio = semio_framework_plugin::resolve_ready(SemioAudioFromMp3::deserialize(&real_world_mp3())).expect("deserialize");
         assert_eq!(audio.sample_rate, 44_100); // MPEG1, index 0
@@ -137,14 +137,14 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn deserialize_carries_real_id3v2_title_and_id3v1_presence_as_tags() {
         let audio = semio_framework_plugin::resolve_ready(SemioAudioFromMp3::deserialize(&real_world_mp3())).expect("deserialize");
         assert!(audio.tags.iter().any(|t| t.key == "TIT2" && t.value == "Test Tone"));
         assert!(audio.tags.iter().any(|t| t.key == "id3v1.raw"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mono_channel_mode_maps_to_a_single_channel() {
         let mut mp3 = real_world_mp3();
         mp3.frames[0].header.channel_mode = 3;
@@ -152,7 +152,7 @@ mod tests {
         assert_eq!(audio.channels.len(), 1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn no_frames_honestly_yields_zero_sample_rate_and_zero_channels() {
         let mp3 = Mp3Snapshot::default();
         let audio = semio_framework_plugin::resolve_ready(SemioAudioFromMp3::deserialize(&mp3)).expect("deserialize");

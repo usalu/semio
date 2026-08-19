@@ -94,19 +94,19 @@ pub async fn create_energy_model_viewer() -> semio_framework_plugin::AppDefiniti
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_energy_model_viewer_builds_a_definition_for_the_viewer_role() {
         let def = create_energy_model_viewer();
         assert_eq!(def.role, semio_framework_plugin::AppRole::Viewer);
         assert_eq!(def.dialect, MODEL_DIALECT.into());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn viewer_dialect_matches_the_artifact_coordinate() {
         assert_eq!(<EnergyModelViewer as ArtifactViewer>::DIALECT, MODEL_DIALECT);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn viewer_declares_both_windows() {
         let def = create_energy_model_viewer();
         assert!(def.window_kinds.iter().any(|w| w.id == structure::WINDOW_KIND_ID));

@@ -54,13 +54,13 @@ mod tests {
         Block3dVortexTemplate { id: id.into(), vortex_kind: "door".into(), position, direction: [0.0, 1.0, 0.0], radius, label: None }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn empty_catalog_yields_default_bounds() {
         let snapshot = Block3dSnapshot::default();
         assert_eq!(compute_block3d_bounds(&snapshot), Block3dBounds::default());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn single_vortex_bounds_equal_its_own_inflated_footprint() {
         let mut snapshot = Block3dSnapshot::default();
         snapshot.vortices.push(vortex("v0", [1.0, 1.0, 1.0], 0.5));
@@ -69,7 +69,7 @@ mod tests {
         assert_eq!(bounds.vertex_count, 1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn multiple_vortices_union_their_footprints() {
         let mut snapshot = Block3dSnapshot::default();
         snapshot.vortices.push(vortex("v0", [1.0, 2.0, 3.0], 0.5));

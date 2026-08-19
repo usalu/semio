@@ -334,7 +334,7 @@ mod codec_tests {
         include_bytes!("../📚️examples/🎬️demo/🖼️assets/🎵️example.mp3").to_vec()
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn detects_a_synthetic_id3v2_header() {
         let mut bytes = b"ID3".to_vec();
         bytes.extend_from_slice(&[0x03, 0x00, 0x00]);
@@ -344,18 +344,18 @@ mod codec_tests {
         assert_eq!(hdr.size, 257);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn finds_a_synthetic_mpeg1_layer3_frame_sync() {
         let bytes = [0x00, 0x00, 0xFF, 0xFB, 0x90, 0x00];
         assert_eq!(find_frame_sync(&bytes), Some(2));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn no_id3v2_header_returns_none() {
         assert!(detect_id3v2_header(b"not an id3 tag").is_none());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn frame_header_bit_layout_round_trips() {
         // FF FB 90 C4: MPEG1(11) Layer III(01) no-CRC(1), bitrate idx 9, sr idx 0, mono, original.
         // 128kbps/44100Hz gives a real 417-byte frame (`144*128000/44100`, no padding) —
@@ -382,7 +382,7 @@ mod codec_tests {
     /// every typed header field must round-trip exactly, and the full byte stream (incl. opaque
     /// payload bytes) must re-encode byte-identical, even though the payload itself is never
     /// Huffman-decoded.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn codec_retention_law() {
         let fixture = real_fixture();
         let decoded = decode_mp3(&fixture).expect("decode real fixture");
@@ -419,7 +419,7 @@ mod codec_tests {
     //#endregion codec_retention_law
 
     //#region 🔖️Id3v1Retention
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn id3v1_trailer_round_trips() {
         let mut bytes = Vec::new();
         bytes.extend_from_slice(&[0xFF, 0xFB, 0x90, 0xC4]);

@@ -765,7 +765,7 @@ pub mod part_5 {
     }
 
     impl Default for ScriptLimits {
-        async fn default() -> Self {
+        fn default() -> Self {
             Self { max_steps: 10_000, max_recursion: 64, timeout_ms: 50 }
         }
     }
@@ -944,14 +944,14 @@ pub const ISO16757_DOCUMENT_SCHEMA: &str = "semio.norm.iso16757/v1";
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dimension_signature_compatible_checks_equality() {
         assert!(DimensionSignature::LENGTH.compatible(DimensionSignature::LENGTH));
         assert!(!DimensionSignature::LENGTH.compatible(DimensionSignature::LENGTH_3));
         assert!(!DimensionSignature::DIMENSIONLESS.compatible(DimensionSignature::LENGTH));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn cardinality_variants_and_satisfies() {
         let optional = Cardinality::optional();
         assert!(optional.satisfies(0));
@@ -965,14 +965,14 @@ mod tests {
         assert!(unbounded.satisfies(1_000));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn geometry_catalogue_default_primitives() {
         let primitives = part_2::GeometryCatalogue::default_primitives();
         let ids: Vec<&str> = primitives.iter().map(|p| p.id.as_str()).collect();
         assert_eq!(ids, vec!["box", "cylinder", "sphere"]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn bounding_box_overlaps() {
         let a = part_2::BoundingBox::from_size(1.0, 1.0, 1.0);
         let touching = part_2::BoundingBox { min: [0.9, 0.9, 0.9], max: [1.9, 1.9, 1.9] };
@@ -982,7 +982,7 @@ mod tests {
         assert!(a.overlaps(far, 10.0));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn script_limits_default_values() {
         let limits = part_5::ScriptLimits::default();
         assert_eq!(limits.max_steps, 10_000);

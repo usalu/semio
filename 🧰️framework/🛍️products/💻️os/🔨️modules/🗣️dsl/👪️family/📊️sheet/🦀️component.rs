@@ -39,6 +39,9 @@ impl std::fmt::Display for EvalError {
 /// deliberately-closed function set a calc sheet actually needs (`min`, `max`, `abs`, `sqrt`) —
 /// not a general call-out mechanism; an unrecognized name/arity is a diagnosed `EvalError`, never
 /// a silent 0 or a panic.
+// 🚫️async: E1 pure recursive evaluator, consumed by `Iterator::map` sync closure in the `Call` arm
+// below — and confirmed sync-by-design by every existing call site, including test assertions that
+// compare its `Result` directly with no `.await` in sight — see R9
 pub fn evaluate(expr: &ExprValue, env: &HashMap<String, f64>) -> Result<f64, EvalError> {
     match expr {
         ExprValue::Num(v) => Ok(*v),
@@ -86,14 +89,14 @@ pub struct Trace {
     pub value: f64,
 }
 
-fn find_arrow_after(tokens: &[crate::os_dsl::SpannedToken], after: usize) -> Option<usize> {
+async fn find_arrow_after(tokens: &[crate::os_dsl::SpannedToken], after: usize) -> Option<usize> {
     tokens.iter().position(|t| t.kind == TokenKind::Arrow).filter(|&i| i > after)
 }
 
 /// @emoji 🔌️ Parses one standalone trace line: `name = expr -> value`.
-pub fn parse_trace_text(text: &str) -> Result<Trace, TextError> {
+pub async fn parse_trace_text(text: &str) -> Result<Trace, TextError> {
     let limits = Limits::default();
-    let tokens: Vec<_> = lex(text, &limits, false)?.into_iter().filter(|t| !t.kind.is_trivia() && t.kind != TokenKind::Eof).collect();
+    let tokens: Vec<_> = lex(text, &limits, false).await?.into_iter().filter(|t| !t.kind.is_trivia() && t.kind != TokenKind::Eof).collect();
 
     let name_token = tokens.first().filter(|t| t.kind == TokenKind::Ident).ok_or_else(|| TextError::new("expected a trace name", TextSpan::at(1, 1)))?;
     let name = name_token.text.as_str().to_string();
@@ -102,10 +105,10 @@ pub fn parse_trace_text(text: &str) -> Result<Trace, TextError> {
         return Err(TextError::new("expected `=` after the trace name", tokens.get(equals_index).map(|t| t.span).unwrap_or(TextSpan::at(1, 1))));
     }
 
-    let arrow_index = find_arrow_after(&tokens, equals_index).ok_or_else(|| TextError::new("expected `->` closing the trace's expression", TextSpan::at(1, 1)))?;
+    let arrow_index = find_arrow_after(&tokens, equals_index).await.ok_or_else(|| TextError::new("expected `->` closing the trace's expression", TextSpan::at(1, 1)))?;
     let expr_start = tokens[equals_index].byte_range.1 as usize;
     let expr_end = tokens[arrow_index].byte_range.0 as usize;
-    let expr = parse_expr_text(text[expr_start..expr_end].trim())?;
+    let expr = parse_expr_text(text[expr_start..expr_end].trim()).await?;
 
     let value_token = tokens.get(arrow_index + 1).filter(|t| matches!(t.kind, TokenKind::Float | TokenKind::Int)).ok_or_else(|| {
         TextError::new("expected a number after `->`", tokens.get(arrow_index + 1).map(|t| t.span).unwrap_or(TextSpan::at(1, 1)))
@@ -120,7 +123,7 @@ pub fn parse_trace_text(text: &str) -> Result<Trace, TextError> {
 
 /// @emoji 🖨️ Canonical printer — prints `value` exactly as stored (does NOT recompute; that's
 /// `canonicalize_trace`'s job, matching this engine's `parse`/`print`/`canonicalize` split).
-pub fn print_trace(trace: &Trace) -> String {
+pub async fn print_trace(trace: &Trace) -> String {
     format!("{} = {} -> {}", trace.name, print_expr(&trace.expr), crate::os_dsl::format_f64(trace.value))
 }
 
@@ -128,10 +131,10 @@ pub fn print_trace(trace: &Trace) -> String {
 /// (ignoring whatever value was written), and reprints with the freshly computed value. A hand-
 /// edited or stale trace canonicalizes to the correct one; an unparseable expression or an
 /// evaluation error (unknown variable, etc.) surfaces as `Err`, never silently keeps the old value.
-pub fn canonicalize_trace(text: &str, env: &HashMap<String, f64>) -> Result<String, TextError> {
-    let trace = parse_trace_text(text)?;
+pub async fn canonicalize_trace(text: &str, env: &HashMap<String, f64>) -> Result<String, TextError> {
+    let trace = parse_trace_text(text).await?;
     let value = evaluate(&trace.expr, env).map_err(|e| TextError::new(e.to_string(), TextSpan::at(1, 1)))?;
-    Ok(print_trace(&Trace { value, ..trace }))
+    Ok(print_trace(&Trace { value, ..trace }).await)
 }
 //#endregion 🔖️Trace
 
@@ -140,38 +143,38 @@ pub fn canonicalize_trace(text: &str, env: &HashMap<String, f64>) -> Result<Stri
 mod tests {
     use super::*;
 
-    fn env(pairs: &[(&str, f64)]) -> HashMap<String, f64> {
+    async fn env(pairs: &[(&str, f64)]) -> HashMap<String, f64> {
         pairs.iter().map(|(k, v)| (k.to_string(), *v)).collect()
     }
 
-    #[test]
-    fn evaluates_a_load_combination_formula() {
+    #[semio_framework_async_macros::async_test]
+    async fn evaluates_a_load_combination_formula() {
         let expr = parse_expr_text("1.35*G + 1.5*Q").expect("parse_expr_text");
         let value = evaluate(&expr, &env(&[("G", 100.0), ("Q", 50.0)])).expect("evaluate");
         assert!((value - 210.0).abs() < 1e-9, "got {value}");
     }
 
-    #[test]
-    fn evaluates_min_max_abs_sqrt() {
+    #[semio_framework_async_macros::async_test]
+    async fn evaluates_min_max_abs_sqrt() {
         assert_eq!(evaluate(&parse_expr_text("min(3, 5)").unwrap(), &env(&[])), Ok(3.0));
         assert_eq!(evaluate(&parse_expr_text("max(3, 5)").unwrap(), &env(&[])), Ok(5.0));
         assert_eq!(evaluate(&parse_expr_text("abs(0-4)").unwrap(), &env(&[])), Ok(4.0));
         assert_eq!(evaluate(&parse_expr_text("sqrt(9)").unwrap(), &env(&[])), Ok(3.0));
     }
 
-    #[test]
-    fn unknown_variable_and_function_are_diagnosed_not_panicked() {
+    #[semio_framework_async_macros::async_test]
+    async fn unknown_variable_and_function_are_diagnosed_not_panicked() {
         assert_eq!(evaluate(&parse_expr_text("z").unwrap(), &env(&[])), Err(EvalError::UnknownVariable("z".to_string())));
         assert_eq!(evaluate(&parse_expr_text("frobnicate(1)").unwrap(), &env(&[])), Err(EvalError::UnknownFunction("frobnicate".to_string(), 1)));
     }
 
-    #[test]
-    fn division_by_zero_is_diagnosed() {
+    #[semio_framework_async_macros::async_test]
+    async fn division_by_zero_is_diagnosed() {
         assert_eq!(evaluate(&parse_expr_text("1/0").unwrap(), &env(&[])), Err(EvalError::DivisionByZero));
     }
 
-    #[test]
-    fn parses_and_prints_a_trace_line() {
+    #[semio_framework_async_macros::async_test]
+    async fn parses_and_prints_a_trace_line() {
         // `crate::os_dsl::schema::print_expr`'s canonical form spaces every binary operator (`1.35 * G`, not
         // `1.35*G`) — parse accepts either spacing; only the printed/canonical form is fixed.
         let trace = parse_trace_text("uls = 1.35*G + 1.5*Q -> 210").expect("parse_trace_text");
@@ -180,37 +183,37 @@ mod tests {
         assert_eq!(print_trace(&trace), "uls = 1.35 * G + 1.5 * Q -> 210");
     }
 
-    #[test]
-    fn canonicalize_trace_recomputes_a_stale_value() {
+    #[semio_framework_async_macros::async_test]
+    async fn canonicalize_trace_recomputes_a_stale_value() {
         let stale = "uls = 1.35*G + 1.5*Q -> 999";
         let canonical = canonicalize_trace(stale, &env(&[("G", 100.0), ("Q", 50.0)])).expect("canonicalize_trace");
         assert_eq!(canonical, "uls = 1.35 * G + 1.5 * Q -> 210");
     }
 
-    #[test]
-    fn canonicalize_trace_is_idempotent_once_correct() {
+    #[semio_framework_async_macros::async_test]
+    async fn canonicalize_trace_is_idempotent_once_correct() {
         let correct = "uls = 1.35 * G + 1.5 * Q -> 210";
         let canonical = canonicalize_trace(correct, &env(&[("G", 100.0), ("Q", 50.0)])).expect("canonicalize_trace");
         assert_eq!(canonical, correct);
     }
 
-    #[test]
-    fn canonicalize_trace_surfaces_an_unknown_variable_as_an_error() {
+    #[semio_framework_async_macros::async_test]
+    async fn canonicalize_trace_surfaces_an_unknown_variable_as_an_error() {
         let err = canonicalize_trace("uls = 1.35*G -> 135", &env(&[])).unwrap_err();
         assert!(err.message.contains("unknown variable"), "unexpected message: {}", err.message);
     }
 
     /// @emoji 📖️ The fragment's `.grammar` file must at least parse under `dsl_grammar`'s parser.
-    #[test]
-    fn grammar_file_is_syntactically_valid() {
+    #[semio_framework_async_macros::async_test]
+    async fn grammar_file_is_syntactically_valid() {
         let source = include_str!("📖️family-sheet.grammar.semio");
         let grammar = crate::os_dsl::grammar::parse_grammar(source).expect("family-sheet.grammar must parse");
         assert_eq!(grammar.id, "family-sheet");
         assert!(grammar.productions.len() > 10, "family-sheet should cover qty, assign, expr, and eng-record");
     }
 
-    #[test]
-    fn round_trip_matrix() {
+    #[semio_framework_async_macros::async_test]
+    async fn round_trip_matrix() {
         let sources = vec!["uls = 1.35 * G + 1.5 * Q -> 210", "check = N-Ed / N-c-Rd -> 0.28", "simple = 5 -> 5"];
         for source in sources {
             let trace = parse_trace_text(source).unwrap_or_else(|e| panic!("parse of {source:?} failed: {e:?}"));

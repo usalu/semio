@@ -32,7 +32,7 @@ mod tests {
     use super::*;
     
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_binary_round_trips_and_agrees_with_text() {
         let operation = crate::artifacts::curate::schema::mutations::create_curated_item(crate::artifacts::curate::CuratedItem { object_id: "beam-glulam-gl24h".into(), count: 3 });
         store::os_store::test_support::assert_op_text_binary_equivalence(&operation);
@@ -40,7 +40,7 @@ mod tests {
         assert_eq!(decode_op(&bytes).expect("decode"), operation);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn curate_document_text_round_trips_through_a_vcs_store() {
         let document = crate::artifacts::curate::curate_snapshot_from_stock(crate::artifacts::curate::schema::demo_stock(), Vec::new());
         let envelope = store::create_document_envelope(crate::artifacts::curate::SOURCING_CURATE_SCHEMA, "sourcing-curate-test", document, None);

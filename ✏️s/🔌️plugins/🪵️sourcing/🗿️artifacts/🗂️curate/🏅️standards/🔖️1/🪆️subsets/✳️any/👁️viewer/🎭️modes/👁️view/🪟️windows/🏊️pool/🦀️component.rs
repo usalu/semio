@@ -41,14 +41,14 @@ pub async fn render(document: &CurateSnapshot) -> UiNode {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn definition_uses_the_framework_table_window_kit() {
         let def = definition();
         assert_eq!(def.id, TableWindowKit::KIND_ID);
         assert_eq!(def.body_key, BODY_KEY);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn view_model_lists_every_stock_row_with_five_columns() {
         let document = crate::artifacts::curate::schema::default_document();
         let stock = stock_of(&document);
@@ -57,7 +57,7 @@ mod tests {
         assert_eq!(view.rows.len(), stock.len());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn render_produces_a_table_ui_node() {
         let document = crate::artifacts::curate::schema::default_document();
         let json = serde_json::to_string(&render(&document)).expect("render json");

@@ -73,7 +73,7 @@ mod tests {
     use super::*;
     use crate::editor::space_index::config::SpaceIndexMember;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn empty_config_renders_the_empty_state() {
         let node = render(&SpaceIndexConfig::default());
         let json = serde_json::to_string(&node).unwrap();
@@ -82,7 +82,7 @@ mod tests {
         assert!(json.contains("s-space-share"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn members_render_with_a_remove_action_each() {
         let config = SpaceIndexConfig { members: vec![SpaceIndexMember { user_id: "u-1".into(), email: "a@example.com".into(), display_name: "Alice".into(), role: "author".into() }], ..Default::default() };
         let node = render(&config);
@@ -92,7 +92,7 @@ mod tests {
         assert!(json.contains("author"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn public_visibility_offers_make_private() {
         let config = SpaceIndexConfig { visibility: "public".into(), ..Default::default() };
         let node = render(&config);

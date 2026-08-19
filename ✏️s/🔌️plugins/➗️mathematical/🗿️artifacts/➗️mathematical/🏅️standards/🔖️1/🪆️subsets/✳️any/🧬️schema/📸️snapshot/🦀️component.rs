@@ -95,7 +95,7 @@ pub struct EquationSnapshot {
 }
 
 impl Default for EquationSnapshot {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { expr: EquationNode { label: EquationNodeLabel(0), kind: EquationNodeKind::Integer { lexeme: "0".to_string() } }, next_label: 1 }
     }
 }
@@ -193,7 +193,7 @@ pub async fn expr_to_equation_node(expr: &crate::cas::expr::Expr, next_label: &m
 //#endregion 🔖️Equation
 
 impl Default for MathematicalSnapshot {
-    async fn default() -> Self {
+    fn default() -> Self {
         crate::artifacts::mathematical::mathematical_snapshot_with_state(MathematicalGraph::default(), MathematicalGeometry::default())
     }
 }

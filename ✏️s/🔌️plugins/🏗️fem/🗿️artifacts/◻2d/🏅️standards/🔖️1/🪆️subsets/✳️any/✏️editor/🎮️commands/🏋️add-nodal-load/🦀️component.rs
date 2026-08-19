@@ -79,7 +79,7 @@ mod tests {
         dispatch(app, Fem2dCommand::AddLoadCase(add_load_case::AddLoadCase { name: "Dead".into(), self_weight: false }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_load_case_and_combination_emit_ops_2d() {
         let mut app = fem2d_app();
         with_dead_case(&mut app);
@@ -91,7 +91,7 @@ mod tests {
         assert_eq!(app.snapshot().expect("snapshot").combinations.last().expect("combination added").terms, vec![crate::artifacts::fem2d::FemCombinationTerm { case_id: dead_id, factor: 1.35 }]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_nodal_load_with_no_existing_case_creates_one_2d() {
         let mut app = fem2d_app();
         dispatch(&mut app, Fem2dCommand::AddNodalLoad(AddNodalLoad { node_id: "n1".into(), dof: FemDof::Ty, value: -5000.0, case_id: None }));
@@ -101,7 +101,7 @@ mod tests {
         assert!(matches!(snapshot.load_cases[0].loads[0], FemLoad::Nodal { .. }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_area_load_targets_named_case_2d() {
         let mut app = fem2d_app();
         with_dead_case(&mut app);
@@ -113,7 +113,7 @@ mod tests {
         assert!(matches!(load_case.loads[0], FemLoad::Area { .. }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_self_weight_toggles_case_2d() {
         let mut app = fem2d_app();
         with_dead_case(&mut app);
@@ -122,7 +122,7 @@ mod tests {
         assert!(app.snapshot().expect("snapshot").load_cases[0].self_weight);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_self_weight_unknown_case_is_a_no_op_2d() {
         let mut app = fem2d_app();
         with_dead_case(&mut app);
@@ -130,7 +130,7 @@ mod tests {
         assert!(!app.snapshot().expect("snapshot").load_cases[0].self_weight);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_nodal_load_action_targets_named_case_2d() {
         let mut app = fem2d_app();
         with_dead_case(&mut app);
@@ -142,7 +142,7 @@ mod tests {
         assert!(matches!(load_case.loads[0], FemLoad::Nodal { .. }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_member_udl_action_emits_op_2d() {
         let mut app = fem2d_app();
         with_dead_case(&mut app);

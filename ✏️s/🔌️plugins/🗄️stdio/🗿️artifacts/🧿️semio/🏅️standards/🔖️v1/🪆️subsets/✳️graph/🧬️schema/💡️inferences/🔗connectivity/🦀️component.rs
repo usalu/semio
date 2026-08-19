@@ -146,7 +146,7 @@ mod tests {
     }
 
     //#region 🧪️Honesty
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn connected_nodes_share_a_component_and_isolated_node_gets_its_own() {
         let values = store::infer_field::<SemioGraphSnapshot, NodeConnectivity>(&two_component_snapshot(), None);
         let a = values.get("a").expect("a present");
@@ -159,7 +159,7 @@ mod tests {
         assert_eq!(c.degree, 0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn a_self_loop_counts_degree_twice() {
         let mut snapshot = two_component_snapshot();
         snapshot.edges.push(edge("e2", "c", "c"));
@@ -167,7 +167,7 @@ mod tests {
         assert_eq!(values.get("c").expect("c present").degree, 2);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn an_all_empty_snapshot_yields_an_empty_plan() {
         let values = store::infer_field::<SemioGraphSnapshot, NodeConnectivity>(&SemioGraphSnapshot::default(), None);
         assert!(values.is_empty());
@@ -175,7 +175,7 @@ mod tests {
     //#endregion 🧪️Honesty
 
     //#region 🧪️CacheTransparencyLaw
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn disabled_cache_matches_pure_recompute() {
         let snapshot = two_component_snapshot();
         let pure = store::infer_field::<SemioGraphSnapshot, NodeConnectivity>(&snapshot, None);
@@ -186,7 +186,7 @@ mod tests {
     //#endregion 🧪️CacheTransparencyLaw
 
     //#region 🧪️IncrementalityLaw
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn identical_snapshot_recompute_is_a_cache_hit() {
         let mut cache = InferenceCache::new(InferenceCacheConfig { enabled: true, record_stats: true, ..Default::default() });
         let base = two_component_snapshot();
@@ -202,7 +202,7 @@ mod tests {
     /// property by design (see this file's doc header) — an edit to `c`'s isolated neighbourhood
     /// still misses `a`/`b`'s entries too, because `dep_input` folds in the entire edge/node set
     /// for every key (plus `key` itself — see that method's own doc comment for why).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn editing_any_edge_misses_every_entry_because_connectivity_is_whole_graph() {
         let mut cache = InferenceCache::new(InferenceCacheConfig { enabled: true, record_stats: true, ..Default::default() });
         let base = two_component_snapshot();
@@ -225,7 +225,7 @@ mod tests {
     /// to the SAME `DepHash` and the cache would hand one of them back the other's
     /// `SemioGraphNodeConnectivity` verbatim. Proven by asserting every cached value matches its
     /// own uncached recompute AND that two structurally-different nodes stay distinct.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn distinct_keys_never_collide_in_the_cache() {
         let mut cache = InferenceCache::new(InferenceCacheConfig { enabled: true, record_stats: true, ..Default::default() });
         let base = two_component_snapshot();

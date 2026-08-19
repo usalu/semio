@@ -28,7 +28,7 @@ pub struct LayoutInference {
 // `infer(&LayoutSnapshot::default())`. An empty layout document (no pages/spreads/parent pages) has
 // an unambiguous empty topology, so that's what this hand-written `Default` returns directly.
 impl Default for LayoutInference {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { topology: LayoutTopology::empty() }
     }
 }
@@ -114,13 +114,13 @@ mod tests {
     //#endregion 🧸️Fixtures
 
     //#region 🧪️InferenceLaws
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = snapshot_with_master_and_spread();
         assert_eq!(LayoutInference::infer(&snapshot), LayoutInference::infer(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         let empty = serde_json::from_value::<LayoutSnapshot>(serde_json::json!({
             "schema": "semio.layout/v1",
@@ -133,7 +133,7 @@ mod tests {
         assert_eq!(LayoutInference::infer(&empty), LayoutInference::default());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn page_topologically_follows_its_master_and_spread() {
         let snapshot = snapshot_with_master_and_spread();
         let inferred = LayoutInference::infer(&snapshot);

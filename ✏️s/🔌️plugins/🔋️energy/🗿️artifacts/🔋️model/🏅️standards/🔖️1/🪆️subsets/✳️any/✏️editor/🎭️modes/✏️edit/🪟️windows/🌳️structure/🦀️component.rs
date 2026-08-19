@@ -82,14 +82,14 @@ pub async fn render(document: &EnergyModelSnapshot) -> UiNode {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn definition_declares_a_tree_window() {
         let def = definition();
         assert_eq!(def.id, WINDOW_KIND_ID);
         assert_eq!(def.body_key, BODY_KEY);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn render_lists_name_version_and_every_collection_count() {
         let document = EnergyModelSnapshot::default();
         let UiNode::Tree(node) = render(&document) else { panic!("expected Tree") };

@@ -86,7 +86,7 @@ pub struct SemioAudioSnapshot {
 }
 
 impl Default for SemioAudioSnapshot {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { schema: STDIO_SEMIOAUDIO_DOCUMENT_SCHEMA.into(), sample_rate: 0, format: SemioAudioFormat::default(), channels: Vec::new(), tags: Vec::new() }
     }
 }
@@ -406,7 +406,7 @@ mod tests {
         demo_audio_snapshot()
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn json_pack_round_trips() {
         let snap = sample_snapshot();
         let bytes = <SemioAudioSnapshot as store::ArtifactPack>::encode_pack(&snap);
@@ -414,7 +414,7 @@ mod tests {
         assert_eq!(snap, back);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dsl_text_round_trips() {
         let snap = sample_snapshot();
         let text = <SemioAudioSnapshot as store::ArtifactDsl>::print_dsl(&snap);
@@ -422,7 +422,7 @@ mod tests {
         assert_eq!(snap, back);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn default_snapshot_has_no_channels_or_tags() {
         let snap = SemioAudioSnapshot::default();
         assert!(snap.channels.is_empty());
@@ -432,7 +432,7 @@ mod tests {
 
     /// 🧪️ codec_retention_law: decode(encode(snapshot)) is byte-for-byte structurally identical
     /// on a fully-populated snapshot (channels/tags non-empty), not just the default.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn codec_retention_law() {
         let snap = sample_snapshot();
         let bytes = <SemioAudioSnapshot as store::ArtifactPack>::encode_pack(&snap);

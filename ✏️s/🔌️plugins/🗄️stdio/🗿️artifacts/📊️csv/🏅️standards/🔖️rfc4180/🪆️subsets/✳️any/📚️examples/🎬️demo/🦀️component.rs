@@ -31,7 +31,7 @@ mod tests {
     
     use store::os_store::test_support::{self, ExampleAsset, IoFidelityClass, SubsetRoundtripSpec};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn demo_source_nonempty() {
         assert!(!PRIMARY_TEXT.is_empty());
         let _ = source();
@@ -87,7 +87,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn demo_subset_integrated_roundtrip() {
         let asset = ExampleAsset { bytes: NATIVE_BYTES, text: Some(std::str::from_utf8(NATIVE_BYTES).expect("utf-8 csv")), provenance: "✳️any/📚️examples/🎬️demo/🖼️assets/📊️example.csv" };
         test_support::assert_subset_roundtrip::<CsvAnyRoundtrip>(&asset, None);

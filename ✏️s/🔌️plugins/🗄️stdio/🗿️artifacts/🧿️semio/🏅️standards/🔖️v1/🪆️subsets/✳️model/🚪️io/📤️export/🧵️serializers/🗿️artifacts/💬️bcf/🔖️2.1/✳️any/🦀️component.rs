@@ -138,7 +138,7 @@ mod tests {
 
     /// 🧪️ Required proof: bcf -> model -> bcf -> model round trip preserves everything `model`
     /// can represent (topic metadata, comments, referenced-guid relations, stub elements).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn bcf_to_model_to_bcf_to_model_round_trips() {
         let s1 = model_from_bcf(&fixture());
         let bcf_x = bcf_from_model(&s1);
@@ -146,7 +146,7 @@ mod tests {
         assert_eq!(s1, s2, "model-level round trip through the reconstructed BCF must be exact");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn non_topic_elements_and_spatial_are_dropped_not_forced() {
         let mut s1 = model_from_bcf(&fixture());
         // hand-add content BCF cannot represent

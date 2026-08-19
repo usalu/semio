@@ -110,14 +110,14 @@ mod tests {
     use super::*;
     use crate::editor::gis3d::testkit::{app, render as render_body};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn renders_the_world_3d_terrain_scene() {
         let mut app = app();
         let json = render_body(&mut app, GIS3D_PLAY_BODY_COMPOSITE);
         assert!(json.contains("world-3d"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn the_fixture_pins_reach_the_scene_as_world_instances() {
         let mut app = app();
         let json = render_body(&mut app, GIS3D_PLAY_BODY_COMPOSITE);
@@ -125,7 +125,7 @@ mod tests {
         assert!(json.contains("pin"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn the_definition_binds_the_world3d_surface_to_the_composite_body() {
         let definition = definition();
         assert_eq!(definition.id, GIS3D_PLAY_WINDOW_MAIN);

@@ -17,7 +17,7 @@ pub struct JsonIntoNote;
 impl Deserializer<NoteSnapshot> for JsonIntoNote {
     const FROM: Dialect = JSON_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Exact;
-    async fn deserialize(payload: &IoPayload) -> IoResult<NoteSnapshot> {
+    fn deserialize(payload: &IoPayload) -> IoResult<NoteSnapshot> {
         let IoPayload::Text(text) = payload else {
             return Err(IoError { message: "JsonIntoNote: expected a text json payload".to_string(), diagnostics: Vec::new() });
         };

@@ -249,7 +249,7 @@ mod tests {
     use crate::artifacts::en1999::mutations::En1999Mutation;
     use protocol::{Mutation as _, MutationDiff};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn change_mutation_diff_updates_only_its_field() {
         let base = En1999Snapshot::default();
         let mutation = En1999Mutation::ChangeNEdKn(crate::artifacts::en1999::mutations::change_n_ed_kn::mutation::ChangeNEdKn { new_n_ed_kn: 95.0 });

@@ -168,7 +168,7 @@ pub async fn canvas_layers(engine: &mut LayoutEngine, doc: &LayoutSnapshot, conf
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn active_page_falls_back_to_first_page_when_config_id_unresolved() {
         let doc = crate::artifacts::layout::schema::default_document();
         let config = LayoutConfig { active_page_id: "no-such-page".into(), ..LayoutConfig::default() };
@@ -176,7 +176,7 @@ mod tests {
         assert_eq!(page.id, doc.pages[0].id);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn canvas_layers_renders_the_page_background() {
         let doc = crate::artifacts::layout::schema::default_document();
         let config = LayoutConfig::default();

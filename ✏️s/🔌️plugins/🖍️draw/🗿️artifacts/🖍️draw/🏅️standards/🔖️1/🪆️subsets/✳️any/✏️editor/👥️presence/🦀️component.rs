@@ -22,7 +22,7 @@ pub struct DrawPresence {
 }
 
 impl Default for DrawPresence {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { engagement_input: String::new(), camera: DrawCamera::default(), active_utility_id: "selectDirect".into() }
     }
 }

@@ -29,7 +29,7 @@ mod tests {
     use crate::artifacts::block2d::{Block2dSnapshot, BLOCK_2D_SCHEMA};
     use store::{create_document_envelope, ArtifactCommand};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn block2d_document_vcs_replays_granular_operations() {
         use crate::artifacts::block2d::schema::mutations::{self as m, Block2dStore};
 
@@ -39,7 +39,7 @@ mod tests {
         assert_eq!(projection.node_kind.name, "n1");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn block2d_operation_binary_round_trips() {
         let operation = crate::artifacts::block2d::schema::mutations::delete_handle("h0".into());
         let bytes = encode_op(&operation).expect("encode");

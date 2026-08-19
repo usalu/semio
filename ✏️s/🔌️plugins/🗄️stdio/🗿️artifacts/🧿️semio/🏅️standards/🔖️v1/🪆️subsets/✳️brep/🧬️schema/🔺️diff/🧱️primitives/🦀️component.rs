@@ -632,7 +632,7 @@ mod tests {
         assert!(ring_issues.is_empty(), "ring integrity failed: {ring_issues:?}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn make_box_euler_and_validate() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
@@ -646,7 +646,7 @@ mod tests {
     }
 
     /// 🧱 The whole box's provenance escapes the call — this is Phase 1's real deliverable, tested.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn make_box_surfaces_its_op_delta_to_the_caller() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
@@ -656,7 +656,7 @@ mod tests {
         assert!(delta.deleted.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn make_box_rejects_non_positive() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
@@ -664,7 +664,7 @@ mod tests {
         assert!(make_box(&mut body, 1.0, -1.0, 1.0, &mut rec).is_err());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn make_sphere_two_hemispheres_euler() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
@@ -678,7 +678,7 @@ mod tests {
         assert!(make_sphere(&mut body, 1.0, 3, &mut rec).is_err());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn make_cylinder_three_faces_and_rings() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
@@ -690,7 +690,7 @@ mod tests {
         assert!(issues.iter().all(|i| i.code != "broken-ring" && i.code != "loop-not-closed"), "{issues:?}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn make_cone_pointed_two_faces() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
@@ -700,7 +700,7 @@ mod tests {
         assert_rings_ok(&body);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn make_torus_genus_one_euler() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
@@ -714,7 +714,7 @@ mod tests {
         assert!(make_torus(&mut body, 1.0, 1.0, 8, &mut rec).is_err());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn make_convex_hull_tetrahedron() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
@@ -728,7 +728,7 @@ mod tests {
         assert!(issues.is_empty(), "{issues:?}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn make_convex_hull_rejects_coplanar() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
@@ -736,7 +736,7 @@ mod tests {
         assert!(make_convex_hull(&mut body, &pts, &mut rec).is_err());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn wires_and_planar_faces() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
@@ -752,7 +752,7 @@ mod tests {
         assert_rings_ok(&body);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn open_polyline_wire() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();

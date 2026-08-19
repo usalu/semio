@@ -28,7 +28,7 @@ mod tests {
     use crate::artifacts::layout::dsl;
     use crate::artifacts::layout::{CharacterStyle, Frame, GridSettings, Layer, LayoutBounds, Page, PageColumns, PageMargins, PageOverride, LAYOUT_DOCUMENT_SCHEMA};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn pack_round_trips_and_agrees_with_dsl() {
         let document = dsl::parse_dsl(dsl::LAYOUT_SAMPLE_TEXT).expect("parse sample layout fixture");
         store::os_store::test_support::assert_dsl_pack_equivalence(&document);
@@ -36,7 +36,7 @@ mod tests {
         assert_eq!(decode(&bytes).expect("decode"), document);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn pack_round_trips_minimal_document_with_character_style() {
         let document = LayoutSnapshot {
             schema: LAYOUT_DOCUMENT_SCHEMA.into(),
@@ -57,7 +57,7 @@ mod tests {
         store::os_store::test_support::assert_dsl_pack_equivalence(&document);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn pack_round_trips_overrides_frame_flags_and_absent_print_target() {
         let document = LayoutSnapshot {
             schema: LAYOUT_DOCUMENT_SCHEMA.into(),

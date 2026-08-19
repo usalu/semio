@@ -72,13 +72,13 @@ mod tests {
     use super::*;
     use protocol::Inference;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = Din18599Snapshot::default();
         assert_eq!(Din18599Inference::infer(&snapshot), Din18599Inference::infer(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(Din18599Inference::infer(&Din18599Snapshot::default()), Din18599Inference::default());
     }
@@ -139,14 +139,14 @@ mod compliance_report_tests {
         from_building(&reference_wall_layers(), 100.0, 4, ClimateZoneDe::Zone2, 0.0).unwrap()
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn balance_annual_includes_all_parts() {
         let inputs = reference_100m2_inputs();
         let report = balance_annual(&inputs).unwrap();
         assert_eq!(report.checks.len(), 12);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn part_1_check_reached_via_balance_annual() {
         let inputs = reference_100m2_inputs();
         let check = part_1::check(&inputs).unwrap();

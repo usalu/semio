@@ -68,13 +68,13 @@ mod tests {
     use super::*;
     use crate::editor::procedural2d::testkit::{app, render as render_body};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn renders_main_graph_scene() {
         let mut app = app();
         assert!(render_body(&mut app, PROCEDURAL2D_PLAY_BODY_MAIN).contains("node-graph"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn main_graph_scene_exports_flow_backed_node_graph_fields() {
         let mut app = app();
         let json = render_body(&mut app, PROCEDURAL2D_PLAY_BODY_MAIN);
@@ -85,7 +85,7 @@ mod tests {
         assert!(graph.get("capabilitiesJson").and_then(|v| v.as_str()).is_some_and(|s| s.contains("flow")));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn definition_declares_the_node_graph_surface_and_body_key() {
         let definition = definition();
         assert_eq!(definition.body_key, PROCEDURAL2D_PLAY_BODY_MAIN);

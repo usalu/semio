@@ -94,7 +94,7 @@ pub async fn set_brush_kind_weights(ctx: &mut Puzzle2dActionCtx<'_>, args: Optio
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn kind_weight_group_normalizes_to_sum_one() {
         let ids = vec!["a".into(), "b".into(), "c".into()];
         let initial = puzzle2d_uniform_kind_weights(&ids);

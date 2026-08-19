@@ -417,7 +417,7 @@ mod tests {
     use super::*;
 
     /// 🧪️ mutation_diff_law: `m.diff(base).diff().apply(base) == { apply_x_mutation(&mut s, m); s }`.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mutation_diff_law_covers_every_variant() {
         let base = fixture();
         for m in demo_mutation_cases() {
@@ -433,7 +433,7 @@ mod tests {
     }
 
     /// 🧪️ inverse_law: every variant's inverse restores `base` when applied after the mutation.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inverse_law_covers_every_variant() {
         let base = fixture();
         for m in demo_mutation_cases() {
@@ -449,7 +449,7 @@ mod tests {
 
     /// 🧪️ op_text_binary_roundtrip_law: handcrafted `OpText`/`OpBinary` round trip for every
     /// variant.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_text_binary_roundtrip_law() {
         let _base = fixture();
         for m in demo_mutation_cases() {

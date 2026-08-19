@@ -31,18 +31,18 @@ mod tests {
     use crate::artifacts::gismap::MapFeature;
     use serde_json::json;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn gis_map_document_dsl_round_trips_bundled_reuse_example() {
         let document = parse_dsl(REUSE_MAP_EXAMPLE_TEXT).expect("parse reuse-map example");
         store::os_store::test_support::assert_dsl_round_trip(&document);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn gis_map_document_dsl_round_trips_empty_document() {
         store::os_store::test_support::assert_dsl_round_trip(&GisMapSnapshot::default());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn print_dsl_reproduces_the_bundled_example_text_verbatim() {
         let document = parse_dsl(REUSE_MAP_EXAMPLE_TEXT).expect("parse reuse-map example");
         assert_eq!(parse_dsl(&print_dsl(&document)).expect("reparse"), document);
@@ -55,7 +55,7 @@ mod tests {
     /// bare-int JSON literal would come back float-backed and fail `serde_json::Value`'s structural
     /// `PartialEq` even though it's the same number — an accepted engine characteristic, not a
     /// round-trip bug.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn gis_map_document_dsl_round_trips_synthetic_value_shapes() {
         let dsl_of = |value: serde_json::Value| dsl::to_dsl_value(&value).unwrap_or(dsl::DslValue::Null);
         let document = GisMapSnapshot {

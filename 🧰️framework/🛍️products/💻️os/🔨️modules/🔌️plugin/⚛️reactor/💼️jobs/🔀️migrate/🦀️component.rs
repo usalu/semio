@@ -85,7 +85,7 @@ mod tests {
     /// 🔀️ Registers a real `DialectMigration` (not mocked away) and drives `semio.migrate` through
     /// two real `step_job` slices to `Done`, proving `job_migrate` really reaches
     /// `store::migrate_document` and runs the registered re-encode, not just `job.unknown-kind`.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn a_two_slice_migrate_job_decodes_then_dispatches_to_the_registered_migration() {
         let (from, to) = register_job_test_migration();
         let input = input_bytes(&from, &to, vec![1, 2, 3]);
@@ -113,7 +113,7 @@ mod tests {
 
     /// 📸️ Interrupts after slice 1 (decode only), checkpoints, cancels, restores, and confirms the
     /// resumed run reaches the SAME `Done` output as an uninterrupted run.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn migrate_job_checkpoint_restore_matches_an_uninterrupted_run() {
         let (from, to) = register_job_test_migration();
         let input = input_bytes(&from, &to, vec![9, 9]);
@@ -141,7 +141,7 @@ mod tests {
         assert_eq!(restored_final, baseline, "checkpoint/restore must produce the identical final output");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn migrate_job_reports_a_named_fault_when_no_migration_is_registered() {
         let from = semio_framework::io_schema::ArtifactDialect { artifact_kind: "s.jobtest.migrate-missing".to_string(), standard: "1".to_string(), subset: "*".to_string() }.to_coordinate();
         let to = semio_framework::io_schema::ArtifactDialect { artifact_kind: "s.jobtest.migrate-missing".to_string(), standard: "2".to_string(), subset: "*".to_string() }.to_coordinate();
@@ -157,7 +157,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn migrate_job_reports_a_named_decode_fault_on_garbage_input() {
         start_job(404, JOB_KIND_MIGRATE, b"not json");
         match step_job(404, JobBudget::default()) {

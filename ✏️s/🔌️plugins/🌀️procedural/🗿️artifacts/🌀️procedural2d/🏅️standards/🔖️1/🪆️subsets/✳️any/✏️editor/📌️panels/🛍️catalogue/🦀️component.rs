@@ -63,13 +63,13 @@ mod tests {
     use super::*;
     use crate::editor::procedural2d::testkit::{app, render as render_body};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn catalogue_lists_show_modes() {
         let mut app = app();
         assert!(render_body(&mut app, PROCEDURAL2D_PLAY_BODY_CATALOGUE).contains("procedural2d-play-catalogue.mode.preview"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn procedural2d_labels_resolve_native_english_by_default() {
         let mut app = app();
         let json = render_body(&mut app, PROCEDURAL2D_PLAY_BODY_CATALOGUE);

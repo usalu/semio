@@ -636,7 +636,7 @@ pub struct Puzzle3dPrecomputeSession {
 }
 
 impl Default for Puzzle3dPrecomputeSession {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self::new()
     }
 }
@@ -760,7 +760,7 @@ mod tests {
     use crate::artifacts::puzzle3d::schema::testkit::*;
     use crate::artifacts::puzzle3d::schema::{BrushHostRules, BrushKindWeights, CableKindCatalog, FixtureObject, KindCompatEntry, ObjectKind, ObjectKindRepresentation, ObjectKindVortexTemplate, VortexKindCatalog, VortexProps};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn brush_candidates_allow_separated_boxes() {
         let mut engine = Puzzle3dCollision::new();
         let positions: Vec<f32> = vec![-4.0, -4.0, -4.0, 4.0, -4.0, -4.0, 4.0, 4.0, -4.0, -4.0, 4.0, -4.0, -4.0, -4.0, 4.0, 4.0, -4.0, 4.0, 4.0, 4.0, 4.0, -4.0, 4.0, 4.0, 4.0];
@@ -822,7 +822,7 @@ mod tests {
     /// progress on every resync — the app's `sync_precompute_session` calls `set_scene` on *every*
     /// action, so this made suggestion/fill precompute restart from zero on every single tick, freezing
     /// the UI. A resync with byte-identical scene JSON must be a no-operation.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn compose_fill_display_is_read_only_and_matches_apply_prefix() {
         let base = Fixture { objects: vec![fill_plan_object("base")], attractions: vec![], target_volumes: vec![] };
         let catalogs = KindCatalogBundle { objects: vec![], vortices: vec![], cables: vec![] };
@@ -845,7 +845,7 @@ mod tests {
         assert_eq!(engine.fill.as_ref().expect("fill").applied_count, 4);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fill_options_paths_are_millisecond_scale() {
         let base = Fixture { objects: vec![fill_plan_object("base")], attractions: vec![], target_volumes: vec![] };
         let catalogs = KindCatalogBundle { objects: vec![], vortices: vec![], cables: vec![] };
@@ -886,7 +886,7 @@ mod tests {
         assert_eq!(fill.applied_count, 5, "applied fill objects must survive weight edits");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn apply_fill_count_downward_move_keeps_the_plan_intact() {
         // 🔽️ Moving the count DOWN must never discard the already-planned sequence/appended objects/
         // placed entries or re-enqueue FillSteps — only `applied_count` (and the returned document-prefix
@@ -929,7 +929,7 @@ mod tests {
         assert_eq!(fixture.objects.len(), base.objects.len() + 7, "moving back up is instant — the plan was never discarded");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn update_kind_weights_soft_replans_tail_without_rebuilding_queue() {
         let mut engine = Puzzle3dCollision::new();
         let json = single_object_scene_json();
@@ -953,7 +953,7 @@ mod tests {
         assert!(engine.fill_steps_pending_for_test() > 0, "fill planning must continue after weight edits");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_scene_with_identical_json_preserves_precompute_progress() {
         let mut engine = Puzzle3dCollision::new();
         let json = single_object_scene_json();
@@ -975,7 +975,7 @@ mod tests {
         assert_ne!(engine.work_pending_for_test(), queue_len_after_step, "a changed scene must rebuild the queue");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn decreasing_fill_count_keeps_the_plan_intact_and_does_not_replan() {
         // 🔽️ Downward moves are prefix-stable (see `apply_fill_count`) — the plan/sequence/appended
         // objects/queue must never be discarded or re-enqueued just because the applied prefix shrank;
@@ -1009,7 +1009,7 @@ mod tests {
         assert_eq!(engine.fill.as_ref().expect("fill builder").sequence.len(), 3, "even at count 0, the plan is preserved for instant re-apply");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_scene_with_applied_fill_projection_preserves_slider_session() {
         let base = Fixture { objects: vec![fill_plan_object("base")], attractions: vec![], target_volumes: vec![] };
         let catalogs = KindCatalogBundle { objects: vec![], vortices: vec![], cables: vec![] };
@@ -1052,7 +1052,7 @@ mod tests {
     /// different (e.g. fallback-box) body for the same url, but a no-operation re-registration must not matter
     /// once the cache already reflects the current mesh set (the everyday case: every action re-seeds the
     /// fallback body, and the app's `sync_precompute_session` already guards that with `has_mesh`).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn register_mesh_invalidates_cached_precompute_state() {
         let mut engine = Puzzle3dCollision::new();
         engine.set_scene(&single_object_scene_json()).expect("set_scene should succeed");
@@ -1064,14 +1064,14 @@ mod tests {
         assert_eq!(engine.fill.as_ref().map(|fill| fill.applied_count), Some(applied_before), "mesh registration must not reset applied fill count");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn engine_precompute_step_and_fill_step_false_with_no_scene() {
         let mut engine = Puzzle3dCollision::new();
         assert!(!engine.precompute_step(10));
         assert!(!engine.fill_step_one());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn engine_apply_brush_placement_none_without_scene_or_catalogs() {
         let mut engine = Puzzle3dCollision::new();
         let payload = BrushPlacePayload { target_vortex_full_id: "host:v0".into(), object_kind_id: "Kind".into(), source_vortex_index: 0, origin: [0.0, 0.0, 0.0], orientation: [0.0, 0.0, 0.0, 1.0], scale: None };
@@ -1084,7 +1084,7 @@ mod tests {
         assert!(engine.apply_brush_placement(&payload).is_none(), "no catalogs means no placement");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn engine_has_mesh_invalidate_and_refresh_brush_candidates() {
         let mut engine = Puzzle3dCollision::new();
         engine.set_scene(&single_object_scene_json()).expect("seed");
@@ -1102,7 +1102,7 @@ mod tests {
         assert_eq!(engine.brush_preview("host:v0", 0), None, "the catalog's Host kind has no vortices, so there are no free candidates");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn precompute_session_native_wrapper_exercises_public_methods() {
         let mut session = Puzzle3dPrecomputeSession::default();
         session.set_scene(&single_object_scene_json()).expect("set_scene");
@@ -1136,7 +1136,7 @@ mod tests {
         assert!(fixture.objects.iter().any(|object| object.id == "host"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn precompute_session_native_wrapper_errors_without_scene() {
         let mut session = Puzzle3dPrecomputeSession::new();
         assert!(session.dispatch(Puzzle3dEngineCommand::ApplyFillCount { count: 0 }).is_err());
@@ -1147,7 +1147,7 @@ mod tests {
         assert_eq!(session.fill_available_count(), 0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fill_lane_advances_while_brush_targets_remain_queued() {
         let mut engine = Puzzle3dCollision::new();
         engine.set_scene(&single_object_scene_json()).expect("seed");
@@ -1162,7 +1162,7 @@ mod tests {
         assert!(after > before || engine.fill_progress_summary().done, "fill lane must make planning progress without draining brush first");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn brush_candidates_cold_cache_returns_pending_without_populating_cache() {
         let mut session = Puzzle3dPrecomputeSession::new();
         session.set_scene(&single_object_scene_json()).expect("seed");
@@ -1173,7 +1173,7 @@ mod tests {
 
     /// 🧰️ `enqueue_brush_target` is the app-facing append (vs. `invalidate_brush_target`'s
     /// front-of-queue jump) — appending an already-queued id must be a no-operation.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn enqueue_brush_target_appends_once() {
         let mut engine = Puzzle3dCollision::new();
         engine.enqueue_brush_target("host:v0");
@@ -1187,7 +1187,7 @@ mod tests {
     /// publicly reachable — pure data under `crate::artifacts::puzzle3d::schema::…`, the session/dispatch
     /// surface under `crate::editor::puzzle3d::precompute::…`. A rename or a visibility narrowing breaks
     /// this test long before it breaks 5d.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn the_5d_facing_precompute_surface_stays_public() {
         use crate::artifacts::puzzle3d::Puzzle3dError as GuardError;
 
@@ -1234,7 +1234,7 @@ mod tests {
     /// pre-dispatch API. Relocated from `🧬️mutations/💾️binary/🦀️component.rs`'s
     /// `dispatch_set_scene_then_apply_and_compose_fill_count_round_trip` — that test constructed
     /// `Puzzle3dPrecomputeSession` directly, which is now an app type a schema test file must not reach.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dispatch_set_scene_then_apply_and_compose_fill_count_round_trip() {
         let mut session = Puzzle3dPrecomputeSession::new();
         session.dispatch(Puzzle3dEngineCommand::SetScene { scene: sample_scene_config() }).expect("set scene");
@@ -1253,7 +1253,7 @@ mod tests {
 
     /// 🎯️ Relocated from `🧬️mutations/💾️binary/🦀️component.rs`'s
     /// `dispatch_brush_preview_without_scene_returns_none` (same reason as the test above).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dispatch_brush_preview_without_scene_returns_none() {
         let mut session = Puzzle3dPrecomputeSession::new();
         let outcome = session.dispatch(Puzzle3dEngineCommand::BrushPreview { vortex_full_id: "host:v0".to_string(), candidate_index: 0 }).expect("brush preview never errors");

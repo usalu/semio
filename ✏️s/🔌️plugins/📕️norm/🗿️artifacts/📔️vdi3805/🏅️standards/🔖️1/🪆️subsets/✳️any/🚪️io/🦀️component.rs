@@ -95,7 +95,7 @@ pub mod io_registry {
 mod json_serializers_tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn catalog_and_document_json_round_trip() {
         let doc = Vdi3805Snapshot::default();
         let json = catalog_to_json(&doc.catalog).expect("to_json");

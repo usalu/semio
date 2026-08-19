@@ -202,7 +202,7 @@ mod tests {
     use super::*;
     use crate::editor::wires::testkit::{metabolism_app, render as render_body};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn empty_selection_shows_document_summary() {
         let mut app = metabolism_app();
         let json = render_body(&mut app, WIRES_PLAY_BODY_PROPERTIES);
@@ -210,19 +210,19 @@ mod tests {
         assert!(json.contains("Board nodes:"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn definition_binds_the_inspection_tab_to_this_body_key() {
         let definition = definition();
         assert_eq!(definition.body_key.as_deref(), Some(WIRES_PLAY_BODY_PROPERTIES));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn relationship_kind_labels() {
         assert_eq!(RelationshipKind::Owns.label(), "owns");
         assert_eq!(RelationshipKind::Has.label(), "has");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fixed_identity_set_validation() {
         let mut ext = DefaultWiresExtension::default();
         ext.allowed_identities.insert(1);
@@ -231,21 +231,21 @@ mod tests {
         assert!(ext.validate_identity_set(&[1, 3]).is_err());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn relationship_lookup() {
         let mut ext = DefaultWiresExtension::default();
         ext.relationships.insert(7, RelationshipKind::References);
         assert_eq!(ext.relationship_kind_label(7), Some("references"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn topic_lookup_stays_local_to_the_wires_extension() {
         let mut ext = DefaultWiresExtension::default();
         ext.topics.insert(7, "Context".into());
         assert_eq!(ext.topic_label(7), Some("Context"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn metabolism_fixture_hydrates_extension() {
         // 📜️ The `.wires` fixture is handcrafted in `crate::artifacts::wires::dsl`'s DSL — parse it,
         // then hydrate this crate's JSON-facing extension from its `wires_fixture` value, the same

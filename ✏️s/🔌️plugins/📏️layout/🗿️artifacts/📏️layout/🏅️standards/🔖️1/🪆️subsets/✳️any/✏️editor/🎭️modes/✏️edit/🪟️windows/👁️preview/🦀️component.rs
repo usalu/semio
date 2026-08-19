@@ -49,13 +49,13 @@ mod tests {
     use super::*;
     use crate::editor::layout::testkit::{layout_app, render as render_body};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn renders_preview_canvas_scene() {
         let mut app = layout_app();
         assert!(render_body(&mut app, LAYOUT_PLAY_BODY_PREVIEW).contains("canvas-2d"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn preview_scene_has_white_background_and_no_guides() {
         let mut app = layout_app();
         let json = render_body(&mut app, LAYOUT_PLAY_BODY_PREVIEW);
@@ -63,7 +63,7 @@ mod tests {
         assert!(!json.contains("layout.guide."));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn definition_declares_the_canvas_2d_surface_and_body_key() {
         let definition = definition();
         assert_eq!(definition.body_key, LAYOUT_PLAY_BODY_PREVIEW);

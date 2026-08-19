@@ -50,7 +50,7 @@ impl protocol::Inference<RemodelSnapshot> for RemodelInference {
 /// `RemodelSnapshot::default()`'s mesh ever stops being empty. Same "match `infer` of the real
 /// default, don't derive structurally" trick `AddInference` uses in `📡️spr/🎮️command/🦀️component.rs`.
 impl Default for RemodelInference {
-    async fn default() -> Self {
+    fn default() -> Self {
         <Self as protocol::Inference<RemodelSnapshot>>::infer(&RemodelSnapshot::default())
     }
 }
@@ -109,18 +109,18 @@ mod tests {
         snapshot
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = triangle_snapshot();
         assert_eq!(RemodelInference::infer(&snapshot), RemodelInference::infer(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(RemodelInference::infer(&RemodelSnapshot::default()), RemodelInference::default());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn bounds_covers_the_mesh_vertices_and_counts_it_exactly() {
         let inferred = RemodelInference::infer(&triangle_snapshot());
         assert_eq!(inferred.bounds.vertex_count, 3);

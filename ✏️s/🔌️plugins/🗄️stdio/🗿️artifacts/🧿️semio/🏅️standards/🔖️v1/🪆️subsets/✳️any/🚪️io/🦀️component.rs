@@ -157,7 +157,7 @@ pub mod derived_composition {
 
         /// 🧪️ A clean, valid audio snapshot delegates to `SemioAudioValidator` and reports no hard
         /// (error-severity) diagnostics.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn clean_audio_snapshot_delegates_and_reports_no_errors() {
             let snapshot = SemioSnapshot { subset: SemioSubsetSnapshot::Audio(SemioAudioSnapshot { sample_rate: 44_100, format: SemioAudioFormat::Pcm16, ..Default::default() }), ..Default::default() };
             let bytes = <SemioSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
@@ -168,7 +168,7 @@ pub mod derived_composition {
         /// 🧪️ An invalid audio snapshot (`sample_rate == 0`, a real invariant `SemioAudioValidator`
         /// checks per `subsets::audio::composer`'s own doc comment) delegates through and the
         /// underlying subset's real diagnostic surfaces unchanged.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn invalid_audio_snapshot_surfaces_the_delegated_subsets_own_diagnostic() {
             let snapshot = SemioSnapshot { subset: SemioSubsetSnapshot::Audio(SemioAudioSnapshot { sample_rate: 0, format: SemioAudioFormat::Pcm16, ..Default::default() }), ..Default::default() };
             let bytes = <SemioSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
@@ -178,7 +178,7 @@ pub mod derived_composition {
 
         /// 🧪️ A payload that doesn't decode as a `SemioSnapshot` at all degrades to the documented
         /// soft warning, never a panic.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn undecodable_payload_returns_soft_warning_not_panic() {
             let diagnostics = SemioValidator::validate(&IoPayload::Binary(vec![0xff, 0x00, 0x01]));
             assert_eq!(diagnostics.len(), 1);
@@ -200,7 +200,7 @@ pub mod derived_composition {
             /// ✅️ "committed files parse": all 6 handcrafted `.grammar.semio`/`.protocol.semio` files
             /// parse under the real dialect — independent of, and cheaper than, the two `recognize`/
             /// `walk_protocol` laws below.
-            #[test]
+            #[semio_framework_async_macros::async_test]
             async fn committed_facet_files_parse() {
                 for (label, text) in [("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO)] {
                     let grammar = dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
@@ -216,7 +216,7 @@ pub mod derived_composition {
             /// `m5_handcrafted_grammar_conformance` harness uses (envelope id prepended as the bare
             /// `artifact-mark` token), so this is a direct proof this facet will pass that harness
             /// once graduated.
-            #[test]
+            #[semio_framework_async_macros::async_test]
             async fn grammar_conformance_law() {
                 let grammar = dsl::parse_grammar(snapshot::text::COMPONENT_GRAMMAR_SEMIO).expect("parse snapshot grammar");
                 let recognizer = dsl::Recognizer::compile(&grammar);
@@ -229,7 +229,7 @@ pub mod derived_composition {
             /// ✅️ `ops_grammar_conformance_law`: the mutations grammar recognizes real `print_op`
             /// output for every `SemioMutation` case (`mutations::demo_mutation_cases()`) — all 15
             /// top-level tags, incl. all 13 wrapped subset kinds.
-            #[test]
+            #[semio_framework_async_macros::async_test]
             async fn ops_grammar_conformance_law() {
                 let grammar = dsl::parse_grammar(mutations::text::COMPONENT_GRAMMAR_SEMIO).expect("parse mutations grammar");
                 let recognizer = dsl::Recognizer::compile(&grammar);
@@ -242,7 +242,7 @@ pub mod derived_composition {
             /// ✅️ `diff_grammar_conformance_law`: the diff grammar recognizes real `print_diff`
             /// output for every representative `SemioDiff` (`diff::demo_diff_cases()`), incl.
             /// `NoChange`, all 13 same-kind nested tags, and `Replace`.
-            #[test]
+            #[semio_framework_async_macros::async_test]
             async fn diff_grammar_conformance_law() {
                 let grammar = dsl::parse_grammar(diff::text::COMPONENT_GRAMMAR_SEMIO).expect("parse diff grammar");
                 let recognizer = dsl::Recognizer::compile(&grammar);
@@ -255,7 +255,7 @@ pub mod derived_composition {
             /// ✅️ `protocol_walk_law`: `walk_protocol` against REAL bytes for all three facets —
             /// snapshot pack (`encode_pack`, envelope-unwrapped first), every demo mutation's
             /// `encode_op`, and every demo diff's `encode_diff` — asserting `consumed == bytes.len()`.
-            #[test]
+            #[semio_framework_async_macros::async_test]
             async fn protocol_walk_law() {
                 let pack_spec = dsl::parse_protocol(snapshot::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
                 let packed = store::ArtifactPack::encode_pack(&snapshot::demo_semio_snapshot());
@@ -282,7 +282,7 @@ pub mod derived_composition {
             /// `print_dsl`/`encode_pack` output of `snapshot::demo_semio_snapshot()` —
             /// `parse_dsl(fixture) == demo()`, `print_dsl(demo()) == fixture` (byte-for-byte), and the
             /// pack twin — so the fixtures can never silently drift back to a fake.
-            #[test]
+            #[semio_framework_async_macros::async_test]
             async fn fixture_honesty_law() {
                 const FIXTURE_DSL: &str = include_str!("../../✳️any/📚️examples/🌐️envelope/🖼️assets/🗣️example.dsl.semio");
                 const FIXTURE_PACK: &[u8] = include_bytes!("../../✳️any/📚️examples/🌐️envelope/🖼️assets/🎒️example.pack.semio");

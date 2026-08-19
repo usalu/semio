@@ -57,7 +57,7 @@ impl FemDof {
 }
 
 impl From<FemDof> for Dof {
-    async fn from(value: FemDof) -> Self {
+    fn from(value: FemDof) -> Self {
         match value {
             FemDof::Tx => Dof::Tx,
             FemDof::Ty => Dof::Ty,
@@ -70,7 +70,7 @@ impl From<FemDof> for Dof {
 }
 
 impl From<Dof> for FemDof {
-    async fn from(value: Dof) -> Self {
+    fn from(value: Dof) -> Self {
         match value {
             Dof::Tx => FemDof::Tx,
             Dof::Ty => FemDof::Ty,
@@ -216,7 +216,7 @@ pub struct FemAnalysisSettings {
 }
 
 impl Default for FemAnalysisSettings {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { modal_count: 3, buckling_count: 3, deformation_scale: 50.0 }
     }
 }
@@ -231,7 +231,7 @@ pub struct FemCamera {
 }
 
 impl Default for FemCamera {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { x: 0.0, y: 0.0, zoom: 1.0 }
     }
 }

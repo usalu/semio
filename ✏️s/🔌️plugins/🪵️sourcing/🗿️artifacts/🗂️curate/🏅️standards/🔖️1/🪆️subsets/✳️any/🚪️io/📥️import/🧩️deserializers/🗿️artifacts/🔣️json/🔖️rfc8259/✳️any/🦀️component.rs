@@ -36,7 +36,7 @@ pub struct JsonIntoCurate;
 impl Deserializer<CurateSnapshot> for JsonIntoCurate {
     const FROM: Dialect = JSON_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Exact;
-    async fn deserialize(payload: &IoPayload) -> IoResult<CurateSnapshot> {
+    fn deserialize(payload: &IoPayload) -> IoResult<CurateSnapshot> {
         let IoPayload::Text(text) = payload else {
             return Err(IoError { message: "JsonIntoCurate: expected a text json payload".to_string(), diagnostics: Vec::new() });
         };

@@ -119,7 +119,7 @@ pub mod derived_composition {
             store::semio_format::wrap_binary(&envelope, &raw)
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn conforming_snapshot_composes_and_stamps_strict() {
             let bytes = conforming_pack_bytes(&strict_snapshot());
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Binary(&bytes) }];
@@ -127,7 +127,7 @@ pub mod derived_composition {
             assert!(composed.diagnostics.iter().all(|d| d.severity != Severity::Error), "got {:?}", composed.diagnostics);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn transitional_relationship_base_fails_compose_with_real_diagnostic() {
             let mut opc = OpcPackage::empty();
             opc.content_types.set_default("rels", RELS_CONTENT_TYPE);
@@ -141,7 +141,7 @@ pub mod derived_composition {
             assert!(err.diagnostics.iter().any(|d| d.code.0 == CODE_REL_BASE && d.severity == Severity::Error), "got {:?}", err.diagnostics);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn subset_validator_rechecks_wire_payload() {
             let bytes = conforming_pack_bytes(&strict_snapshot());
             let diagnostics = DocxStrictValidator::validate(&IoPayload::Binary(bytes));

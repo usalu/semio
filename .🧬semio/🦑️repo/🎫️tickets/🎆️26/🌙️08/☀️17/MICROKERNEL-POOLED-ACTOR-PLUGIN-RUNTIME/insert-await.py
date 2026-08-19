@@ -18,10 +18,30 @@ from `semio-framework-async`:
     help: consider `await`ing on the `Future`   ->  ...Park.to_u8().await, ...
     help: consider `await`ing on the `Future`   ->  ...Live.to_u8().await, ...
 
-Applying both is wrong; applying an arbitrary one is a coin flip. **This tool therefore applies an
-edit only when a diagnostic yields exactly ONE distinct candidate.** Everything ambiguous is
-written to a review file and left untouched. That is the whole difference between this and
-`cargo fix`, which would happily apply machine-applicable suggestions it should not.
+**Both of those are correct and must be applied together** - they are two independent futures in one
+expression, not two ways to fix one thing. That was measured, not assumed: `geometry-residue` found
+9 of its 10 "ambiguous" diagnostics were exactly this shape (`lerp_point(p0, p1, t)` with both
+arguments un-awaited), and hand-applied every candidate.
+
+So the discriminator is **span overlap**, not candidate count:
+  * candidates at DISJOINT spans  -> independent futures -> apply them all
+  * candidates at OVERLAPPING spans -> genuinely alternative rewrites of the same text -> refuse,
+    record as ambiguous, leave for a human
+
+That is still the whole difference between this and `cargo fix`, which would happily apply
+machine-applicable suggestions it should not - but it no longer punts on the common case.
+
+ORDER MATTERS: ASYNCIFY BEFORE YOU AWAIT
+----------------------------------------
+If the enclosing functions are still sync, inserting `.await` produces E0728 instead of progress.
+Measured on `📡️spr`: one pass applied 197 edits, E0599 fell by exactly 197 and E0728 rose by exactly
+197 — a perfectly conserved non-improvement. The module had never been asyncified at all (0 `async fn`,
+622 plain, in the index too). Correct sequence for any un-converted or reverted scope:
+
+    asyncify-universal.py --apply <paths>     # signatures first
+    insert-await.py --apply --scope <path>    # then call sites, to fixpoint
+
+The tool now ABORTS on any E0728 rather than grinding, and tells you to run the codemod first.
 
 DISCIPLINE THIS ENCODES (learned the hard way on this ticket)
 -------------------------------------------------------------
@@ -128,7 +148,15 @@ def collect_await_edits(diags: list[dict], scope: str | None):
                 repl = span.get("suggested_replacement")
                 if repl is None:
                     continue
-                if not is_await_hint and ".await" not in repl:
+                # The replacement must ITSELF add an `.await`. Trusting `is_await_hint` alone was a
+                # real defect: a diagnostic whose child message merely mentions "await" can carry a
+                # suggestion that does something else entirely (remove an await, annotate a type),
+                # and applying it lands text on the wrong token. `kernel-ripple` had to write repair
+                # scripts for exactly that across ~10 files. The message is a hint; the replacement
+                # is the contract.
+                if ".await" not in repl:
+                    continue
+                if not is_await_hint:
                     continue
                 path = span.get("file_name", "")
                 abs_path = path if os.path.isabs(path) else os.path.join(REPO, path)
@@ -148,14 +176,29 @@ def collect_await_edits(diags: list[dict], scope: str | None):
             if span.get("is_primary"):
                 primary = f'{span.get("file_name")}:{span.get("line_start")}'
                 break
-        if len(uniq) == 1:
-            path, bs, be, repl = next(iter(uniq))
+        # Multiple candidates are NOT automatically an either/or fork.
+        # Measured by `geometry-residue`: 9 of its 10 "ambiguous" diagnostics were rustc offering N
+        # candidates because N SIBLING ARGUMENTS in one call were each an un-awaited future —
+        # `lerp_point(p0, p1, t)` with both p0 and p1 needing `.await`. Every candidate was correct
+        # and they had to be applied together. The same is true of the `compare_exchange(a, b)`
+        # example in this file's header: both arguments were futures.
+        #
+        # The real discriminator is SPAN OVERLAP, not candidate count:
+        #   * disjoint spans  -> independent futures in one expression -> apply them ALL
+        #   * overlapping spans -> genuinely alternative rewrites of the same text -> refuse
+        ordered = sorted(uniq, key=lambda c: (c[0], c[1], c[2]))
+        overlapping = any(
+            a[0] == b[0] and a[2] > b[1]
+            for a, b in zip(ordered, ordered[1:])
+        )
+        if overlapping:
+            ambiguous.append((primary, root_code, sorted(r for _, _, _, r in uniq)))
+            return
+        for path, bs, be, repl in ordered:
             if scope and not in_scope(path, scope):
                 other.append((primary, root_code, "out-of-scope"))
-                return
+                continue
             edits.append((path, bs, be, repl, f"{root_code} @ {primary}"))
-        else:
-            ambiguous.append((primary, root_code, sorted(r for _, _, _, r in uniq)))
 
     for diag in diags:
         code = (diag.get("code") or {}).get("code") or ""
@@ -237,6 +280,36 @@ def main() -> int:
         edits, ambiguous, other = collect_await_edits(diags, args.scope)
         print(f"[pass {npass}] errors={len(errors)} await-edits={len(edits)} "
               f"ambiguous={len(ambiguous)} other={len(other)}")
+
+        # ⛔ Ordering guard. E0728 = "`await` is only allowed inside `async` functions".
+        # Its presence means the ENCLOSING fns are still sync, so inserting `.await` converts one
+        # error into another instead of fixing anything. Measured the hard way on `📡️spr`: a pass
+        # applied 197 edits, E0599 fell by exactly 197 and E0728 rose by exactly 197 — net zero.
+        # The tool cannot fix this: the correct repair is to asyncify the enclosing functions first.
+        # Count ONLY in-scope E0728. An out-of-scope one belongs to another packet and must not
+        # abort your run — that made the guard a denial-of-service on the scoped workflow it exists
+        # to protect (reported by `kernel-ripple`, which had to write its own loop to get around it).
+        def _primary_path(d):
+            for sp in d.get("spans", []):
+                if sp.get("is_primary"):
+                    fn = sp.get("file_name", "")
+                    return os.path.normpath(fn if os.path.isabs(fn) else os.path.join(REPO, fn))
+            return None
+
+        e0728 = 0
+        for d in errors:
+            if (d.get("code") or {}).get("code") != "E0728":
+                continue
+            pp = _primary_path(d)
+            if args.scope and pp and not in_scope(pp, args.scope):
+                continue  # another packet's problem, not ours
+            e0728 += 1
+        if e0728:
+            print(f"  ⛔ ABORT: {e0728} × E0728 (`await` outside an async fn).")
+            print("  The enclosing functions are still SYNC, so inserting `.await` only trades one")
+            print("  error for another. Run the asyncify codemod over this scope FIRST, then re-run:")
+            print(f"    python3 asyncify-universal.py --apply <paths under {args.scope or 'the crate'}>")
+            break
         history.append({
             "pass": npass, "errors": len(errors), "edits": len(edits),
             "ambiguous": len(ambiguous), "other": len(other),

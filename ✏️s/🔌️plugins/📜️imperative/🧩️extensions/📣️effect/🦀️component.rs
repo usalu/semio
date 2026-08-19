@@ -74,16 +74,18 @@ async fn operator_info(id: &str, name: &str, abbreviation: &str, summary: &str, 
     OperatorInfo { id: id.into(), extension: "imperative".into(), name: name.into(), abbreviation: abbreviation.into(), icon: "emoji:⚡️".into(), summary: summary.into(), inputs, outputs, ..Default::default() }
 }
 
-async fn register_simple(registry: &mut Registry, info: OperatorInfo, operation: Box<dyn Operator>) {
-    registry.register_operator(info, vec![OperatorImpl { schemas: vec![], operator: operation }], &[]);
+// 🗺️ Generic over the concrete operator, not `Box<dyn Operator>` — see the sibling note in
+// `🧠️logic/🦀️component.rs` and R11.
+async fn register_simple<O: Operator + 'static>(registry: &mut Registry, info: OperatorInfo, operation: O) {
+    registry.register_operator(info, vec![OperatorImpl { schemas: vec![], operator: Box::new(operation) }], &[]);
 }
 
 /// 📦️ Registers all imperative action operators.
 pub async fn register(registry: &mut Registry) {
-    register_simple(registry, operator_info("log.print", "Log Print", "Log", "Writes a message to the effect log", vec![string_channel("message")], vec![ChannelSpec::named("M", "Msg", "message", "Message")]), Box::new(LogPrint));
-    register_simple(registry, operator_info("state.set", "State Set", "Set", "Sets a scope key to a value", vec![string_channel("key"), ChannelSpec::named("V", "Val", "value", "Value")], vec![ChannelSpec::wildcard()]), Box::new(StateSet));
-    register_simple(registry, operator_info("state.increment", "State Increment", "Inc", "Increments a numeric scope key", vec![string_channel("key"), number_channel("by")], vec![ChannelSpec::wildcard()]), Box::new(StateIncrement));
-    register_simple(registry, operator_info("wait.delay", "Wait Delay", "Wait", "Records a delay side effect", vec![number_channel("ms")], vec![ChannelSpec::named("D", "Dly", "delay", "Delay")]), Box::new(WaitDelay));
+    register_simple(registry, operator_info("log.print", "Log Print", "Log", "Writes a message to the effect log", vec![string_channel("message")], vec![ChannelSpec::named("M", "Msg", "message", "Message")]), LogPrint);
+    register_simple(registry, operator_info("state.set", "State Set", "Set", "Sets a scope key to a value", vec![string_channel("key"), ChannelSpec::named("V", "Val", "value", "Value")], vec![ChannelSpec::wildcard()]), StateSet);
+    register_simple(registry, operator_info("state.increment", "State Increment", "Inc", "Increments a numeric scope key", vec![string_channel("key"), number_channel("by")], vec![ChannelSpec::wildcard()]), StateIncrement);
+    register_simple(registry, operator_info("wait.delay", "Wait Delay", "Wait", "Records a delay side effect", vec![number_channel("ms")], vec![ChannelSpec::named("D", "Dly", "delay", "Delay")]), WaitDelay);
     registry.finalize();
 }
 
@@ -165,7 +167,7 @@ semio_framework_plugin::extension_exports!(bundle);
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn bundle_contributes_core_module_for_imperative_play() {
         let entry = imperative_module_contribution();
         assert_eq!(entry.plugin_id, EXTENSION_ID);
@@ -177,7 +179,7 @@ mod tests {
         assert!(payload["manifestJson"].as_str().unwrap_or_default().contains("imperative.extension"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn catalogue_json_includes_input_channels() {
         let registry = module_registry();
         let raw = catalogue_json(&registry);
@@ -187,7 +189,7 @@ mod tests {
         assert_eq!(message["code"], "S");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn state_increment_updates_counter() {
         let registry = module_registry();
         let input = Dictionary::new().insert("key", Value::Atom(Atom::String("counter".into()))).insert("by", Value::Atom(Atom::Decimal(2.0))).insert("counter", Value::Atom(Atom::Decimal(5.0)));

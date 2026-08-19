@@ -179,7 +179,7 @@ mod tests {
         PlySnapshot { schema: "stdio.ply".into(), format: PlyFormat::Ascii, comments: Vec::new(), elements: vec![vertex, face] }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn deserialize_builds_a_real_indexed_mesh_with_colors() {
         let semio = semio_framework_plugin::resolve_ready(SemioMeshFromPly::deserialize(&sample_ply())).expect("deserialize");
         let prim = &semio.meshes[0].primitives[0];
@@ -191,7 +191,7 @@ mod tests {
         assert!(prim.normals.is_empty() && prim.uvs.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn no_face_element_yields_a_points_primitive() {
         let mut ply = sample_ply();
         ply.elements.retain(|e| e.name != "face");

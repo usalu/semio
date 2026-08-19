@@ -24,6 +24,10 @@ component-guest-async = []
 
 [dependencies]
 semio-framework = { path = "../../../../../../../🧰️framework/📦️packages/🦀️rust", package = "semio-framework" }
+# 🗃️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (sdk-dedyn, O1): `#[dyn_enum]` on `trait PluginApp` —
+# each fleet plugin crate closes its own per-plugin app enum via `dyn_enum_close!` (cross-crate,
+# see 📓️terra-dyn-enum-macro-report.md's recipe §5).
+semio-framework-dispatch-macros = { path = "../../../../../../../🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust", package = "semio-framework-dispatch-macros" }
 semio-framework-os-kernel = { path = "../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 # 🧩️ UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM (C1): `ArtifactChildren`'s `slots() -> &'static
 # [ChildSlotSpec]` needs the real `ChildSlotSpec`/ `ArtifactCompositionFields` types A2 landed in
@@ -39,3 +43,6 @@ wit-bindgen = { version = "0.57.1", features = ["macros"] }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 console_error_panic_hook = "0.1"
+
+[dev-dependencies]
+semio-framework-async-macros = { path = "../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }

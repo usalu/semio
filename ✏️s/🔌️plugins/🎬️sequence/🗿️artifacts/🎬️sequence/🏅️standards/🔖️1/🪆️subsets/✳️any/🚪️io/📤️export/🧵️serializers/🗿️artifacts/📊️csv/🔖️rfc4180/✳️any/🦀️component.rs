@@ -17,7 +17,7 @@ pub struct SequenceIntoCsv;
 impl Serializer<SequenceSnapshot> for SequenceIntoCsv {
     const INTO: Dialect = CSV_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    async fn serialize(from: &SequenceSnapshot) -> IoResult<IoPayload> {
+    fn serialize(from: &SequenceSnapshot) -> IoResult<IoPayload> {
         let fixture = from.to_fixture();
         let records = fixture
             .steps

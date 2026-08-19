@@ -55,14 +55,14 @@ mod tests {
     use super::*;
     use crate::editor::dag::testkit::{new_app, render as render_body};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn renders_node_graph_scene() {
         let mut app = new_app();
         let json = render_body(&mut app, DAG_PLAY_BODY_MAIN);
         assert!(json.contains("node-graph"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn definition_declares_the_node_graph_surface_and_body_key() {
         let definition = definition();
         assert_eq!(definition.body_key, DAG_PLAY_BODY_MAIN);

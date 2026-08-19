@@ -14,7 +14,7 @@ pub struct GltfMutationLeafError {
 }
 
 impl std::fmt::Display for GltfMutationLeafError {
-    async fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(formatter, "{} at {}: {}", self.code, self.path, self.detail)
     }
 }

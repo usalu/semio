@@ -27,7 +27,7 @@ pub struct IfcArtifact {
 
 //#region 🔖️Conversions
 impl Default for IfcArtifact {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self::from_snapshot(IfcSnapshot::default())
     }
 }

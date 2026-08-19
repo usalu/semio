@@ -976,7 +976,7 @@ mod tests {
     use super::*;
     use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primitives::make_box;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn box_round_trip_topology_counts() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
@@ -991,13 +991,13 @@ mod tests {
         assert_eq!(read.solids.len(), 1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn write_step_rejects_empty_solids() {
         let body = Body::new();
         assert!(write_step(&body, &[]).is_err());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn read_step_rejects_missing_data_section() {
         assert!(read_step("ISO-10303-21;").is_err());
     }

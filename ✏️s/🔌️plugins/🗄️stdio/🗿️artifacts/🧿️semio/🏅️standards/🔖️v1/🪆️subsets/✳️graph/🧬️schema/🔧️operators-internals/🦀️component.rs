@@ -532,7 +532,7 @@ mod tests {
     }
 
     // #subregion SetOperators
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn union_of_disjoint_graphs_merges_everything() {
         let g = und_edge(0, 1);
         let mut h: Storage<Normal, Undirected> = Storage::new();
@@ -547,7 +547,7 @@ mod tests {
         assert!(merged.edges_between(10, 11).next().is_some());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn union_errors_on_overlapping_node_ids() {
         let g = und_edge(0, 1);
         let h = und_edge(1, 2);
@@ -555,7 +555,7 @@ mod tests {
         assert!(matches!(err, GraphError::AmbiguousSolution(_)));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn compose_lets_h_overwrite_shared_node_and_edge_attrs() {
         let mut g: Storage<Normal, Undirected> = Storage::new();
         g.add_node_with_id(0, attrs_of(&[("color", "red")]));
@@ -575,7 +575,7 @@ mod tests {
         assert_eq!(composed.edge_attrs(edge.id).unwrap().get("kind").unwrap().as_str(), Some("h"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn disjoint_union_relabels_both_graphs_into_fresh_ids() {
         let g = und_edge(0, 1);
         let h = und_edge(0, 1);
@@ -584,7 +584,7 @@ mod tests {
         assert_eq!(merged.edge_count(), 2);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn intersection_keeps_only_shared_nodes_and_edges() {
         let mut g: Storage<Normal, Undirected> = Storage::new();
         for id in [0, 1, 2] {
@@ -605,7 +605,7 @@ mod tests {
         assert!(inter.edges_between(0, 1).next().is_some());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn difference_keeps_gs_nodes_and_only_gs_own_edges() {
         let mut g: Storage<Normal, Undirected> = Storage::new();
         for id in [0, 1, 2] {
@@ -627,7 +627,7 @@ mod tests {
         assert!(diff.edges_between(0, 1).next().is_none());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn symmetric_difference_keeps_edges_unique_to_either_side() {
         let g = und_edge(0, 1);
         let mut h: Storage<Normal, Undirected> = Storage::new();
@@ -646,7 +646,7 @@ mod tests {
     // #endsubregion
 
     // #subregion Complement
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn complement_of_a_path_matches_a_hand_count() {
         // 🔺️ Path 0-1-2 (undirected, 3 nodes, 2 edges) has C(3,2)-2 = 1 missing pair: 0-2.
         let mut g: Storage<Normal, Undirected> = Storage::new();
@@ -662,7 +662,7 @@ mod tests {
         assert!(comp.edges_between(0, 2).next().is_some());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn reverse_round_trips_the_edge_set() {
         let mut g: Storage<Normal, Directed> = Storage::new();
         for id in [0, 1, 2] {
@@ -683,7 +683,7 @@ mod tests {
     // #endsubregion
 
     // #subregion Products
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn cartesian_product_of_two_2node_paths_is_a_4cycle() {
         let g = und_edge(0, 1);
         let h = und_edge(0, 1);
@@ -695,7 +695,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn tensor_product_requires_adjacency_on_both_sides() {
         let g = und_edge(0, 1);
         let h = und_edge(0, 1);
@@ -705,7 +705,7 @@ mod tests {
         assert_eq!(prod.edge_count(), 2);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn strong_product_is_the_union_of_cartesian_and_tensor() {
         let g = und_edge(0, 1);
         let h = und_edge(0, 1);
@@ -716,7 +716,7 @@ mod tests {
         assert!(strong.edge_count() >= tens.edge_count());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn lexicographic_product_includes_cross_block_edges() {
         let g = und_edge(0, 1);
         let h = und_edge(0, 1);
@@ -728,7 +728,7 @@ mod tests {
     // #endsubregion
 
     // #subregion Power
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn power_connects_nodes_within_k_hops() {
         let mut g: Storage<Normal, Undirected> = Storage::new();
         for id in [0, 1, 2, 3] {
@@ -748,7 +748,7 @@ mod tests {
     // #endsubregion
 
     // #subregion Contraction
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn contracted_nodes_merges_v_into_u_and_respects_self_loops_flag() {
         let mut g: Storage<Normal, Undirected> = Storage::new();
         for id in [0, 1, 2] {
@@ -768,7 +768,7 @@ mod tests {
         assert!(kept.edges_between(0, 2).next().is_some());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn contracted_edge_contracts_its_own_endpoints() {
         let mut g: Storage<Normal, Undirected> = Storage::new();
         for id in [0, 1, 2] {
@@ -784,7 +784,7 @@ mod tests {
         assert!(matches!(err, GraphError::EdgeNotFound(9999)));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn quotient_graph_connects_blocks_that_have_a_crossing_edge() {
         let mut g: Storage<Normal, Undirected> = Storage::new();
         for id in [0, 1, 2, 3] {
@@ -802,7 +802,7 @@ mod tests {
     // #endsubregion
 
     // #subregion LineGraph
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn line_graph_of_a_triangle_is_itself_a_triangle() {
         let mut g: Storage<Normal, Undirected> = Storage::new();
         for id in [0, 1, 2] {
@@ -822,7 +822,7 @@ mod tests {
     // #endsubregion
 
     // #subregion Mycielski
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mycielskian_of_a_single_edge_is_the_5cycle() {
         let g = und_edge(0, 1);
         let myc = mycielskian(&g);

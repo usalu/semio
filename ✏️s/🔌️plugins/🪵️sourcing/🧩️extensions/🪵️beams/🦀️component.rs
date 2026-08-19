@@ -35,7 +35,7 @@ semio_framework_plugin::extension_exports!(bundle);
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn bundle_contributes_module_for_sourcing_curate() {
         let manifest = bundle().manifest;
         assert_eq!(manifest.extension_id, EXTENSION_ID);

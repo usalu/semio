@@ -95,19 +95,19 @@ pub async fn create_fem3d_viewer() -> semio_framework_plugin::AppDefinition {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_fem3d_viewer_builds_a_definition_for_the_viewer_role() {
         let def = create_fem3d_viewer();
         assert_eq!(def.role, semio_framework::AppRole::Viewer);
         assert_eq!(def.dialect, crate::artifacts::fem3d::FEM3D_DIALECT.into());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn viewer_dialect_matches_the_artifact_coordinate() {
         assert_eq!(<Fem3dViewer as ArtifactViewer>::DIALECT, crate::artifacts::fem3d::FEM3D_DIALECT);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn initial_snapshot_is_the_bundled_example_not_empty() {
         let snapshot = <Fem3dViewer as ArtifactViewer>::initial_snapshot();
         assert!(!snapshot.nodes.is_empty(), "expected the bundled default example's nodes");

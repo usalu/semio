@@ -315,7 +315,7 @@ mod tests {
     use super::*;
     use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primitives::make_box;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn export_box_mesh_stl_nonempty() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
@@ -326,7 +326,7 @@ mod tests {
         assert!(tri_count > 0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn import_stl_produces_faces() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
@@ -337,7 +337,7 @@ mod tests {
         assert!(!imported_body.solid_faces(imported).is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn obj_export_import_round_trip() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
@@ -348,7 +348,7 @@ mod tests {
         assert!(mesh.indices.len() >= 3);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn glb_export_import_round_trip() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
@@ -359,7 +359,7 @@ mod tests {
         assert!(mesh.triangle_count() >= 1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn import_glb_to_body_has_faces() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();

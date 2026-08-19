@@ -201,7 +201,7 @@ mod tests {
         crate::artifacts::ifc::schema::snapshot::from_part21_document(crate::artifacts::ifc::STDIO_IFC_DOCUMENT_SCHEMA, &doc)
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn spatial_tree_and_element_map_from_a_real_ifc4_document() {
         let model = model_from_ifc(&fixture_snapshot());
         assert_eq!(model.spatial.len(), 3, "site/building/storey, project dropped");
@@ -228,7 +228,7 @@ mod tests {
         assert!(model.relations.iter().any(|r| r.kind == RelationKind::ContainedIn && r.from == wall.id && r.to == storey.id));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn unscalar_property_values_are_skipped_not_fabricated() {
         assert_eq!(pset_value_from_part21(&Part21Value::Unset), None);
         assert_eq!(pset_value_from_part21(&Part21Value::List(vec![])), None);

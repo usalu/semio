@@ -97,57 +97,57 @@ mod tests {
     }
 
     //#region 🔖️MutationLaws
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_step_inverse_law() {
         let base = default_snapshot();
         assert_mutation_inverse_law(&base, &create_step(PathRef::default(), step("step-99", "log.print")));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn delete_step_inverse_law() {
         let base = default_snapshot();
         assert_mutation_inverse_law(&base, &delete_step(PathRef::default(), "step-1".into()));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn delete_step_missing_target_is_error() {
         let base = default_snapshot();
         protocol::testkit::assert_missing_target_is_error(&base, &delete_step(PathRef::default(), "step-missing".into()));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn reorder_steps_inverse_law() {
         let base = default_snapshot();
         assert_mutation_inverse_law(&base, &reorder_steps(PathRef::default(), "step-2".into(), 0));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn reorder_steps_missing_target_is_error() {
         let base = default_snapshot();
         protocol::testkit::assert_missing_target_is_error(&base, &reorder_steps(PathRef::default(), "step-missing".into(), 0));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn edit_step_params_inverse_law() {
         let base = default_snapshot();
         let params = Dictionary::new().insert("message", Value::Atom(Atom::String("hi".into())));
         assert_mutation_inverse_law(&base, &edit_step_params(PathRef::default(), "step-2".into(), params));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn edit_step_params_missing_target_is_error() {
         let base = default_snapshot();
         protocol::testkit::assert_missing_target_is_error(&base, &edit_step_params(PathRef::default(), "step-missing".into(), Dictionary::new()));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_step_duplicate_id_fatal_never_applies() {
         let base = default_snapshot();
         let mutation = create_step(PathRef::default(), step("step-1", "log.print"));
         protocol::testkit::assert_fatal_never_applies(&protocol::Mutation::diff(&mutation, &base));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_step_diff_absorb_law() {
         use protocol::Mutation;
         let base = default_snapshot();
@@ -157,7 +157,7 @@ mod tests {
         assert_mutation_diff_absorb_law(&base, d1, d2);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dispatch_registers_semantic_descriptors() {
         register_imperative_mutation_descriptors();
         for kind in ImperativeMutation::kinds() {

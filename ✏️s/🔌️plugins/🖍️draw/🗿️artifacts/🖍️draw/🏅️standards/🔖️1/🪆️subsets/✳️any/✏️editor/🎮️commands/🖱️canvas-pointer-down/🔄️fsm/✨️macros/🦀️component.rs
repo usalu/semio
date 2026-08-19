@@ -105,7 +105,8 @@ mod analyze {
     }
 
     impl Analyzer {
-        async fn intern_guard(&mut self, ident: Ident) -> usize {
+        // 🚫️async: E3 transitive — pure fn reachable only from a synchronous proc-macro entry point (R9-style propagation of E3)
+        fn intern_guard(&mut self, ident: Ident) -> usize {
             if let Some(pos) = self.guards.iter().position(|g| g == &ident) {
                 pos
             } else {
@@ -114,7 +115,8 @@ mod analyze {
             }
         }
 
-        async fn intern_action(&mut self, ident: Ident) -> usize {
+        // 🚫️async: E3 transitive — pure fn reachable only from a synchronous proc-macro entry point (R9-style propagation of E3)
+        fn intern_action(&mut self, ident: Ident) -> usize {
             if let Some(pos) = self.actions.iter().position(|a| a == &ident) {
                 pos
             } else {
@@ -123,7 +125,8 @@ mod analyze {
             }
         }
 
-        async fn add_node(&mut self, name: &Ident, kind: NodeKindIr, parent: usize) -> syn::Result<usize> {
+        // 🚫️async: E3 transitive — pure fn reachable only from a synchronous proc-macro entry point (R9-style propagation of E3)
+        fn add_node(&mut self, name: &Ident, kind: NodeKindIr, parent: usize) -> syn::Result<usize> {
             let key = name.to_string();
             if self.names.contains_key(&key) {
                 return Err(syn::Error::new(name.span(), format!("duplicate state name `{key}`")));
@@ -135,7 +138,8 @@ mod analyze {
             Ok(idx)
         }
 
-        async fn build_state(&mut self, ast: StateAst, parent: usize) -> syn::Result<usize> {
+        // 🚫️async: E3 transitive — pure fn reachable only from a synchronous proc-macro entry point (R9-style propagation of E3)
+        fn build_state(&mut self, ast: StateAst, parent: usize) -> syn::Result<usize> {
             let name = ast.name.clone().expect("nested/top-level states always carry a name");
             let kind = if ast.children.is_empty() { NodeKindIr::Atomic } else { NodeKindIr::Compound };
             let idx = self.add_node(&name, kind, parent)?;
@@ -196,7 +200,8 @@ mod analyze {
             Ok(idx)
         }
 
-        async fn build_parallel(&mut self, ast: ParallelAst, parent: usize) -> syn::Result<usize> {
+        // 🚫️async: E3 transitive — pure fn reachable only from a synchronous proc-macro entry point (R9-style propagation of E3)
+        fn build_parallel(&mut self, ast: ParallelAst, parent: usize) -> syn::Result<usize> {
             if ast.regions.len() < 2 {
                 return Err(syn::Error::new(ast.name.span(), format!("parallel state `{}` needs at least two `state` regions", ast.name)));
             }
@@ -211,7 +216,8 @@ mod analyze {
             Ok(idx)
         }
 
-        async fn build_final(&mut self, ast: FinalAst, parent: usize) -> syn::Result<usize> {
+        // 🚫️async: E3 transitive — pure fn reachable only from a synchronous proc-macro entry point (R9-style propagation of E3)
+        fn build_final(&mut self, ast: FinalAst, parent: usize) -> syn::Result<usize> {
             let idx = self.add_node(&ast.name, NodeKindIr::Final, parent)?;
             if let Some(output_fn) = ast.output {
                 self.outputs.push(output_fn);
@@ -219,7 +225,8 @@ mod analyze {
             Ok(idx)
         }
 
-        async fn push_on_transitions(&mut self, source: usize, transitions: &[OnAst]) {
+        // 🚫️async: E3 transitive — pure fn reachable only from a synchronous proc-macro entry point (R9-style propagation of E3)
+        fn push_on_transitions(&mut self, source: usize, transitions: &[OnAst]) {
             for on in transitions {
                 let guard = on.guard.clone().map(|g| self.intern_guard(g));
                 let action = on.action.clone().map(|a| self.intern_action(a));
@@ -227,7 +234,8 @@ mod analyze {
             }
         }
 
-        async fn push_always_transitions(&mut self, source: usize, always: &[AlwaysAst]) {
+        // 🚫️async: E3 transitive — pure fn reachable only from a synchronous proc-macro entry point (R9-style propagation of E3)
+        fn push_always_transitions(&mut self, source: usize, always: &[AlwaysAst]) {
             for al in always {
                 let guard = al.guard.clone().map(|g| self.intern_guard(g));
                 let action = al.action.clone().map(|a| self.intern_action(a));
@@ -240,7 +248,8 @@ mod analyze {
 
     //#region 🔖️Fingerprint
 
-    async fn kind_tag(kind: &NodeKindIr) -> u8 {
+    // 🚫️async: E3 transitive — pure fn reachable only from a synchronous proc-macro entry point (R9-style propagation of E3)
+    fn kind_tag(kind: &NodeKindIr) -> u8 {
         match kind {
             NodeKindIr::Atomic => 0,
             NodeKindIr::Compound => 1,
@@ -251,7 +260,8 @@ mod analyze {
         }
     }
 
-    async fn fnv_feed(state: &mut u64, bytes: &[u8]) {
+    // 🚫️async: E3 transitive — pure fn reachable only from a synchronous proc-macro entry point (R9-style propagation of E3)
+    fn fnv_feed(state: &mut u64, bytes: &[u8]) {
         for &b in bytes {
             *state ^= b as u64;
             *state = state.wrapping_mul(0x100000001b3);
@@ -259,7 +269,8 @@ mod analyze {
     }
 
     /// 🔢️ Hand-rolled FNV-1a over the compiled structure — no hashing crate dependency.
-    async fn compute_fingerprint(nodes: &[NodeIr], transitions: &[TransitionIr], events: &[EventVariantAst]) -> u64 {
+    // 🚫️async: E3 transitive — pure fn reachable only from a synchronous proc-macro entry point (R9-style propagation of E3)
+    fn compute_fingerprint(nodes: &[NodeIr], transitions: &[TransitionIr], events: &[EventVariantAst]) -> u64 {
         let mut state: u64 = 0xcbf29ce484222325;
         for node in nodes {
             fnv_feed(&mut state, node.name.as_bytes());
@@ -278,7 +289,8 @@ mod analyze {
         state
     }
 
-    async fn build_manifest_json(name: &Ident, nodes: &[NodeIr], transitions: &[TransitionIr], events: &[EventVariantAst]) -> String {
+    // 🚫️async: E3 transitive — pure fn reachable only from a synchronous proc-macro entry point (R9-style propagation of E3)
+    fn build_manifest_json(name: &Ident, nodes: &[NodeIr], transitions: &[TransitionIr], events: &[EventVariantAst]) -> String {
         let mut json = format!("{{\"id\":\"{name}\",\"states\":[");
         for (i, node) in nodes.iter().enumerate() {
             if i > 0 {
@@ -302,7 +314,8 @@ mod analyze {
 
     //#endregion 🔖️Fingerprint
 
-pub async fn analyze(ast: MachineAst) -> syn::Result<Ir> {
+// 🚫️async: E3 transitive — pure fn reachable only from a synchronous proc-macro entry point (R9-style propagation of E3)
+pub fn analyze(ast: MachineAst) -> syn::Result<Ir> {
         let mut az = Analyzer { nodes: Vec::new(), names: HashMap::new(), guards: Vec::new(), actions: Vec::new(), outputs: Vec::new(), pending: Vec::new(), invoke_counter: 0, timer_counter: 0 };
         az.nodes.push(NodeIr { name: "root".to_string(), kind: NodeKindIr::Compound, parent: None, initial: None, children: Vec::new(), entry_actions: Vec::new(), exit_actions: Vec::new(), invokes: Vec::new(), timers: Vec::new() });
         az.names.insert("root".to_string(), 0);
@@ -381,7 +394,8 @@ mod codegen {
 
     //#region 🔖️Helpers
 
-    async fn to_pascal_case(input: &str) -> String {
+    // 🚫️async: E3 transitive — pure fn reachable only from a synchronous proc-macro entry point (R9-style propagation of E3)
+    fn to_pascal_case(input: &str) -> String {
         input
             .split('_')
             .map(|part| {
@@ -394,12 +408,14 @@ mod codegen {
             .collect()
     }
 
-    async fn node_id_lit(index: usize) -> TokenStream {
+    // 🚫️async: E3 transitive — pure fn reachable only from a synchronous proc-macro entry point (R9-style propagation of E3)
+    fn node_id_lit(index: usize) -> TokenStream {
         let lit = index as u16;
         quote! { fsm::NodeId(#lit) }
     }
 
-    async fn node_kind_tokens(kind: &NodeKindIr) -> TokenStream {
+    // 🚫️async: E3 transitive — pure fn reachable only from a synchronous proc-macro entry point (R9-style propagation of E3)
+    fn node_kind_tokens(kind: &NodeKindIr) -> TokenStream {
         match kind {
             NodeKindIr::Atomic => quote! { fsm::NodeKind::Atomic },
             NodeKindIr::Compound => quote! { fsm::NodeKind::Compound },
@@ -410,7 +426,8 @@ mod codegen {
         }
     }
 
-    async fn trigger_tokens(trigger: &TriggerIr) -> TokenStream {
+    // 🚫️async: E3 transitive — pure fn reachable only from a synchronous proc-macro entry point (R9-style propagation of E3)
+    fn trigger_tokens(trigger: &TriggerIr) -> TokenStream {
         match trigger {
             TriggerIr::Event(idx) => {
                 let lit = *idx as u16;
@@ -432,7 +449,8 @@ mod codegen {
 
     //#region 🔖️NodeDef
 
-    async fn node_def_tokens(node: &NodeIr, doc_index: usize) -> TokenStream {
+    // 🚫️async: E3 transitive — pure fn reachable only from a synchronous proc-macro entry point (R9-style propagation of E3)
+    fn node_def_tokens(node: &NodeIr, doc_index: usize) -> TokenStream {
         let stable_id = &node.name;
         let kind = node_kind_tokens(&node.kind);
         let parent = match node.parent {
@@ -488,7 +506,8 @@ mod codegen {
 
     //#region 🔖️TransitionDef
 
-    async fn transition_def_tokens(transition: &TransitionIr, doc_index: usize) -> TokenStream {
+    // 🚫️async: E3 transitive — pure fn reachable only from a synchronous proc-macro entry point (R9-style propagation of E3)
+    fn transition_def_tokens(transition: &TransitionIr, doc_index: usize) -> TokenStream {
         let source = node_id_lit(transition.source);
         let trigger = trigger_tokens(&transition.trigger);
         let guard = match transition.guard {
@@ -526,7 +545,8 @@ mod codegen {
 
     //#region 🔖️Event
 
-    async fn event_variant_def_tokens(variant: &EventVariantAst) -> TokenStream {
+    // 🚫️async: E3 transitive — pure fn reachable only from a synchronous proc-macro entry point (R9-style propagation of E3)
+    fn event_variant_def_tokens(variant: &EventVariantAst) -> TokenStream {
         match variant {
             EventVariantAst::Unit(name) => quote! { #name },
             EventVariantAst::Struct(name, fields) => {
@@ -537,7 +557,8 @@ mod codegen {
         }
     }
 
-    async fn event_id_arm_tokens(event_name: &syn::Ident, index: usize, variant: &EventVariantAst) -> TokenStream {
+    // 🚫️async: E3 transitive — pure fn reachable only from a synchronous proc-macro entry point (R9-style propagation of E3)
+    fn event_id_arm_tokens(event_name: &syn::Ident, index: usize, variant: &EventVariantAst) -> TokenStream {
         let lit = index as u16;
         match variant {
             EventVariantAst::Unit(name) => quote! { #event_name::#name => fsm::EventId(#lit) },
@@ -553,7 +574,8 @@ mod codegen {
 
     //#region 🔖️Emit
 
-    pub async fn emit(ir: &Ir) -> TokenStream {
+    // 🚫️async: E3 transitive — pure fn reachable only from a synchronous proc-macro entry point (R9-style propagation of E3)
+    pub fn emit(ir: &Ir) -> TokenStream {
         let mod_name = &ir.machine_name;
         let marker_name = format_ident!("{}", to_pascal_case(&ir.machine_name.to_string()));
         let event_name = &ir.event_name;
@@ -724,7 +746,8 @@ mod parse {
     }
 
     impl EventVariantAst {
-        pub async fn name(&self) -> &Ident {
+        // 🚫️async: E3 transitive — pure fn reachable only from a synchronous proc-macro entry point (R9-style propagation of E3)
+        pub fn name(&self) -> &Ident {
             match self {
                 EventVariantAst::Unit(name) | EventVariantAst::Struct(name, _) | EventVariantAst::Tuple(name, _) => name,
             }
@@ -791,21 +814,24 @@ mod parse {
 
     //#region 🔖️Parse
 
-    async fn parse_typed_item(input: ParseStream<'_>) -> syn::Result<Type> {
+    // 🚫️async: E3 transitive — pure fn reachable only from a synchronous proc-macro entry point (R9-style propagation of E3)
+    fn parse_typed_item(input: ParseStream<'_>) -> syn::Result<Type> {
         input.parse::<Token![:]>()?;
         let ty = input.parse::<Type>()?;
         input.parse::<Token![;]>()?;
         Ok(ty)
     }
 
-    async fn parse_ident_item(input: ParseStream<'_>) -> syn::Result<Ident> {
+    // 🚫️async: E3 transitive — pure fn reachable only from a synchronous proc-macro entry point (R9-style propagation of E3)
+    fn parse_ident_item(input: ParseStream<'_>) -> syn::Result<Ident> {
         input.parse::<Token![:]>()?;
         let ident = input.parse::<Ident>()?;
         input.parse::<Token![;]>()?;
         Ok(ident)
     }
 
-    async fn parse_event_block(input: ParseStream<'_>) -> syn::Result<(Ident, Vec<EventVariantAst>)> {
+    // 🚫️async: E3 transitive — pure fn reachable only from a synchronous proc-macro entry point (R9-style propagation of E3)
+    fn parse_event_block(input: ParseStream<'_>) -> syn::Result<(Ident, Vec<EventVariantAst>)> {
         let name = input.parse::<Ident>()?;
         let content;
         braced!(content in input);
@@ -847,7 +873,8 @@ mod parse {
         Ok((name, variants))
     }
 
-    async fn parse_after(input: ParseStream<'_>) -> syn::Result<AfterAst> {
+    // 🚫️async: E3 transitive — pure fn reachable only from a synchronous proc-macro entry point (R9-style propagation of E3)
+    fn parse_after(input: ParseStream<'_>) -> syn::Result<AfterAst> {
         let delay_lit = input.parse::<LitInt>()?;
         let delay_ms: u64 = delay_lit.base10_parse()?;
         input.parse::<Token![=>]>()?;
@@ -862,7 +889,8 @@ mod parse {
         Ok(AfterAst { delay_ms, target, action })
     }
 
-    async fn parse_on(input: ParseStream<'_>) -> syn::Result<OnAst> {
+    // 🚫️async: E3 transitive — pure fn reachable only from a synchronous proc-macro entry point (R9-style propagation of E3)
+    fn parse_on(input: ParseStream<'_>) -> syn::Result<OnAst> {
         let event = input.parse::<Ident>()?;
         let guard = if input.peek(Token![if]) {
             input.parse::<Token![if]>()?;
@@ -888,7 +916,8 @@ mod parse {
         Ok(OnAst { event, guard, target, action, internal })
     }
 
-    async fn parse_always(input: ParseStream<'_>) -> syn::Result<AlwaysAst> {
+    // 🚫️async: E3 transitive — pure fn reachable only from a synchronous proc-macro entry point (R9-style propagation of E3)
+    fn parse_always(input: ParseStream<'_>) -> syn::Result<AlwaysAst> {
         let guard = if input.peek(Token![if]) {
             input.parse::<Token![if]>()?;
             Some(input.parse::<Ident>()?)
@@ -907,7 +936,8 @@ mod parse {
         Ok(AlwaysAst { guard, target, action })
     }
 
-    async fn parse_history(input: ParseStream<'_>) -> syn::Result<HistoryAst> {
+    // 🚫️async: E3 transitive — pure fn reachable only from a synchronous proc-macro entry point (R9-style propagation of E3)
+    fn parse_history(input: ParseStream<'_>) -> syn::Result<HistoryAst> {
         let name = input.parse::<Ident>()?;
         let deep = if input.peek(kw::deep) {
             input.parse::<kw::deep>()?;
@@ -920,7 +950,8 @@ mod parse {
         Ok(HistoryAst { name, deep })
     }
 
-    async fn parse_state_body(input: ParseStream<'_>, name: Option<Ident>) -> syn::Result<StateAst> {
+    // 🚫️async: E3 transitive — pure fn reachable only from a synchronous proc-macro entry point (R9-style propagation of E3)
+    fn parse_state_body(input: ParseStream<'_>, name: Option<Ident>) -> syn::Result<StateAst> {
         let content;
         braced!(content in input);
         let mut state = StateAst { name, ..StateAst::default() };
@@ -969,7 +1000,8 @@ mod parse {
         Ok(state)
     }
 
-    async fn parse_final(input: ParseStream<'_>) -> syn::Result<FinalAst> {
+    // 🚫️async: E3 transitive — pure fn reachable only from a synchronous proc-macro entry point (R9-style propagation of E3)
+    fn parse_final(input: ParseStream<'_>) -> syn::Result<FinalAst> {
         let name = input.parse::<Ident>()?;
         if input.peek(Token![;]) {
             input.parse::<Token![;]>()?;
@@ -989,7 +1021,8 @@ mod parse {
         Ok(FinalAst { name, output })
     }
 
-    async fn parse_parallel(input: ParseStream<'_>) -> syn::Result<ParallelAst> {
+    // 🚫️async: E3 transitive — pure fn reachable only from a synchronous proc-macro entry point (R9-style propagation of E3)
+    fn parse_parallel(input: ParseStream<'_>) -> syn::Result<ParallelAst> {
         let name = input.parse::<Ident>()?;
         let content;
         braced!(content in input);
@@ -1020,7 +1053,7 @@ mod parse {
     }
 
     impl Parse for MachineAst {
-        async fn parse(input: ParseStream<'_>) -> syn::Result<Self> {
+        fn parse(input: ParseStream<'_>) -> syn::Result<Self> {
             input.parse::<kw::machine>()?;
             let name = input.parse::<Ident>()?;
             let content;
@@ -1105,7 +1138,8 @@ use syn::DeriveInput;
 /// 🪄️ Compiles a `machine <name> { .. }` declaration into a `pub mod <name> { .. }`
 /// with a dense static [`fsm::MachineDefinition`], a generated event enum, and a
 /// `states` module of `NodeId` consts.
-pub async fn expand_statechart(input: proc_macro2::TokenStream) -> syn::Result<proc_macro2::TokenStream> {
+// 🚫️async: E3 transitive — pure fn reachable only from a synchronous proc-macro entry point (R9-style propagation of E3)
+pub fn expand_statechart(input: proc_macro2::TokenStream) -> syn::Result<proc_macro2::TokenStream> {
     let ast: parse::MachineAst = syn::parse2(input)?;
     let ir = analyze::analyze(ast)?;
     Ok(codegen::emit(&ir))
@@ -1113,7 +1147,8 @@ pub async fn expand_statechart(input: proc_macro2::TokenStream) -> syn::Result<p
 
 /// 🪄️ Implements `fsm::StatechartEvent` for a consumer-authored enum, for use with
 /// hand-authored `MachineDefinition` tables (i.e. without the `statechart!` DSL).
-pub async fn expand_statechart_event(input: &DeriveInput) -> syn::Result<proc_macro2::TokenStream> {
+// 🚫️async: E3 transitive — pure fn reachable only from a synchronous proc-macro entry point (R9-style propagation of E3)
+pub fn expand_statechart_event(input: &DeriveInput) -> syn::Result<proc_macro2::TokenStream> {
     let name = &input.ident;
     let data = match &input.data {
         syn::Data::Enum(e) => e,
@@ -1156,7 +1191,8 @@ pub async fn expand_statechart_event(input: &DeriveInput) -> syn::Result<proc_ma
 
 /// 🪄️ Implements `fsm::StatechartSchema` for a consumer-authored context struct —
 /// embeds a field name/type manifest consumed by TypeScript generation tooling.
-pub async fn expand_statechart_schema(input: &DeriveInput) -> syn::Result<proc_macro2::TokenStream> {
+// 🚫️async: E3 transitive — pure fn reachable only from a synchronous proc-macro entry point (R9-style propagation of E3)
+pub fn expand_statechart_schema(input: &DeriveInput) -> syn::Result<proc_macro2::TokenStream> {
     let name = &input.ident;
     let data = match &input.data {
         syn::Data::Struct(s) => s,
@@ -1185,7 +1221,7 @@ struct ExportWasmMachineAst {
 }
 
 impl syn::parse::Parse for ExportWasmMachineAst {
-    async fn parse(input: syn::parse::ParseStream<'_>) -> syn::Result<Self> {
+    fn parse(input: syn::parse::ParseStream<'_>) -> syn::Result<Self> {
         let machine_path = input.parse::<syn::Path>()?;
         input.parse::<syn::Token![,]>()?;
         let js_name = input.parse::<syn::LitStr>()?;
@@ -1196,7 +1232,8 @@ impl syn::parse::Parse for ExportWasmMachineAst {
 /// 🪄️ wasm-bindgen can't export generics, so a concrete consumer machine invokes this
 /// in its own `🔖️WasmBridge` region to emit a `#[wasm_bindgen]`-exported class wrapping
 /// one `<machine_path>` instance: `new/sendJson/tick/snapshotJson/restoreJson/manifestJson/onEffect`.
-pub async fn expand_export_wasm_machine(input: proc_macro2::TokenStream) -> syn::Result<proc_macro2::TokenStream> {
+// 🚫️async: E3 transitive — pure fn reachable only from a synchronous proc-macro entry point (R9-style propagation of E3)
+pub fn expand_export_wasm_machine(input: proc_macro2::TokenStream) -> syn::Result<proc_macro2::TokenStream> {
     let ast: ExportWasmMachineAst = syn::parse2(input)?;
     let machine_path = &ast.machine_path;
     let class_name = syn::Ident::new(&ast.js_name.value(), ast.js_name.span());
@@ -1289,7 +1326,7 @@ pub async fn expand_export_wasm_machine(input: proc_macro2::TokenStream) -> syn:
                     serde_json::from_value(value["persisted"].clone()).map_err(|e| wasm_bindgen::JsValue::from_str(&e.to_string()))?;
                 let context: <#machine_path as fsm::Machine>::Context =
                     serde_json::from_value(value["context"].clone()).map_err(|e| wasm_bindgen::JsValue::from_str(&e.to_string()))?;
-                let snapshot = fsm::restore::<#machine_path>(&persisted, context, &[])
+                let snapshot = fsm::restore::<#machine_path, fsm::NoMigrations>(&persisted, context, &[])
                     .map_err(|e| wasm_bindgen::JsValue::from_str(&format!("{:?}", e)))?;
                 Ok(Self {
                     snapshot: std::cell::RefCell::new(snapshot),
@@ -1319,7 +1356,7 @@ mod tests {
     use super::*;
     use quote::quote;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn statechart_expands_minimal_machine_to_valid_rust() {
         let input = quote! {
             machine toggle {
@@ -1342,7 +1379,7 @@ mod tests {
         syn::parse2::<syn::File>(quote! { #expanded }).expect("expanded code should parse as valid Rust items");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn statechart_rejects_duplicate_state_names() {
         let input = quote! {
             machine dup {
@@ -1361,7 +1398,7 @@ mod tests {
         assert!(err.to_string().contains("duplicate state name"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn statechart_rejects_unknown_initial_state() {
         let input = quote! {
             machine bad_initial {
@@ -1379,7 +1416,7 @@ mod tests {
         assert!(err.to_string().contains("unknown initial state"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn statechart_rejects_unknown_transition_target() {
         let input = quote! {
             machine bad_target {
@@ -1397,7 +1434,7 @@ mod tests {
         assert!(err.to_string().contains("unknown transition target"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn statechart_rejects_compound_without_initial() {
         let input = quote! {
             machine bad_compound {
@@ -1417,7 +1454,7 @@ mod tests {
         assert!(err.to_string().contains("needs `initial:"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn statechart_expands_hierarchical_parallel_history_machine() {
         let input = quote! {
             machine media {
@@ -1466,7 +1503,7 @@ mod tests {
         syn::parse2::<syn::File>(quote! { #expanded }).expect("expanded code should parse as valid Rust items");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn derive_statechart_event_expands_mixed_variant_kinds() {
         let input: DeriveInput = syn::parse_quote! {
             enum Ev {
@@ -1482,7 +1519,7 @@ mod tests {
         assert!(text.contains("3u16") || text.contains("3"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn derive_statechart_event_rejects_non_enum() {
         let input: DeriveInput = syn::parse_quote! {
             struct NotAnEnum;
@@ -1491,7 +1528,7 @@ mod tests {
         assert!(err.to_string().contains("enums"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn derive_statechart_schema_expands_named_fields() {
         let input: DeriveInput = syn::parse_quote! {
             struct Ctx {
@@ -1506,7 +1543,7 @@ mod tests {
         assert!(text.contains("order_id"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn export_wasm_machine_expands_to_valid_rust() {
         let input = quote! { checkout::Checkout, "CheckoutMachine" };
         let expanded = expand_export_wasm_machine(input).expect("expansion should succeed");

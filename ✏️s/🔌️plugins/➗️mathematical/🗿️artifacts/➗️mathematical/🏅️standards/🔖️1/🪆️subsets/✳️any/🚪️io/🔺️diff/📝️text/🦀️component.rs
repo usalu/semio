@@ -114,7 +114,7 @@ pub async fn diff_from_state(graph: MathematicalGraph, geometry: MathematicalGeo
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn diff_from_state_round_trips_through_apply() {
         // 🔎️ `notation`/`results`/`computed` are three co-derived projections of the SAME
         // `(graph, geometry)` pair — a graph-scoped change regenerates all three handles, unlike the
@@ -129,7 +129,7 @@ mod tests {
         assert_eq!(crate::artifacts::mathematical::mathematical_geometry(&applied), geometry);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_prefers_the_incoming_slots_when_present() {
         let (notation_a, _, _) = mathematical_children_from_state(&MathematicalGraph::default(), &MathematicalGeometry::default());
         let mut first = MathematicalDiff { notation: Some(notation_a), ..Default::default() };

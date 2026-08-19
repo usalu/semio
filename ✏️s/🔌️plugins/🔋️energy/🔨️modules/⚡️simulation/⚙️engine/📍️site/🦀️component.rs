@@ -57,7 +57,7 @@ impl TryFrom<&EpwRecord> for WeatherRecord {
     /// 🔁️ Derives energy's own per-timestep view from one of stdio's fully-labeled, 35-column
     /// `EpwRecord`s (https://bigladdersoftware.com/epx/docs/9-6/auxiliary-programs/energyplus-weather-file-epw-data-dictionary.html#field-list-locations-of-the-data-in-the-epw-file).
     /// EPW's `hour` column is 1..24 (hour-ending); converted here to a 0..23 index.
-    async fn try_from(r: &EpwRecord) -> Result<Self, Error> {
+    fn try_from(r: &EpwRecord) -> Result<Self, Error> {
         let hour_1_24: u8 = parse_epw_field(&r.hour, "hour")?;
         let relative_humidity: f64 = parse_epw_field::<f64>(&r.relative_humidity, "relativeHumidity")? / 100.0;
         Ok(WeatherRecord {
@@ -270,7 +270,7 @@ COMMENTS 2,0\n\
 DATA PERIODS,1,1,Data,Sunday,1/1,1/1\n\
 2026,1,15,1,0,?9?9?9?9E0?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9,-7.8,-12.3,92,101100,0,0,280,0,0,0,0,0,0,0,205,2.9,3,2,20.0,22000,0,999999999,14,0.081,0,88,0.2,0,0\n";
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn epw_parses_minimal() {
         let w = EpwWeather::parse(EPW_FIXTURE).unwrap();
         assert!((w.latitude_deg - 52.37).abs() < 1e-6);
@@ -283,7 +283,7 @@ DATA PERIODS,1,1,Data,Sunday,1/1,1/1\n\
     /// 🐛️ Regression: the deleted ad-hoc parser read the wrong wire columns for wind
     /// speed/direction and horizontal-infrared radiation (off by several columns). Deriving
     /// `WeatherRecord` from stdio's labeled `EpwRecord` fields must recover the correct values.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn weather_record_derives_correct_fields_from_stdio_snapshot() {
         let w = EpwWeather::parse(EPW_FIXTURE).unwrap();
         let r = &w.records[0];
@@ -297,12 +297,12 @@ DATA PERIODS,1,1,Data,Sunday,1/1,1/1\n\
         assert!((r.snow_depth_mm - 0.0).abs() < 1e-6);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn epw_parse_rejects_malformed_text() {
         assert!(EpwWeather::parse("not an epw file").is_err());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn solar_noon_altitude_positive() {
         let pos = solar_position(45.0, 0.0, 172, 12.0);
         assert!(pos.altitude_deg > 0.0);

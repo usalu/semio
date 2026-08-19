@@ -35,7 +35,7 @@ pub enum GltfInferenceBinaryError {
 }
 
 impl fmt::Display for GltfInferenceBinaryError {
-    async fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Payload(error) => write!(formatter, "invalid canonical leaf payload: {error}"),
             Self::TooShort { actual } => write!(formatter, "binary envelope is shorter than 40 bytes: {actual}"),
@@ -55,7 +55,7 @@ impl fmt::Display for GltfInferenceBinaryError {
 
 impl std::error::Error for GltfInferenceBinaryError {}
 impl From<text::GltfInferenceTextError> for GltfInferenceBinaryError {
-    async fn from(error: text::GltfInferenceTextError) -> Self {
+    fn from(error: text::GltfInferenceTextError) -> Self {
         Self::Payload(error)
     }
 }
@@ -147,7 +147,7 @@ async fn read_u64(input: &[u8], offset: usize) -> u64 {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn deterministic_leaf_roundtrip() {
         let value = GltfInferenceLeafEnvelope {
             id: "s.stdio.gltf.inference.overall-size.v1".into(),

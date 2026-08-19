@@ -20,7 +20,7 @@ pub struct SemioFlowArtifact {
 }
 
 impl Default for SemioFlowArtifact {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self::from_snapshot(SemioFlowSnapshot::default())
     }
 }

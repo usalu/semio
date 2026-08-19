@@ -94,10 +94,10 @@ async fn schema(id: &str, name: &str, summary: &str, fields: Vec<FieldSpec>) -> 
     Schema { id: id.into(), module: "core".into(), name: name.into(), icon: "emoji:🧱️".into(), summary: summary.into(), fields }
 }
 
-async fn operator(id: &str, name: &str, summary: &str, outputs: Vec<ChannelSpec>, operation: Box<dyn Operator>) -> (OperatorInfo, Vec<OperatorImpl>) {
+async fn operator<O: Operator + 'static>(id: &str, name: &str, summary: &str, outputs: Vec<ChannelSpec>, operation: O) -> (OperatorInfo, Vec<OperatorImpl>) {
     (
         OperatorInfo { id: id.into(), extension: "core".into(), name: name.into(), abbreviation: name.into(), icon: "emoji:🧱️".into(), summary: summary.into(), inputs: vec![], outputs, ..Default::default() },
-        vec![OperatorImpl { schemas: vec![], operator: operation }],
+        vec![OperatorImpl { schemas: vec![], operator: Box::new(operation) }],
     )
 }
 
@@ -112,13 +112,13 @@ pub async fn register(registry: &mut Registry) {
     registry.register_schema(schema("dictionary", "Dictionary", "Arbitrary dictionary", vec![]));
     registry.register_schema(schema("image", "Image", "Image data URL", vec![FieldSpec::new("dataUrl", ValueType::Text).with_default(Value::Atom(Atom::String(String::new())))]));
 
-    let (info, implementations) = operator("core.number", "Number", "Produces a number dictionary", vec![ChannelSpec::named("N", "Num", "number", "Number")], Box::new(Number));
+    let (info, implementations) = operator("core.number", "Number", "Produces a number dictionary", vec![ChannelSpec::named("N", "Num", "number", "Number")], Number);
     registry.register_operator(info, implementations, &["number"]);
-    let (info, implementations) = operator("core.text", "Text", "Produces a text dictionary", vec![ChannelSpec::named("T", "Txt", "text", "Text")], Box::new(Text));
+    let (info, implementations) = operator("core.text", "Text", "Produces a text dictionary", vec![ChannelSpec::named("T", "Txt", "text", "Text")], Text);
     registry.register_operator(info, implementations, &["text"]);
-    let (info, implementations) = operator("core.boolean", "Bool", "Produces a boolean dictionary", vec![ChannelSpec::named("B", "Boo", "boolean", "Boolean")], Box::new(Boolean));
+    let (info, implementations) = operator("core.boolean", "Bool", "Produces a boolean dictionary", vec![ChannelSpec::named("B", "Boo", "boolean", "Boolean")], Boolean);
     registry.register_operator(info, implementations, &["boolean"]);
-    let (info, implementations) = operator("core.image", "Image", "Produces an image dictionary", vec![ChannelSpec::named("I", "Img", "image", "Image")], Box::new(Image));
+    let (info, implementations) = operator("core.image", "Image", "Produces an image dictionary", vec![ChannelSpec::named("I", "Img", "image", "Image")], Image);
     registry.register_operator(info, implementations, &["image"]);
     registry.register_operator(
         OperatorInfo {
@@ -160,7 +160,7 @@ mod tests {
     use super::*;
     use flow_extension_sdk::{build_manifest_json, evaluate_json};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn variable_relay_forwards_named_channel() {
         let mut registry = Registry::new();
         register(&mut registry);
@@ -170,7 +170,7 @@ mod tests {
         assert_eq!(width.schema(), Some("number"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn number_emits_schema_dictionary() {
         let mut registry = Registry::new();
         register(&mut registry);
@@ -180,7 +180,7 @@ mod tests {
         assert_eq!(number.get("value").and_then(|v| v.as_atom()).and_then(|a| a.as_f64()), Some(2.5));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn manifest_lists_schemas_and_operators() {
         let json = build_manifest_json("core", "Core", "0.1.0", &module_registry(), vec!["onStartup".into()], vec![], vec![], vec![]);
         assert!(json.contains("\"schemas\""));
@@ -188,7 +188,7 @@ mod tests {
         assert!(json.contains("\"number\""));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn evaluate_json_text() {
         let input = Dictionary::new().insert("value", Value::Atom(Atom::String("hi".into())));
         let out_json = evaluate_json(&module_registry(), "core.text", &serde_json::to_string(&input).unwrap());

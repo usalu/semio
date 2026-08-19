@@ -29,7 +29,7 @@ mod tests {
     use crate::artifacts::draw::schema::{create_draw_shape_layer_rect, default_draw_document, layer_id};
     use crate::artifacts::draw::{DrawSnapshot, DRAW_DOCUMENT_SCHEMA};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_binary_round_trips_and_agrees_with_text() {
         let document = default_draw_document("doc-text-test", None);
         let operation = crate::artifacts::draw::mutations::create_layer(None, Some(document.layers.len()), create_draw_shape_layer_rect("Op Binary Test"));
@@ -38,7 +38,7 @@ mod tests {
         assert_eq!(decode_op(&bytes).expect("decode"), operation);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn document_text_round_trips_a_store_with_an_applied_operation() {
         let initial = default_draw_document("doc-text-test", None);
         let envelope = store::create_document_envelope::<DrawSnapshot, DrawMutation>(DRAW_DOCUMENT_SCHEMA, "doc-text-test", initial, None);
@@ -56,7 +56,7 @@ mod tests {
     /// 🎫️ CW7 command-envelope law (`POLICY_COMMAND_ENVELOPE_COMPLETENESS_ALLOWLIST`): proves
     /// `DrawMutation`'s `Edit` round-trips through `protocol::MutationEnvelope`s beside this file's
     /// existing pack round-trip law.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn command_envelope_round_trip_holds_for_an_applied_operation() {
         use protocol::{ArtifactId, Edit, SchemaId};
 

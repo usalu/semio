@@ -90,7 +90,7 @@ mod tests {
     use protocol::Inference;
 
     //#region 🧪️InferenceLaws
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = GisMapSnapshot {
             positions: vec![MapFeature { id: "p1".into(), data: dsl::to_dsl_value(&serde_json::json!({ "lon": 1.0, "lat": 2.0 })).unwrap_or(dsl::DslValue::Null) }],
@@ -101,7 +101,7 @@ mod tests {
         assert_eq!(GisMapInference::infer(&snapshot), GisMapInference::infer(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(GisMapInference::infer(&GisMapSnapshot::default()), GisMapInference::default());
     }

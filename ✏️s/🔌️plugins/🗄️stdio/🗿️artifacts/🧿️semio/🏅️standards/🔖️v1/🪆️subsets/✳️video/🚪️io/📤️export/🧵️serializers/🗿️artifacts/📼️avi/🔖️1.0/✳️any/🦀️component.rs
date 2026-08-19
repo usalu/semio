@@ -113,7 +113,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn video_to_avi_to_video_round_trips_everything_the_video_subset_can_represent() {
         let original = real_world_video();
         let avi = semio_framework_plugin::resolve_ready(SemioVideoToAvi::serialize(&original)).expect("serialize");
@@ -125,7 +125,7 @@ mod tests {
         assert_eq!(back, original);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn subtitle_kind_folds_to_auds_fcc_type_honestly_documented() {
         let mut snap = real_world_video();
         snap.streams[0].kind = SemioVideoStreamKind::Subtitle;

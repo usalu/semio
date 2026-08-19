@@ -202,7 +202,7 @@ mod tests {
         AdjacencyView::new(neighbors, vec![RegionId(0); 6])
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn single_path_meets_flow_of_one() {
         let model = floor_wall_model();
         let adjacency = line_adjacency(4);
@@ -211,7 +211,7 @@ mod tests {
         assert!(c.validate_complete(&all_floor, &adjacency).is_ok());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn a_wall_blocking_the_only_path_fails_flow_of_one() {
         let model = floor_wall_model();
         let adjacency = line_adjacency(4);
@@ -220,7 +220,7 @@ mod tests {
         assert!(c.validate_complete(&blocked, &adjacency).is_err());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn ladder_with_both_corridors_open_meets_flow_of_two() {
         let model = floor_wall_model();
         let adjacency = ladder_adjacency();
@@ -229,7 +229,7 @@ mod tests {
         assert!(c.validate_complete(&all_floor, &adjacency).is_ok());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn ladder_with_one_corridor_walled_off_fails_flow_of_two() {
         let model = floor_wall_model();
         let adjacency = ladder_adjacency();
@@ -239,7 +239,7 @@ mod tests {
         assert!(c.validate_complete(&one_corridor, &adjacency).is_err());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn source_not_selected_yields_zero_flow() {
         let model = floor_wall_model();
         let adjacency = line_adjacency(3);
@@ -248,7 +248,7 @@ mod tests {
         assert!(c.validate_complete(&source_is_wall, &adjacency).is_err());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn max_flow_never_exceeds_the_number_of_distinct_source_sink_edges() {
         // A direct single-edge line: max possible flow is 1, regardless of how large min_flow's
         // check demands — this just exercises the network construction terminates and is exact.

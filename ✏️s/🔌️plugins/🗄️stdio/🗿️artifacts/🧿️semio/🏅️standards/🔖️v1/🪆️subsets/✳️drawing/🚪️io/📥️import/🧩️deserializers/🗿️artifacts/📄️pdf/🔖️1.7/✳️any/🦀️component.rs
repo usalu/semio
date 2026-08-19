@@ -58,7 +58,7 @@ mod tests {
     use super::*;
     use crate::artifacts::pdf::schema::snapshot::PdfPage;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn maps_page_text_and_media_box() {
         let pdf = PdfSnapshot { pages: vec![PdfPage { media_box: [0.0, 0.0, 200.0, 100.0], text: "hello semio".into(), ..PdfPage::default() }], ..PdfSnapshot::default() };
         let drawing = semio_framework_plugin::resolve_ready(SemioDrawingFromPdf::deserialize(&pdf)).expect("deserialize");
@@ -74,7 +74,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn rejects_no_pages() {
         assert!(semio_framework_plugin::resolve_ready(SemioDrawingFromPdf::deserialize(&PdfSnapshot::default())).is_err());
     }

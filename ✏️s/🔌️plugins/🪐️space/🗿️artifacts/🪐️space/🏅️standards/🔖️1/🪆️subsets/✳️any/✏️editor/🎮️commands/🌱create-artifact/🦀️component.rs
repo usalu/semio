@@ -57,7 +57,7 @@ mod tests {
     use crate::editor::space_index::{testkit, SpaceIndexCommand};
     
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_artifact_mints_an_id_adds_a_row_and_relays_the_open_command() {
         let mut app = testkit::new_app();
         let result = app.dispatch_typed(SpaceIndexCommand::CreateArtifact(CreateArtifact { name: "First".into(), kind_id: "draw".into(), now_ms: 1, actor: "user:1".into() }), &semio_framework_plugin::testkit::meta("local")).expect("create artifact");
@@ -79,7 +79,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn empty_name_and_kind_open_the_dialog_instead_of_failing() {
         let mut app = testkit::new_app();
         let result = app
@@ -97,14 +97,14 @@ mod tests {
         assert!(snapshot.artifacts.is_empty(), "opening the dialog must not create a row");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_artifact_rejects_an_unknown_kind() {
         let mut app = testkit::new_app();
         let error = app.dispatch_typed(SpaceIndexCommand::CreateArtifact(CreateArtifact { name: "First".into(), kind_id: "nope".into(), now_ms: 1, actor: "user:1".into() }), &semio_framework_plugin::testkit::meta("local")).expect_err("unknown kind must fail");
         assert_eq!(error.code.0, "s.space.unknown-kind");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_artifact_mints_distinct_ids_for_two_rows_created_at_the_same_instant() {
         let mut app = testkit::new_app();
         app.dispatch_typed(SpaceIndexCommand::CreateArtifact(CreateArtifact { name: "A".into(), kind_id: "draw".into(), now_ms: 5, actor: "user:1".into() }), &semio_framework_plugin::testkit::meta("local")).expect("create a");

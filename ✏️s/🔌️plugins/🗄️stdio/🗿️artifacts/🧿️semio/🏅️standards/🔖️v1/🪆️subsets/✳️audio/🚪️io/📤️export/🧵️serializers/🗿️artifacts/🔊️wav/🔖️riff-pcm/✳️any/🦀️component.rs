@@ -63,7 +63,7 @@ mod tests {
     /// 🧪️ codec_retention_law: audio → wav → audio is a LOSSLESS fixpoint for every field except
     /// `format` (always normalizes to `Float32`, documented above) and `tags` (dropped,
     /// documented above) -- constructed with neither here so equality holds field-for-field.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn audio_to_wav_to_audio_round_trips_losslessly_for_samples_and_rate() {
         let original = real_world_audio_no_tags();
         let wav = semio_framework_plugin::resolve_ready(SemioAudioToWav::serialize(&original)).expect("serialize");
@@ -76,7 +76,7 @@ mod tests {
         assert_eq!(back.format, SemioAudioFormat::Float32); // normalized, documented
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn tags_are_intentionally_dropped_on_export_documented_lossy() {
         let mut snap = real_world_audio_no_tags();
         snap.tags = vec![SemioAudioTag { key: "title".into(), value: "clean".into() }];
@@ -86,7 +86,7 @@ mod tests {
         assert!(back.tags.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mismatched_channel_lengths_pad_shorter_channel_with_silence_not_panic() {
         let snap = SemioAudioSnapshot { channels: vec![SemioAudioChannel { samples: vec![1.0, 2.0, 3.0] }, SemioAudioChannel { samples: vec![1.0] }], ..real_world_audio_no_tags() };
         let wav = semio_framework_plugin::resolve_ready(SemioAudioToWav::serialize(&snap)).expect("serialize");

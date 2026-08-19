@@ -200,7 +200,7 @@ mod tests {
         (model, tb.build().unwrap())
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn from_model_compile_round_trip_preserves_fingerprint() {
         let (model, _topo) = checkerboard();
         let doc = SourceModelDoc::from_model(&model);
@@ -209,7 +209,7 @@ mod tests {
         assert_eq!(recompiled.pattern_count(), model.pattern_count());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn source_model_doc_json_round_trips() {
         let (model, _topo) = checkerboard();
         let doc = SourceModelDoc::from_model(&model);
@@ -219,7 +219,7 @@ mod tests {
         assert_eq!(back.compile().unwrap().fingerprint(), model.fingerprint());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn compile_rejects_unknown_schema_version() {
         let (model, _topo) = checkerboard();
         let mut doc = SourceModelDoc::from_model(&model);
@@ -227,7 +227,7 @@ mod tests {
         assert_eq!(doc.compile().unwrap_err(), ModelError::SchemaVersionMismatch { expected: SOURCE_MODEL_VERSION, actual: 999 });
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn hand_authored_asymmetric_allow_fails_validate_on_compile() {
         // A hand-edited document declares `adj` self-inverse but only allows black->white, never
         // the reverse: `compile()` must still run `validate()` and reject it, not just build
@@ -242,7 +242,7 @@ mod tests {
         assert!(matches!(doc.compile().unwrap_err(), ModelError::AsymmetricInverse { .. }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn checkpoint_doc_round_trips_and_resumes() {
         let (model, topo) = checkerboard();
         let fingerprint = model.fingerprint();
@@ -261,7 +261,7 @@ mod tests {
         assert!(restored.domains[0].get(PatternId(0)));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn checkpoint_doc_rejects_version_mismatch() {
         let (model, topo) = checkerboard();
         let mut doc = CheckpointDoc { version: CHECKPOINT_VERSION, domains: vec![model.full_domain(); topo.node_count()], model_fingerprint: model.fingerprint(), seed: 0 };
@@ -269,21 +269,21 @@ mod tests {
         assert_eq!(doc.into_checkpoint(&model, topo.node_count()).unwrap_err(), SolveError::CheckpointVersionMismatch { expected: CHECKPOINT_VERSION, actual: 7 });
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn checkpoint_doc_rejects_fingerprint_mismatch() {
         let (model, topo) = checkerboard();
         let doc = CheckpointDoc { version: CHECKPOINT_VERSION, domains: vec![model.full_domain(); topo.node_count()], model_fingerprint: 0xDEAD_BEEF, seed: 0 };
         assert_eq!(doc.into_checkpoint(&model, topo.node_count()).unwrap_err(), SolveError::CorruptCheckpoint { reason: "model fingerprint mismatch" });
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn checkpoint_doc_rejects_wrong_domain_count() {
         let (model, topo) = checkerboard();
         let doc = CheckpointDoc { version: CHECKPOINT_VERSION, domains: vec![model.full_domain(); topo.node_count() - 1], model_fingerprint: model.fingerprint(), seed: 0 };
         assert_eq!(doc.into_checkpoint(&model, topo.node_count()).unwrap_err(), SolveError::CorruptCheckpoint { reason: "domain count does not match topology node count" });
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn checkpoint_doc_rejects_wrong_bitset_length() {
         let (model, topo) = checkerboard();
         let mut domains = vec![model.full_domain(); topo.node_count()];
@@ -292,7 +292,7 @@ mod tests {
         assert_eq!(doc.into_checkpoint(&model, topo.node_count()).unwrap_err(), SolveError::CorruptCheckpoint { reason: "domain bitset length does not match model pattern count" });
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn checkpoint_doc_rejects_tampered_bitset_from_raw_json() {
         // Simulates a hand-edited file: valid JSON shape, but a bitset with a stray bit set past
         // its declared `len` in the `words` array — must be caught by `is_well_formed`, not panic.

@@ -57,7 +57,7 @@ mod tests {
         snapshot
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn home_op_text_round_trips_every_variant() {
         store::os_store::test_support::assert_op_line_round_trip(&create_artifact(sample_row("artifact-9")));
         store::os_store::test_support::assert_op_line_round_trip(&delete_artifact("artifact-1".into()));
@@ -65,7 +65,7 @@ mod tests {
         store::os_store::test_support::assert_op_line_round_trip(&touch_artifact("artifact-1".into(), 42, "user:2".into()));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dispatch_registers_semantic_descriptors() {
         register_s_space_mutation_descriptors();
         for kind in <SSpaceMutation as protocol::SemanticMutation<SSpaceSnapshot>>::kinds() {
@@ -75,31 +75,31 @@ mod tests {
     }
 
     //#region 🔖️MutationLaws
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_artifact_inverse_law() {
         let base = empty_space_index_snapshot("space-1");
         assert_mutation_inverse_law(&base, &create_artifact(sample_row("artifact-1")));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn delete_artifact_inverse_law() {
         let base = seeded_snapshot();
         assert_mutation_inverse_law(&base, &delete_artifact("artifact-1".into()));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn rename_artifact_inverse_law() {
         let base = seeded_snapshot();
         assert_mutation_inverse_law(&base, &rename_artifact("artifact-1".into(), "Renamed".into()));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn touch_artifact_inverse_law() {
         let base = seeded_snapshot();
         assert_mutation_inverse_law(&base, &touch_artifact("artifact-1".into(), 99, "user:3".into()));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_artifact_diff_absorb_law() {
         let base = empty_space_index_snapshot("space-1");
         let d1 = create_artifact(sample_row("artifact-1")).diff(&base).diff().clone();
@@ -111,7 +111,7 @@ mod tests {
 
     //#region 🔖️OutcomeLaws
     /// ✅️ §C2/fan-out-recipe laws — one per verb family this facet implements.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_artifact_duplicate_id_is_fatal() {
         let base = seeded_snapshot();
         let outcome = create_artifact(sample_row("artifact-1")).diff(&base);
@@ -119,19 +119,19 @@ mod tests {
         assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn delete_artifact_missing_target_is_error() {
         let base = seeded_snapshot();
         assert_missing_target_is_error(&base, &delete_artifact("ghost".into()));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn rename_artifact_missing_target_is_error() {
         let base = seeded_snapshot();
         assert_missing_target_is_error(&base, &rename_artifact("ghost".into(), "x".into()));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn rename_artifact_same_name_is_no_op() {
         let base = seeded_snapshot();
         let outcome = rename_artifact("artifact-1".into(), "Artifact artifact-1".into()).diff(&base);
@@ -139,7 +139,7 @@ mod tests {
         assert_eq!(outcome.diff(), &SSpaceDiff::default());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn rename_artifact_name_collision_is_fatal() {
         let mut base = seeded_snapshot();
         base.artifacts.push(sample_row("artifact-2"));
@@ -149,7 +149,7 @@ mod tests {
         assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn touch_artifact_missing_target_is_error() {
         let base = seeded_snapshot();
         assert_missing_target_is_error(&base, &touch_artifact("ghost".into(), 1, "user:1".into()));

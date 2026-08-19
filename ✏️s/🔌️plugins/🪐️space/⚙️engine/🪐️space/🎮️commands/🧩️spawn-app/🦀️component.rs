@@ -31,7 +31,7 @@ mod tests {
     use crate::demo_space_projection;
     use std::collections::HashSet;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn space_command_op_text_round_trips_every_variant() {
         store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::SpawnApp(SpawnApp { plugin_id: "draw".into(), app_id: "draw".into(), x: 80.0, y: 80.0 }));
         store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::MoveMediaNode(crate::engine::space::commands::move_media_node::MoveMediaNode { node_id: "n1".into(), x: 1.0, y: 2.0 }));
@@ -56,7 +56,7 @@ mod tests {
         store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::ReorganizeWorkflow(crate::engine::space::commands::reorganize_workflow::ReorganizeWorkflow {}));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn move_media_node_emits_coalesced_move_operation() {
         let projection = demo_space_projection();
         let config = SpaceConfig::default();
@@ -68,7 +68,7 @@ mod tests {
         assert!((node.y - 160.0).abs() < 0.01);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn spawns_draw_app_instance() {
         seed_draw_plugin();
         let projection = demo_space_projection();
@@ -81,7 +81,7 @@ mod tests {
         assert_eq!(emit.config_mutations, vec![SpaceConfigMutation::SetActiveNode { node_id: expected_active }]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn spawns_draw_app_instance_at_drop_position() {
         seed_draw_plugin();
         let projection = demo_space_projection();
@@ -94,7 +94,7 @@ mod tests {
         assert!((node.y - 654.0).abs() < 0.01);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn patch_app_instances_updates_labels() {
         let projection = demo_space_projection();
         let config = SpaceConfig::default();
@@ -106,7 +106,7 @@ mod tests {
         assert!(labels.iter().all(|label| label == "Batch Label"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn spawns_puzzle5d_and_shooting_with_multi_port_registrations() {
         seed_multi_port_plugins();
         let mut projection = demo_space_projection();
@@ -121,7 +121,7 @@ mod tests {
         assert_eq!(shooting_node.inputs.len(), 2, "document:in + scene-in");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn undo_redo_round_trip_on_spawn() {
         use semio_framework_plugin::{testkit, VcsArtifactApp};
         seed_draw_plugin();

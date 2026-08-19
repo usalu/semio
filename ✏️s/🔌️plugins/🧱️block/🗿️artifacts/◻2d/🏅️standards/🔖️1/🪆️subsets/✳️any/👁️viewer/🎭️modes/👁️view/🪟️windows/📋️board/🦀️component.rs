@@ -61,14 +61,14 @@ pub async fn render(document: &Block2dSnapshot) -> UiNode {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn definition_declares_the_board_surface_and_body_key() {
         let definition = definition();
         assert_eq!(definition.body_key, BODY_KEY);
         assert!(matches!(definition.surface_kind, SurfaceKind::Board2d));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn render_lists_real_handle_kind_and_handle_geometry() {
         use crate::artifacts::block2d::{Block2dHandleKind, Block2dHandleTemplate};
         let mut document = crate::artifacts::block2d::schema::empty_block2d_snapshot();

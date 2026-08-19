@@ -106,7 +106,7 @@ impl store::ArtifactPack for RasterConfig {
 pub type RasterConfigViewportSize = crate::artifacts::raster::RasterViewportSize;
 
 impl Default for RasterConfig {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { brush_size: 24.0, brush_opacity: 1.0, composite_viewport: None, camera: RasterCamera::default(), active_utility_id: "selectMarquee".into(), locale: "en-US".into() }
     }
 }
@@ -245,7 +245,7 @@ impl Mutation<RasterConfig> for RasterConfigMutation {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn raster_config_operation_round_trips_and_backwards_restores_snapshot() {
         let base = RasterConfig { brush_size: 24.0, ..Default::default() };
         let operation = RasterConfigMutation::SetBrushSize { value: 40.0 };
@@ -256,7 +256,7 @@ mod tests {
         assert_eq!(backwards[0].diff(&forward).diff().clone(), base);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn raster_config_operation_op_text_round_trips_every_variant() {
         store::os_store::test_support::assert_op_line_round_trip(&RasterConfigMutation::Snapshot { config: RasterConfig::default() });
         store::os_store::test_support::assert_op_line_round_trip(&RasterConfigMutation::SetBrushSize { value: 40.0 });
@@ -268,7 +268,7 @@ mod tests {
         store::os_store::test_support::assert_op_line_round_trip(&RasterConfigMutation::SetLocale { value: "de-DE".into() });
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn raster_config_default_matches_ui_selectmarquee_utility() {
         let config = RasterConfig::default();
         assert_eq!(config.active_utility_id, "selectMarquee");
@@ -277,7 +277,7 @@ mod tests {
         assert_eq!(config.brush_opacity, 1.0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn raster_config_dsl_round_trips() {
         let config = RasterConfig {
             brush_size: 40.0,

@@ -137,7 +137,7 @@ pub use derived_composition::*;
 use crate::artifacts::process3d::{Pose, Process3dSnapshot, ProcessWorkingScene, Stock, WorkingSolid};
 use base64::Engine as _;
 use semio_framework_plugin::{MeshExporter, MeshImporter};
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::{ObjSolidExporter, ObjSolidImporter, SolidExporter, SolidImporter, StepSolidExporter, StepSolidImporter, StlSolidExporter, StlSolidImporter};
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::{Brep, BrepError, GeometryHandle, ObjSolidExporter, ObjSolidImporter, SolidExporter, SolidImporter, StepSolidExporter, StepSolidImporter, StlSolidExporter, StlSolidImporter};
 use serde_json::Value;
 
 /// 📤️ A pending native-geometry export ready to become a `Effect::DownloadMediaExport`.
@@ -152,8 +152,65 @@ pub struct Process3dModelExport {
 /// kernel-replay constant of the same value (`schema::inferences::PROCESS3D_TESSELLATION_TOLERANCE`).
 const PROCESS3D_TESSELLATION_TOLERANCE: f64 = 0.05;
 
+//#region 🔖️SolidCodecs
+/// 🗃️ The closed set of `SolidExporter` implementors `export_process3d_model` ever selects among.
+/// `SolidExporter` is declared in `🗄️stdio`, outside this packet's path scope, so `#[dyn_enum]` cannot
+/// annotate its declaration (R11: "cannot annotate a trait you do not own") — hand-written here in the
+/// same shape `dyn_enum_close!` would generate (O1: no `Box<dyn SolidExporter>`).
+enum ProcessSolidExporter {
+    Obj(ObjSolidExporter),
+    Step(StepSolidExporter),
+    Stl(StlSolidExporter),
+}
+
+impl SolidExporter for ProcessSolidExporter {
+    async fn format_kind(&self) -> &'static str {
+        match self {
+            Self::Obj(exporter) => exporter.format_kind().await,
+            Self::Step(exporter) => exporter.format_kind().await,
+            Self::Stl(exporter) => exporter.format_kind().await,
+        }
+    }
+
+    async fn export(&self, kernel: &Brep, shapes: &[GeometryHandle], deflection: f64) -> Result<Vec<u8>, BrepError> {
+        match self {
+            Self::Obj(exporter) => exporter.export(kernel, shapes, deflection).await,
+            Self::Step(exporter) => exporter.export(kernel, shapes, deflection).await,
+            Self::Stl(exporter) => exporter.export(kernel, shapes, deflection).await,
+        }
+    }
+}
+
+/// 🗃️ Mirror of `ProcessSolidExporter` for the import direction — same rationale (`SolidImporter` is
+/// likewise a foreign, un-owned trait).
+enum ProcessSolidImporter {
+    Step(StepSolidImporter),
+    Obj(ObjSolidImporter),
+    Stl(StlSolidImporter),
+}
+
+impl SolidImporter for ProcessSolidImporter {
+    async fn format_kind(&self) -> &'static str {
+        match self {
+            Self::Step(importer) => importer.format_kind().await,
+            Self::Obj(importer) => importer.format_kind().await,
+            Self::Stl(importer) => importer.format_kind().await,
+        }
+    }
+
+    async fn import(&self, kernel: &mut Brep, bytes: &[u8], tolerance: f64) -> Result<Vec<GeometryHandle>, BrepError> {
+        match self {
+            Self::Step(importer) => importer.import(kernel, bytes, tolerance).await,
+            Self::Obj(importer) => importer.import(kernel, bytes, tolerance).await,
+            Self::Stl(importer) => importer.import(kernel, bytes, tolerance).await,
+        }
+    }
+}
+//#endregion 🔖️SolidCodecs
+
 /// 📤️ Encodes the replayed stock through `format`'s codec. STEP/OBJ/STL go through the
-/// `SolidExporter` trait objects (real B-Rep, exact where the format allows it); GLB goes through
+/// `ProcessSolidExporter`-dispatched `SolidExporter` codecs (real B-Rep, exact where the format
+/// allows it); GLB goes through
 /// the mesh tessellation bridge (`schema::inferences::processed_mesh` → `GlbExporter`), matching how
 /// it is already rendered/exported elsewhere in this app.
 ///
@@ -174,10 +231,10 @@ pub async fn export_process3d_model(scene: &ProcessWorkingScene, resolved_up_to:
         let mime_type = descriptor.mimes.first().cloned().ok_or_else(|| "process export format kind `glb` has no MIME claim".to_string())?;
         return Ok(Some(Process3dModelExport { filename: format!("process3d{extension}"), data: Value::String(base64::engine::general_purpose::STANDARD.encode(bytes)), mime_type, encoding: descriptor.is_binary.then(|| "base64".into()) }));
     }
-    let exporter: Box<dyn SolidExporter> = match format {
-        "obj" => Box::new(ObjSolidExporter),
-        "stl" => Box::new(StlSolidExporter),
-        _ => Box::new(StepSolidExporter),
+    let exporter: ProcessSolidExporter = match format {
+        "obj" => ProcessSolidExporter::Obj(ObjSolidExporter),
+        "stl" => ProcessSolidExporter::Stl(StlSolidExporter),
+        _ => ProcessSolidExporter::Step(StepSolidExporter),
     };
     let mut session = crate::artifacts::process3d::schema::inferences::ProcessKernelReplay::new();
     let Some(handle) = crate::artifacts::process3d::schema::inferences::replay_process(&mut session, scene, resolved_up_to) else {
@@ -203,7 +260,8 @@ async fn process3d_bytes_from_data_url(data_url: &str) -> Option<Vec<u8>> {
 }
 
 /// 📥️ Imports a picked file into a brand-new stock-only fixture (steps cleared): STEP/OBJ/STL go
-/// through the `SolidImporter` trait objects and land as `WorkingSolid::ImportedSolid` (real B-Rep,
+/// through the `ProcessSolidImporter`-dispatched `SolidImporter` codecs and land as
+/// `WorkingSolid::ImportedSolid` (real B-Rep,
 /// reusable as a Cut/Drill/Attach operand); GLB is decoded once (via the mesh tessellation bridge,
 /// `GlbImporter`) purely to validate it, then kept as `WorkingSolid::ImportedMesh` referencing the
 /// original data url directly — it carries no exact B-Rep, so it is never re-imported into the
@@ -217,12 +275,12 @@ pub async fn import_process3d_model(name: &str, data_url: &str) -> Option<Proces
         let stock = Stock { id: "stock".into(), label: "Imported GLB".into(), solid: WorkingSolid::ImportedMesh { mesh_url: data_url.into() }, pose: Pose::default() };
         return Some(crate::artifacts::process3d::process_working_scene_to_snapshot(&ProcessWorkingScene { stock, steps: Vec::new() }, Default::default(), None));
     }
-    let (importer, label): (Box<dyn SolidImporter>, &str) = if name.ends_with(".stp") || name.ends_with(".step") {
-        (Box::new(StepSolidImporter), "Imported STEP")
+    let (importer, label): (ProcessSolidImporter, &str) = if name.ends_with(".stp") || name.ends_with(".step") {
+        (ProcessSolidImporter::Step(StepSolidImporter), "Imported STEP")
     } else if name.ends_with(".obj") {
-        (Box::new(ObjSolidImporter), "Imported OBJ")
+        (ProcessSolidImporter::Obj(ObjSolidImporter), "Imported OBJ")
     } else if name.ends_with(".stl") {
-        (Box::new(StlSolidImporter), "Imported STL")
+        (ProcessSolidImporter::Stl(StlSolidImporter), "Imported STL")
     } else {
         return None;
     };

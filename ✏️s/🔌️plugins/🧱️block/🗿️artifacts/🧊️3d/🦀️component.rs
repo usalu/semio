@@ -273,7 +273,7 @@ pub const BLOCK3D_DIALECT: semio_framework_plugin::app::Dialect =
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn artifact_kind_declares_the_3d_block_interchange_kind() {
         let kind = artifact_kind();
         assert_eq!(kind.id, "3d.block");

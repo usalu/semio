@@ -236,7 +236,7 @@ mod tests {
     use crate::editor::lowpoly::LowpolyCommand;
     use semio_framework_plugin::{testkit, PluginApp};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_paint_layer_emits_operation() {
         let mut a = app();
         let before = a.snapshot().expect("projection").objects[0].paint_layers.len();
@@ -244,7 +244,7 @@ mod tests {
         assert_eq!(a.snapshot().expect("projection").objects[0].paint_layers.len(), before + 1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn paint_stroke_drag_is_one_undo_step_with_pixel_restoration() {
         let mut a = app();
         let object_id = a.snapshot().expect("projection").objects[0].id.clone();
@@ -265,7 +265,7 @@ mod tests {
         assert_eq!(a.snapshot().expect("projection").objects[0].paint_layers[0].pixels, painted);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn eyedropper_updates_paint_color_without_operations() {
         let mut a = app();
         // 🧰️ The host-owned utility switch bridges into config.paint_utility and emits no operations.

@@ -141,7 +141,7 @@ pub mod cache {
         use super::*;
         use std::time::{SystemTime, UNIX_EPOCH};
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn segment_hash_is_stable() {
             let a = PartialMovieLut::segment_hash("abc", 0, 10);
             let b = PartialMovieLut::segment_hash("abc", 0, 10);
@@ -149,7 +149,7 @@ pub mod cache {
             assert_ne!(a, PartialMovieLut::segment_hash("abc", 0, 11));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn lru_evicts_oldest_entry() {
             let stamp = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_nanos();
             let root = std::env::temp_dir().join(format!("animate_cache_lru_{stamp}"));
@@ -231,7 +231,7 @@ pub mod preview {
         }
 
         impl<S: Scene> ApplicationHandler for PreviewApp<S> {
-            async fn resumed(&mut self, event_loop: &ActiveEventLoop) {
+            fn resumed(&mut self, event_loop: &ActiveEventLoop) {
                 if self.window.is_some() {
                     return;
                 }
@@ -259,7 +259,7 @@ pub mod preview {
                 window.request_redraw();
             }
 
-            async fn window_event(&mut self, event_loop: &ActiveEventLoop, _id: WindowId, event: WindowEvent) {
+            fn window_event(&mut self, event_loop: &ActiveEventLoop, _id: WindowId, event: WindowEvent) {
                 match event {
                     WindowEvent::CloseRequested => {
                         self.closed.store(true, Ordering::Relaxed);
@@ -328,7 +328,7 @@ pub mod preview {
         use crate::editor::animate::engine::scene::scene::{BasicStage, Scene};
         use crate::editor::animate::engine::camera::camera::Camera;
         use crate::editor::animate::engine::scene::section::SectionList;
-        use crate::editor::animate::engine::scene::sobject::{Sobject, VSobject};
+        use crate::editor::animate::engine::scene::sobject::{Sobjects, VSobject};
         use std::collections::HashMap;
 
         struct DemoScene {
@@ -343,7 +343,7 @@ pub mod preview {
 
         impl Scene for DemoScene {
             async fn construct(&mut self) {
-                self.add(Box::new(VSobject::new()));
+                self.add(VSobject::new().into());
                 self.wait(0.05);
             }
             async fn config(&self) -> &AnimateConfig {
@@ -358,10 +358,10 @@ pub mod preview {
             async fn camera_mut(&mut self) -> &mut Camera {
                 self.base.camera_mut()
             }
-            async fn mobjects(&self) -> &HashMap<u64, Box<dyn Sobject>> {
+            async fn mobjects(&self) -> &HashMap<u64, Sobjects> {
                 self.base.mobjects()
             }
-            async fn mobjects_mut(&mut self) -> &mut HashMap<u64, Box<dyn Sobject>> {
+            async fn mobjects_mut(&mut self) -> &mut HashMap<u64, Sobjects> {
                 self.base.mobjects_mut()
             }
             async fn sections(&self) -> &SectionList {
@@ -378,7 +378,7 @@ pub mod preview {
             }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn preview_scene_window_metadata_runs() {
             let config = AnimateConfig::default().with_resolution(64, 64).with_frame_rate(30.0);
             let scene = DemoScene::new(config.clone());
@@ -389,12 +389,12 @@ pub mod preview {
 }
 
 pub mod render {
-    use crate::editor::animate::engine::animation::animation::{compile_animations, interpolate_at, Animation, Wait};
+    use crate::editor::animate::engine::animation::animation::{compile_animations, interpolate_at, Animation, Animations, Wait};
     use crate::editor::animate::engine::config::config::AnimateConfig;
     use crate::editor::animate::engine::camera::camera::Camera;
     use crate::editor::animate::engine::scene::scene::Scene;
     use crate::editor::animate::engine::scene::section::SectionList;
-    use crate::editor::animate::engine::scene::sobject::Sobject;
+    use crate::editor::animate::engine::scene::sobject::{Sobject, Sobjects};
     use std::collections::HashMap;
     use std::fs;
     use std::path::PathBuf;
@@ -531,11 +531,11 @@ pub mod render {
             self.inner.camera_mut()
         }
 
-        async fn mobjects(&self) -> &HashMap<u64, Box<dyn Sobject>> {
+        async fn mobjects(&self) -> &HashMap<u64, Sobjects> {
             self.inner.mobjects()
         }
 
-        async fn mobjects_mut(&mut self) -> &mut HashMap<u64, Box<dyn Sobject>> {
+        async fn mobjects_mut(&mut self) -> &mut HashMap<u64, Sobjects> {
             self.inner.mobjects_mut()
         }
 
@@ -555,24 +555,24 @@ pub mod render {
             self.inner.set_scene_time(time);
         }
 
-        async fn play(&mut self, mut animation: Box<dyn Animation>) {
+        async fn play(&mut self, mut animation: Animations) {
             animation.begin();
             let duration = animation.duration().max(0.0);
             let steps = (duration * self.config().frame_rate).ceil() as u64;
             let steps = steps.max(1);
             for frame in 0..=steps {
                 let alpha = frame as f64 / steps as f64;
-                interpolate_at(self.mobjects_mut(), animation.as_mut(), alpha);
+                interpolate_at(self.mobjects_mut(), &mut animation, alpha);
                 self.sample_frame(self.config().frame_duration());
             }
             animation.finish();
         }
 
         async fn wait(&mut self, seconds: f64) {
-            self.play(Box::new(Wait::new(seconds)));
+            self.play(Wait::new(seconds).into());
         }
 
-        async fn compile_and_play(&mut self, animations: Vec<Box<dyn Animation>>) {
+        async fn compile_and_play(&mut self, animations: Vec<Animations>) {
             let _durations = compile_animations(&animations);
             for anim in animations {
                 self.play(anim);
@@ -604,7 +604,7 @@ pub mod render {
 
         impl Scene for DemoScene {
             async fn construct(&mut self) {
-                self.add(Box::new(VSobject::new()));
+                self.add(VSobject::new().into());
                 self.wait(0.1);
             }
             async fn config(&self) -> &AnimateConfig {
@@ -619,10 +619,10 @@ pub mod render {
             async fn camera_mut(&mut self) -> &mut Camera {
                 self.base.camera_mut()
             }
-            async fn mobjects(&self) -> &HashMap<u64, Box<dyn Sobject>> {
+            async fn mobjects(&self) -> &HashMap<u64, Sobjects> {
                 self.base.mobjects()
             }
-            async fn mobjects_mut(&mut self) -> &mut HashMap<u64, Box<dyn Sobject>> {
+            async fn mobjects_mut(&mut self) -> &mut HashMap<u64, Sobjects> {
                 self.base.mobjects_mut()
             }
             async fn sections(&self) -> &SectionList {
@@ -639,7 +639,7 @@ pub mod render {
             }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn render_scene_writes_last_frame() {
             let stamp = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_nanos();
             let dir = std::env::temp_dir().join(format!("animate_render_test_{stamp}"));
@@ -657,7 +657,7 @@ pub mod renderer {
     use crate::editor::animate::engine::config::config::AnimateConfig;
     use crate::editor::animate::engine::camera::camera::Camera;
     use crate::editor::animate::engine::text::color::Color;
-    use crate::editor::animate::engine::scene::sobject::Sobject;
+    use crate::editor::animate::engine::scene::sobject::{Sobject, Sobjects};
     use pollster::block_on;
     use vello::kurbo::Stroke as KurboStroke;
     use vello::peniko::Color as VelloColor;
@@ -666,7 +666,7 @@ pub mod renderer {
     /// 🖼️ Captured mobject state at one timeline sample.
     pub struct CapturedFrame {
         pub time: f64,
-        pub mobjects: Vec<Box<dyn Sobject>>,
+        pub mobjects: Vec<Sobjects>,
     }
 
     /// 🖌️ Headless Vello/wgpu renderer with static-background caching.
@@ -753,7 +753,7 @@ pub mod renderer {
         let mut indices: Vec<usize> = (0..capture.mobjects.len()).collect();
         indices.sort_by_key(|&i| (capture.mobjects[i].z_order(), capture.mobjects[i].id()));
         for i in indices {
-            paint_mobject(&mut scene, capture.mobjects[i].as_ref(), view);
+            paint_mobject(&mut scene, &capture.mobjects[i], view);
         }
         scene
     }
@@ -764,7 +764,7 @@ pub mod renderer {
         kurbo::Affine::new([sx, 0.0, 0.0, -sy, width as f64 * 0.5 - camera.frame_center.x() * sx, height as f64 * 0.5 + camera.frame_center.y() * sy]) * camera.transform.to_kurbo()
     }
 
-    async fn paint_mobject(scene: &mut Scene, mobj: &dyn Sobject, view: kurbo::Affine) {
+    async fn paint_mobject(scene: &mut Scene, mobj: &Sobjects, view: kurbo::Affine) {
         let transform = view * mobj.transform().to_kurbo();
         let style = mobj.style();
         let opacity = mobj.effective_opacity();
@@ -842,11 +842,11 @@ pub mod renderer {
         use super::*;
         use crate::editor::animate::engine::scene::sobject::VSobject;
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn vello_renderer_produces_rgba_buffer() {
             let config = AnimateConfig::default().with_resolution(64, 64);
             let camera = Camera::new(config.width as f64 / 100.0, config.height as f64 / 100.0);
-            let mut capture = CapturedFrame { time: 0.0, mobjects: vec![Box::new(VSobject::new())] };
+            let mut capture = CapturedFrame { time: 0.0, mobjects: vec![VSobject::new().into()] };
             let mut renderer = VelloRenderer::new(config.width, config.height).expect("renderer");
             let pixels = renderer.render_capture(&capture, &camera, &config).expect("frame");
             assert_eq!(pixels.len(), 64 * 64 * 4);
@@ -865,7 +865,7 @@ pub mod scenes {
     use crate::editor::animate::engine::camera::camera::Camera;
     use crate::editor::animate::engine::scene::section::Section;
     use crate::editor::animate::engine::scene::section::SectionList;
-    use crate::editor::animate::engine::scene::sobject::{Sobject, VSobject};
+    use crate::editor::animate::engine::scene::sobject::{Sobject, Sobjects, VSobject};
     use std::collections::HashMap;
 
     /// 🧩️ Demo scene used when no bespoke scene is registered for a hash.
@@ -882,7 +882,7 @@ pub mod scenes {
 
     impl Scene for HashDemoScene {
         async fn construct(&mut self) {
-            self.add(Box::new(VSobject::new()));
+            self.add(VSobject::new().into());
             let label = format!("scene-{}", &self.hash[..self.hash.len().min(8)]);
             self.sections_mut().push(Section::new(label, 0.0, 0.2));
             self.wait(0.2);
@@ -899,10 +899,10 @@ pub mod scenes {
         async fn camera_mut(&mut self) -> &mut Camera {
             self.base.camera_mut()
         }
-        async fn mobjects(&self) -> &HashMap<u64, Box<dyn Sobject>> {
+        async fn mobjects(&self) -> &HashMap<u64, Sobjects> {
             self.base.mobjects()
         }
-        async fn mobjects_mut(&mut self) -> &mut HashMap<u64, Box<dyn Sobject>> {
+        async fn mobjects_mut(&mut self) -> &mut HashMap<u64, Sobjects> {
             self.base.mobjects_mut()
         }
         async fn sections(&self) -> &SectionList {
@@ -928,7 +928,7 @@ pub mod scenes {
     mod tests {
         use super::*;
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn scene_for_hash_constructs() {
             let config = AnimateConfig::default().with_resolution(32, 32).with_frame_rate(15.0);
             let mut scene = scene_for_hash(config.clone(), "abc123");
@@ -1256,7 +1256,7 @@ pub mod writer {
             AnimateConfig::default().with_resolution(16, 16).with_output_dir(&dir).with_media_dir(dir.join("media"))
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn writer_writes_srt_from_sections() {
             let config = temp_config();
             let sections = SectionList::default();
@@ -1272,7 +1272,7 @@ pub mod writer {
         /// never a silent partial result, per stdio's own mp4 engine); the assertions below add the
         /// explicit track/duration invariants (real `ftyp` header, sample-accurate total track
         /// duration in timescale ticks, byte-exact frame payload) on top of that.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn writer_buffers_frame_and_finalizes_a_real_decodable_mp4() {
             let config = temp_config();
             let mut writer = SceneFileWriter::new(&config, &[OutputFormat::Mp4]).expect("writer");
@@ -1299,7 +1299,7 @@ pub mod writer {
             assert_eq!(track.samples[1].data, pixels);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn writer_writes_png_sequence_frame() {
             let config = temp_config();
             let mut writer = SceneFileWriter::new(&config, &[OutputFormat::PngSequence]).expect("writer");
@@ -1309,7 +1309,7 @@ pub mod writer {
             assert!(frames_dir.join("000000.png").exists());
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn concat_raw_partials_merges_sample_counts_and_stays_decodable() {
             let config = temp_config();
             let mut writer = SceneFileWriter::new(&config, &[OutputFormat::Mp4]).expect("writer");
@@ -1328,7 +1328,7 @@ pub mod writer {
             assert_eq!(snapshot.tracks[0].samples.len(), 2);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn build_gif_snapshot_quantizes_and_downscales() {
             let frames = vec![vec![255u8, 0, 0, 255].repeat(64 * 64)];
             let snapshot = build_gif_snapshot(64, 64, 15.0, &frames).expect("gif snapshot");
@@ -1340,7 +1340,7 @@ pub mod writer {
             assert!(!bytes.is_empty());
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn nearest_neighbor_scale_downsizes_dimensions() {
             let src = vec![7u8; (8 * 8 * 4) as usize];
             let scaled = nearest_neighbor_scale(&src, 8, 8, 4, 4);

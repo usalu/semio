@@ -97,7 +97,7 @@ impl store::ArtifactPack for SSpaceSnapshot {
 //#endregion 🔖️HandcraftedArtifactCodecs
 
 impl Default for SSpaceSnapshot {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { schema: S_SPACE_INDEX_DOCUMENT_SCHEMA.into(), space_id: String::new(), artifacts: Vec::new() }
     }
 }
@@ -143,7 +143,7 @@ pub async fn space_index_table_row(row: &SpaceArtifactRow, presence: &str) -> Ve
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn empty_snapshot_uses_the_space_index_schema() {
         let snapshot = empty_space_index_snapshot("space-1");
         assert_eq!(snapshot.schema, S_SPACE_INDEX_DOCUMENT_SCHEMA);
@@ -151,14 +151,14 @@ mod tests {
         assert!(snapshot.artifacts.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mint_artifact_id_probes_past_a_collision() {
         let existing = vec![SpaceArtifactRow { id: "artifact-1-0".into(), ..Default::default() }];
         assert_eq!(mint_artifact_id(&existing, 1), "artifact-1-1");
         assert_eq!(mint_artifact_id(&[], 1), "artifact-1-0");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn table_row_projects_the_seven_worker_brief_columns() {
         assert_eq!(SPACE_INDEX_TABLE_COLUMNS.len(), 7);
         let row = SpaceArtifactRow {
@@ -175,7 +175,7 @@ mod tests {
         assert_eq!(space_index_table_row(&row, "user:9"), vec!["artifact-1", "First", "s.draw.draw", "*", "42", "user:2", "user:9"]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dsl_round_trips_default_and_populated_documents() {
         store::os_store::test_support::assert_dsl_round_trip(&SSpaceSnapshot::default());
         let mut populated = empty_space_index_snapshot("space-2");

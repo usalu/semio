@@ -168,7 +168,7 @@ mod tests {
     }
 
     //#region 🧪️TopologyLaws
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn a_direct_cycle_between_two_blocks_is_reported() {
         let a = block("a", Some(PlaybookExpr::Var { name: "b".into() }));
         let b = block("b", Some(PlaybookExpr::Var { name: "a".into() }));
@@ -176,7 +176,7 @@ mod tests {
         assert!(!topology.cycle_free, "a reads b and b reads a — this is a genuine cycle");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn sequential_steps_without_conditions_stay_cycle_free_with_increasing_depth() {
         let topology = compute_playbook_topology(&[step("s1", vec![block("q1", None)]), step("s2", vec![block("q2", None)])]);
         assert!(topology.cycle_free);

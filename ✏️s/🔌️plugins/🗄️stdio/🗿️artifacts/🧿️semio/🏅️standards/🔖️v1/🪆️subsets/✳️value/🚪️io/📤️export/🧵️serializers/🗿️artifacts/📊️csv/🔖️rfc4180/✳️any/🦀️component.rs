@@ -140,7 +140,7 @@ mod tests {
 
     /// 🧪️ Required proof: csv -> value -> csv -> value round trip preserves everything the
     /// value subset can represent (the `quoted` flag excepted — documented lossy field).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn csv_to_value_to_csv_to_value_round_trips() {
         let snapshot = CsvSnapshot {
             schema: STDIO_CSV_DOCUMENT_SCHEMA.into(),
@@ -155,7 +155,7 @@ mod tests {
         assert_eq!(csv_x.records.len(), 3);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn headerless_round_trips() {
         let snapshot = CsvSnapshot { schema: STDIO_CSV_DOCUMENT_SCHEMA.into(), has_header: false, records: vec![CsvRecord { fields: vec![field("x"), field("y")] }, CsvRecord { fields: vec![field("1"), field("2")] }] };
         let csv_x = round_trip(&snapshot);
@@ -163,7 +163,7 @@ mod tests {
         assert_eq!(csv_x.records, snapshot.records);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mismatched_row_shape_is_a_hard_error() {
         let value = SemioValue::List {
             items: vec![
@@ -176,7 +176,7 @@ mod tests {
         assert!(csv_from_semio(&value, &nodes, &mut visiting).is_err());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn nested_container_cell_is_a_hard_error() {
         let value = SemioValue::List { items: vec![SemioValue::List { items: vec![SemioValue::List { items: vec![] }] }] };
         let nodes = HashMap::new();

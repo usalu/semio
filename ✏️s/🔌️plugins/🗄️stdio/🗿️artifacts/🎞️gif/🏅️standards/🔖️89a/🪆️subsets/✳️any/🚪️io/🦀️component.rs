@@ -543,14 +543,14 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn decode_gif_rejects_garbage_and_wrong_magic() {
         assert!(decode_gif(b"not a gif at all").is_err());
         assert!(decode_gif(b"GIF87a").is_err(), "89a decoder must reject 87a magic");
     }
 
     /// 🧪️ Multi-frame, multi-region, GCE (delay/disposal/transparency) + NETSCAPE loop round trip.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn encode_decode_round_trip_multiframe() {
         let snap = sample_snapshot();
         let bytes = encode_gif(&snap).expect("encode");
@@ -560,7 +560,7 @@ mod tests {
     }
 
     /// 🧪️ decode(encode(decode(x))) snapshot equality across frames, delays, disposal, loop count.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn encode_decode_encode_decode_is_stable() {
         let snap = sample_snapshot();
         let once = decode_gif(&encode_gif(&snap).unwrap()).unwrap();
@@ -568,20 +568,20 @@ mod tests {
         assert_eq!(once, twice);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn encode_gif_rejects_empty_frame_list() {
         let snap = GifSnapshot { schema: STDIO_GIF89A_DOCUMENT_SCHEMA.into(), width: 4, height: 4, loop_count: None, frames: vec![], ..GifSnapshot::default() };
         assert!(encode_gif(&snap).is_err());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn encode_gif_rejects_frame_exceeding_logical_screen() {
         let mut snap = sample_snapshot();
         snap.frames[0].left = 100; // pushes the frame past the 12x10 logical screen
         assert!(encode_gif(&snap).is_err());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn no_loop_extension_when_loop_count_is_none() {
         let mut snap = sample_snapshot();
         snap.loop_count = None;
@@ -595,7 +595,7 @@ mod tests {
     /// 🧪️ Comments, an unrecognized application extension, AND the NETSCAPE loop extension all
     /// round-trip losslessly and don't corrupt one another — the real spec-fidelity gain this
     /// rewrite delivers over the prior stub, which dropped everything but GCE/loop.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn comments_and_app_extensions_round_trip() {
         let mut snap = sample_snapshot();
         snap.comments = vec!["hello gif".into(), "second comment".into()];
@@ -610,7 +610,7 @@ mod tests {
 
     /// 🧪️ A plain-text-only frame (no image data, `plain_text: Some`) round-trips as a real Plain
     /// Text Extension block, including its preceding GCE.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn plain_text_only_frame_round_trips() {
         let mut snap = sample_snapshot();
         snap.frames.push(GifFrame {
@@ -635,7 +635,7 @@ mod tests {
 
     /// 🧪️ A frame combining real image data with a plain-text extension is a documented
     /// unsupported combo — must be a typed encode error, never silently drop one or the other.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn encode_gif_rejects_image_plus_plain_text_combo() {
         let mut snap = sample_snapshot();
         snap.frames[0].plain_text = Some(GifPlainText::default());
@@ -644,7 +644,7 @@ mod tests {
 
     /// 🧪️ `interlace` is a real, round-trippable field — encode must reorder rows into the
     /// on-disk interlaced pass order, and decode must invert it back to natural-order indices.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn interlace_flag_round_trips_through_real_encode() {
         let mut snap = sample_snapshot();
         snap.frames[0].interlace = true;
@@ -656,7 +656,7 @@ mod tests {
     }
 
     /// 🧪️ An index referencing past the end of its color table is a typed encode error.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn encode_gif_rejects_index_past_color_table() {
         let mut snap = sample_snapshot();
         let len = snap.frames[0].indices.len();
@@ -665,7 +665,7 @@ mod tests {
     }
 
     /// 🧪️ `rgba()` derived accessor: a transparent index normalizes to `[0,0,0,0]`.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn rgba_derived_accessor_honors_transparent_index() {
         let snap = sample_snapshot();
         let transparent_frame = &snap.frames[1]; // built with transparent_corner=true
@@ -689,7 +689,7 @@ mod tests {
 
         /// ✅️ "committed files parse": all 6 handcrafted `.grammar.semio`/`.protocol.semio`
         /// files parse under the real dialect.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn committed_facet_files_parse() {
             for (label, text) in [("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO)] {
                 let grammar = dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
@@ -703,7 +703,7 @@ mod tests {
         /// ✅️ `grammar_conformance_law`: the snapshot grammar (a hex-dump grammar — GIF89a has
         /// no textual syntax of its own, see that file's own doc comment) recognizes real
         /// `print_dsl` output for the demo (dancing.gif) snapshot.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn grammar_conformance_law() {
             let grammar = dsl::parse_grammar(snapshot::text::COMPONENT_GRAMMAR_SEMIO).expect("parse snapshot grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
@@ -715,7 +715,7 @@ mod tests {
 
         /// ✅️ `ops_grammar_conformance_law`: the mutations grammar recognizes real `print_op`
         /// output for every `GifMutation` variant (`mutations::demo_mutation_cases()`).
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn ops_grammar_conformance_law() {
             let grammar = dsl::parse_grammar(mutations::text::COMPONENT_GRAMMAR_SEMIO).expect("parse mutations grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
@@ -727,7 +727,7 @@ mod tests {
 
         /// ✅️ `diff_grammar_conformance_law`: the diff grammar recognizes real `print_diff`
         /// output for every representative `GifDiff` (`diff::demo_diff_cases()`).
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn diff_grammar_conformance_law() {
             let grammar = dsl::parse_grammar(diff::text::COMPONENT_GRAMMAR_SEMIO).expect("parse diff grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
@@ -741,7 +741,7 @@ mod tests {
         /// snapshot pack (`encode_pack`, envelope-unwrapped first), every demo mutation's
         /// `encode_op`, and every demo diff's `encode_diff` — asserting `consumed ==
         /// bytes.len()`.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn protocol_walk_law() {
             let pack_spec = dsl::parse_protocol(snapshot::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
             let packed = store::ArtifactPack::encode_pack(&demo_gif_snapshot());
@@ -767,7 +767,7 @@ mod tests {
         /// ✅️ `fixture_honesty_law`: the shipped `.dsl.semio`/`.pack.semio` fixtures are
         /// GENUINE `print_dsl`/`encode_pack` output of `demo_gif_snapshot()` (the real
         /// dancing.gif fixture decoded via the real 89a codec).
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn fixture_honesty_law() {
             const FIXTURE_DSL: &str = include_str!("../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
             const FIXTURE_PACK: &[u8] = include_bytes!("../📚️examples/🎬️demo/🖼️assets/🎒️example.pack.semio");

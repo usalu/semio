@@ -95,7 +95,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn maps_headings_lists_code_quotes_and_flattens_tables() {
         let md = semio_framework_plugin::resolve_ready(SemioDocumentToMd::serialize(&sample_semio())).expect("serialize");
         assert!(matches!(&md.blocks[0], MdBlock::Heading { level: 2, inlines } if matches!(&inlines[0], MdInline::Strong { .. })));

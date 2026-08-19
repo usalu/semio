@@ -61,7 +61,7 @@ mod tests {
     use crate::editor::sourcing::SourcingCurateCommand;
     use crate::artifacts::curate::schema::curated_count;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn curate_add_and_remove_round_trip_through_operations() {
         let mut app = new_app();
         let document = app.snapshot().expect("snapshot");
@@ -74,7 +74,7 @@ mod tests {
         assert_eq!(curated_count(&app.snapshot().expect("snapshot"), &object_id), 0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn curate_set_count_supports_both_delta_and_absolute_value() {
         let mut app = new_app();
         let object_id = app.snapshot().expect("snapshot").stock_extra[2].id.clone();
@@ -84,7 +84,7 @@ mod tests {
         assert_eq!(curated_count(&app.snapshot().expect("snapshot"), &object_id), 2);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn drop_on_curated_and_drop_on_pool_mirror_add_and_remove() {
         let mut app = new_app();
         let document = app.snapshot().expect("snapshot");
@@ -99,7 +99,7 @@ mod tests {
 
     /// 🧬️ A no-op adjustment (removing an object that was never curated) must emit NOTHING —
     /// `SourcingMutation` has no whole-snapshot no-op sentinel to fall back on any more.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn curate_remove_on_an_uncurated_object_emits_no_mutation() {
         let mut app = new_app();
         let object_id = app.snapshot().expect("snapshot").stock_extra[2].id.clone();

@@ -24,9 +24,6 @@ use semio_framework::{
     DslValue, PluginManifest,
 };
 use semio_framework_actor::ActorId as RuntimeActorId;
-// ⏳️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-trait-asyncify): `GuestRuntime`'s turn/job/
-// checkpoint methods return this instead of a bare `Result` — see the trait's own doc comment.
-use semio_framework_async::HostFuture;
 // 🌉️ `pub use`, not a plain `use` — `PackageRef`'s own fields are `PackageId`/`PackageHash`
 // (`semio_framework_actor`, packet A1), so a downstream crate that does not itself depend on
 // `semio_framework_actor` (e.g. `🏃️run`, which only depends on THIS crate) still needs a path to
@@ -493,71 +490,43 @@ pub enum TurnFault {
 
 /// 🐎️ Host-side driver for one actor's execution — `design-runtime.md` §2. `WasmtimeRuntime` (the
 /// native implementation, backed by [`build_shared_engine`]/[`EpochTicker`]/[`BudgetLimiter`]/the
-/// compiled-artifact cache above) and `MockGuestRuntime` (test double, below) both implement this;
-/// nothing else in the host — `ShardLoop`, the task manager, `WasmtimeNodeHost` — talks to a guest
-/// through any other surface.
+/// compiled-artifact cache above), `MockGuestRuntime` (test double, below), and
+/// `shard::RecordingRuntime` (`🧵️shard`'s own test double) all implement this; nothing else in the
+/// host — `ShardLoop`, the task manager, `WasmtimeNodeHost` — talks to a guest through any other
+/// surface. The closed set of impls is dispatched through the [`GuestRuntimes`] enum, never `dyn`
+/// (O1/R1 — `async fn` in a trait is not dyn-compatible, and dyn-Future erasure in trait-method
+/// return position is banned).
 ///
-/// ⏳️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-trait-asyncify): the turn/job/checkpoint
-/// methods return [`HostFuture`] (`semio_framework_async::HostFuture<T> = Pin<Box<dyn Future<Output
-/// = T> + Send + 'static>>`), not a bare `Result`, so a genuinely-suspending backend (a sibling
-/// packet's `WasmtimeAsyncRuntime`, built on wasmtime's `component-model-async`) can share this ONE
-/// trait with today's fully-synchronous `WasmtimeRuntime`/`MockGuestRuntime` — every `Arc<dyn
-/// GuestRuntime>` holder in the crate needs dynamic dispatch, and `async fn` in a trait is not
-/// dyn-compatible. `compile`/`instantiate`/`drop_instance` stay plain `Result`: `compile` is
-/// CPU-bound with no await point, `instantiate` only BUILDS a task spec for an async backend (never
-/// runs one), and `drop_instance` is a destructor. `WasmtimeRuntime`/`MockGuestRuntime` (both below)
-/// do today's exact synchronous work eagerly and return `Box::pin(std::future::ready(result))` — see
-/// [`poll_ready`], the helper every caller in this crate uses to consume that always-ready future
-/// without an executor.
+/// 👶️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (host-dedyn): the turn/job/checkpoint methods are
+/// plain `async fn` returning their `Result` directly — the double-future `HostFuture<Result<..>>`
+/// wrapper terra-trait-asyncify staged here is gone (R1: `dyn Future` is banned from trait-method
+/// return position). `compile`/`instantiate`/`drop_instance` stay plain, non-`async fn`: `compile`
+/// is CPU-bound with no await point, `instantiate` only BUILDS a task spec for an async backend
+/// (never runs one), and `drop_instance` is a destructor. `WasmtimeRuntime`/`MockGuestRuntime`/
+/// `RecordingRuntime` (all eagerly-ready, no real suspension) resolve on their very first poll,
+/// which is exactly what makes them safe to drive with [`semio_framework_async::block_on`] from a
+/// plain OS thread loop with no executor of its own (`ShardLoop`'s thread root,
+/// `PluginInstanceHandle::run_job_to_completion`'s sync ABI boundary) — the day a genuinely-
+/// suspending backend (`WasmtimeAsyncRuntime`/`AsyncActor`, a sibling packet) joins this enum, ITS
+/// call sites drive it some other way (a real task per actor), never `block_on` on a hot path.
 pub trait GuestRuntime: Send + Sync {
     fn compile(&self, package: &PackageRef, bytes: &[u8]) -> Result<CompiledHandle, PluginHostError>;
     fn instantiate(&self, compiled: &CompiledHandle, actor: RuntimeActorId, caps: &[BrokerCapabilityGrant], budget: &Budget) -> Result<GuestInstance, PluginHostError>;
-    fn execute_turn(&self, inst: &mut GuestInstance, events: &[Event], budget: Budget) -> HostFuture<Result<TurnResult, TurnFault>>;
+    async fn execute_turn(&self, inst: &mut GuestInstance, events: &[Event], budget: Budget) -> Result<TurnResult, TurnFault>;
     /// 🧬️ `jobs.wit`'s `start-job` export — added past `design-runtime.md` §2's literal trait listing
     /// because that listing omits it even though `jobs.wit` declares three functions
     /// (`start-job`/`step-job`/`cancel-job`), not one: a job cannot be stepped before it exists.
     /// `PluginInstanceHandle::run_job_to_completion` (`//#region 🔀️PostTurnRelay`) is the only caller.
-    fn start_job(&self, inst: &mut GuestInstance, job: u64, kind: &str, input: Vec<u8>) -> HostFuture<Result<(), TurnFault>>;
-    fn step_job(&self, inst: &mut GuestInstance, job: u64, budget: JobBudget) -> HostFuture<Result<JobStep, TurnFault>>;
+    async fn start_job(&self, inst: &mut GuestInstance, job: u64, kind: &str, input: Vec<u8>) -> Result<(), TurnFault>;
+    async fn step_job(&self, inst: &mut GuestInstance, job: u64, budget: JobBudget) -> Result<JobStep, TurnFault>;
     /// 🛑️ `jobs.wit`'s `cancel-job` export — added past `design-runtime.md` §2's literal trait
     /// listing for the SAME reason `start_job` was (that listing names only `execute_turn`/
     /// `step_job`, but `jobs.wit` declares three functions, and a generic `Effect::CancelJob`
     /// admission path — `🧵️shard/🦀️component.rs`'s `ShardLoop::pump` — needs somewhere to call).
-    fn cancel_job(&self, inst: &mut GuestInstance, job: u64) -> HostFuture<Result<(), TurnFault>>;
-    fn checkpoint(&self, inst: &mut GuestInstance) -> HostFuture<Result<Vec<u8>, PluginHostError>>;
-    fn restore(&self, inst: &mut GuestInstance, state: &[u8]) -> HostFuture<Result<(), PluginHostError>>;
+    async fn cancel_job(&self, inst: &mut GuestInstance, job: u64) -> Result<(), TurnFault>;
+    async fn checkpoint(&self, inst: &mut GuestInstance) -> Result<Vec<u8>, PluginHostError>;
+    async fn restore(&self, inst: &mut GuestInstance, state: &[u8]) -> Result<(), PluginHostError>;
     fn drop_instance(&self, inst: GuestInstance);
-}
-
-/// ⏱️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-trait-asyncify): every [`GuestRuntime`] impl in
-/// this crate today (`WasmtimeRuntime`, `MockGuestRuntime`) does its work eagerly and returns
-/// `Box::pin(std::future::ready(result))` — a future that is ALWAYS `Poll::Ready` on its very first
-/// poll, never `Poll::Pending`. `ShardLoop` (`🧵️shard/🦀️component.rs`) and `PluginInstanceHandle`
-/// (`//#region 🔀️PostTurnRelay`, below) have no executor of their own — they run on a plain OS
-/// thread loop, not inside a spawned task — so they cannot `.await`; this polls once with a no-op
-/// waker instead. The `.expect`-equivalent panic below is sound ONLY as long as every impl this
-/// crate hands to a `poll_ready` caller keeps the "always ready" contract; the day a genuinely-
-/// suspending backend (`WasmtimeAsyncRuntime`, a sibling packet) is wired into one of THESE
-/// call sites rather than driven some other way (e.g. a real task per actor), this helper is the
-/// wrong tool for that call site and the panic below is the loud signal that migration is overdue —
-/// never a silent hang, because a no-op waker that receives a wake from a truly-pending future has
-/// nothing listening on it anyway.
-///
-/// `pub`, not `pub(crate)` — every `Arc<dyn GuestRuntime>` holder outside this crate (e.g.
-/// `semio-framework-os-mcp`'s `activate_plugin_instance`/`PluginArtifactChannel::exchange_one_real`)
-/// is in the exact same "plain OS thread, no executor" position `ShardLoop`/`PluginInstanceHandle`
-/// are, so it needs the identical poll-once escape hatch rather than a second copy of it.
-pub fn poll_ready<T>(mut future: HostFuture<T>) -> T {
-    // 🐛️ terra-trait-asyncify: NOT `use std::future::Future;` here — this crate's edition (2021)
-    // already has `Future` in its prelude (confirmed by `cargo check`: an explicit import produced
-    // an `unused_imports` warning), so `.poll(...)` below resolves without it.
-    use std::task::{Context, Poll, Waker};
-    let waker = Waker::noop();
-    let mut cx = Context::from_waker(waker);
-    match future.as_mut().poll(&mut cx) {
-        Poll::Ready(value) => value,
-        Poll::Pending => panic!("poll_ready: GuestRuntime future was not ready on first poll — this call site assumes an eagerly-ready impl (see poll_ready's own doc comment)"),
-    }
 }
 
 //#region 🔖️MockGuestRuntime
@@ -663,22 +632,18 @@ impl GuestRuntime for MockGuestRuntime {
         Ok(GuestInstance { actor, state: GuestInstanceState::Mock(MockInstanceState::default()) })
     }
 
-    fn execute_turn(&self, inst: &mut GuestInstance, events: &[Event], _budget: Budget) -> HostFuture<Result<TurnResult, TurnFault>> {
-        // ⏳️ terra-trait-asyncify: identical body to before this packet, just computed eagerly and
-        // handed back as an already-ready future — see `poll_ready`'s doc comment for why that is
-        // sound here (this impl never actually suspends).
-        let result = (|| -> Result<TurnResult, TurnFault> {
-            self.observed_events.lock().map_err(|_| TurnFault::Host(PluginHostError::LockPoisoned("mock runtime")))?.entry(inst.actor.0).or_default().extend_from_slice(events);
-            let mut scripts = self.scripts.lock().map_err(|_| TurnFault::Host(PluginHostError::LockPoisoned("mock runtime")))?;
-            let queue = scripts.entry(inst.actor.0).or_default();
-            match queue.pop_front() {
-                Some(ScriptedOutcome::Turn(result)) => Ok(result),
-                Some(ScriptedOutcome::Job(_)) => Err(TurnFault::Trapped("scripted outcome was a job step, not a turn".to_string())),
-                Some(ScriptedOutcome::Fault(message)) => Err(TurnFault::Trapped(message)),
-                None => Err(TurnFault::Exhausted),
-            }
-        })();
-        Box::pin(std::future::ready(result))
+    async fn execute_turn(&self, inst: &mut GuestInstance, events: &[Event], _budget: Budget) -> Result<TurnResult, TurnFault> {
+        // 👶️ host-dedyn: identical body to before this packet — no suspension point, so this
+        // resolves on its very first poll, same contract `GuestRuntime`'s own doc comment names.
+        self.observed_events.lock().map_err(|_| TurnFault::Host(PluginHostError::LockPoisoned("mock runtime")))?.entry(inst.actor.0).or_default().extend_from_slice(events);
+        let mut scripts = self.scripts.lock().map_err(|_| TurnFault::Host(PluginHostError::LockPoisoned("mock runtime")))?;
+        let queue = scripts.entry(inst.actor.0).or_default();
+        match queue.pop_front() {
+            Some(ScriptedOutcome::Turn(result)) => Ok(result),
+            Some(ScriptedOutcome::Job(_)) => Err(TurnFault::Trapped("scripted outcome was a job step, not a turn".to_string())),
+            Some(ScriptedOutcome::Fault(message)) => Err(TurnFault::Trapped(message)),
+            None => Err(TurnFault::Exhausted),
+        }
     }
 
     /// 🎬️ `start-job` has no interesting return value on success (`jobs.wit`: `result<_,
@@ -686,28 +651,22 @@ impl GuestRuntime for MockGuestRuntime {
     /// — a test that needs a scripted `start-job` failure schedules a `ScriptedOutcome::Fault` and
     /// asserts it surfaces from the FIRST call after `start_job` (i.e. the first `step_job`), matching
     /// `run_job_to_completion`'s own call order (`start_job` then `step_job` in a loop).
-    fn start_job(&self, inst: &mut GuestInstance, _job: u64, _kind: &str, _input: Vec<u8>) -> HostFuture<Result<(), TurnFault>> {
-        let result = (|| -> Result<(), TurnFault> {
-            if !self.scripts.lock().map_err(|_| TurnFault::Host(PluginHostError::LockPoisoned("mock runtime")))?.contains_key(&inst.actor.0) {
-                return Err(TurnFault::Exhausted);
-            }
-            Ok(())
-        })();
-        Box::pin(std::future::ready(result))
+    async fn start_job(&self, inst: &mut GuestInstance, _job: u64, _kind: &str, _input: Vec<u8>) -> Result<(), TurnFault> {
+        if !self.scripts.lock().map_err(|_| TurnFault::Host(PluginHostError::LockPoisoned("mock runtime")))?.contains_key(&inst.actor.0) {
+            return Err(TurnFault::Exhausted);
+        }
+        Ok(())
     }
 
-    fn step_job(&self, inst: &mut GuestInstance, _job: u64, _budget: JobBudget) -> HostFuture<Result<JobStep, TurnFault>> {
-        let result = (|| -> Result<JobStep, TurnFault> {
-            let mut scripts = self.scripts.lock().map_err(|_| TurnFault::Host(PluginHostError::LockPoisoned("mock runtime")))?;
-            let queue = scripts.entry(inst.actor.0).or_default();
-            match queue.pop_front() {
-                Some(ScriptedOutcome::Job(step)) => Ok(step),
-                Some(ScriptedOutcome::Turn(_)) => Err(TurnFault::Trapped("scripted outcome was a turn, not a job step".to_string())),
-                Some(ScriptedOutcome::Fault(message)) => Err(TurnFault::Trapped(message)),
-                None => Err(TurnFault::Exhausted),
-            }
-        })();
-        Box::pin(std::future::ready(result))
+    async fn step_job(&self, inst: &mut GuestInstance, _job: u64, _budget: JobBudget) -> Result<JobStep, TurnFault> {
+        let mut scripts = self.scripts.lock().map_err(|_| TurnFault::Host(PluginHostError::LockPoisoned("mock runtime")))?;
+        let queue = scripts.entry(inst.actor.0).or_default();
+        match queue.pop_front() {
+            Some(ScriptedOutcome::Job(step)) => Ok(step),
+            Some(ScriptedOutcome::Turn(_)) => Err(TurnFault::Trapped("scripted outcome was a turn, not a job step".to_string())),
+            Some(ScriptedOutcome::Fault(message)) => Err(TurnFault::Trapped(message)),
+            None => Err(TurnFault::Exhausted),
+        }
     }
 
     /// 🛑️ Mirrors `run_job_to_completion`'s own assumption that cancellation just drops
@@ -715,31 +674,25 @@ impl GuestRuntime for MockGuestRuntime {
     /// no scripted outcome to consume, since a cancelled job is never stepped again by whichever
     /// caller cancelled it (`🧵️shard/🦀️component.rs`'s `ShardLoop::pump` removes it from
     /// `running_jobs` in the SAME turn it sees the `Effect::CancelJob`).
-    fn cancel_job(&self, _inst: &mut GuestInstance, _job: u64) -> HostFuture<Result<(), TurnFault>> {
-        Box::pin(std::future::ready(Ok(())))
+    async fn cancel_job(&self, _inst: &mut GuestInstance, _job: u64) -> Result<(), TurnFault> {
+        Ok(())
     }
 
-    fn checkpoint(&self, inst: &mut GuestInstance) -> HostFuture<Result<Vec<u8>, PluginHostError>> {
-        let result = (|| -> Result<Vec<u8>, PluginHostError> {
-            let GuestInstanceState::Mock(state) = &mut inst.state else {
-                return Err(PluginHostError::Plugin("MockGuestRuntime::checkpoint called on a non-mock GuestInstance".to_string()));
-            };
-            let bytes = format!("mock-checkpoint:{}", inst.actor.0).into_bytes();
-            state.checkpoint = Some(bytes.clone());
-            Ok(bytes)
-        })();
-        Box::pin(std::future::ready(result))
+    async fn checkpoint(&self, inst: &mut GuestInstance) -> Result<Vec<u8>, PluginHostError> {
+        let GuestInstanceState::Mock(state) = &mut inst.state else {
+            return Err(PluginHostError::Plugin("MockGuestRuntime::checkpoint called on a non-mock GuestInstance".to_string()));
+        };
+        let bytes = format!("mock-checkpoint:{}", inst.actor.0).into_bytes();
+        state.checkpoint = Some(bytes.clone());
+        Ok(bytes)
     }
 
-    fn restore(&self, inst: &mut GuestInstance, state: &[u8]) -> HostFuture<Result<(), PluginHostError>> {
-        let result = (|| -> Result<(), PluginHostError> {
-            let GuestInstanceState::Mock(mock_state) = &mut inst.state else {
-                return Err(PluginHostError::Plugin("MockGuestRuntime::restore called on a non-mock GuestInstance".to_string()));
-            };
-            mock_state.checkpoint = Some(state.to_vec());
-            Ok(())
-        })();
-        Box::pin(std::future::ready(result))
+    async fn restore(&self, inst: &mut GuestInstance, state: &[u8]) -> Result<(), PluginHostError> {
+        let GuestInstanceState::Mock(mock_state) = &mut inst.state else {
+            return Err(PluginHostError::Plugin("MockGuestRuntime::restore called on a non-mock GuestInstance".to_string()));
+        };
+        mock_state.checkpoint = Some(state.to_vec());
+        Ok(())
     }
 
     fn drop_instance(&self, inst: GuestInstance) {
@@ -769,9 +722,12 @@ mod mock_guest_runtime_tests {
         runtime.script_turn(actor, first);
         runtime.script_turn(actor, second);
 
-        let got_first = poll_ready(runtime.execute_turn(&mut inst, &[], Budget { fuel: 1000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 })).expect("first scripted turn");
+        // 👶️ host-dedyn: `#[test] fn` is a sanctioned `block_on` entry point (R4 clause 5) — this
+        // test drives `GuestRuntime`'s async methods directly against the concrete `MockGuestRuntime`
+        // (not through the `GuestRuntimes` enum), same as it did through the deleted `poll_ready`.
+        let got_first = semio_framework_async::block_on(runtime.execute_turn(&mut inst, &[], Budget { fuel: 1000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 })).expect("first scripted turn");
         assert_eq!(got_first.fuel_used, 7);
-        let got_second = poll_ready(runtime.execute_turn(&mut inst, &[], Budget { fuel: 1000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 })).expect("second scripted turn");
+        let got_second = semio_framework_async::block_on(runtime.execute_turn(&mut inst, &[], Budget { fuel: 1000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 })).expect("second scripted turn");
         assert_eq!(got_second.fuel_used, 9);
     }
 
@@ -781,7 +737,7 @@ mod mock_guest_runtime_tests {
         let compiled = runtime.compile(&PackageRef { package: PackageId("cad".to_string()), hash: hash(2) }, &[]).expect("compile");
         let actor = RuntimeActorId(7);
         let mut inst = runtime.instantiate(&compiled, actor, &[], &Budget { fuel: 1, deadline_ms: 1, max_effects: 1, max_patch_bytes: 1, max_frames: 1 }).expect("instantiate");
-        let error = poll_ready(runtime.execute_turn(&mut inst, &[], Budget { fuel: 1, deadline_ms: 1, max_effects: 1, max_patch_bytes: 1, max_frames: 1 })).expect_err("no script queued");
+        let error = semio_framework_async::block_on(runtime.execute_turn(&mut inst, &[], Budget { fuel: 1, deadline_ms: 1, max_effects: 1, max_patch_bytes: 1, max_frames: 1 })).expect_err("no script queued");
         assert!(matches!(error, TurnFault::Exhausted));
     }
 
@@ -792,7 +748,7 @@ mod mock_guest_runtime_tests {
         let actor = RuntimeActorId(9);
         let mut inst = runtime.instantiate(&compiled, actor, &[], &Budget { fuel: 1, deadline_ms: 1, max_effects: 1, max_patch_bytes: 1, max_frames: 1 }).expect("instantiate");
         runtime.script_fault(actor, "epoch deadline exceeded");
-        let error = poll_ready(runtime.execute_turn(&mut inst, &[], Budget { fuel: 1, deadline_ms: 1, max_effects: 1, max_patch_bytes: 1, max_frames: 1 })).expect_err("scripted fault");
+        let error = semio_framework_async::block_on(runtime.execute_turn(&mut inst, &[], Budget { fuel: 1, deadline_ms: 1, max_effects: 1, max_patch_bytes: 1, max_frames: 1 })).expect_err("scripted fault");
         assert!(matches!(error, TurnFault::Trapped(message) if message == "epoch deadline exceeded"));
     }
 
@@ -802,10 +758,10 @@ mod mock_guest_runtime_tests {
         let compiled = runtime.compile(&PackageRef { package: PackageId("puzzle".to_string()), hash: hash(4) }, &[]).expect("compile");
         let actor = RuntimeActorId(11);
         let mut inst = runtime.instantiate(&compiled, actor, &[], &Budget { fuel: 1, deadline_ms: 1, max_effects: 1, max_patch_bytes: 1, max_frames: 1 }).expect("instantiate");
-        let snapshot = poll_ready(runtime.checkpoint(&mut inst)).expect("checkpoint");
+        let snapshot = semio_framework_async::block_on(runtime.checkpoint(&mut inst)).expect("checkpoint");
 
         let mut restored = runtime.instantiate(&compiled, actor, &[], &Budget { fuel: 1, deadline_ms: 1, max_effects: 1, max_patch_bytes: 1, max_frames: 1 }).expect("re-instantiate");
-        poll_ready(runtime.restore(&mut restored, &snapshot)).expect("restore");
+        semio_framework_async::block_on(runtime.restore(&mut restored, &snapshot)).expect("restore");
         let GuestInstanceState::Mock(state) = &restored.state else { panic!("expected a Mock instance") };
         assert_eq!(state.checkpoint.as_deref(), Some(snapshot.as_slice()));
     }
@@ -971,134 +927,115 @@ impl GuestRuntime for WasmtimeRuntime {
         Ok(GuestInstance { actor, state: GuestInstanceState::Wasmtime(WasmtimeInstanceState { store, bindings, instance_id }) })
     }
 
-    fn execute_turn(&self, inst: &mut GuestInstance, events: &[Event], budget: Budget) -> HostFuture<Result<TurnResult, TurnFault>> {
-        // ⏳️ terra-trait-asyncify: identical body to before this packet (fuel/epoch setup, the
-        // fuel/epoch trap-message sniffing, effect conversion, `TurnResult` shape all byte-for-byte
-        // unchanged) — computed eagerly, handed back as an already-ready future. See `poll_ready`'s
-        // doc comment for why every caller in this crate may safely assume that.
-        let result = (|| -> Result<TurnResult, TurnFault> {
-            let GuestInstanceState::Wasmtime(state) = &mut inst.state else {
-                return Err(TurnFault::Trapped("execute_turn called on a non-wasmtime GuestInstance".to_string()));
-            };
-            state.store.set_fuel(budget.fuel).map_err(|error| TurnFault::Host(PluginHostError::Wasmtime(error.to_string())))?;
-            state.store.set_epoch_deadline(budget.deadline_ms as u64);
-            let wit_budget = wit_reactor::Budget { fuel: budget.fuel, deadline_ms: budget.deadline_ms, max_effects: budget.max_effects, max_patch_bytes: budget.max_patch_bytes, max_frames: budget.max_frames };
-            let wit_events: Vec<wit_events::Event> = events.iter().map(|event| kernel_event_to_wit(event, state.instance_id)).collect();
-            let call_result = state.bindings.semio_framework_reactor().call_poll(&mut state.store, &wit_events, wit_budget);
-            let poll_result = match call_result {
-                Ok(inner) => inner,
-                Err(trap) => {
-                    let message = trap.to_string();
-                    let lowered = message.to_ascii_lowercase();
-                    return Err(if lowered.contains("fuel") {
-                        TurnFault::FuelExhausted
-                    } else if lowered.contains("epoch") || lowered.contains("interrupt") {
-                        TurnFault::DeadlineExceeded
-                    } else {
-                        TurnFault::Trapped(message)
-                    });
-                }
-            };
-            let wit_turn_result = poll_result.map_err(|error| TurnFault::Trapped(format!("{error:?}")))?;
-            let mut effects = Vec::with_capacity(wit_turn_result.effects.len());
-            for effect in wit_turn_result.effects {
-                effects.push(wit_effect_to_kernel(effect).map_err(TurnFault::Host)?);
+    async fn execute_turn(&self, inst: &mut GuestInstance, events: &[Event], budget: Budget) -> Result<TurnResult, TurnFault> {
+        // 👶️ host-dedyn: identical body to before this packet (fuel/epoch setup, the fuel/epoch
+        // trap-message sniffing, effect conversion, `TurnResult` shape all byte-for-byte unchanged)
+        // — no suspension point, so this resolves on its very first poll.
+        let GuestInstanceState::Wasmtime(state) = &mut inst.state else {
+            return Err(TurnFault::Trapped("execute_turn called on a non-wasmtime GuestInstance".to_string()));
+        };
+        state.store.set_fuel(budget.fuel).map_err(|error| TurnFault::Host(PluginHostError::Wasmtime(error.to_string())))?;
+        state.store.set_epoch_deadline(budget.deadline_ms as u64);
+        let wit_budget = wit_reactor::Budget { fuel: budget.fuel, deadline_ms: budget.deadline_ms, max_effects: budget.max_effects, max_patch_bytes: budget.max_patch_bytes, max_frames: budget.max_frames };
+        let wit_events: Vec<wit_events::Event> = events.iter().map(|event| kernel_event_to_wit(event, state.instance_id)).collect();
+        let call_result = state.bindings.semio_framework_reactor().call_poll(&mut state.store, &wit_events, wit_budget);
+        let poll_result = match call_result {
+            Ok(inner) => inner,
+            Err(trap) => {
+                let message = trap.to_string();
+                let lowered = message.to_ascii_lowercase();
+                return Err(if lowered.contains("fuel") {
+                    TurnFault::FuelExhausted
+                } else if lowered.contains("epoch") || lowered.contains("interrupt") {
+                    TurnFault::DeadlineExceeded
+                } else {
+                    TurnFault::Trapped(message)
+                });
             }
-            Ok(TurnResult {
-                // 🚧️ UI patch marshaling (WIT `patch-op`'s `path: list<u32>` + `node: pack` vs kernel
-                // `PatchOp`'s `path: String` + `node: UiNode`) is NOT implemented — a real path/node
-                // encoding convention needs to be agreed with A2/A3 first (`📓️terra-B1-host-native-
-                // report.md`'s `## blocked-on` — tracked there, not silently dropped).
-                ui_patches: Vec::new(),
-                effects,
-                next_wake: wit_turn_result.next_wake,
-                status: wit_turn_status_to_kernel(wit_turn_result.status),
-                fuel_used: wit_turn_result.fuel_used,
-            })
-        })();
-        Box::pin(std::future::ready(result))
+        };
+        let wit_turn_result = poll_result.map_err(|error| TurnFault::Trapped(format!("{error:?}")))?;
+        let mut effects = Vec::with_capacity(wit_turn_result.effects.len());
+        for effect in wit_turn_result.effects {
+            effects.push(wit_effect_to_kernel(effect).map_err(TurnFault::Host)?);
+        }
+        Ok(TurnResult {
+            // 🚧️ UI patch marshaling (WIT `patch-op`'s `path: list<u32>` + `node: pack` vs kernel
+            // `PatchOp`'s `path: String` + `node: UiNode`) is NOT implemented — a real path/node
+            // encoding convention needs to be agreed with A2/A3 first (`📓️terra-B1-host-native-
+            // report.md`'s `## blocked-on` — tracked there, not silently dropped).
+            ui_patches: Vec::new(),
+            effects,
+            next_wake: wit_turn_result.next_wake,
+            status: wit_turn_status_to_kernel(wit_turn_result.status),
+            fuel_used: wit_turn_result.fuel_used,
+        })
     }
 
-    fn start_job(&self, inst: &mut GuestInstance, job: u64, kind: &str, input: Vec<u8>) -> HostFuture<Result<(), TurnFault>> {
-        let result = (|| -> Result<(), TurnFault> {
-            let GuestInstanceState::Wasmtime(state) = &mut inst.state else {
-                return Err(TurnFault::Trapped("start_job called on a non-wasmtime GuestInstance".to_string()));
-            };
-            state
-                .bindings
-                .semio_framework_jobs()
-                .call_start_job(&mut state.store, job, kind, &input)
-                .map_err(|error| TurnFault::Trapped(error.to_string()))?
-                .map_err(|error| TurnFault::Trapped(format!("{error:?}")))
-        })();
-        Box::pin(std::future::ready(result))
+    async fn start_job(&self, inst: &mut GuestInstance, job: u64, kind: &str, input: Vec<u8>) -> Result<(), TurnFault> {
+        let GuestInstanceState::Wasmtime(state) = &mut inst.state else {
+            return Err(TurnFault::Trapped("start_job called on a non-wasmtime GuestInstance".to_string()));
+        };
+        state
+            .bindings
+            .semio_framework_jobs()
+            .call_start_job(&mut state.store, job, kind, &input)
+            .map_err(|error| TurnFault::Trapped(error.to_string()))?
+            .map_err(|error| TurnFault::Trapped(format!("{error:?}")))
     }
 
-    fn step_job(&self, inst: &mut GuestInstance, job: u64, budget: JobBudget) -> HostFuture<Result<JobStep, TurnFault>> {
-        let result = (|| -> Result<JobStep, TurnFault> {
-            let GuestInstanceState::Wasmtime(state) = &mut inst.state else {
-                return Err(TurnFault::Trapped("step_job called on a non-wasmtime GuestInstance".to_string()));
-            };
-            state.store.set_fuel(budget.fuel).map_err(|error| TurnFault::Host(PluginHostError::Wasmtime(error.to_string())))?;
-            state.store.set_epoch_deadline(budget.deadline_ms as u64);
-            let wit_budget = wit_jobs::JobBudget { fuel: budget.fuel, deadline_ms: budget.deadline_ms };
-            let step = state
-                .bindings
-                .semio_framework_jobs()
-                .call_step_job(&mut state.store, job, wit_budget)
-                .map_err(|error| TurnFault::Trapped(error.to_string()))?
-                .map_err(|error| TurnFault::Trapped(format!("{error:?}")))?;
-            Ok(match step {
-                wit_jobs::JobStep::Running(bytes) => JobStep::Running { progress: bytes },
-                wit_jobs::JobStep::Done(bytes) => JobStep::Done { output: bytes },
-                wit_jobs::JobStep::Failed(bytes) => JobStep::Failed { error: bytes },
-            })
-        })();
-        Box::pin(std::future::ready(result))
+    async fn step_job(&self, inst: &mut GuestInstance, job: u64, budget: JobBudget) -> Result<JobStep, TurnFault> {
+        let GuestInstanceState::Wasmtime(state) = &mut inst.state else {
+            return Err(TurnFault::Trapped("step_job called on a non-wasmtime GuestInstance".to_string()));
+        };
+        state.store.set_fuel(budget.fuel).map_err(|error| TurnFault::Host(PluginHostError::Wasmtime(error.to_string())))?;
+        state.store.set_epoch_deadline(budget.deadline_ms as u64);
+        let wit_budget = wit_jobs::JobBudget { fuel: budget.fuel, deadline_ms: budget.deadline_ms };
+        let step = state
+            .bindings
+            .semio_framework_jobs()
+            .call_step_job(&mut state.store, job, wit_budget)
+            .map_err(|error| TurnFault::Trapped(error.to_string()))?
+            .map_err(|error| TurnFault::Trapped(format!("{error:?}")))?;
+        Ok(match step {
+            wit_jobs::JobStep::Running(bytes) => JobStep::Running { progress: bytes },
+            wit_jobs::JobStep::Done(bytes) => JobStep::Done { output: bytes },
+            wit_jobs::JobStep::Failed(bytes) => JobStep::Failed { error: bytes },
+        })
     }
 
-    fn cancel_job(&self, inst: &mut GuestInstance, job: u64) -> HostFuture<Result<(), TurnFault>> {
-        let result = (|| -> Result<(), TurnFault> {
-            let GuestInstanceState::Wasmtime(state) = &mut inst.state else {
-                return Err(TurnFault::Trapped("cancel_job called on a non-wasmtime GuestInstance".to_string()));
-            };
-            // 🧬️ `jobs.wit`'s `cancel-job: func(job: u64);` has no `result<_, plugin-error>` wrapper
-            // (unlike `start-job`/`step-job`) — only the outer `wasmtime::Result` (trap-level) can
-            // fail, so this is a single `.map_err`, not the double `.map_err(..).map_err(..)`
-            // `start_job`/`step_job` need.
-            state.bindings.semio_framework_jobs().call_cancel_job(&mut state.store, job).map_err(|error| TurnFault::Trapped(error.to_string()))
-        })();
-        Box::pin(std::future::ready(result))
+    async fn cancel_job(&self, inst: &mut GuestInstance, job: u64) -> Result<(), TurnFault> {
+        let GuestInstanceState::Wasmtime(state) = &mut inst.state else {
+            return Err(TurnFault::Trapped("cancel_job called on a non-wasmtime GuestInstance".to_string()));
+        };
+        // 🧬️ `jobs.wit`'s `cancel-job: func(job: u64);` has no `result<_, plugin-error>` wrapper
+        // (unlike `start-job`/`step-job`) — only the outer `wasmtime::Result` (trap-level) can
+        // fail, so this is a single `.map_err`, not the double `.map_err(..).map_err(..)`
+        // `start_job`/`step_job` need.
+        state.bindings.semio_framework_jobs().call_cancel_job(&mut state.store, job).map_err(|error| TurnFault::Trapped(error.to_string()))
     }
 
-    fn checkpoint(&self, inst: &mut GuestInstance) -> HostFuture<Result<Vec<u8>, PluginHostError>> {
-        let result = (|| -> Result<Vec<u8>, PluginHostError> {
-            let GuestInstanceState::Wasmtime(state) = &mut inst.state else {
-                return Err(PluginHostError::Plugin("checkpoint called on a non-wasmtime GuestInstance".to_string()));
-            };
-            state
-                .bindings
-                .semio_framework_checkpoint()
-                .call_checkpoint(&mut state.store)
-                .map_err(|error| PluginHostError::Wasmtime(error.to_string()))?
-                .map_err(|error| PluginHostError::Plugin(format!("{error:?}")))
-        })();
-        Box::pin(std::future::ready(result))
+    async fn checkpoint(&self, inst: &mut GuestInstance) -> Result<Vec<u8>, PluginHostError> {
+        let GuestInstanceState::Wasmtime(state) = &mut inst.state else {
+            return Err(PluginHostError::Plugin("checkpoint called on a non-wasmtime GuestInstance".to_string()));
+        };
+        state
+            .bindings
+            .semio_framework_checkpoint()
+            .call_checkpoint(&mut state.store)
+            .map_err(|error| PluginHostError::Wasmtime(error.to_string()))?
+            .map_err(|error| PluginHostError::Plugin(format!("{error:?}")))
     }
 
-    fn restore(&self, inst: &mut GuestInstance, state_bytes: &[u8]) -> HostFuture<Result<(), PluginHostError>> {
-        let result = (|| -> Result<(), PluginHostError> {
-            let GuestInstanceState::Wasmtime(state) = &mut inst.state else {
-                return Err(PluginHostError::Plugin("restore called on a non-wasmtime GuestInstance".to_string()));
-            };
-            state
-                .bindings
-                .semio_framework_checkpoint()
-                .call_restore(&mut state.store, state_bytes)
-                .map_err(|error| PluginHostError::Wasmtime(error.to_string()))?
-                .map_err(|error| PluginHostError::Plugin(format!("{error:?}")))
-        })();
-        Box::pin(std::future::ready(result))
+    async fn restore(&self, inst: &mut GuestInstance, state_bytes: &[u8]) -> Result<(), PluginHostError> {
+        let GuestInstanceState::Wasmtime(state) = &mut inst.state else {
+            return Err(PluginHostError::Plugin("restore called on a non-wasmtime GuestInstance".to_string()));
+        };
+        state
+            .bindings
+            .semio_framework_checkpoint()
+            .call_restore(&mut state.store, state_bytes)
+            .map_err(|error| PluginHostError::Wasmtime(error.to_string()))?
+            .map_err(|error| PluginHostError::Plugin(format!("{error:?}")))
     }
 
     fn drop_instance(&self, _inst: GuestInstance) {
@@ -1106,6 +1043,146 @@ impl GuestRuntime for WasmtimeRuntime {
         // release; the pooling allocator reclaims the instance's slab on `Store` drop.
     }
 }
+
+//#region 🎛️GuestRuntimes
+/// 🎛️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (host-dedyn): the closed-set enum replacing every
+/// `Arc<dyn GuestRuntime>` in this crate (O1/R1 — `async fn` in a trait cannot be `dyn`-dispatched).
+/// Hand-written, not `#[dyn_enum]`/`dyn_enum_close!` (`semio-framework-dispatch-macros`): TWO of the
+/// three variants are `#[cfg(test)]`-gated, and the macro's own acceptance suite
+/// (`📓️terra-dyn-enum-macro-report.md`) never exercised cfg-gated variants at all — a hand-written
+/// match-delegation is the lower-risk choice here, exactly the fallback the packet brief
+/// anticipates ("if cfg-gated variants defeat the macro, hand-write the enum ... say so").
+///
+/// `Mock`/`Recording` wrap an `Arc<..>` of their concrete type, not the bare value — many existing
+/// tests hold their OWN `Arc<MockGuestRuntime>`/`Arc<RecordingRuntime>` to call inherent,
+/// non-`GuestRuntime` methods (`script_turn`, `observed_events`, `last_turn_budget`, ...) on the
+/// SAME instance a `PluginInstanceHandle`/`ShardLoop` is driving; a bare-value variant would force
+/// every one of those call sites to construct a SECOND, disconnected instance instead of sharing
+/// state through the clone `Arc` already gives for free. `Wasmtime` needs no such indirection — no
+/// test in this crate keeps a second handle to the SAME `WasmtimeRuntime` for out-of-band inherent
+/// calls — so it stays a bare value, one indirection (the enum's own `Arc<GuestRuntimes>` wrapper at
+/// every call site) instead of two.
+pub enum GuestRuntimes {
+    Wasmtime(WasmtimeRuntime),
+    // 🔮️ a later packet adds `AsyncActor(AsyncPluginRuntime)` here, backed by wasmtime's
+    // `component-model-async` — do not mount `⏳️runtime.rs` from this packet (out of scope, needs a
+    // rewritten schema; see this ticket's brief).
+    #[cfg(test)]
+    Mock(Arc<MockGuestRuntime>),
+    #[cfg(test)]
+    Recording(Arc<shard::RecordingRuntime>),
+}
+
+impl GuestRuntime for GuestRuntimes {
+    fn compile(&self, package: &PackageRef, bytes: &[u8]) -> Result<CompiledHandle, PluginHostError> {
+        match self {
+            Self::Wasmtime(r) => r.compile(package, bytes),
+            #[cfg(test)]
+            Self::Mock(r) => r.compile(package, bytes),
+            #[cfg(test)]
+            Self::Recording(r) => r.compile(package, bytes),
+        }
+    }
+
+    fn instantiate(&self, compiled: &CompiledHandle, actor: RuntimeActorId, caps: &[BrokerCapabilityGrant], budget: &Budget) -> Result<GuestInstance, PluginHostError> {
+        match self {
+            Self::Wasmtime(r) => r.instantiate(compiled, actor, caps, budget),
+            #[cfg(test)]
+            Self::Mock(r) => r.instantiate(compiled, actor, caps, budget),
+            #[cfg(test)]
+            Self::Recording(r) => r.instantiate(compiled, actor, caps, budget),
+        }
+    }
+
+    async fn execute_turn(&self, inst: &mut GuestInstance, events: &[Event], budget: Budget) -> Result<TurnResult, TurnFault> {
+        match self {
+            Self::Wasmtime(r) => r.execute_turn(inst, events, budget).await,
+            #[cfg(test)]
+            Self::Mock(r) => r.execute_turn(inst, events, budget).await,
+            #[cfg(test)]
+            Self::Recording(r) => r.execute_turn(inst, events, budget).await,
+        }
+    }
+
+    async fn start_job(&self, inst: &mut GuestInstance, job: u64, kind: &str, input: Vec<u8>) -> Result<(), TurnFault> {
+        match self {
+            Self::Wasmtime(r) => r.start_job(inst, job, kind, input).await,
+            #[cfg(test)]
+            Self::Mock(r) => r.start_job(inst, job, kind, input).await,
+            #[cfg(test)]
+            Self::Recording(r) => r.start_job(inst, job, kind, input).await,
+        }
+    }
+
+    async fn step_job(&self, inst: &mut GuestInstance, job: u64, budget: JobBudget) -> Result<JobStep, TurnFault> {
+        match self {
+            Self::Wasmtime(r) => r.step_job(inst, job, budget).await,
+            #[cfg(test)]
+            Self::Mock(r) => r.step_job(inst, job, budget).await,
+            #[cfg(test)]
+            Self::Recording(r) => r.step_job(inst, job, budget).await,
+        }
+    }
+
+    async fn cancel_job(&self, inst: &mut GuestInstance, job: u64) -> Result<(), TurnFault> {
+        match self {
+            Self::Wasmtime(r) => r.cancel_job(inst, job).await,
+            #[cfg(test)]
+            Self::Mock(r) => r.cancel_job(inst, job).await,
+            #[cfg(test)]
+            Self::Recording(r) => r.cancel_job(inst, job).await,
+        }
+    }
+
+    async fn checkpoint(&self, inst: &mut GuestInstance) -> Result<Vec<u8>, PluginHostError> {
+        match self {
+            Self::Wasmtime(r) => r.checkpoint(inst).await,
+            #[cfg(test)]
+            Self::Mock(r) => r.checkpoint(inst).await,
+            #[cfg(test)]
+            Self::Recording(r) => r.checkpoint(inst).await,
+        }
+    }
+
+    async fn restore(&self, inst: &mut GuestInstance, state: &[u8]) -> Result<(), PluginHostError> {
+        match self {
+            Self::Wasmtime(r) => r.restore(inst, state).await,
+            #[cfg(test)]
+            Self::Mock(r) => r.restore(inst, state).await,
+            #[cfg(test)]
+            Self::Recording(r) => r.restore(inst, state).await,
+        }
+    }
+
+    fn drop_instance(&self, inst: GuestInstance) {
+        match self {
+            Self::Wasmtime(r) => r.drop_instance(inst),
+            #[cfg(test)]
+            Self::Mock(r) => r.drop_instance(inst),
+            #[cfg(test)]
+            Self::Recording(r) => r.drop_instance(inst),
+        }
+    }
+}
+
+impl From<WasmtimeRuntime> for GuestRuntimes {
+    fn from(r: WasmtimeRuntime) -> Self {
+        Self::Wasmtime(r)
+    }
+}
+#[cfg(test)]
+impl From<Arc<MockGuestRuntime>> for GuestRuntimes {
+    fn from(r: Arc<MockGuestRuntime>) -> Self {
+        Self::Mock(r)
+    }
+}
+#[cfg(test)]
+impl From<Arc<shard::RecordingRuntime>> for GuestRuntimes {
+    fn from(r: Arc<shard::RecordingRuntime>) -> Self {
+        Self::Recording(r)
+    }
+}
+//#endregion 🎛️GuestRuntimes
 
 //#region 🔀️EffectEventMarshal
 /// 🌉️ `wit_effect_to_kernel`/`kernel_event_to_wit` are the host-side half of `design-abi.md` §2's
@@ -1423,13 +1500,13 @@ const RELAY_JOB_BUDGET: JobBudget = JobBudget { fuel: 50_000_000, deadline_ms: 2
 /// that produced the triggering effect returned (never re-entrantly against that turn's own `Store`).
 pub struct PluginInstanceHandle {
     pub actor: RuntimeActorId,
-    runtime: Arc<dyn GuestRuntime>,
+    runtime: Arc<GuestRuntimes>,
     instance: Mutex<GuestInstance>,
     next_job_id: std::sync::atomic::AtomicU64,
 }
 
 impl PluginInstanceHandle {
-    pub fn new(actor: RuntimeActorId, runtime: Arc<dyn GuestRuntime>, instance: GuestInstance) -> Self {
+    pub fn new(actor: RuntimeActorId, runtime: Arc<GuestRuntimes>, instance: GuestInstance) -> Self {
         Self { actor, runtime, instance: Mutex::new(instance), next_job_id: std::sync::atomic::AtomicU64::new(1) }
     }
 
@@ -1441,9 +1518,16 @@ impl PluginInstanceHandle {
     fn run_job_to_completion(&self, kind: &str, input: Vec<u8>) -> Result<Vec<u8>, PluginHostError> {
         let job = self.next_job_id.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
         let mut instance = self.instance.lock().map_err(|_| PluginHostError::LockPoisoned("plugin instance handle"))?;
-        poll_ready(self.runtime.start_job(&mut instance, job, kind, input)).map_err(|fault| PluginHostError::Plugin(format!("{kind} start-job: {fault}")))?;
+        // 🚫️async: E5 executor bridge. `run_job_to_completion` is called from inside a wasmtime
+        // host-import call chain (`IoRouter::run_io`/`compose`/`identify` -> guest wasm import ->
+        // this method, strictly post-turn against a DIFFERENT actor's instance) — a genuinely-sync
+        // ABI boundary wasmtime's own (non-async) linker imposes, not something this packet can
+        // thread `.await` through without mounting `⏳️runtime.rs`'s async runtime (out of scope; a
+        // later packet's `AsyncActor` variant is exactly what removes this bridge). `block_on` is
+        // sound here because every impl `GuestRuntimes` wraps today resolves on its first poll.
+        semio_framework_async::block_on(self.runtime.start_job(&mut instance, job, kind, input)).map_err(|fault| PluginHostError::Plugin(format!("{kind} start-job: {fault}")))?;
         loop {
-            match poll_ready(self.runtime.step_job(&mut instance, job, RELAY_JOB_BUDGET)).map_err(|fault| PluginHostError::Plugin(format!("{kind} step-job: {fault}")))? {
+            match semio_framework_async::block_on(self.runtime.step_job(&mut instance, job, RELAY_JOB_BUDGET)).map_err(|fault| PluginHostError::Plugin(format!("{kind} step-job: {fault}")))? {
                 JobStep::Done { output } => return Ok(output),
                 JobStep::Failed { error } => return Err(PluginHostError::Plugin(format!("{kind} job failed: {}", String::from_utf8_lossy(&error)))),
                 JobStep::Running { .. } => continue,
@@ -3214,7 +3298,7 @@ mod artifact_mutation_router_tests {
         let budget = Budget { fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 };
         let compiled = mock.compile(&PackageRef { package: PackageId("mutplan".to_string()), hash: PackageHash([7u8; 32]) }, &[]).expect("mock compile");
         let instance = mock.instantiate(&compiled, actor, &[], &budget).expect("mock instantiate");
-        let handle = Arc::new(PluginInstanceHandle::new(actor, mock.clone() as Arc<dyn GuestRuntime>, instance));
+        let handle = Arc::new(PluginInstanceHandle::new(actor, Arc::new(GuestRuntimes::Mock(mock.clone())), instance));
         (mock, handle)
     }
 
@@ -4506,7 +4590,7 @@ mod tests {
         mock.script_job_step(actor, JobStep::Running { progress: None });
         let io_payload = semio_framework::io_schema::IoPayload::Text("87a-bytes".to_string());
         mock.script_job_step(actor, JobStep::Done { output: serde_json::to_vec(&io_payload).expect("encode expected result") });
-        let handle = PluginInstanceHandle::new(actor, mock.clone() as Arc<dyn GuestRuntime>, instance);
+        let handle = PluginInstanceHandle::new(actor, Arc::new(GuestRuntimes::Mock(mock.clone())), instance);
 
         let payload_bytes = serde_json::to_vec(&semio_framework::io_schema::IoPayload::Text("raw-bytes".to_string())).expect("encode payload");
         let result = handle.io_run("s.stdio.gif@87a/*", "s.stdio.gif@89a/*", payload_bytes).expect("job-backed io_run must drive start-job + step-job to Done");
@@ -4523,7 +4607,7 @@ mod tests {
         let compiled = mock.compile(&PackageRef { package: PackageId("stdio".to_string()), hash: PackageHash([2u8; 32]) }, &[]).expect("mock compile");
         let instance = mock.instantiate(&compiled, actor, &[], &Budget { fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 }).expect("mock instantiate");
         mock.script_job_step(actor, JobStep::Done { output: vec![3u8] });
-        let handle = PluginInstanceHandle::new(actor, mock.clone() as Arc<dyn GuestRuntime>, instance);
+        let handle = PluginInstanceHandle::new(actor, Arc::new(GuestRuntimes::Mock(mock.clone())), instance);
 
         let payload_bytes = serde_json::to_vec(&semio_framework::io_schema::IoPayload::Binary(vec![0xFF])).expect("encode payload");
         let rank = handle.io_sniff("s.stdio.binary@raw/*", "s.stdio.gif@87a/*", &payload_bytes).expect("job-backed io_sniff must decode a Done result");
@@ -4541,7 +4625,7 @@ mod tests {
         let instance = mock.instantiate(&compiled, actor, &[], &Budget { fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 }).expect("mock instantiate");
         mock.script_job_step(actor, JobStep::Running { progress: None });
         mock.script_job_step(actor, JobStep::Done { output: vec![1, 2, 3, 0xAB] });
-        let handle = PluginInstanceHandle::new(actor, mock.clone() as Arc<dyn GuestRuntime>, instance);
+        let handle = PluginInstanceHandle::new(actor, Arc::new(GuestRuntimes::Mock(mock.clone())), instance);
 
         let result = handle.migrate("s.stdio.gif@87a/*", "s.stdio.gif@89a/*", vec![1, 2, 3]).expect("job-backed migrate must drive start-job + step-job to Done");
         assert_eq!(result, vec![1, 2, 3, 0xAB]);
@@ -4556,7 +4640,7 @@ mod tests {
         let compiled = mock.compile(&PackageRef { package: PackageId("stdio".to_string()), hash: PackageHash([10u8; 32]) }, &[]).expect("mock compile");
         let instance = mock.instantiate(&compiled, actor, &[], &Budget { fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 }).expect("mock instantiate");
         mock.script_job_step(actor, JobStep::Done { output: b"planned".to_vec() });
-        let handle = PluginInstanceHandle::new(actor, mock.clone() as Arc<dyn GuestRuntime>, instance);
+        let handle = PluginInstanceHandle::new(actor, Arc::new(GuestRuntimes::Mock(mock.clone())), instance);
 
         let result = handle.mutation_plan(b"request-wire-bytes").expect("job-backed mutation_plan must drive start-job + step-job to Done");
         assert_eq!(result, b"planned");
@@ -4585,7 +4669,7 @@ mod tests {
         let stdio_instance = stdio_mock.instantiate(&stdio_compiled, stdio_actor, &[], &budget).expect("stdio mock instantiate");
         let midpoint = semio_framework::io_schema::IoPayload::Text("midpoint".to_string());
         stdio_mock.script_job_step(stdio_actor, JobStep::Done { output: serde_json::to_vec(&midpoint).expect("encode midpoint") });
-        let stdio_handle = Arc::new(PluginInstanceHandle::new(stdio_actor, stdio_mock as Arc<dyn GuestRuntime>, stdio_instance));
+        let stdio_handle = Arc::new(PluginInstanceHandle::new(stdio_actor, Arc::new(GuestRuntimes::Mock(stdio_mock)), stdio_instance));
 
         let gif_mock = Arc::new(MockGuestRuntime::new());
         let gif_actor = RuntimeActorId(201);
@@ -4593,7 +4677,7 @@ mod tests {
         let gif_instance = gif_mock.instantiate(&gif_compiled, gif_actor, &[], &budget).expect("gif mock instantiate");
         let final_payload = semio_framework::io_schema::IoPayload::Text("final".to_string());
         gif_mock.script_job_step(gif_actor, JobStep::Done { output: serde_json::to_vec(&final_payload).expect("encode final") });
-        let gif_handle = Arc::new(PluginInstanceHandle::new(gif_actor, gif_mock as Arc<dyn GuestRuntime>, gif_instance));
+        let gif_handle = Arc::new(PluginInstanceHandle::new(gif_actor, Arc::new(GuestRuntimes::Mock(gif_mock)), gif_instance));
 
         let binary_raw = io_dialect("s.stdio.binary", "raw", "*");
         let gif_87a = io_dialect("s.stdio.gif", "87a", "*");
@@ -4637,7 +4721,7 @@ mod tests {
         let instance = mock.instantiate(&compiled, actor, &[], &budget).expect("mock instantiate");
         mock.script_job_step(actor, JobStep::Running { progress: None });
         mock.script_job_step(actor, JobStep::Done { output: b"composed".to_vec() });
-        let handle = Arc::new(PluginInstanceHandle::new(actor, mock as Arc<dyn GuestRuntime>, instance));
+        let handle = Arc::new(PluginInstanceHandle::new(actor, Arc::new(GuestRuntimes::Mock(mock)), instance));
 
         let dialects = vec![(semio_framework::ArtifactDialect { artifact_kind: "s.cad".to_string(), standard: "1".to_string(), subset: "*".to_string() }, vec![semio_framework::ArtifactDialect { artifact_kind: "s.stdio.step".to_string(), standard: "ap214".to_string(), subset: "*".to_string() }])];
         router.register_plugin("cad", handle, &dialects, &[]).expect("register cad");
@@ -4670,7 +4754,7 @@ mod tests {
         let budget = Budget { fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 };
         let compiled = mock.compile(&PackageRef { package: PackageId("cad".to_string()), hash: PackageHash([6u8; 32]) }, &[]).expect("mock compile");
         let instance = mock.instantiate(&compiled, actor, &[], &budget).expect("mock instantiate");
-        let handle = Arc::new(PluginInstanceHandle::new(actor, mock as Arc<dyn GuestRuntime>, instance));
+        let handle = Arc::new(PluginInstanceHandle::new(actor, Arc::new(GuestRuntimes::Mock(mock)), instance));
 
         let dialects = vec![(semio_framework::ArtifactDialect { artifact_kind: "s.cad".to_string(), standard: "1".to_string(), subset: "*".to_string() }, vec![semio_framework::ArtifactDialect { artifact_kind: "s.stdio.step".to_string(), standard: "ap214".to_string(), subset: "*".to_string() }])];
         router.register_plugin("cad", handle, &dialects, &[]).expect("register cad");

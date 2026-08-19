@@ -71,7 +71,7 @@ mod tests {
         forward
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn move_rotate_scale_round_trip() {
         let base = fixture();
 
@@ -89,7 +89,7 @@ mod tests {
         assert_eq!(after.transform.scale, SemioPoint3 { x: 2.0, y: 2.0, z: 2.0 });
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_delete_brep_round_trips() {
         let base = fixture();
         let target = ref_of("brep", "new-brep");
@@ -104,7 +104,7 @@ mod tests {
         assert!(after.brep.is_none());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn delete_brep_of_an_absent_slot_has_an_empty_inverse() {
         let mut base = fixture();
         base.brep = None;
@@ -113,7 +113,7 @@ mod tests {
         assert_eq!(delete.diff(&base).diff().apply(&base).expect("apply must succeed for a well-formed fixture"), base, "deleting an absent slot is a no-op");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_brep_overwriting_an_existing_handle_restores_the_prior_one_on_undo() {
         let base = fixture();
         assert!(base.brep.is_some(), "fixture must start with a brep handle to exercise overwrite");
@@ -122,7 +122,7 @@ mod tests {
         assert_eq!(after.brep.as_ref().unwrap().child_id, "brand-new");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_delete_mesh_round_trips() {
         let base = fixture();
         let create = SemioObjectMutation::CreateMesh(create_mesh::mutation::CreateMesh { child_id: "mesh-99".into(), target: ref_of("mesh", "new-mesh") });
@@ -134,7 +134,7 @@ mod tests {
         assert!(after.mesh.is_none());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_delete_properties_round_trips() {
         let base = fixture();
         let create = SemioObjectMutation::CreateProperties(create_properties::mutation::CreateProperties { child_id: "props-99".into(), target: ref_of("value", "new-props") });
@@ -146,7 +146,7 @@ mod tests {
         assert!(after.properties.is_none());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn semantic_kinds_cover_every_variant() {
         assert_eq!(SemioObjectMutation::kinds().len(), 9);
         let mutation = SemioObjectMutation::DeleteMesh(delete_mesh::mutation::DeleteMesh {});

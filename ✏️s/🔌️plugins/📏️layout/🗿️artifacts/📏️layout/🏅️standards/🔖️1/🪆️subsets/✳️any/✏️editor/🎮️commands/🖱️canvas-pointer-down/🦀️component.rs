@@ -103,7 +103,7 @@ mod tests {
     use semio_framework::kernel::Effect;
     use semio_framework_plugin::{CLEAR_SELECTION_ACTION_ID, INTERACTION_HOVER_ACTION_ID, INTERACTION_SELECT_ACTION_ID};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_camera_mutates_config_and_emits_no_operations() {
         let mut app = layout_app();
         let before = app.snapshot().expect("projection");
@@ -112,7 +112,7 @@ mod tests {
         assert_eq!(app.snapshot().expect("projection"), before, "camera never mutates the document");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_camera_preview_surface_updates_independently_of_blueprint() {
         let mut app = layout_app();
         dispatch(&mut app, LayoutCommand::SetCamera(set_camera::SetCamera { surface_id: Some(LAYOUT_PLAY_SURFACE_PREVIEW.into()), camera: LayoutCamera { x: 3.0, y: 4.0, zoom: 2.0 } }));
@@ -126,7 +126,7 @@ mod tests {
     /// host to redispatch `interactionSelect` (`dispatch_interaction_action` runs that on the SAME
     /// instance next, out of band — the test harness doesn't simulate the round trip, so this only
     /// asserts the requested effect is shaped correctly, not that selection state landed).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn pointer_down_requests_a_select_effect_for_the_hit_frame() {
         let mut app = layout_app();
         let (sx, sy) = test_screen_point(0.0, 0.0, 1.0, 800.0, 600.0, 136.0, 435.0);
@@ -140,7 +140,7 @@ mod tests {
         assert!(args["targets"].as_str().expect("targets json").contains("frame-image-1"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn pointer_down_extend_click_requests_an_invertive_merge() {
         let mut app = layout_app();
         let (sx, sy) = test_screen_point(0.0, 0.0, 1.0, 800.0, 600.0, 136.0, 435.0);
@@ -151,7 +151,7 @@ mod tests {
         assert_eq!(args["merge"], "invertive");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn pointer_down_on_empty_space_requests_clear_selection() {
         let mut app = layout_app();
         let (sx, sy) = test_screen_point(0.0, 0.0, 1.0, 800.0, 600.0, 5.0, 5.0);
@@ -159,7 +159,7 @@ mod tests {
         assert!(result.requested_effects.iter().any(|effect| matches!(effect, Effect::DispatchAction { action, .. } if action == CLEAR_SELECTION_ACTION_ID)));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn pointer_move_requests_a_hover_effect_for_the_hit_frame() {
         let mut app = layout_app();
         let (sx, sy) = test_screen_point(0.0, 0.0, 1.0, 800.0, 600.0, 156.0, 220.0);
@@ -171,7 +171,7 @@ mod tests {
         assert!(args["targets"].as_str().expect("targets json").contains("frame-text-1"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn canvas_drop_adds_frame_at_world_coords() {
         let mut app = layout_app();
         let (sx, sy) = test_screen_point(0.0, 0.0, 1.0, 800.0, 600.0, 100.0, 200.0);
@@ -184,7 +184,7 @@ mod tests {
         assert!((bounds.y - 200.0).abs() < 0.01);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn canvas_drop_page_kind_adds_page() {
         let mut app = layout_app();
         let before = app.snapshot().expect("projection").pages.len();
@@ -193,7 +193,7 @@ mod tests {
         assert_eq!(app.snapshot().expect("projection").pages.len(), before + 1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn drag_over_emits_ghost_and_leave_clears() {
         let mut app = layout_app();
         dispatch(&mut app, LayoutCommand::CanvasDragOver(canvas_drag_over::CanvasDragOver { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), kind: "rect".into(), x: 400.0, y: 300.0, width: 800.0, height: 600.0 }));

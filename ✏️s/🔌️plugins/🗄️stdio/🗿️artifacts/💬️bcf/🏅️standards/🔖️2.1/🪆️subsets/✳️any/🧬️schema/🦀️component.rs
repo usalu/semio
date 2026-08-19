@@ -27,7 +27,7 @@ pub struct BcfArtifact {
 
 //#region Conversions
 impl Default for BcfArtifact {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self::from_snapshot(BcfSnapshot::default())
     }
 }
@@ -221,14 +221,14 @@ pub mod derived_analysis {
     #[cfg(test)]
     mod tests {
         use super::*;
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn sniff_bumps_to_high_when_bcf_version_entry_name_is_present() {
             let snap = BcfSnapshot { schema: "stdio.bcf".into(), version: "2.1".into(), topics: Vec::new(), parts: Vec::new() };
             let bytes = crate::artifacts::bcf::io::encode_bcf(&snap).expect("encode");
             assert_eq!(BcfAnalyzerAnalysis::sniff(&AnalyzeSource::Binary(&bytes)), IoConfidence::High);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn sniff_stays_medium_for_a_real_zip_without_bcf_version() {
             let zip_snap = crate::artifacts::zip::ZipSnapshot {
                 schema: crate::artifacts::zip::STDIO_ZIP_DOCUMENT_SCHEMA.into(),
@@ -239,12 +239,12 @@ pub mod derived_analysis {
             assert_eq!(BcfAnalyzerAnalysis::sniff(&AnalyzeSource::Binary(&bytes)), IoConfidence::Medium);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn sniff_rejects_non_zip_garbage() {
             assert_eq!(BcfAnalyzerAnalysis::sniff(&AnalyzeSource::Binary(b"not a zip at all")), IoConfidence::Low);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn sniff_treats_text_source_as_low() {
             assert_eq!(BcfAnalyzerAnalysis::sniff(&AnalyzeSource::Text("deadbeef")), IoConfidence::Low);
         }

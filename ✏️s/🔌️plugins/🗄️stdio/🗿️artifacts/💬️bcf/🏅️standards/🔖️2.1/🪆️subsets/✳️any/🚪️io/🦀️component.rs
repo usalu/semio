@@ -545,7 +545,7 @@ mod tests {
     /// previously-mismodeled `Priority`/`Description`/`Labels`/`CreationDate`/`CreationAuthor`
     /// child elements), comments (incl. `viewpoint_ref`), and a viewpoint's camera/components/
     /// snapshot all survive.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn decode_of_encode_recovers_full_typed_model() {
         let snap = sample_snapshot();
         let bytes = encode_bcf(&snap).expect("encode");
@@ -578,7 +578,7 @@ mod tests {
     }
 
     /// 🧪️ Orthogonal camera round-trips too (the `xs:choice` sibling of `PerspectiveCamera`).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn orthogonal_camera_round_trips() {
         let mut snap = sample_snapshot();
         snap.topics[0].viewpoints[0].camera = Some(orthogonal_camera());
@@ -588,7 +588,7 @@ mod tests {
 
     /// 🧪️ A topic folder with no `markup.bcf` (only stray files) is retained verbatim as raw
     /// parts, never fabricated into a bogus topic.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn folder_without_markup_becomes_raw_parts() {
         let zip_snap = crate::artifacts::zip::ZipSnapshot {
             schema: crate::artifacts::zip::STDIO_ZIP_DOCUMENT_SCHEMA.into(),
@@ -601,7 +601,7 @@ mod tests {
         assert!(decoded.parts.iter().any(|p| p.name == "stray/notes.txt"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn empty_snapshot_matches_schema() {
         let snapshot = empty_bcf_snapshot();
         assert_eq!(snapshot.schema, STDIO_BCF_DOCUMENT_SCHEMA);
@@ -609,7 +609,7 @@ mod tests {
         assert!(snapshot.parts.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn codec_round_trip() {
         let snap = decode_bcf(&encode_bcf(&sample_snapshot()).unwrap()).unwrap();
 
@@ -626,7 +626,7 @@ mod tests {
     /// ⚖️ Law 1 — `mutation_diff_law`: for every mutation variant, applying via
     /// `apply_bcf_mutation` matches `m.diff(base).diff().apply(base)`, and the returned diff equals
     /// `m.diff(base)`.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mutation_diff_law() {
         let base = decode_bcf(&encode_bcf(&sample_snapshot()).unwrap()).unwrap();
         let mutations = vec![
@@ -656,7 +656,7 @@ mod tests {
     //#region 🧪️Law2_InverseLaw
     /// ⚖️ Law 2 — `inverse_law`: every mutation round-trips (mutation-level) and every diff
     /// round-trips (diff-level `d.diff().inverse(base).apply(&d.diff().apply(base)) == base`).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inverse_law() {
         let base = decode_bcf(&encode_bcf(&sample_snapshot()).unwrap()).unwrap();
         let mutations = vec![
@@ -695,7 +695,7 @@ mod tests {
     /// cases (Insert+Remove-before, Insert+Insert-same-key-both-survive [name-keyed: no
     /// same-key clash needed, tested via disjoint-then-merge], Add+SetField patches into added,
     /// Modify+Remove annihilates) plus associativity.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_law() {
         let base = decode_bcf(&encode_bcf(&sample_snapshot()).unwrap()).unwrap();
 
@@ -763,7 +763,7 @@ mod tests {
 
     //#region 🧪️Law4_BetweenRoundtripLaw
     /// ⚖️ Law 4 — `between_roundtrip_law`: `between(a,b).apply(a) == b` on real fixtures.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn between_roundtrip_law() {
         let a = decode_bcf(&encode_bcf(&sample_snapshot()).unwrap()).unwrap();
         let mut b = a.clone();
@@ -785,7 +785,7 @@ mod tests {
     /// ⚖️ Law 5 — `codec_retention_law`: decode(encode(x)) == x (this artifact's documented
     /// normal form for viewpoint/snapshot filenames -- see the snapshot module's `BcfViewpoint`
     /// doc comment).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn codec_retention_law() {
         let snap = decode_bcf(&encode_bcf(&sample_snapshot()).unwrap()).unwrap();
         let re_encoded = encode_bcf(&snap).unwrap();
@@ -887,7 +887,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn field_sweep() {
         let a = sweep_a();
         let b = sweep_b();
@@ -945,7 +945,7 @@ mod tests {
     /// `SetViewpointCamera`'s `BcfCamera` enum payload (both `Perspective`/`Orthogonal`, plus
     /// `None`) and `SetComment`'s tri-state `viewpoint_ref` (both `Some(None)` and
     /// `Some(Some(_))`).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_text_binary_roundtrip_law() {
         let mutations = vec![
             BcfMutation::NoMutation,
@@ -996,7 +996,7 @@ mod tests {
     /// `viewpoints`/`parts`, all guid/name-keyed) plus every tri-state field's `Some(None)`
     /// transition, via `sweep_a`/`sweep_b`'s `between()` result (the same fixtures `field_sweep`
     /// uses, incl. `BcfCamera`'s `Perspective`->`Orthogonal` transition inside `vp-keep`'s diff).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn diff_codec_text_binary_roundtrip_law() {
         let a = sweep_a();
         let b = sweep_b();
@@ -1032,7 +1032,7 @@ mod tests {
         /// parse under the real dialect -- independent of, and cheaper than, the two
         /// `recognize`/`walk_protocol` laws below (a parse failure here fails fast with a clearer
         /// message).
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn committed_facet_files_parse() {
             for (label, text) in [("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO)] {
                 let grammar = dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
@@ -1054,7 +1054,7 @@ mod tests {
         /// own `encode_bcf`/`decode_bcf` delegate to directly) and recognizes EACH real part's own
         /// text against the grammar -- direct proof the grammar matches this artifact's own real
         /// per-part XML bytes, not an invented approximation.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn grammar_conformance_law() {
             let grammar = dsl::parse_grammar(snapshot::text::COMPONENT_GRAMMAR_SEMIO).expect("parse snapshot grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
@@ -1080,7 +1080,7 @@ mod tests {
 
         /// ✅️ `ops_grammar_conformance_law`: the mutations grammar recognizes real `print_op`
         /// output for every `BcfMutation` variant (`mutations::demo_mutation_cases()`).
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn ops_grammar_conformance_law() {
             let grammar = dsl::parse_grammar(mutations::text::COMPONENT_GRAMMAR_SEMIO).expect("parse mutations grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
@@ -1092,7 +1092,7 @@ mod tests {
 
         /// ✅️ `diff_grammar_conformance_law`: the diff grammar recognizes real `print_diff` output
         /// for every representative `BcfDiff` (`diff::demo_diff_cases()`).
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn diff_grammar_conformance_law() {
             let grammar = dsl::parse_grammar(diff::text::COMPONENT_GRAMMAR_SEMIO).expect("parse diff grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
@@ -1111,7 +1111,7 @@ mod tests {
         /// exception, `📖️grammar-recipe.md` §2.3) -- assert a sane in-range `consumed` there
         /// instead, same as zip's/docx's own `protocol_walk_law` does; the op/diff protocols have
         /// no such exception and must consume every byte.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn protocol_walk_law() {
             let pack_spec = dsl::parse_protocol(snapshot::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
             let demo = demo_bcf_snapshot();
@@ -1141,7 +1141,7 @@ mod tests {
         /// fixtures can never silently drift back to a fake `"68656c6c6f"`-style placeholder again
         /// (this ticket's own recon note on the pre-FG-wave state of these two files -- the
         /// `.dsl.semio` fixture WAS exactly that placeholder before this wave).
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn fixture_honesty_law() {
             const FIXTURE_DSL: &str = include_str!("../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
             const FIXTURE_PACK: &[u8] = include_bytes!("../📚️examples/🎬️demo/🖼️assets/🎒️example.pack.semio");

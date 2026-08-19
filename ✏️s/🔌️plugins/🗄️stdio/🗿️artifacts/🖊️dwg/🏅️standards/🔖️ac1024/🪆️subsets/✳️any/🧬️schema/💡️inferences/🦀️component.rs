@@ -38,7 +38,7 @@ impl protocol::Inference<DwgSnapshot> for DwgInference {
 
 /// 🌱 Defined in terms of `infer` so the default follows the logical snapshot model.
 impl Default for DwgInference {
-    async fn default() -> Self {
+    fn default() -> Self {
         <Self as protocol::Inference<DwgSnapshot>>::infer(&DwgSnapshot::default())
     }
 }
@@ -87,13 +87,13 @@ mod tests {
     use super::*;
     use protocol::Inference;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = DwgSnapshot::default();
         assert_eq!(DwgInference::infer(&snapshot), DwgInference::infer(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(DwgInference::infer(&DwgSnapshot::default()), DwgInference::default());
     }

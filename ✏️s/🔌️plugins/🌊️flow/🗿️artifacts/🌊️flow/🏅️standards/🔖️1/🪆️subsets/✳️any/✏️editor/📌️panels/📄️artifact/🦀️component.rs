@@ -50,13 +50,13 @@ mod tests {
     use super::*;
     use crate::editor::flow::testkit::{flow_app, render as render_body};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn document_lists_widgets() {
         let mut app = flow_app();
         assert!(render_body(&mut app, FLOW_PLAY_BODY_DOCUMENT).contains("flow-play-document.widgets"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn definition_binds_the_framework_document_tab_to_this_body_key() {
         let definition = definition();
         assert_eq!(definition.id(), FRAMEWORK_PANEL_TAB_ARTIFACT_ID);

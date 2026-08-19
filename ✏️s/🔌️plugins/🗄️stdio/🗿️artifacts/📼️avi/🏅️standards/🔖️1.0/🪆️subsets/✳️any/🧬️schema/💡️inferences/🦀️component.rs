@@ -34,7 +34,7 @@ impl protocol::Inference<AviSnapshot> for AviInference {
 /// necessity here, but keeps the same hand-rolled convention every sibling family uses (safer
 /// against a future `AviMainHeader` default that stops being all-zero).
 impl Default for AviInference {
-    async fn default() -> Self {
+    fn default() -> Self {
         <Self as protocol::Inference<AviSnapshot>>::infer(&AviSnapshot::default())
     }
 }
@@ -85,13 +85,13 @@ mod tests {
     use super::*;
     use protocol::Inference;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = AviSnapshot::default();
         assert_eq!(AviInference::infer(&snapshot), AviInference::infer(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(AviInference::infer(&AviSnapshot::default()), AviInference::default());
     }

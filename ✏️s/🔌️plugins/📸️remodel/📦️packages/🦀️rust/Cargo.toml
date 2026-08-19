@@ -47,3 +47,6 @@ serde_json.workspace = true
 base64 = "0.22.1"
 png = "0.17.16"
 
+
+[dev-dependencies]
+semio-framework-async-macros = { path = "../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }

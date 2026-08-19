@@ -766,7 +766,7 @@ mod tests {
     }
 
     /// 🧪️ LZW core: trivial round trip at the smallest legal minimum code size.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn lzw_round_trip_trivial() {
         let indices = vec![1u8, 2, 1, 2, 1, 2, 3, 3, 3, 3];
         let enc = lzw_encode(&indices, 2);
@@ -777,7 +777,7 @@ mod tests {
     /// 🧪️ Ticket 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION: an
     /// all-one-color-ish long run at min_code_size=8 forces the dictionary well past the 8-bit
     /// boundary, exercising the asymmetric growth-threshold rule documented on `lzw_encode`.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn lzw_round_trip_forces_code_size_growth() {
         let indices: Vec<u8> = (0..5000).map(|i| (i % 2) as u8).collect();
         let enc = lzw_encode(&indices, 8);
@@ -788,7 +788,7 @@ mod tests {
 
     /// 🧪️ A single solid color run drives the dictionary to grow every entry from one repeated
     /// symbol — the worst case for the KwKwK (code == table length) decode branch.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn lzw_round_trip_solid_run_and_kwkwk() {
         let indices = vec![7u8; 20_000];
         let enc = lzw_encode(&indices, 8);
@@ -799,7 +799,7 @@ mod tests {
 
     /// 🧪️ Pseudo-random data at every legal minimum code size (2..=8), large enough to cross
     /// multiple code-size growth boundaries and at least one dictionary-full clear-code reset.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn lzw_round_trip_pseudo_random_all_min_code_sizes() {
         for mcs in 2u8..=8 {
             let max_sym = (1u32 << mcs) - 1;
@@ -815,7 +815,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn lzw_round_trip_empty_and_single_symbol() {
         assert_eq!(lzw_decode(&lzw_encode(&[], 2), 2).unwrap(), Vec::<u8>::new());
         assert_eq!(lzw_decode(&lzw_encode(&[3], 4), 4).unwrap(), vec![3u8]);
@@ -828,7 +828,7 @@ mod tests {
     /// data code, expected the NEW bit width) — the pre-existing pseudo-random/solid-run test data
     /// never happened to land on this exact boundary. Swept across several lengths and min code
     /// sizes to catch the boundary regardless of exactly which length triggers it.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn lzw_round_trip_period_two_alternating_hits_growth_boundary_at_tail() {
         for mcs in 2u8..=6 {
             for len in 2usize..=80 {
@@ -842,7 +842,7 @@ mod tests {
 
     /// 🧪️ `decode_gif` must reject truncated/invalid input with a typed `Err`, never fabricate
     /// pixels — regression guard for the prior stub which silently produced an all-black image.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn decode_gif_rejects_garbage() {
         assert!(decode_gif(b"not a gif at all").is_err());
         assert!(decode_gif(b"GIF89a").is_err(), "87a decoder must reject 89a magic");
@@ -855,7 +855,7 @@ mod tests {
     /// 🧪️ Full byte-level codec round trip through a real (non-solid) checkerboard image,
     /// exercising LCT sizing and the sub-block-packed LZW stream together — losslessly, at the
     /// palette-index level, not by re-quantizing decoded RGBA.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn encode_decode_round_trip_checkerboard() {
         let snap = sample_snapshot();
         let bytes = encode_gif(&snap).expect("encode");
@@ -866,7 +866,7 @@ mod tests {
 
     /// 🧪️ decode(encode(decode(x))) snapshot equality — the acceptance bar from the plan's
     /// fixtures section (model equality across a second round trip, not necessarily byte-exact).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn encode_decode_encode_decode_is_stable() {
         let snap = GifSnapshot { width: 9, height: 13, images: vec![checkerboard(9, 13)], ..GifSnapshot::default() };
         let once = decode_gif(&encode_gif(&snap).unwrap()).unwrap();
@@ -876,7 +876,7 @@ mod tests {
 
     /// 🧪️ GIF87a genuinely permits more than one Image Descriptor per file (§20) even without any
     /// extension block — a real spec-fidelity gain over the prior single-`RasterImage` model.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn encode_decode_round_trip_multiple_images() {
         let snap = GifSnapshot { width: 20, height: 20, images: vec![checkerboard(6, 6), checkerboard(9, 4), checkerboard(3, 3)], ..GifSnapshot::default() };
         let bytes = encode_gif(&snap).expect("encode");
@@ -887,7 +887,7 @@ mod tests {
 
     /// 🧪️ A global color table shared by an image with no local table round-trips, including the
     /// sort flag and the real (no-longer-hardcoded) background-color-index/pixel-aspect-ratio bytes.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn encode_decode_round_trip_global_color_table_and_screen_fields() {
         let (palette, indices, _) = quantize_rgba(&{
             let mut rgba = vec![0u8; 4 * 4 * 4];
@@ -915,7 +915,7 @@ mod tests {
     /// 🧪️ `interlace` is now a real, round-trippable field — encode must actually reorder rows
     /// into the on-disk interlaced pass order (not just set the bit), and decode must invert it
     /// back to the same natural-order indices this test started with.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn interlace_flag_round_trips_through_real_encode() {
         let mut image = checkerboard(11, 17);
         image.interlace = true;
@@ -928,7 +928,7 @@ mod tests {
 
     /// 🧪️ An index referencing past the end of its color table is a typed encode error, never a
     /// silently-corrupt file.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn encode_gif_rejects_index_past_color_table() {
         let mut image = checkerboard(2, 2);
         image.indices = vec![250, 250, 250, 250]; // way past the checkerboard's tiny 2-color LCT
@@ -936,7 +936,7 @@ mod tests {
         assert!(encode_gif(&snap).is_err());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn interlace_round_trip() {
         let width = 5usize;
         let height = 9usize;
@@ -969,7 +969,7 @@ mod tests {
 
         /// ✅️ "committed files parse": all 6 handcrafted `.grammar.semio`/`.protocol.semio`
         /// files parse under the real dialect.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn committed_facet_files_parse() {
             for (label, text) in [("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO)] {
                 let grammar = dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
@@ -983,7 +983,7 @@ mod tests {
         /// ✅️ `grammar_conformance_law`: the snapshot grammar (a hex-dump grammar — GIF87a has
         /// no textual syntax of its own, see that file's own doc comment) recognizes real
         /// `print_dsl` output for the demo snapshot.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn grammar_conformance_law() {
             let grammar = dsl::parse_grammar(snapshot::text::COMPONENT_GRAMMAR_SEMIO).expect("parse snapshot grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
@@ -995,7 +995,7 @@ mod tests {
 
         /// ✅️ `ops_grammar_conformance_law`: the mutations grammar recognizes real `print_op`
         /// output for every `GifMutation` variant (`mutations::demo_mutation_cases()`).
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn ops_grammar_conformance_law() {
             let grammar = dsl::parse_grammar(mutations::text::COMPONENT_GRAMMAR_SEMIO).expect("parse mutations grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
@@ -1007,7 +1007,7 @@ mod tests {
 
         /// ✅️ `diff_grammar_conformance_law`: the diff grammar recognizes real `print_diff`
         /// output for every representative `GifDiff` (`diff::demo_diff_cases()`).
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn diff_grammar_conformance_law() {
             let grammar = dsl::parse_grammar(diff::text::COMPONENT_GRAMMAR_SEMIO).expect("parse diff grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
@@ -1021,7 +1021,7 @@ mod tests {
         /// snapshot pack (`encode_pack`, envelope-unwrapped first), every demo mutation's
         /// `encode_op`, and every demo diff's `encode_diff` — asserting `consumed ==
         /// bytes.len()`.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn protocol_walk_law() {
             let pack_spec = dsl::parse_protocol(snapshot::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
             let packed = store::ArtifactPack::encode_pack(&demo_gif_snapshot());
@@ -1046,7 +1046,7 @@ mod tests {
 
         /// ✅️ `fixture_honesty_law`: the shipped `.dsl.semio`/`.pack.semio` fixtures are
         /// GENUINE `print_dsl`/`encode_pack` output of `demo_gif_snapshot()`.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn fixture_honesty_law() {
             const FIXTURE_DSL: &str = include_str!("../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
             const FIXTURE_PACK: &[u8] = include_bytes!("../📚️examples/🎬️demo/🖼️assets/🎒️example.pack.semio");

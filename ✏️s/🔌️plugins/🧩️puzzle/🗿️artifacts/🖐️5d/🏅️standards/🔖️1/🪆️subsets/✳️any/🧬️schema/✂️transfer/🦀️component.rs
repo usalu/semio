@@ -188,7 +188,7 @@ mod tests {
         projection
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn copy_selection_pulls_in_fastener_endpoints_and_internal_links() {
         let projection = three_part_projection();
         // Selecting only p1 and p2 (no fastener) should still close over f1 since both endpoints are selected.
@@ -197,7 +197,7 @@ mod tests {
         assert_eq!(fasteners.iter().map(|f| f.id.as_str()).collect::<Vec<_>>(), vec!["f1"]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn copy_selection_expands_parts_from_selected_fastener() {
         let projection = three_part_projection();
         // Selecting only fastener f2 should pull in its endpoint parts p2 and p3.
@@ -206,14 +206,14 @@ mod tests {
         assert_eq!(fasteners.iter().map(|f| f.id.as_str()).collect::<Vec<_>>(), vec!["f2"]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn centroid_2d_averages_positions() {
         let parts = vec![part_at("a", 0.0, 0.0), part_at("b", 10.0, 0.0)];
         assert_eq!(centroid_2d(&parts), Some((5.0, 0.0)));
         assert_eq!(centroid_2d(&[]), None);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn paste_selection_mints_fresh_ids_shifts_positions_and_remaps_fastener_endpoints() {
         let projection = three_part_projection();
         let (fragment_parts, fragment_fasteners) = copy_selection(&projection, &["p1".into(), "p2".into()], &[]);
@@ -232,7 +232,7 @@ mod tests {
         assert_eq!(fresh_target_part, fresh_parts[1].id);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn translate_parts_shifts_selected_parts_only() {
         let projection = three_part_projection();
         let updated = translate_parts(&projection, &["p2".into()], (5.0, 5.0), [5.0, 5.0, 5.0]);
@@ -244,7 +244,7 @@ mod tests {
         assert_eq!(part.part_3d.origin, [15.0, 5.0, 5.0]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn find_replaceable_kinds_walks_kind_compatibility() {
         let mut projection = three_part_projection();
         projection.parts[0].part_kind = Some("kind-a".into());

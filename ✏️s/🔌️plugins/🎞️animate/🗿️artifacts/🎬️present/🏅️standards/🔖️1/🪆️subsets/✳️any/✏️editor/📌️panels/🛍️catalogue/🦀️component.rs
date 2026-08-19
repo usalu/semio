@@ -84,14 +84,14 @@ mod tests {
     use super::*;
     use crate::editor::animate::testkit::{present_app, render as render_body};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn definition_binds_the_framework_catalogue_tab_to_this_body_key() {
         let definition = definition();
         assert_eq!(definition.id(), FRAMEWORK_PANEL_TAB_CATALOGUE_ID);
         assert_eq!(definition.body_key.as_deref(), Some(PRESENT_PLAY_BODY_CATALOGUE));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn catalogue_lists_templates() {
         let mut app = present_app();
         assert!(render_body(&mut app, PRESENT_PLAY_BODY_CATALOGUE).contains("animate.present.play.catalogue.templates"));

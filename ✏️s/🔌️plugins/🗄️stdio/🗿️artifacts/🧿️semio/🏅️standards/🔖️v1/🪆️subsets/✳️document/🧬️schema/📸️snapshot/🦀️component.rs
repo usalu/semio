@@ -192,7 +192,7 @@ pub struct SemioDocumentSnapshot {
 }
 
 impl Default for SemioDocumentSnapshot {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { schema: STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA.into(), styles: Default::default(), images: Default::default(), blocks: Default::default() }
     }
 }
@@ -612,7 +612,7 @@ pub(crate) async fn demo_semio_document_snapshot() -> SemioDocumentSnapshot {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn json_pack_round_trips() {
         let snap = demo_semio_document_snapshot();
         let bytes = <SemioDocumentSnapshot as store::ArtifactPack>::encode_pack(&snap);
@@ -620,7 +620,7 @@ mod tests {
         assert_eq!(snap, back);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dsl_text_round_trips() {
         let snap = demo_semio_document_snapshot();
         let text = <SemioDocumentSnapshot as store::ArtifactDsl>::print_dsl(&snap);
@@ -628,7 +628,7 @@ mod tests {
         assert_eq!(snap, back);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn empty_snapshot_binary_round_trips() {
         let snap = SemioDocumentSnapshot::default();
         let bytes = <SemioDocumentSnapshot as store::ArtifactPack>::encode_pack(&snap);

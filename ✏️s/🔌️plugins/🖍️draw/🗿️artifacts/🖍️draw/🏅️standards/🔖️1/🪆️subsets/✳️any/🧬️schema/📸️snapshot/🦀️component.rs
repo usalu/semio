@@ -36,7 +36,7 @@ pub struct DrawSnapshot {
 // transforms only, per design.md rule 3).
 
 impl Default for DrawSnapshot {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self {
             schema: DRAW_DOCUMENT_SCHEMA.into(),
             id: String::new(),

@@ -231,7 +231,10 @@ pub mod scalar {
     // compatible with ids written directly by another layer that chooses to skip interning.
 
     /// @emoji 🪪️ Writes `id` using the most compact of the four id tags that preserves it exactly.
-    pub async fn write_id(out: &mut ByteWriter, id: &str, mut intern: impl FnMut(&str) -> u32, edit_ordinal_of: impl Fn(&str) -> Option<u64>) -> Result<(), PackError> {
+    // ✏️ `intern`/`resolve` are `AsyncFn(Mut)` (not plain `Fn`): their real-world arguments are
+    // `DictBuilder::intern`/`DictReader::resolve`, which are themselves `async fn` — see the
+    // `kernel-finish` lease-request this packet granted (`📡️spr/📜️history` is the one caller).
+    pub async fn write_id(out: &mut ByteWriter, id: &str, mut intern: impl AsyncFnMut(&str) -> u32, edit_ordinal_of: impl Fn(&str) -> Option<u64>) -> Result<(), PackError> {
         if let Some(ordinal) = edit_ordinal_of(id) {
             out.write_u8(3).await;
             out.write_varint_u64(ordinal).await;
@@ -239,17 +242,17 @@ pub mod scalar {
         }
         if let Some((prefix, uuid_bytes)) = split_prefix_uuid(id).await {
             out.write_u8(2).await;
-            out.write_varint_u64(intern(prefix) as u64).await;
+            out.write_varint_u64(intern(prefix).await as u64).await;
             out.write_bytes(&uuid_bytes).await;
             return Ok(());
         }
         out.write_u8(1).await;
-        out.write_varint_u64(intern(id) as u64).await;
+        out.write_varint_u64(intern(id).await as u64).await;
         Ok(())
     }
 
     /// @emoji 🪪️ Reads one tagged id, resolving dictrefs/ordinals through the supplied closures.
-    pub async fn read_id<'r>(input: &mut ByteReader<'_>, resolve: impl Fn(u32) -> Result<&'r str, PackError>, ordinal_to_id: impl Fn(u64) -> Result<&'r str, PackError>) -> Result<String, PackError> {
+    pub async fn read_id<'r>(input: &mut ByteReader<'_>, resolve: impl AsyncFn(u32) -> Result<&'r str, PackError>, ordinal_to_id: impl Fn(u64) -> Result<&'r str, PackError>) -> Result<String, PackError> {
         let tag = input.read_u8().await?;
         match tag {
             0 => {
@@ -259,11 +262,11 @@ pub mod scalar {
             }
             1 => {
                 let idx = input.read_varint_u64().await? as u32;
-                Ok(resolve(idx)?.to_string())
+                Ok(resolve(idx).await?.to_string())
             }
             2 => {
                 let idx = input.read_varint_u64().await? as u32;
-                let prefix = resolve(idx)?;
+                let prefix = resolve(idx).await?;
                 let uuid_bytes = input.read_bytes(16).await?;
                 let mut array = [0u8; 16];
                 array.copy_from_slice(uuid_bytes);

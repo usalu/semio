@@ -27,7 +27,7 @@ pub struct CurateIntoPng;
 impl Serializer<CurateSnapshot> for CurateIntoPng {
     const INTO: Dialect = PNG_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    async fn serialize(from: &CurateSnapshot) -> IoResult<IoPayload> {
+    fn serialize(from: &CurateSnapshot) -> IoResult<IoPayload> {
         serialize_bytes(from).map(|bytes| IoOutcome::clean(IoPayload::Binary(bytes))).map_err(|error| IoError { message: format!("CurateIntoPng: {error}"), diagnostics: Vec::new() })
     }
 }

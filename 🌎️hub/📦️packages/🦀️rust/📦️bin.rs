@@ -1553,18 +1553,18 @@ impl db::semio_framework_async::HostAsyncRuntime for HubDbRuntime {
         tokio::task::spawn_blocking(work);
     }
 
-    fn sleep_until(&self, deadline_ms: u64) -> db::semio_framework_async::HostFuture<()> {
-        let now = self.now_ms();
+    async fn sleep_until(&self, deadline_ms: u64) {
+        let now = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0, |duration| duration.as_millis() as u64);
         let delay = std::time::Duration::from_millis(deadline_ms.saturating_sub(now));
-        Box::pin(tokio::time::sleep(delay))
+        tokio::time::sleep(delay).await;
     }
 
-    fn cancel_scope(&self, _owner: &db::semio_framework_async::ScopeOwner, _grace_ms: u64) -> db::semio_framework_async::HostFuture<db::semio_framework_async::ScopeDrainReport> {
+    async fn cancel_scope(&self, _owner: &db::semio_framework_async::ScopeOwner, _grace_ms: u64) -> db::semio_framework_async::ScopeDrainReport {
         // 🎯️ Hub never opens a cancellable scope of its own on this runtime today (only
         // `SqliteStorage::open`'s fixed internal scope, which it never cancels) — a real
         // drain-and-report implementation is `TokioHostRuntime`'s job (packet R2), not this
         // single-purpose bridge's.
-        Box::pin(std::future::ready(db::semio_framework_async::ScopeDrainReport::default()))
+        db::semio_framework_async::ScopeDrainReport::default()
     }
 
     fn now_ms(&self) -> u64 {

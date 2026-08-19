@@ -219,7 +219,7 @@ mod tests {
         (s.eval(u, v + h) - s.eval(u, v - h)) * (1.0 / (2.0 * h))
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn plane_eval_and_normal() {
         let frame = Frame3::from_normal(Pnt3::new(1.0, 2.0, 3.0), Vec3::Z).unwrap();
         let s = Surface::Plane { frame };
@@ -229,7 +229,7 @@ mod tests {
         assert!(s.is_planar());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn cylinder_derivatives_match_finite_differences_and_lie_on_cylinder() {
         let frame = Frame3::from_normal(Pnt3::new(0.0, 0.0, 0.0), Vec3::Z).unwrap();
         let s = Surface::Cylinder { frame, radius: 2.0 };
@@ -243,7 +243,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn cylinder_gaussian_curvature_is_zero_and_mean_curvature_is_half_reciprocal_radius() {
         let frame = Frame3::WORLD;
         let s = Surface::Cylinder { frame, radius: 3.0 };
@@ -252,7 +252,7 @@ mod tests {
         assert!((mean.abs() - 1.0 / (2.0 * 3.0)).abs() < 1e-6);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn sphere_gaussian_curvature_equals_reciprocal_radius_squared() {
         let frame = Frame3::WORLD;
         let s = Surface::Sphere { frame, radius: 4.0 };
@@ -262,7 +262,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn sphere_eval_stays_on_sphere_and_derivatives_match_finite_differences() {
         let frame = Frame3::from_normal(Pnt3::new(1.0, -1.0, 2.0), Vec3::new(0.2, 0.3, 1.0)).unwrap();
         let s = Surface::Sphere { frame, radius: 5.0 };
@@ -275,7 +275,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn torus_eval_stays_at_correct_distance_from_main_circle() {
         let frame = Frame3::WORLD;
         let s = Surface::Torus { frame, major_radius: 5.0, minor_radius: 1.5 };
@@ -287,7 +287,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn torus_derivatives_match_finite_differences() {
         let frame = Frame3::WORLD;
         let s = Surface::Torus { frame, major_radius: 4.0, minor_radius: 1.0 };
@@ -298,7 +298,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn cone_radius_grows_linearly_with_v_and_derivatives_match_finite_differences() {
         let frame = Frame3::from_normal(Pnt3::new(0.0, 0.0, 0.0), Vec3::Z).unwrap();
         let half_angle = std::f64::consts::FRAC_PI_6;
@@ -313,7 +313,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn plane_second_derivatives_are_zero_and_gaussian_curvature_is_zero() {
         let frame = Frame3::WORLD;
         let s = Surface::Plane { frame };

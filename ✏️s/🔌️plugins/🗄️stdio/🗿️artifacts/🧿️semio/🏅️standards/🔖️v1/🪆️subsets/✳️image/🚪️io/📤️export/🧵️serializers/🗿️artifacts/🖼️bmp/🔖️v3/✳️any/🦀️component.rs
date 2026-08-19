@@ -70,7 +70,7 @@ mod tests {
 
     /// 🧪️ Real round trip through bmp's own codec — alpha is expected to drop (documented, the
     /// codec's own real behavior), RGB channels must survive exactly.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn real_byte_round_trip_through_bmp_codec() {
         let semio = sample_semio();
         let bmp = semio_framework_plugin::resolve_ready(SemioImageToBmp::serialize(&semio)).expect("serialize");

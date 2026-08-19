@@ -33,7 +33,7 @@ impl protocol::Inference<StlSnapshot> for StlInference {
 /// 🌱 Defined in terms of `infer` (not derived) — keeps the law correct regardless of whether
 /// `StlSnapshot::default()`'s `triangles` ever stops being empty.
 impl Default for StlInference {
-    async fn default() -> Self {
+    fn default() -> Self {
         <Self as protocol::Inference<StlSnapshot>>::infer(&StlSnapshot::default())
     }
 }
@@ -85,13 +85,13 @@ mod tests {
     use super::*;
     use protocol::Inference;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = StlSnapshot::default();
         assert_eq!(StlInference::infer(&snapshot), StlInference::infer(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(StlInference::infer(&StlSnapshot::default()), StlInference::default());
     }

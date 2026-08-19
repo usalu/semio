@@ -15,7 +15,7 @@ pub async fn source() -> ExampleSource {
 #[cfg(test)]
 mod tests {
     use super::*;
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn demo_source_nonempty() {
         assert!(!PRIMARY_TEXT.is_empty());
         let _ = source();
@@ -27,7 +27,7 @@ mod tests {
     /// `semio stdio.gif.dsl v1` envelope is the 87a standard's (`envelope_id()`), so this parses
     /// as `standards::v87a`'s `GifSnapshot` — 89a's own laws are covered separately by the
     /// `💃️dancing` example (a real 89a fixture).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         use crate::artifacts::gif::standards::v87a::subsets::any::schema::inferences::GifInference;
         use crate::artifacts::gif::standards::v87a::subsets::any::schema::snapshot::GifSnapshot;
@@ -36,7 +36,7 @@ mod tests {
         assert_eq!(GifInference::infer(&snapshot), GifInference::infer(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         use crate::artifacts::gif::standards::v87a::subsets::any::schema::inferences::GifInference;
         use crate::artifacts::gif::standards::v87a::subsets::any::schema::snapshot::GifSnapshot;

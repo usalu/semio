@@ -120,7 +120,7 @@ impl store::ArtifactPack for RemodelSnapshot {
 //#endregion 🔖️HandcraftedArtifactCodecs
 
 impl Default for RemodelSnapshot {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self {
             schema: REMODEL_DOCUMENT_SCHEMA.into(),
             id: "remodel".into(),

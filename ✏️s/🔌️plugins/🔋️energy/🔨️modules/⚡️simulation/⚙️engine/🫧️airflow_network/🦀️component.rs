@@ -195,7 +195,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn stack_pressure_positive_when_outdoor_colder() {
         let outdoor = AfNode { id: 0, elevation_m: 0.0, temperature_c: 5.0, humidity_ratio: 0.004, is_reference: true };
         let zone = AfNode { id: 1, elevation_m: 3.0, temperature_c: 22.0, humidity_ratio: 0.009, is_reference: false };
@@ -203,7 +203,7 @@ mod tests {
         assert!(dp.abs() > 0.0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn network_solves_pressures() {
         let net = two_zone_network();
         let pressures = net.solve_pressures(P_STD, 100, 1e-3).unwrap();
@@ -211,7 +211,7 @@ mod tests {
         assert!((pressures[0]).abs() < 1e-9);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn infiltration_flow_when_zone_warmer() {
         let net = two_zone_network();
         let flows = net.solve_flows(P_STD).unwrap();

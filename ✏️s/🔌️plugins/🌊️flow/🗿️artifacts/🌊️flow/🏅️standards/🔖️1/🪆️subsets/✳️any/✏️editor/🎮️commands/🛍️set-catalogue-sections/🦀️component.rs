@@ -22,7 +22,7 @@ mod tests {
     use crate::editor::flow::testkit::{dispatch, flow_app};
     use crate::editor::flow::FlowCommand;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn setting_catalogue_sections_emits_no_artifact_mutations() {
         let mut app = flow_app();
         let result = dispatch(&mut app, FlowCommand::SetCatalogueSections(SetCatalogueSections { sections_json: "[]".into() }));

@@ -306,7 +306,7 @@ impl store::ArtifactPack for Din18599Snapshot {
 //#endregion 🔖️HandcraftedArtifactCodecs
 
 impl Default for Din18599Snapshot {
-    async fn default() -> Self {
+    fn default() -> Self {
         let climate = crate::artifacts::din18599::din18599_climate_child_from_data(&MonthlyClimate {
             theta_e_c: [-14.0, -11.186533479473212, -3.4999999999999964, 7.000000000000001, 17.5, 25.186533479473212, 28.0, 25.186533479473212, 17.5, 7.000000000000001, -3.4999999999999964, -11.186533479473212],
             g_h_w_m2: [30.0, 60.0, 100.0, 140.0, 180.0, 200.0, 210.0, 190.0, 140.0, 90.0, 40.0, 20.0],

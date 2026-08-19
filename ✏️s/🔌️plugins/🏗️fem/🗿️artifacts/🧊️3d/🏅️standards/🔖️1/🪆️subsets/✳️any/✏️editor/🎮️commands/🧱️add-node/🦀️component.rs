@@ -27,7 +27,7 @@ mod tests {
     use crate::editor::fem3d::testkit::{dispatch, fem3d_app, Fem3dApp};
     use crate::editor::fem3d::Fem3dCommand;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_node_action_emits_op_3d() {
         let mut app: Fem3dApp = fem3d_app();
         dispatch(&mut app, Fem3dCommand::AddNode(AddNode { x: 1.0, y: 2.0, z: 3.0 }));
@@ -36,7 +36,7 @@ mod tests {
         assert_eq!((node.x, node.y, node.z), (1.0, 2.0, 3.0));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_material_action_emits_op_3d() {
         let mut app: Fem3dApp = fem3d_app();
         dispatch(&mut app, Fem3dCommand::AddMaterial(add_material::AddMaterial { name: "Steel".into(), e: 2.1e11, g: 8.1e10 }));
@@ -44,7 +44,7 @@ mod tests {
         assert_eq!(snapshot.materials.last().expect("material added").g, 8.1e10);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_section_action_emits_op_3d() {
         let mut app: Fem3dApp = fem3d_app();
         dispatch(&mut app, Fem3dCommand::AddSection(add_section::AddSection { name: "HEA200".into(), area: 0.00538, iy: 0.0000369, iz: 0.0000133, j: 0.0000006 }));
@@ -52,7 +52,7 @@ mod tests {
         assert_eq!(snapshot.sections.last().expect("section added").j, 0.0000006);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_frame_action_emits_op_3d() {
         let mut app: Fem3dApp = fem3d_app();
         dispatch(&mut app, Fem3dCommand::AddFrame(add_frame::AddFrame { start: "n1".into(), end: "n2".into(), material_id: "m1".into(), section_id: "s1".into(), roll: 0.5 }));
@@ -63,7 +63,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_solid_action_emits_set_solid_3d() {
         let mut app: Fem3dApp = fem3d_app();
         dispatch(&mut app, Fem3dCommand::AddSolid(add_solid::AddSolid { x: 0.0, y: 0.0, width: 2.0, depth: 1.0, height: 0.5, material_id: "concrete".into(), base_z: None, layers: None, mesh_size: None }));

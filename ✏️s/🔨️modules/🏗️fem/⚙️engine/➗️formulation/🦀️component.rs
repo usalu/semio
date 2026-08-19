@@ -187,7 +187,7 @@ pub async fn d_matrix_plane_strain(e: f64, nu: f64) -> MatD {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn gauss_1d_weights_sum_to_two() {
         for n in 1..=4 {
             let sum: f64 = gauss_1d(n).iter().map(|(_, w)| w).sum();
@@ -195,7 +195,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn gauss_tri_weights_sum_to_half() {
         for n in [1, 3, 7] {
             let sum: f64 = gauss_tri(n).iter().map(|(_, _, w)| w).sum();
@@ -203,7 +203,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn gauss_quad_weights_sum_to_four() {
         for n in 1..=4 {
             let sum: f64 = gauss_quad(n).iter().map(|(_, _, w)| w).sum();
@@ -211,7 +211,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn shape_tri3_partition_of_unity_and_node_values() {
         let (n, _) = shape_tri3(0.2, 0.3);
         assert!((n[0] + n[1] + n[2] - 1.0).abs() < 1e-12);
@@ -225,7 +225,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn shape_tri6_partition_of_unity_and_node_values() {
         let (n, _) = shape_tri6(0.15, 0.35);
         let sum: f64 = n.iter().sum();
@@ -240,7 +240,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn shape_quad4_partition_of_unity_and_node_values() {
         let (n, _) = shape_quad4(0.3, -0.4);
         let sum: f64 = n.iter().sum();
@@ -255,7 +255,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn shape_quad8_partition_of_unity_and_node_values() {
         let (n, _) = shape_quad8(0.25, -0.6);
         let sum: f64 = n.iter().sum();
@@ -270,7 +270,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn jacobian_of_axis_aligned_rectangle_is_diagonal() {
         let (lx, ly) = (4.0, 6.0);
         let coords = [[0.0, 0.0], [lx, 0.0], [lx, ly], [0.0, ly]];
@@ -283,13 +283,13 @@ mod tests {
         assert!((det_j - lx * ly / 4.0).abs() < 1e-9);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     #[should_panic(expected = "gauss_1d: unsupported order")]
     async fn gauss_1d_panics_on_unsupported_order() {
         gauss_1d(5);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     #[should_panic(expected = "gauss_tri: unsupported order")]
     async fn gauss_tri_panics_on_unsupported_order() {
         gauss_tri(2);

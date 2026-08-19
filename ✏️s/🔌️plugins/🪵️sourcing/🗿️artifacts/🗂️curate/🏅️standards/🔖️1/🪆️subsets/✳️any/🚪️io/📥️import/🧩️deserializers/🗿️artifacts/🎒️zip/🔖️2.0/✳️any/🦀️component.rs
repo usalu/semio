@@ -33,7 +33,7 @@ pub struct ZipIntoCurate;
 impl Deserializer<CurateSnapshot> for ZipIntoCurate {
     const FROM: Dialect = ZIP_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    async fn deserialize(payload: &IoPayload) -> IoResult<CurateSnapshot> {
+    fn deserialize(payload: &IoPayload) -> IoResult<CurateSnapshot> {
         let IoPayload::Binary(bytes) = payload else {
             return Err(IoError { message: "ZipIntoCurate: expected a binary zip payload".to_string(), diagnostics: Vec::new() });
         };

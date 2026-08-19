@@ -48,13 +48,13 @@ pub struct LayoutPoint {
 }
 
 impl From<(f64, f64)> for LayoutPoint {
-    async fn from((x, y): (f64, f64)) -> Self {
+    fn from((x, y): (f64, f64)) -> Self {
         Self { x, y }
     }
 }
 
 impl From<LayoutPoint> for (f64, f64) {
-    async fn from(point: LayoutPoint) -> Self {
+    fn from(point: LayoutPoint) -> Self {
         (point.x, point.y)
     }
 }

@@ -242,7 +242,7 @@ mod codec_tests {
         include_bytes!("../📚️examples/🎬️demo/🖼️assets/🔊️example.wav").to_vec()
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn sniffs_and_decodes_a_synthetic_fmt_chunk() {
         let snap = WavSnapshot { fmt: WavFmt { audio_format: 1, channels: 1, sample_rate: 8000, byte_rate: 16000, block_align: 2, bits_per_sample: 16, ext: None }, data: WavData::Pcm16(vec![0, 100, -100]), ..WavSnapshot::default() };
         let bytes = encode_wav(&snap);
@@ -252,7 +252,7 @@ mod codec_tests {
         assert_eq!(decoded.data, snap.data);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn sniff_rejects_non_wave_riff() {
         let mut bytes = b"RIFF".to_vec();
         bytes.extend_from_slice(&4u32.to_le_bytes());
@@ -266,7 +266,7 @@ mod codec_tests {
     /// independent confirmation, not reusing the decoder's own sample array) a freshly
     /// re-synthesized 440Hz reference tone, per `fixtures/wav/NOTES.md`'s own verification
     /// method.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn codec_retention_law() {
         let fixture = real_fixture();
         let decoded = decode_wav(&fixture).expect("decode real fixture");
@@ -308,7 +308,7 @@ mod codec_tests {
     //#endregion codec_retention_law
 
     //#region 🔖️OtherChunksRetention
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn other_chunks_round_trip_verbatim_in_order() {
         let snap = WavSnapshot {
             fmt: WavFmt { audio_format: 1, channels: 1, sample_rate: 44100, byte_rate: 88200, block_align: 2, bits_per_sample: 16, ext: None },
@@ -328,7 +328,7 @@ mod codec_tests {
     //#endregion 🔖️OtherChunksRetention
 
     //#region 🔖️ExtFmtRetention
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn extensible_fmt_chunk_round_trips_ext_bytes() {
         let snap = WavSnapshot {
             fmt: WavFmt {

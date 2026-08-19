@@ -270,7 +270,7 @@ mod tests {
         edges
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn chamfer_all_box_edges_reduces_volume() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
@@ -283,7 +283,7 @@ mod tests {
         assert!(vol1 < vol0 - 1e-6, "chamfered volume {vol1} should be < original {vol0}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fillet_one_edge_yields_solid() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
@@ -295,7 +295,7 @@ mod tests {
         assert!(vol > 0.0 && vol.is_finite());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fillet_variable_runs() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
@@ -305,7 +305,7 @@ mod tests {
         assert!(!body.solid_faces(out).is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn reject_zero_radius() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
@@ -316,7 +316,7 @@ mod tests {
         assert!(fillet_variable(&mut body, solid, edge, 0.0, 0.1, &mut rec).is_err());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn reject_empty_edges() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();

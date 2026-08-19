@@ -92,20 +92,20 @@ pub async fn render(document: &Puzzle3dSnapshot) -> UiNode {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn definition_declares_the_framework_mesh_window() {
         let def = definition();
         assert_eq!(def.id, WINDOW_KIND_ID);
         assert_eq!(def.id, "framework.window.mesh");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn render_produces_a_scene_node_for_the_default_document() {
         let document = Puzzle3dSnapshot::default();
         let _node = render(&document);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn instances_json_carries_one_entry_per_object() {
         let mut document = Puzzle3dSnapshot::default();
         document.objects.push(Puzzle3dObject {

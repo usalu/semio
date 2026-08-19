@@ -162,7 +162,7 @@ mod tests {
         GltfSnapshot { schema: "s.stdio.gltf".into(), document, buffers: b.buffers().to_vec(), source_form: GltfSourceForm::Json }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn deserialize_maps_linear_translation_channel_with_named_node() {
         let anim = semio_framework_plugin::resolve_ready(SemioAnimationFromGltf::deserialize(&real_world_gltf())).expect("deserialize");
         assert_eq!(anim.timelines.len(), 1);
@@ -175,7 +175,7 @@ mod tests {
         assert_eq!(ch.keyframes[1].value, AnimValue::Vec3 { value: SemioPoint3 { x: 1.0, y: 2.0, z: 3.0 } });
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn deserialize_strips_cubic_spline_tangents_keeping_only_the_real_value_third() {
         let anim = semio_framework_plugin::resolve_ready(SemioAnimationFromGltf::deserialize(&real_world_gltf())).expect("deserialize");
         let ch = &anim.timelines[0].channels[1];

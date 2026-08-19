@@ -105,7 +105,7 @@ impl store::ArtifactPack for LayoutConfig {
 
 
 impl Default for LayoutConfig {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self {
             active_page_id: "page-1".into(),
             drop_preview: LayoutDropPreviewState::default(),
@@ -258,7 +258,7 @@ impl Mutation<LayoutConfig> for LayoutConfigMutation {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn layout_config_default_matches_the_existing_runtime_defaults() {
         let config = LayoutConfig::default();
         assert_eq!(config.active_page_id, "page-1");
@@ -268,7 +268,7 @@ mod tests {
         assert_eq!(config.locale, "en-US");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn layout_config_dsl_and_pack_round_trip() {
         let config = LayoutConfig {
             active_page_id: "page-2".into(),
@@ -304,7 +304,7 @@ mod tests {
         forward
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn config_mutations_apply_and_restore_every_field() {
         let base = LayoutConfig::default();
         assert_eq!(config_round_trip(&base, &LayoutConfigMutation::SetActivePage { page_id: "page-9".into() }).active_page_id, "page-9");
@@ -318,13 +318,13 @@ mod tests {
         assert_eq!(config_round_trip(&base, &LayoutConfigMutation::SetLocale { value: "de-DE".into() }).locale, "de-DE");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn config_snapshot_op_text_round_trips() {
         store::os_store::test_support::assert_op_line_round_trip(&LayoutConfigMutation::SetActivePage { page_id: "page-2".into() });
         store::os_store::test_support::assert_op_line_round_trip(&LayoutConfigMutation::SetLocale { value: "en-US".into() });
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn config_mutation_inverses_restore_each_field_without_a_snapshot_sentinel() {
         let base = sample_config();
         assert_eq!(config_round_trip(&base, &LayoutConfigMutation::SetActivePage { page_id: "page-9".into() }).active_page_id, "page-9");

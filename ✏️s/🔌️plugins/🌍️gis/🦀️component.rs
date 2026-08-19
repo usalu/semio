@@ -64,22 +64,22 @@ mod surface_tests {
     use crate::viewer::gisterrain::GisTerrainViewer;
     use semio_framework_plugin::testkit::{assert_editor_and_viewer_share_dialect, assert_viewer_never_mutates};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn gismap_viewer_never_mutates() {
         assert_viewer_never_mutates::<GisMapViewer>();
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn gismap_editor_and_viewer_share_dialect() {
         assert_editor_and_viewer_share_dialect::<Gis2dPlayApp, GisMapViewer>();
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn gisterrain_viewer_never_mutates() {
         assert_viewer_never_mutates::<GisTerrainViewer>();
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn gisterrain_editor_and_viewer_share_dialect() {
         assert_editor_and_viewer_share_dialect::<Gis3dPlayApp, GisTerrainViewer>();
     }

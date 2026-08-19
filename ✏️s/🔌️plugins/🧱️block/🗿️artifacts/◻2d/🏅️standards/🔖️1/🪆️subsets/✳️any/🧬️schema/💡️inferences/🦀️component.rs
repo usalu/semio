@@ -129,18 +129,18 @@ mod tests {
     //#endregion 🧸️Fixtures
 
     //#region 🧪️InferenceLaws
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = snapshot_with_handles(vec![handle("h0", 0.0, 1.0), handle("h1", FRAC_PI_2, 2.0)]);
         assert_eq!(Block2dInference::infer(&snapshot), Block2dInference::infer(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(Block2dInference::infer(&Block2dSnapshot::default()), Block2dInference::default());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn bounds_convert_polar_handles_to_cartesian() {
         let snapshot = snapshot_with_handles(vec![handle("h0", 0.0, 1.0), handle("h1", FRAC_PI_2, 2.0)]);
         let inferred = Block2dInference::infer(&snapshot);
@@ -154,7 +154,7 @@ mod tests {
     //#endregion 🧪️InferenceLaws
 
     //#region 🧪️PuzzleCatalogFragment
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn puzzle2d_manifest_fragment_maps_kind_identity_and_handles() {
         let mut definition = Block2dSnapshot { schema: BLOCK_2D_SCHEMA.into(), node_kind: BlockKindIdentity { id: "left".into(), name: "left".into(), label: "Left".into(), ..Default::default() }, ..Block2dSnapshot::default() };
         definition.handle_kinds.push(Block2dHandleKind { id: "b-l".into(), name: "b-l".into(), label: "b-l".into(), color: "hsl(206 52% 48%)".into(), default_wire_kind: "cable.link".into() });

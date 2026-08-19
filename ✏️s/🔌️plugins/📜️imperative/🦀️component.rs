@@ -38,12 +38,12 @@ pub async fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyEr
 mod surface_tests {
     use semio_framework_plugin::testkit::{assert_editor_and_viewer_share_dialect, assert_viewer_never_mutates};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn imperative_viewer_never_mutates() {
         assert_viewer_never_mutates::<crate::viewer::imperative::ImperativeViewer>();
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn imperative_editor_and_viewer_share_dialect() {
         assert_editor_and_viewer_share_dialect::<crate::editor::imperative::ImperativePlayApp, crate::viewer::imperative::ImperativeViewer>();
     }

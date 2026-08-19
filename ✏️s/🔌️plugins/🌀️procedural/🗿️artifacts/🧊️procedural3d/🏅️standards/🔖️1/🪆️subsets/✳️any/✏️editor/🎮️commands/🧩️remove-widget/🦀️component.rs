@@ -35,7 +35,7 @@ mod tests {
     use crate::editor::procedural3d::Procedural3dCommand;
     use crate::editor::procedural3d::commands::{add_widget, patch_flow_widgets};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_widget_action_appends_widget() {
         let _serial = crate::editor::procedural3d::test_support::lock();
         let mut app = app();
@@ -44,7 +44,7 @@ mod tests {
         assert!(app.snapshot().expect("snapshot").fixture.widgets.len() > before);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn patch_flow_widgets_edits_slider_value() {
         let _serial = crate::editor::procedural3d::test_support::lock();
         let mut app = app();
@@ -55,7 +55,7 @@ mod tests {
         assert_eq!(value, Some(9.5));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn patch_flow_widgets_recomputes_preview_geometry() {
         let _serial = crate::editor::procedural3d::test_support::lock();
         let mut app = app();
@@ -74,7 +74,7 @@ mod tests {
         assert_ne!(before_meshes, after_meshes, "slider mutation must change the tessellated preview mesh");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn remove_widget_action_deletes_by_id() {
         let _serial = crate::editor::procedural3d::test_support::lock();
         let mut app = app();

@@ -47,7 +47,7 @@ pub struct Mp4Codec {
 }
 
 impl Default for Mp4Codec {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { sps: Vec::new(), pps: Vec::new(), nal_length_size: 4, extension: None }
     }
 }
@@ -90,7 +90,7 @@ pub struct Mp4Movie {
 }
 
 impl Default for Mp4Movie {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { creation_time: 0, modification_time: 0, timescale: 1000, duration: 0, rate: 0x0001_0000, volume: 0x0100, matrix: [0x0001_0000, 0, 0, 0, 0x0001_0000, 0, 0, 0, 0x4000_0000], next_track_id: 1, title: None, encoder: None }
     }
 }
@@ -122,7 +122,7 @@ pub struct Mp4VisualSampleEntry {
 }
 
 impl Default for Mp4VisualSampleEntry {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self {
             data_reference_index: 1,
             version: 0,
@@ -195,7 +195,7 @@ pub struct Mp4TrackMetadata {
 }
 
 impl Default for Mp4TrackMetadata {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self {
             creation_time: 0,
             modification_time: 0,
@@ -265,7 +265,7 @@ impl Default for Mp4Snapshot {
     /// 🌱️ A minimal but real, 4-byte-brand `ftyp` — `major_brand` MUST be exactly 4 ASCII bytes
     /// for a genuinely valid box (unlike an empty string, which `⚙️engine::encode_mp4` would have
     /// to pad, breaking the empty-snapshot round trip below).
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { schema: STDIO_MP4_DOCUMENT_SCHEMA.into(), ftyp: Mp4Ftyp { major_brand: "isom".into(), minor_version: 0, compatible_brands: Vec::new() }, movie: Mp4Movie::default(), tracks: Vec::new() }
     }
 }
@@ -340,7 +340,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn json_pack_round_trips_via_real_mp4_bytes() {
         let snap = sample_snapshot();
         let bytes = <Mp4Snapshot as store::ArtifactPack>::encode_pack(&snap);
@@ -348,7 +348,7 @@ mod tests {
         assert_eq!(snap, back);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dsl_text_round_trips_via_real_mp4_bytes() {
         let snap = sample_snapshot();
         let text = <Mp4Snapshot as store::ArtifactDsl>::print_dsl(&snap);
@@ -356,7 +356,7 @@ mod tests {
         assert_eq!(snap, back);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn default_snapshot_round_trips_through_real_codec() {
         let snap = Mp4Snapshot::default();
         let bytes = <Mp4Snapshot as store::ArtifactPack>::encode_pack(&snap);
@@ -364,7 +364,7 @@ mod tests {
         assert_eq!(snap, back);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn logical_snapshot_and_facets_have_no_shadow_state() {
         let model = format!("{:?}", sample_snapshot());
         for forbidden in ["unknownBoxes", "physical", "sourceBytes", "nativeArchive", "\"raw\""] {
@@ -399,7 +399,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn exact_fixture_survives_pack_and_dsl_codecs() {
         let path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../temp/bauen-mit-bestand.mp4");
         let bytes = std::fs::read(path).expect("read exact MP4 fixture");

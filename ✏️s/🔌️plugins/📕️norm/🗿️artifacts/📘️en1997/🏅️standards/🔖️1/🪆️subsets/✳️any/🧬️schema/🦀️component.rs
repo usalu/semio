@@ -62,13 +62,13 @@ pub struct En1997Artifact {
 
 //#region 🔖️Conversions
 impl Default for En1997Artifact {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self::from_snapshot(En1997Snapshot::default())
     }
 }
 
 impl From<En1997Snapshot> for En1997Artifact {
-    async fn from(snapshot: En1997Snapshot) -> Self {
+    fn from(snapshot: En1997Snapshot) -> Self {
         Self::from_snapshot(snapshot)
     }
 }
@@ -577,19 +577,19 @@ mod compliance_helpers_tests {
     use super::*;
     use crate::document::CheckStatus;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn bearing_factor_n_c_phi30() {
         let n_c = part_1::bearing_factor_n_c(30.0, 1.5, 2.0);
         assert!((n_c - 30.1).abs() < 0.5);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn shallow_foundation_e2e() {
         let report = check_shallow_foundation(500.0, 80.0, 2.0, 30.0, 0.0, 18.0, 2.0, 1.5, 30_000.0, 0.3, DesignApproach::Da1Str, AnnexChoice::De, 25.0);
         assert!(!report.checks.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn pile_design_resistance_worked() {
         let r_s = part_1::shaft_resistance_kn(0.7, 0.6, 80.0, 12.0);
         assert!((r_s - 1266.69).abs() < 1.0);
@@ -600,7 +600,7 @@ mod compliance_helpers_tests {
         assert!((r_c_d - expected).abs() < 1e-6);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn pile_correlation_factors_n2_matches_annex_a_table() {
         let (xi_3, xi_4) = part_1::pile_correlation_factors(2);
         assert!((xi_3 - 1.35).abs() < 1e-9);
@@ -612,14 +612,14 @@ mod compliance_helpers_tests {
         assert!((r_k - expected).abs() < 1e-6);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn pile_correlation_factors_boundary_cases() {
         assert_eq!(part_1::pile_correlation_factors(1), (1.40, 1.40));
         assert_eq!(part_1::pile_correlation_factors(5), (1.30, 1.15));
         assert_eq!(part_1::pile_correlation_factors(9), (1.30, 1.15));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn investigation_depth_check_pass_and_fail() {
         let b_m = 2.0;
         let min_depth = part_2::min_investigation_depth_m(b_m);
@@ -630,7 +630,7 @@ mod compliance_helpers_tests {
         assert_eq!(fail.status, CheckStatus::Fail);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn phi_from_cpt_worked_example() {
         let q_c_kpa = 15_000.0;
         let sigma_v0_kpa = 100.0;
@@ -640,14 +640,14 @@ mod compliance_helpers_tests {
         assert!(phi > 25.0 && phi < 45.0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn phi_from_spt_worked_example() {
         let phi = part_2::phi_from_spt_deg(20.0);
         let expected = 27.1 + 0.3 * 20.0 - 0.00054 * 20.0 * 20.0;
         assert!((phi - expected).abs() < 1e-9);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn da2_star_de_diverges_from_da2_en_on_same_footing() {
         let q_d_de = part_1::design_bearing_capacity_kpa(30.0, 0.0, 18.0, 2.0, 1.5, DesignApproach::Da2, AnnexChoice::De);
         let q_d_en = part_1::design_bearing_capacity_kpa(30.0, 0.0, 18.0, 2.0, 1.5, DesignApproach::Da2, AnnexChoice::En);

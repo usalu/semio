@@ -33,7 +33,7 @@ mod tests {
     use super::*;
     use crate::artifacts::writer::{schema, WriterSnapshot};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_binary_round_trips_and_agrees_with_text() {
         let operation = WriterMutation::EditText(crate::artifacts::writer::schema::mutations::EditText { text: "hello".into() });
         store::os_store::test_support::assert_op_text_binary_equivalence(&operation);
@@ -69,7 +69,7 @@ mod tests {
         ]
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn writer_document_text_round_trips_through_the_store() {
         let mut store = store::ArtifactStore::<WriterSnapshot, WriterMutation>::new(store::create_document_envelope("writer.document", "writer", schema::empty_writer_snapshot(), None)).expect("valid artifact store fixture");
         store.dispatch(store::ArtifactCommand::Apply { mutations: jack_mutations(), description: None }).expect("apply");
@@ -82,7 +82,7 @@ mod tests {
     /// 🎫️ CW7 command-envelope law (`POLICY_COMMAND_ENVELOPE_COMPLETENESS_ALLOWLIST`): proves
     /// `WriterMutation`'s `Edit` round-trips through `protocol::MutationEnvelope`s beside this file's
     /// existing pack round-trip law.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn command_envelope_round_trip_holds_for_an_applied_operation() {
         use protocol::{ArtifactId, Edit, SchemaId};
 
@@ -99,7 +99,7 @@ mod tests {
 mod semio_protocol_conformance {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn component_protocol_semio_is_protocol_dialect() {
         let g = ::dsl::parse_grammar(COMPONENT_PROTOCOL_SEMIO).expect("parse protocol.semio");
         assert_eq!(g.dialect, ::dsl::SemioDialect::Protocol);
@@ -107,7 +107,7 @@ mod semio_protocol_conformance {
         let _ = COMPONENT_PROTOCOL_PATH;
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn verify_protocol_bytes_against_encoded_spr() {
         let operation = WriterMutation::EditText(crate::artifacts::writer::schema::mutations::EditText { text: "hello".into() });
         let bytes = encode_op(&operation).expect("encode op");

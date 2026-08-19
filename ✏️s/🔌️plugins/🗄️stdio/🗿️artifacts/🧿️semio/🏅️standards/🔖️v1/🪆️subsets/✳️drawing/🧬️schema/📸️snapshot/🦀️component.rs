@@ -72,7 +72,7 @@ pub enum DrawNode {
 }
 
 impl Default for DrawNode {
-    async fn default() -> Self {
+    fn default() -> Self {
         DrawNode::Group { transform: SemioTransform::identity(), children: Vec::new() }
     }
 }
@@ -127,7 +127,7 @@ pub struct DrawCanvas {
 }
 
 impl Default for DrawCanvas {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { width: 0.0, height: 0.0, background: None }
     }
 }
@@ -155,7 +155,7 @@ pub struct SemioDrawingSnapshot {
 }
 
 impl Default for SemioDrawingSnapshot {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { schema: STDIO_SEMIODRAWING_DOCUMENT_SCHEMA.into(), canvas: DrawCanvas::default(), styles: Vec::new(), layers: Vec::new() }
     }
 }
@@ -823,7 +823,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn json_pack_round_trips() {
         let snap = sample();
         let bytes = <SemioDrawingSnapshot as store::ArtifactPack>::encode_pack(&snap);
@@ -831,7 +831,7 @@ mod tests {
         assert_eq!(snap, back);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dsl_text_round_trips() {
         let snap = sample();
         let text = <SemioDrawingSnapshot as store::ArtifactDsl>::print_dsl(&snap);
@@ -839,7 +839,7 @@ mod tests {
         assert_eq!(snap, back);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn default_snapshot_round_trips() {
         let snap = SemioDrawingSnapshot::default();
         let bytes = <SemioDrawingSnapshot as store::ArtifactPack>::encode_pack(&snap);
@@ -850,7 +850,7 @@ mod tests {
     /// 🧪️ Every `PathSegment`/`DrawNode` variant (incl. nested `Group.children` recursion) round-
     /// trips through both the pack binary and the dsl text codec — the demo fixture used by the
     /// fixture-honesty conformance law.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn demo_snapshot_round_trips_pack_and_dsl() {
         let demo = demo_drawing_snapshot();
         let packed = <SemioDrawingSnapshot as store::ArtifactPack>::encode_pack(&demo);

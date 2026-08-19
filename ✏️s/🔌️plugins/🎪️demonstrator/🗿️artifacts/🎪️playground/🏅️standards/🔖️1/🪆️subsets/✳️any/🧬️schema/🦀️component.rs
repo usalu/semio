@@ -16,7 +16,7 @@ pub struct PlaygroundArtifact {
 
 //#region 🔖️Conversions
 impl Default for PlaygroundArtifact {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self {
             schema: crate::artifacts::playground::PLAYGROUND_DOCUMENT_SCHEMA.into(),
         }
@@ -195,7 +195,7 @@ pub mod derived_analysis {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn empty_snapshot_matches_schema() {
         let snapshot = empty_playground_snapshot();
         assert_eq!(snapshot.schema, crate::artifacts::playground::PLAYGROUND_DOCUMENT_SCHEMA);

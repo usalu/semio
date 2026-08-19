@@ -138,7 +138,7 @@ mod tests {
         forward
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn every_scalar_change_round_trips() {
         let base = Din4108Snapshot::default();
 
@@ -194,7 +194,7 @@ mod tests {
         assert_eq!(after.declared_application_class, "kh");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn insert_remove_layer_round_trips() {
         let base = Din4108Snapshot::default();
         let new_layer = LayerDocument { thickness_m: 0.05, lambda_w_mk: 0.04 };
@@ -213,7 +213,7 @@ mod tests {
         assert_eq!(after_remove.layers[0], base.layers[1]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn remove_layer_of_an_out_of_range_index_is_rejected() {
         let base = Din4108Snapshot::default();
         let remove = Din4108Mutation::RemoveLayer(remove_layer::mutation::RemoveLayer { index: 99 });
@@ -221,7 +221,7 @@ mod tests {
         protocol::testkit::assert_missing_target_is_error(&base, &remove);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn reorder_layers_round_trips() {
         let base = Din4108Snapshot::default();
         assert!(base.layers.len() >= 2, "fixture must have at least two layers to exercise reorder");
@@ -232,7 +232,7 @@ mod tests {
         assert_eq!(after.layers[1], base.layers[0]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn change_layer_thickness_and_lambda_round_trip() {
         let base = Din4108Snapshot::default();
 
@@ -249,7 +249,7 @@ mod tests {
         assert!(missing.inverse(&base).is_empty(), "changing an absent index has nothing to undo");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn semantic_kinds_cover_every_variant() {
         assert_eq!(Din4108Mutation::kinds().len(), 22);
         let mutation = Din4108Mutation::ChangeCategory(change_category::mutation::ChangeCategory { new_category: "x".into() });

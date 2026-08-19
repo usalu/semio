@@ -1372,7 +1372,7 @@ mod tests {
     }
 
     //#region 🔖️Operations
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_node_action_emits_upsert_op_and_appends_node() {
         let mut app = app();
         let result = dispatch(&mut app, "addNode", Some(&json!({ "kind": "node" })), None).expect("add node");
@@ -1380,7 +1380,7 @@ mod tests {
         assert_eq!(fixture_nodes(&fixture_of(&app)).len(), 1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_active_example_loads_concrete_forest_via_operations() {
         let mut app = app();
         dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID })), None).expect("load example");
@@ -1390,13 +1390,13 @@ mod tests {
     /// 📦️ `Puzzle2dPlaySnapshot`'s pack encoding round-trips through the same `(RecordSpec,
     /// RecordValue)` pair its `parse_dsl`/`print_dsl` do (both delegate to the underlying
     /// `serde_json::Value` bridge impls).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn puzzle2d_play_projection_pack_round_trips() {
         let app = concrete_forest_app();
         semio_framework_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&app.snapshot().expect("projection"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn select_then_delete_selection_removes_the_node() {
         let mut app = app_with_registry();
         dispatch(&mut app, "addNode", Some(&json!({ "kind": "node" })), None).expect("add node");
@@ -1406,7 +1406,7 @@ mod tests {
         assert!(fixture_nodes(&fixture_of(&app)).is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn undo_redo_round_trip_through_the_wrapper() {
         let mut app = app();
         dispatch(&mut app, "addNode", Some(&json!({ "kind": "node" })), None).expect("add");
@@ -1424,7 +1424,7 @@ mod tests {
     /// `Puzzle2dPlaySnapshot` (the `🔖️ValueBridge` `serde_json::Value` wrapper this app still uses)
     /// — since `Puzzle2dMutation`'s canonical `Mutation<Puzzle2dSnapshot>` impl (not its
     /// `Mutation<Value>` bridge impl) is what the CW7 law is about.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn command_envelope_round_trip_holds_for_an_applied_operation() {
         use crate::artifacts::puzzle2d::spr::Puzzle2dStore;
         use crate::artifacts::puzzle2d::{Puzzle2dNode, PUZZLE_2D_SCHEMA};
@@ -1442,7 +1442,7 @@ mod tests {
     //#region 🔖️BoardEvents
     /// 🎥️ `setCamera` is session-only view state: a camera drag never creates a VCS edit, so there is
     /// nothing to coalesce and nothing for `undo` to revert.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_camera_is_session_only_and_never_undoable() {
         let mut app = app();
         for x in [1.0, 2.0, 3.0] {
@@ -1461,7 +1461,7 @@ mod tests {
     /// rebuilds, so every edge looked "new" and got re-`push_event`'d as `edgeCreate` — which
     /// `apply_host_events` then replayed into the fixture on the *next* action, duplicating every edge
     /// once per action forever.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn repeated_actions_do_not_duplicate_edges() {
         let mut app = app();
         dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": PUZZLE2D_PLAY_EXAMPLE_NAKAGIN_ID })), None).expect("load nakagin");
@@ -1478,7 +1478,7 @@ mod tests {
     /// 🪞️ Regression test: `applyBoardEvents`'s `select` case only mutated the runtime, never the
     /// host, so `apply_host_events`'s `host.selection`-is-truth re-sync silently reverted the
     /// selection to whatever the host held before the action (empty, on a fresh sync).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn apply_board_events_select_persists_across_the_next_action() {
         let mut app = concrete_forest_app();
         let node_id = first_node_id(&app);
@@ -1492,7 +1492,7 @@ mod tests {
     /// 🪞️ Regression test: `apply_host_events` used to epsilon-compare `host.camera` (still the
     /// *pre-action* value) against the runtime and blindly overwrite it, reverting a plain `camera`
     /// board event (used for the live wheel-zoom echo) before it ever committed.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn apply_board_events_camera_event_commits() {
         let mut app = app();
         let result = dispatch(&mut app, "applyBoardEvents", Some(&json!({ "eventsJson": json!([{ "name": "camera", "payload": { "x": 5.0, "y": 6.0, "zoom": 1.2 } }]).to_string() })), None).expect("camera event");
@@ -1506,7 +1506,7 @@ mod tests {
     /// 🐢️ A pure selection change is runtime state, not document state — it must not produce any
     /// operations (previously it fell back to a whole-document replace once the edge-duplication bug
     /// made `before` and `after` genuinely diverge).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn select_action_emits_no_operations() {
         let mut app = concrete_forest_app();
         let node_id = first_node_id(&app);
@@ -1519,7 +1519,7 @@ mod tests {
     /// 🐢️ Perf round 3: a select event must declare a narrow `Partial` ui_scope (the 3 canvas panes +
     /// layers/properties panels + engagements) — never `Full`, or the shell's batched `refresh-ui`
     /// call degrades back to fetching everything on every select.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn select_action_declares_partial_ui_scope() {
         let mut app = concrete_forest_app();
         let node_id = first_node_id(&app);
@@ -1544,7 +1544,7 @@ mod tests {
 
     /// 🐢️ Perf round 3: a camera-only board event touches only the 3 canvas panes — no panels,
     /// engagements, measures, or utilities.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn camera_event_declares_window_only_ui_scope() {
         let mut app = app();
         let result = dispatch(&mut app, "applyBoardEvents", Some(&json!({ "eventsJson": json!([{ "name": "camera", "payload": { "x": 1.0, "y": 2.0, "zoom": 1.0 } }]).to_string() })), None).expect("camera event");
@@ -1560,7 +1560,7 @@ mod tests {
 
     /// 🐢️ Perf round 3: an empty `applyBoardEvents` batch (no-operation) must declare nothing beyond the
     /// history panel body — the View action still logs a command-history entry, but no board surface is dirtied.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn empty_board_events_declare_none_ui_scope() {
         let mut app = app();
         let result = dispatch(&mut app, "applyBoardEvents", Some(&json!({ "eventsJson": "[]" })), None).expect("no-operation");
@@ -1576,7 +1576,7 @@ mod tests {
 
     /// 🐢️ Perf round 3: cold-tier structural actions (document operations) must keep the safe `Full`
     /// default — no puzzle2d scope helper narrows them.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_node_action_declares_full_ui_scope() {
         let mut app = app();
         let result = dispatch(&mut app, "addNode", Some(&json!({ "kind": "node" })), None).expect("add node");
@@ -1585,7 +1585,7 @@ mod tests {
     //#endregion 🔖️UiScope
 
     //#region 🔖️Manifest
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn app_definition_has_three_lod_pane_window_kinds() {
         let definition = create_puzzle2d_app();
         let ids: Vec<&str> = definition.window_kinds.iter().map(|window| window.id.as_str()).collect();
@@ -1598,7 +1598,7 @@ mod tests {
 
     /// 🧰️ The app declares exactly the select/brush canvas utilities and binds them to the interactive
     /// overview pane; fill is declared as a mode-level tool instead.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn utility_registry_declares_utilities() {
         let definition = create_puzzle2d_app();
         let ids: Vec<&str> = definition.utilities.iter().map(|utility| utility.id.as_str()).collect();
@@ -1615,7 +1615,7 @@ mod tests {
     }
 
     /// 🛠️ Fill is a mode-level tool (a whole-document generator), not a window utility.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn tool_registry_declares_fill_tool() {
         use semio_framework_plugin::{ToolRef, SET_ACTIVE_TOOL_ACTION_ID};
         let definition = create_puzzle2d_app();
@@ -1628,7 +1628,7 @@ mod tests {
     /// 🎥️ The camera is session-only runtime state, never a document field — a DWG import (which has
     /// no live app instance to receive a runtime write) must produce a bare empty board with no
     /// `"camera"` key at all, regardless of the drawing's extents.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dwg_import_returns_empty_board_with_no_camera_field() {
         let drawing = semio_s_plugin_stdio::artifacts::dwg::DwgDrawing { extmin: [0.0, 0.0, 0.0], extmax: [100.0, 200.0, 0.0], ..semio_s_plugin_stdio::artifacts::dwg::DwgDrawing::default() };
         let fixture = puzzle2d_document_json_from_dwg(&drawing).unwrap();
@@ -1642,7 +1642,7 @@ mod tests {
     /// 🧪️ Definitional convergence proof: two instances on one backbone make DISJOINT node edits
     /// (each adds its own node) and, after exchanging operations, both converge to contain BOTH nodes —
     /// impossible under whole-document `setSnapshot` snapshots, which would clobber one side.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn two_instances_converge_disjoint_node_edits_via_backbone() {
         let mut instance_a = app();
         let mut instance_b = app();
@@ -1661,7 +1661,7 @@ mod tests {
         assert_eq!(fixture_nodes(&fixture_of(&instance_b)).len(), 2, "instance B must contain both nodes");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn ingest_operations_is_idempotent() {
         let mut sender = app();
         let (near, mut far) = MemoryBackbone::pair("mem://puzzle2d-doc", "mem://puzzle2d-doc");
@@ -1688,7 +1688,7 @@ mod tests {
     /// 🧰️ B1: `setActiveUtility` is a real typed `Puzzle2dCommand` now (was a host-applied `ViewModel`
     /// notification): switching utilities must still emit no DOCUMENT operations — the new value lands
     /// in `Puzzle2dConfig::active_utility_by_window_id` as a config operation instead.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn utility_switch_emits_no_ops_and_no_history() {
         let mut app = app_with_registry();
         let result = dispatch(&mut app, SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": brush_utility::UTILITY_ID })), Some(overview::WINDOW_KIND_ID)).expect("switch utility");
@@ -1699,7 +1699,7 @@ mod tests {
 
     /// 🧭️ Kind discipline: every View-declared runtime/host action must run through the registry
     /// without tripping the "must not emit operations" guard (proving each is correctly classified).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn view_actions_emit_no_ops_through_the_registry() {
         let mut app = app_with_registry();
         dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID })), None).expect("load example");
@@ -1732,7 +1732,7 @@ mod tests {
 
     /// 🗂️ Grouped-context-menu disclosure: the top-level row budget stays small (leaves+groups
     /// combined) and the known `deleteSelection` destructive row stays last.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn context_menu_grouped_disclosure_stays_within_budget_and_keeps_destructive_last() {
         use semio_framework_plugin::{ContextMenuRequest, ContextMenuSelectionGroup, ContextMenuSurfaceTarget, UiMenuRef};
 

@@ -385,7 +385,7 @@ mod op_codec_tests {
 
     /// 🧪️ F6/P2-FG1: `OpText`/`OpBinary` round-trip laws for the hand-rolled `MdMutation` grammar —
     /// see `demo_mutation_cases()`'s own doc comment for exactly what each case exercises.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_text_binary_roundtrip_law() {
         for mutation in demo_mutation_cases() {
             let printed = mutation.print_op();

@@ -1325,7 +1325,7 @@ pub struct Puzzle5dPlayApp {
 }
 
 impl Default for Puzzle5dPlayApp {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { precompute: RefCell::new(Puzzle5dPrecomputeSession::new()), registered_mesh_urls: RefCell::new(HashSet::new()) }
     }
 }
@@ -2169,21 +2169,21 @@ mod tests {
     use semio_framework_plugin::{ContextMenuRequest, ContextMenuSelectionGroup, ContextMenuSurfaceTarget, PluginApp, UiMenuRef};
 
     //#region 🔖️Rendering
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn renders_paired_board_and_world_scenes() {
         let mut app = app();
         assert!(render_body(&mut app, board2d::BODY_KEY).contains("board-2d"));
         assert!(render_body(&mut app, world3d::BODY_KEY).contains("world-3d"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn initial_snapshot_is_the_concrete_forest_document() {
         let app = app();
         assert_eq!(projection_of(&app).get("schema").and_then(|value| value.as_str()), Some(PUZZLE5D_SCHEMA));
         assert!(part_count(&app) > 0, "the concrete-forest default document ships with parts");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn document_panel_renders() {
         let mut app = app();
         assert!(!render_body(&mut app, document_panel::BODY_KEY).is_empty());
@@ -2194,7 +2194,7 @@ mod tests {
     /// 🗂️ GROUPED-PROGRESSIVELY-DISCLOSED-CONTEXT-MENUS: the selection context menu stays a shallow,
     /// disclosed list (top-level verbs + a handful of taxonomy groups) rather than a flat wall of rows,
     /// and the known destructive `deleteSelection` action stays the trailing group's last item.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn context_menu_is_grouped_and_keeps_delete_selection_last() {
         let mut app = app_with_registry();
         let part_id = first_part_id(&app);
@@ -2218,7 +2218,7 @@ mod tests {
     /// 📦️ `Puzzle5dPlaySnapshot`'s pack encoding round-trips through the same `(RecordSpec,
     /// RecordValue)` pair its `parse_dsl`/`print_dsl` do (both delegate to the underlying
     /// `serde_json::Value` bridge impls), reusing the default concrete-forest fixture.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn puzzle5d_play_projection_pack_round_trips() {
         let app = app();
         semio_framework_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&app.snapshot().expect("projection"));
@@ -2226,7 +2226,7 @@ mod tests {
     //#endregion 🔖️Pack
 
     //#region 🔖️Operations
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_active_example_swaps_the_document_and_undo_restores_it() {
         let mut app = app();
         let loaded = part_count(&app);
@@ -2239,7 +2239,7 @@ mod tests {
         assert_eq!(part_count(&app), 0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn patch_fastener_updates_transform_offsets_and_undoes() {
         let mut app = app();
         dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": PUZZLE5D_EXAMPLE_NAKAGIN })), None).expect("load nakagin (has fasteners)");
@@ -2270,7 +2270,7 @@ mod tests {
     /// `Puzzle5dPlaySnapshot` (the `🔖️ValueBridge` `serde_json::Value` wrapper this app's real
     /// `ArtifactApp` still uses) — since `Puzzle5dMutation`'s canonical `Mutation<Puzzle5dSnapshot>`
     /// impl (not its `Mutation<Value>` bridge impl) is what the CW7 law is about.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn command_envelope_round_trip_holds_for_an_applied_operation() {
         use crate::artifacts::puzzle5d::spr::Puzzle5dStore;
         use crate::artifacts::puzzle5d::{Puzzle5dPart, Puzzle5dPart2d, Puzzle5dPart3d, PUZZLE_5D_SCHEMA};
@@ -2286,7 +2286,7 @@ mod tests {
     //#endregion 🔖️CommandEnvelopeTests
 
     //#region 🔖️Clipboard
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn copy_emits_clipboard_fragment_for_the_closed_selection() {
         let mut app = app_with_registry();
         dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": PUZZLE5D_EXAMPLE_NAKAGIN })), None).expect("load nakagin");
@@ -2301,7 +2301,7 @@ mod tests {
         assert_eq!(fragment_value["parts"].as_array().expect("parts").len(), 1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn copy_with_no_selection_is_a_benign_no_operation() {
         let mut app = app();
         let result = app.handle_action("copy", None, &meta("local")).expect("copy");
@@ -2309,7 +2309,7 @@ mod tests {
         assert!(result.requested_effects.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn cut_removes_selected_part_and_undo_restores_it() {
         let mut app = app_with_registry();
         dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": PUZZLE5D_EXAMPLE_NAKAGIN })), None).expect("load nakagin");
@@ -2325,7 +2325,7 @@ mod tests {
         assert_eq!(part_count(&app), before_count, "one undo restores the cut part as a single edit");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn paste_materializes_fragment_parts_at_original_anchor_with_fresh_ids() {
         let mut app = app_with_registry();
         dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": PUZZLE5D_EXAMPLE_NAKAGIN })), None).expect("load nakagin");
@@ -2349,7 +2349,7 @@ mod tests {
         assert_eq!(part_count(&app), before_count, "one undo removes the whole pasted fragment");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn paste_with_no_fragment_arg_is_a_benign_no_operation() {
         let mut app = app();
         let before_count = part_count(&app);
@@ -2360,14 +2360,14 @@ mod tests {
     //#endregion 🔖️Clipboard
 
     //#region 🔖️Manifest
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn app_definition_has_the_paired_windows() {
         let definition = create_puzzle5d_app();
         let ids: Vec<&str> = definition.window_kinds.iter().map(|window| window.id.as_str()).collect();
         assert!(ids.contains(&board2d::WINDOW_KIND_ID) && ids.contains(&world3d::WINDOW_KIND_ID));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn window_kind_actions_scope_transform_to_3d_only() {
         let definition = create_puzzle5d_app();
         let resolve = |window_id: &str| -> Vec<String> {
@@ -2389,7 +2389,7 @@ mod tests {
 
     /// 📑️ The three declared panel tabs must survive the `panel_tab_def` stitch. Asserts PRESENCE
     /// only — the framework injects tabs of its own, so a total count would be brittle.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn app_definition_declares_its_three_panel_tabs() {
         let definition = create_puzzle5d_app();
         let body_keys: Vec<&str> = definition.panel_tabs.iter().filter_map(|tab| tab.body_key.as_deref()).collect();
@@ -2398,7 +2398,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn window_engagements_cover_both_windows() {
         let mut app = app();
         let engagements = app.window_engagements();
@@ -2412,7 +2412,7 @@ mod tests {
     /// `assert_declared_actions_bridge_to_commands`, which probes `command_from_action`, the
     /// string-dispatch path this app does not implement — its commands carry an opaque `args: Value`,
     /// see the `🔖️Puzzle5dCommand` macro.)
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn every_dispatched_action_bridges_to_a_command() {
         for action in [
             "setFixtureJson",
@@ -2468,7 +2468,7 @@ mod tests {
     //#endregion 🔖️Manifest
 
     //#region 🧰️ Window Actions & Utilities contract
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_part_kind_materializes_the_declared_kind_default() {
         // 📝️ P1 arg form: addPartKind with no args materializes the declared `partKind` default and adds a part.
         let mut app = app_with_registry();
@@ -2482,7 +2482,7 @@ mod tests {
         assert_eq!(kind, Some("Part"), "the declared partKind default was materialized host-side");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_active_utility_emits_no_ops_and_no_history_entry() {
         // 🧰️ Switching utilities is the framework View action: no document operations, no undo entry, no re-emitted effect.
         let mut app = app_with_registry();
@@ -2493,7 +2493,7 @@ mod tests {
         assert_eq!(projection_of(&app), before, "utility switching does not mutate the document");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_camera_actions_write_runtime_and_emit_no_operations() {
         // 📷️ Camera pose is session-only view state (`ActionKind::View`): `setCamera2d`/`setCamera3d`
         // must mutate the app's runtime (visible via the rendered scene) without ever touching the
@@ -2512,7 +2512,7 @@ mod tests {
         assert!(world.contains("42.5") && world.contains("7.5") && world.contains("1.5"), "the new 3D camera pose must be reflected in the rendered runtime state");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn engagements_expose_no_utility_switch_options_for_either_window() {
         // 🧰️ select/brush/fill switching lives only on the framework utility bar; neither the 2D nor the 3D
         // engagement HUD may duplicate it as options.
@@ -2526,7 +2526,7 @@ mod tests {
     /// 🎯️ D-3 follow-up: the fill-count slider and brush placement picker are tagged `WindowMeasure::Group`s
     /// in each window's `window_measures` (surfaced by `partition_window_measures` only for their active
     /// utility), never `WindowEngagementControl`s on the HUD — for both the 2D and 3D windows.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fill_and_brush_params_are_tagged_utility_options_not_engagement_controls() {
         let labels = puzzle5d_labels(&Puzzle5dConfig::default());
         let session = Puzzle5dPrecomputeSession::new();
@@ -2552,7 +2552,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn engagement_submit_switches_utility_via_host_effect_for_both_windows() {
         // 🧰️ Reconciled dual entry point: the engagement token drives the same host-owned utility switch, once per window.
         let mut app = app();
@@ -2568,7 +2568,7 @@ mod tests {
         assert!(windows.contains(&board2d::WINDOW_KIND_ID) && windows.contains(&world3d::WINDOW_KIND_ID), "brush switch is pushed to both windows, got {windows:?}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn gumball_translate_drag_coalesces_into_one_edit() {
         // 🌀️ Coalescing regression: three translate ticks with the same key are ONE undoable edit.
         let mut app = app();
@@ -2597,7 +2597,7 @@ mod tests {
     /// `Puzzle5dPlayApp::import_media` must normalize `objectKinds` into the typed
     /// `kindCatalogs.parts` (with each per-object `vortices[]` entry becoming a grip template) and
     /// `vortexKinds` into `kindCatalogs.grips`, and land both after applying the returned operations.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn kit_in_import_media_upserts_part_and_grip_kinds_into_kind_catalogs() {
         let app = Puzzle5dPlayApp::default();
         let projection = Puzzle5dPlayApp::initial_snapshot();
@@ -2651,7 +2651,7 @@ mod tests {
 
     /// 🔁️ Re-importing the SAME fragment (simulating a second producer edge, or a redelivered
     /// message on a `multiplicity: Many` port) must upsert idempotently — no duplicate rows.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn kit_in_import_media_is_idempotent_on_repeated_delivery() {
         let app = Puzzle5dPlayApp::default();
         let projection = Puzzle5dPlayApp::initial_snapshot();
@@ -2681,7 +2681,7 @@ mod tests {
         assert_eq!(catalogs.parts.iter().filter(|entry| entry.id == "capsule").count(), 1, "repeated delivery of the same fragment must upsert, never duplicate");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn kit_in_port_is_declared_on_the_app_io() {
         let app = Puzzle5dPlayApp::default();
         let io = Puzzle5dPlayApp::io().expect("puzzle5d declares an AppIo");

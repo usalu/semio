@@ -23,7 +23,7 @@ mod tests {
     use crate::editor::mathematical::testkit::math_app;
     use crate::editor::mathematical::MathematicalCommand;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_locale_writes_config_not_mutations() {
         let mut app = math_app();
         let result = app.dispatch_typed(MathematicalCommand::SetLocale(SetLocale { value: "de-DE".into() }), &semio_framework_plugin::testkit::meta("local")).expect("locale");

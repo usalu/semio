@@ -161,7 +161,7 @@ mod tests {
         forward
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn every_variant_registers_an_approved_semantic_descriptor() {
         for mutation in every_mutation() {
             let descriptor = protocol::SemanticMutation::semantics(&mutation);
@@ -170,7 +170,7 @@ mod tests {
         assert_eq!(<En1996Mutation as protocol::SemanticMutation<En1996Snapshot>>::kinds().len(), every_mutation().len(), "kinds() must register exactly one descriptor per dispatch variant");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn every_variant_round_trips_via_inverse() {
         let base = En1996Snapshot::default();
         for mutation in every_mutation() {
@@ -183,7 +183,7 @@ mod tests {
     /// (reachable here as `protocol::os_spr::testkit`), exercised against three structurally distinct
     /// variants: an enum scalar (`change-annex`), a plain `f64` scalar (`change-m-ed-knm`), and a
     /// `String` scalar (`change-unit`).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn change_annex_satisfies_the_inverse_and_absorb_laws() {
         let base = En1996Snapshot::default();
         let mutation = En1996Mutation::ChangeAnnex(change_annex::mutation::ChangeAnnex { new_annex: crate::document::AnnexChoice::En });
@@ -192,7 +192,7 @@ mod tests {
         let d2 = En1996Mutation::ChangeUnit(change_unit::mutation::ChangeUnit { new_unit: "calcium_silicate".to_string() }).diff(&base).diff().clone();
         protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn change_m_ed_knm_satisfies_the_inverse_and_absorb_laws() {
         let base = En1996Snapshot::default();
         let mutation = En1996Mutation::ChangeMEdKnm(change_m_ed_knm::mutation::ChangeMEdKnm { new_m_ed_knm: 12.5 });
@@ -201,7 +201,7 @@ mod tests {
         let d2 = En1996Mutation::ChangeStoreys(change_storeys::mutation::ChangeStoreys { new_storeys: 4 }).diff(&base).diff().clone();
         protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn change_unit_satisfies_the_inverse_and_absorb_laws() {
         let base = En1996Snapshot::default();
         let mutation = En1996Mutation::ChangeUnit(change_unit::mutation::ChangeUnit { new_unit: "calcium_silicate".to_string() });
@@ -217,7 +217,7 @@ mod tests {
     /// this facet is entirely one verb family (root-scoped `change-<field>`) — see en1992's own
     /// `🔖️OutcomeLaws` note for why `assert_missing_target_is_error`/`assert_outcome_policy_matrix`
     /// don't apply/aren't landed yet.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn change_m_ed_knm_non_finite_is_fatal() {
         let base = En1996Snapshot::default();
         let mutation = En1996Mutation::ChangeMEdKnm(change_m_ed_knm::mutation::ChangeMEdKnm { new_m_ed_knm: f64::NAN });
@@ -226,7 +226,7 @@ mod tests {
         assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn change_masonry_class_same_value_is_no_op() {
         let base = En1996Snapshot::default();
         let mutation = En1996Mutation::ChangeMasonryClass(change_masonry_class::mutation::ChangeMasonryClass { new_masonry_class: base.masonry_class });
@@ -235,7 +235,7 @@ mod tests {
         assert_eq!(outcome.diff(), &En1996Diff::default());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn change_m_ed_knm_is_deterministic() {
         let base = En1996Snapshot::default();
         let mutation = En1996Mutation::ChangeMEdKnm(change_m_ed_knm::mutation::ChangeMEdKnm { new_m_ed_knm: 12.5 });

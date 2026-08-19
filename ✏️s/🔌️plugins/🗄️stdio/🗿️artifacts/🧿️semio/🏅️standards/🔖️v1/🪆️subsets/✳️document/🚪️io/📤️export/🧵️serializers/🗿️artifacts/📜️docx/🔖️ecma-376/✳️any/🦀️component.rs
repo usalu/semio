@@ -92,7 +92,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn maps_heading_paragraph_and_table() {
         let docx = semio_framework_plugin::resolve_ready(SemioDocumentToDocx::serialize(&sample_semio())).expect("serialize");
         assert_eq!(docx.document.styles.len(), 1);
@@ -102,7 +102,7 @@ mod tests {
         assert!(matches!(&docx.document.body[2], DocxBlock::Table(t) if t.rows.len() == 1));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn list_and_quote_flatten_image_and_pagebreak_drop() {
         let snap = SemioDocumentSnapshot {
             schema: STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA.into(),

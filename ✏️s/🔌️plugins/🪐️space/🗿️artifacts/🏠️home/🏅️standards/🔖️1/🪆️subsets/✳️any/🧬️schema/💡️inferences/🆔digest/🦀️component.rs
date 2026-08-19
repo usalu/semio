@@ -25,13 +25,13 @@ pub async fn compute_content_digest(snapshot: &SHomeSnapshot) -> String {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn same_snapshot_yields_same_digest() {
         let snapshot = SHomeSnapshot { schema: "s.home".into(), catalog_generation: 3 };
         assert_eq!(compute_content_digest(&snapshot), compute_content_digest(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn changing_generation_changes_digest() {
         let a = SHomeSnapshot { schema: "s.home".into(), catalog_generation: 3 };
         let mut b = a.clone();

@@ -80,7 +80,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn folds_min_max_across_spatial_and_element_placements() {
         let bounds = compute_semio_model_bounds(&populated());
         assert_eq!(bounds.entity_count, 3);
@@ -88,13 +88,13 @@ mod tests {
         assert_eq!(bounds.max, SemioPoint3 { x: 10.0, y: 0.0, z: 3.0 });
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = populated();
         assert_eq!(compute_semio_model_bounds(&snapshot), compute_semio_model_bounds(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(compute_semio_model_bounds(&SemioModelSnapshot::default()), SemioModelBounds::default());
     }

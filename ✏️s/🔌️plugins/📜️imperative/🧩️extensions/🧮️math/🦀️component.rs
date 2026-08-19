@@ -65,22 +65,24 @@ async fn operator_info(id: &str, name: &str, abbreviation: &str, summary: &str, 
     OperatorInfo { id: id.into(), extension: "imperative".into(), name: name.into(), abbreviation: abbreviation.into(), icon: "emoji:🔢️".into(), summary: summary.into(), inputs, outputs: vec![ChannelSpec::wildcard()], ..Default::default() }
 }
 
-async fn register_simple(registry: &mut Registry, info: OperatorInfo, operation: Box<dyn Operator>) {
-    registry.register_operator(info, vec![OperatorImpl { schemas: vec![], operator: operation }], &[]);
+// 🗺️ Generic over the concrete operator, not `Box<dyn Operator>` — see the sibling note in
+// `🧠️logic/🦀️component.rs` and R11.
+async fn register_simple<O: Operator + 'static>(registry: &mut Registry, info: OperatorInfo, operation: O) {
+    registry.register_operator(info, vec![OperatorImpl { schemas: vec![], operator: Box::new(operation) }], &[]);
 }
 
 pub async fn register(registry: &mut Registry) {
-    register_simple(registry, operator_info("math.add", "Add", "Add", "Adds two numbers and writes the result into scope", vec![number_channel("a"), number_channel("b"), string_channel("into")]), Box::new(MathAdd));
-    register_simple(registry, operator_info("math.subtract", "Subtract", "Sub", "Subtracts two numbers and writes the result into scope", vec![number_channel("a"), number_channel("b"), string_channel("into")]), Box::new(MathSubtract));
-    register_simple(registry, operator_info("math.multiply", "Multiply", "Mul", "Multiplies two numbers and writes the result into scope", vec![number_channel("a"), number_channel("b"), string_channel("into")]), Box::new(MathMultiply));
-    register_simple(registry, operator_info("math.divide", "Divide", "Div", "Divides two numbers and writes the result into scope", vec![number_channel("a"), number_channel("b"), string_channel("into")]), Box::new(MathDivide));
-    register_simple(registry, operator_info("math.modulo", "Modulo", "Mod", "Computes remainder and writes the result into scope", vec![number_channel("a"), number_channel("b"), string_channel("into")]), Box::new(MathModulo));
-    register_simple(registry, operator_info("math.power", "Power", "Pow", "Raises a to the power of b and writes the result into scope", vec![number_channel("a"), number_channel("b"), string_channel("into")]), Box::new(MathPower));
-    register_simple(registry, operator_info("math.min", "Min", "Min", "Writes the minimum of two numbers into scope", vec![number_channel("a"), number_channel("b"), string_channel("into")]), Box::new(MathMin));
-    register_simple(registry, operator_info("math.max", "Max", "Max", "Writes the maximum of two numbers into scope", vec![number_channel("a"), number_channel("b"), string_channel("into")]), Box::new(MathMax));
-    register_simple(registry, operator_info("math.round", "Round", "Rnd", "Rounds a number and writes the result into scope", vec![number_channel("value"), string_channel("into")]), Box::new(MathRound));
-    register_simple(registry, operator_info("math.floor", "Floor", "Flr", "Floors a number and writes the result into scope", vec![number_channel("value"), string_channel("into")]), Box::new(MathFloor));
-    register_simple(registry, operator_info("math.ceil", "Ceil", "Ceil", "Ceils a number and writes the result into scope", vec![number_channel("value"), string_channel("into")]), Box::new(MathCeil));
+    register_simple(registry, operator_info("math.add", "Add", "Add", "Adds two numbers and writes the result into scope", vec![number_channel("a"), number_channel("b"), string_channel("into")]), MathAdd);
+    register_simple(registry, operator_info("math.subtract", "Subtract", "Sub", "Subtracts two numbers and writes the result into scope", vec![number_channel("a"), number_channel("b"), string_channel("into")]), MathSubtract);
+    register_simple(registry, operator_info("math.multiply", "Multiply", "Mul", "Multiplies two numbers and writes the result into scope", vec![number_channel("a"), number_channel("b"), string_channel("into")]), MathMultiply);
+    register_simple(registry, operator_info("math.divide", "Divide", "Div", "Divides two numbers and writes the result into scope", vec![number_channel("a"), number_channel("b"), string_channel("into")]), MathDivide);
+    register_simple(registry, operator_info("math.modulo", "Modulo", "Mod", "Computes remainder and writes the result into scope", vec![number_channel("a"), number_channel("b"), string_channel("into")]), MathModulo);
+    register_simple(registry, operator_info("math.power", "Power", "Pow", "Raises a to the power of b and writes the result into scope", vec![number_channel("a"), number_channel("b"), string_channel("into")]), MathPower);
+    register_simple(registry, operator_info("math.min", "Min", "Min", "Writes the minimum of two numbers into scope", vec![number_channel("a"), number_channel("b"), string_channel("into")]), MathMin);
+    register_simple(registry, operator_info("math.max", "Max", "Max", "Writes the maximum of two numbers into scope", vec![number_channel("a"), number_channel("b"), string_channel("into")]), MathMax);
+    register_simple(registry, operator_info("math.round", "Round", "Rnd", "Rounds a number and writes the result into scope", vec![number_channel("value"), string_channel("into")]), MathRound);
+    register_simple(registry, operator_info("math.floor", "Floor", "Flr", "Floors a number and writes the result into scope", vec![number_channel("value"), string_channel("into")]), MathFloor);
+    register_simple(registry, operator_info("math.ceil", "Ceil", "Ceil", "Ceils a number and writes the result into scope", vec![number_channel("value"), string_channel("into")]), MathCeil);
     registry.finalize();
 }
 
@@ -161,7 +163,7 @@ semio_framework_plugin::extension_exports!(bundle);
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn math_add_writes_into_scope() {
         let registry = module_registry();
         let input = Dictionary::new().insert("a", Value::Atom(Atom::Decimal(2.0))).insert("b", Value::Atom(Atom::Decimal(3.0))).insert("into", Value::Atom(Atom::String("sum".into())));

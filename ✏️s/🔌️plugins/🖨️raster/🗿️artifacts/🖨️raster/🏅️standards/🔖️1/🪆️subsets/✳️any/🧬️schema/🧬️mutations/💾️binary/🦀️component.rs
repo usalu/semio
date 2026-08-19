@@ -29,7 +29,7 @@ mod tests {
     use crate::artifacts::raster::mutations::create_layer;
     use crate::artifacts::raster::{RasterLayerNode, RasterTransform, RASTER_DOCUMENT_SCHEMA};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_binary_round_trips_and_agrees_with_text() {
         let document = empty_raster_document();
         let operation = RasterMutation::CreateLayer(create_layer::mutation::CreateLayer {
@@ -53,7 +53,7 @@ mod tests {
         assert_eq!(decode_op(&bytes).expect("decode"), operation);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn raster_document_text_round_trips_store_with_applied_operation() {
         use crate::artifacts::raster::RasterSnapshot;
 
@@ -87,7 +87,7 @@ mod tests {
     /// `RasterMutation`'s `Edit` round-trips through `protocol::MutationEnvelope`s beside this file's
     /// existing pack round-trip law (same pattern as `mathematical_protocol`'s own
     /// `command_envelope_round_trip_holds_for_an_applied_operation`).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn command_envelope_round_trip_holds_for_an_applied_operation() {
         use crate::artifacts::raster::RasterSnapshot;
         use protocol::{ArtifactId, Edit, SchemaId};

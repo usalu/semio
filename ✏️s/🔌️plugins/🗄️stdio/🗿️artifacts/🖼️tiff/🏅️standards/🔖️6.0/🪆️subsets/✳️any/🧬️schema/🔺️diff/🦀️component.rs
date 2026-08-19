@@ -1156,7 +1156,7 @@ mod handcrafted_diff_codec_tests {
     /// `TiffValues` variant (incl. `Rational`/`SRational` pair lists and `Ascii`/`Byte` hex),
     /// both IFD-level (index-keyed) and tag-level (id-keyed) removed/modified/added, and the
     /// scalar `byte_order`/`pixels` tokens.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn diff_codec_text_binary_roundtrip_law() {
         let a = TiffSnapshot {
             schema: "stdio.tiff".into(),

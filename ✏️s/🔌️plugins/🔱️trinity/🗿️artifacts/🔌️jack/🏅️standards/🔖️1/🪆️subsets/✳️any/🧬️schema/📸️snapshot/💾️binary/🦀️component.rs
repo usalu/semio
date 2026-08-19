@@ -31,7 +31,7 @@ mod tests {
     use super::*;
     use crate::artifacts::jack::dsl::{parse_dsl, NAKAGIN_EXAMPLE_TEXT};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn nakagin_example_pack_round_trips_and_agrees_with_dsl() {
         let document = parse_dsl(NAKAGIN_EXAMPLE_TEXT).expect("parse nakagin example");
         ::store::os_store::test_support::assert_dsl_pack_equivalence(&document);

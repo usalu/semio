@@ -121,7 +121,7 @@ mod tests {
     }
 
     //#region 🔖️Behavior
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn rename_and_change_node_kind_round_trip() {
         let base = empty_block2d_snapshot();
         let renamed = round_trip(&base, &rename_node_kind("Renamed".into()));
@@ -130,14 +130,14 @@ mod tests {
         assert_eq!(relabeled.node_kind.label, "Label");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn update_presentation_round_trips() {
         let base = empty_block2d_snapshot();
         let after = round_trip(&base, &update_presentation(Some("circle".into()), Some(0.4), None, None, Some("#fff".into()), None));
         assert_eq!(after.presentation.shape.as_deref(), Some("circle"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_rename_delete_handle_kind_round_trip() {
         let base = empty_block2d_snapshot();
         let handle_kind = crate::artifacts::block2d::Block2dHandleKind { id: "hk0".into(), name: "hk0".into(), label: "HK0".into(), color: "#888".into(), default_wire_kind: "cable.link".into() };
@@ -149,7 +149,7 @@ mod tests {
         assert!(deleted.handle_kinds.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_move_delete_handle_round_trip() {
         let mut base = empty_block2d_snapshot();
         base.handle_kinds.push(crate::artifacts::block2d::Block2dHandleKind { id: "hk0".into(), name: "hk0".into(), label: "HK0".into(), color: "#888".into(), default_wire_kind: "cable.link".into() });
@@ -162,7 +162,7 @@ mod tests {
         assert!(deleted.handles.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_remove_compatibility_rule_round_trip() {
         let base = empty_block2d_snapshot();
         let rule = BlockCompatibilityRule { id: "c0".into(), source: "a".into(), target: "b".into(), bidirectional: true };
@@ -172,7 +172,7 @@ mod tests {
         assert!(removed.compatibility.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_remove_attribute_round_trip() {
         let base = empty_block2d_snapshot();
         let attribute = BlockAttribute { key: "material".into(), value: "concrete".into(), definition: None };
@@ -182,7 +182,7 @@ mod tests {
         assert!(removed.attributes.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_remove_author_round_trip() {
         let base = empty_block2d_snapshot();
         let author = BlockAuthor { id: "a0".into(), name: "Ada".into(), email: None };
@@ -192,7 +192,7 @@ mod tests {
         assert!(removed.authors.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn move_and_scale_camera2d_round_trip() {
         let base = empty_block2d_snapshot();
         let moved = round_trip(&base, &move_camera2d(10.0, -4.0));
@@ -201,7 +201,7 @@ mod tests {
         assert_eq!(scaled.camera2d.zoom, 2.5);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn change_meta_description_round_trips() {
         let base = empty_block2d_snapshot();
         let after = round_trip(&base, &change_meta_description("session notes".into()));
@@ -210,7 +210,7 @@ mod tests {
     //#endregion 🔖️Behavior
 
     //#region 🔖️MutationLaws
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn every_mutation_kind_satisfies_the_inverse_law() {
         let mut base = empty_block2d_snapshot();
         base.handle_kinds.push(crate::artifacts::block2d::Block2dHandleKind { id: "hk0".into(), name: "hk0".into(), label: "HK0".into(), color: "#888".into(), default_wire_kind: "cable.link".into() });
@@ -247,7 +247,7 @@ mod tests {
         assert_mutation_inverse_law(&base, &change_meta_description("notes".into()));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn change_node_kind_label_diff_absorb_law() {
         let base = empty_block2d_snapshot();
         let d1 = change_node_kind_label("first".into()).diff(&base).into_parts().0;
@@ -256,7 +256,7 @@ mod tests {
         assert_mutation_diff_absorb_law(&base, d1, d2);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn move_handle_diff_absorb_law() {
         let mut base = empty_block2d_snapshot();
         base.handle_kinds.push(crate::artifacts::block2d::Block2dHandleKind { id: "hk0".into(), name: "hk0".into(), label: "HK0".into(), color: "#888".into(), default_wire_kind: "cable.link".into() });
@@ -267,7 +267,7 @@ mod tests {
         assert_mutation_diff_absorb_law(&base, d1, d2);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dispatch_registers_semantic_descriptors_with_approved_verbs() {
         register_block2d_mutation_descriptors();
         for kind in Block2dMutation::kinds() {
@@ -287,7 +287,7 @@ mod tests {
     // of this lane's pass) — pending lane 1-D, tracked in `📓️w3-f-block-puzzle-report.md`.
     use protocol::testkit::{assert_fatal_never_applies, assert_missing_target_is_error};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn missing_target_is_error_per_verb_family() {
         let base = empty_block2d_snapshot();
         assert_missing_target_is_error(&base, &delete_handle("missing".into())); // delete
@@ -301,7 +301,7 @@ mod tests {
         assert_missing_target_is_error(&base, &move_handle("missing".into(), 1.0, 1.0)); // move/drag/rotate/scale/resize
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_duplicate_id_is_fatal_and_never_applies() {
         let mut base = empty_block2d_snapshot();
         let handle_kind = crate::artifacts::block2d::Block2dHandleKind { id: "hk0".into(), name: "hk0".into(), label: "HK0".into(), color: "#888".into(), default_wire_kind: "cable.link".into() };

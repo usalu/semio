@@ -155,7 +155,7 @@ mod tests {
         forward
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn every_variant_registers_an_approved_semantic_descriptor() {
         for mutation in every_mutation() {
             let descriptor = protocol::SemanticMutation::semantics(&mutation);
@@ -164,7 +164,7 @@ mod tests {
         assert_eq!(<En1995Mutation as protocol::SemanticMutation<En1995Snapshot>>::kinds().len(), every_mutation().len(), "kinds() must register exactly one descriptor per dispatch variant");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn every_variant_round_trips_via_inverse() {
         let base = En1995Snapshot::default();
         for mutation in every_mutation() {
@@ -177,7 +177,7 @@ mod tests {
     /// (reachable here as `protocol::testkit`), exercised against the three most structurally
     /// distinct variants: the enum-typed scalar (`change-annex`), a typical `f64` scalar
     /// (`change-m-ed-knm`), and a `String` scalar (`change-service-class`).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn change_annex_satisfies_the_inverse_and_absorb_laws() {
         let base = En1995Snapshot::default();
         let mutation = En1995Mutation::ChangeAnnex(set_snapshot::mutation::ChangeAnnex { new_annex: crate::document::AnnexChoice::En });
@@ -186,7 +186,7 @@ mod tests {
         let d2 = En1995Mutation::ChangeServiceClass(change_service_class::mutation::ChangeServiceClass { new_service_class: "sc2".into() }).diff(&base).diff().clone();
         protocol::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn change_m_ed_knm_satisfies_the_inverse_and_absorb_laws() {
         let base = En1995Snapshot::default();
         let mutation = En1995Mutation::ChangeMEdKnm(change_m_ed_knm::mutation::ChangeMEdKnm { new_m_ed_knm: 999.0 });
@@ -195,7 +195,7 @@ mod tests {
         let d2 = En1995Mutation::ChangeVEdKn(change_v_ed_kn::mutation::ChangeVEdKn { new_v_ed_kn: 77.0 }).diff(&base).diff().clone();
         protocol::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn change_service_class_satisfies_the_inverse_and_absorb_laws() {
         let base = En1995Snapshot::default();
         let mutation = En1995Mutation::ChangeServiceClass(change_service_class::mutation::ChangeServiceClass { new_service_class: "sc2".into() });

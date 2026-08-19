@@ -575,7 +575,7 @@ mod tests {
         "open-source",
     ];
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn command_ids_are_unique_and_cover_every_row() {
         let commands = every_command();
         let ids: Vec<&str> = commands.iter().map(Gis2dCommand::command_id).collect();
@@ -586,7 +586,7 @@ mod tests {
         assert_eq!(ids.len(), 14, "every Gis2dCommand row must be covered by every_command()");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn every_command_round_trips_text_and_binary_under_its_declared_wire_keyword() {
         assert_eq!(every_command().len(), WIRE_KEYWORDS.len());
         for (command, keyword) in every_command().iter().zip(WIRE_KEYWORDS) {
@@ -599,7 +599,7 @@ mod tests {
     /// 🧷️ `PatchRoutes`' empty-`Vec` shape round-trips identically to its non-empty shape — the one
     /// `Vec`-carrying optional-field case left after the interaction-mechanism migration deleted every
     /// other optional-field row (`setSelection`/`setFeatureSelection`/`clearSelection`/`selectAll`).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn patch_routes_empty_route_ids_round_trips_text_and_binary() {
         store::os_store::test_support::assert_op_text_binary_equivalence(&Gis2dCommand::PatchRoutes(patch_routes::PatchRoutes { route_ids: Vec::new(), field: "label".into(), value: String::new() }));
     }
@@ -607,7 +607,7 @@ mod tests {
     /// 🎯️ Every app-declared action must bridge through `command_from_action` and round-trip
     /// `command_id`. Uses the framework's own harness, which stages each action's declared args and
     /// knows the framework-injected ids to skip (`undo`/`copy`/`recordTutorial`/…).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn command_from_action_covers_every_declared_action_and_rejects_unknown_ones() {
         semio_framework_plugin::testkit::assert_declared_actions_bridge_to_commands::<EditorApp<Gis2dPlayApp>>(gis2d_app_manifest_for_testkit);
         assert!(Gis2dPlayApp::command_from_action("noSuchAction", None).is_err());
@@ -615,7 +615,7 @@ mod tests {
     //#endregion 🔖️CommandSurface
 
     //#region 🔖️Manifest
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn the_manifest_stitches_every_taxonomy_node() {
         let definition = create_gis2d_app().definition;
         assert_eq!(definition.modes.len(), 1);
@@ -628,7 +628,7 @@ mod tests {
         assert!(definition.artifact_kinds.iter().any(|kind| kind.id == "2d.map"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn an_unknown_body_key_falls_back_to_a_text_node() {
         let mut app = app();
         assert!(render(&mut app, "gis2d.play.nope").contains("Unknown body"));
@@ -636,7 +636,7 @@ mod tests {
     //#endregion 🔖️Manifest
 
     //#region 🔖️Media
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn export_media_map_out_produces_a_2d_map_structured_payload() {
         let app = app();
         let document = app.snapshot().expect("projection");
@@ -648,7 +648,7 @@ mod tests {
         assert!(json.contains("positions"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn import_media_features_in_adds_new_positions_as_operations() {
         let app = app();
         let document = app.snapshot().expect("projection");
@@ -660,7 +660,7 @@ mod tests {
         assert!(emit.artifact_mutations.iter().any(|operation| matches!(operation, GisMapMutation::CreatePosition(payload) if payload.item.id == "imported-1")));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn media_ports_declare_features_in_and_map_out() {
         let app = Gis2dPlayApp;
         let ports = Gis2dPlayApp::media_ports();
@@ -670,7 +670,7 @@ mod tests {
 
     /// 🧭️ Relocated from the artifact's `⚙️engine` tests (ticket
     /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) alongside `gis2d_io`/`gis2d_map_media`.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn gis2d_io_declares_the_features_in_and_map_out_ports() {
         let io = gis2d_io();
         assert_eq!(io.document_schema, GIS_MAP_SCHEMA);
@@ -682,7 +682,7 @@ mod tests {
         assert_eq!(map_out.kind_id.as_deref(), Some("2d.map"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn gis2d_map_media_exports_the_document_descriptor() {
         let document = crate::artifacts::gismap::schema::default_document();
         let media = gis2d_map_media(&document);
@@ -698,7 +698,7 @@ mod tests {
     /// 🖱️ Grouped disclosure: the empty-canvas context menu (no feature under the pointer) stays
     /// within the row budget and keeps the known destructive `clearSelection` last, matching the
     /// canonical migration pattern.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn context_menu_stays_within_budget_and_keeps_clear_selection_destructive_last() {
         let mut app = app_with_registry();
         let request = ContextMenuRequest { menu: semio_framework_plugin::UiMenuRef { id: "gis2dMap".into(), args: None }, surface: None, window_instance_id: None, point: None };

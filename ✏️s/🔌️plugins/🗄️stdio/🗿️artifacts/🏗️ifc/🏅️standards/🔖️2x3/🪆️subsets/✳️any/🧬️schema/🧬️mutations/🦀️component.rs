@@ -319,7 +319,7 @@ mod tests {
         assert!(actual == expected, "{label}: expected {} bytes, got {}; first differing byte: {first_difference:?}", expected.len(), actual.len(),);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn upsert_then_inverse_restores_absent_id_via_remove() {
         let mut snap = Ifc2x3Snapshot::default();
         let mutation = Ifc2x3Mutation::UpsertInstance { instance: inst(1, "IFCWALL") };
@@ -330,7 +330,7 @@ mod tests {
         assert_eq!(inv, vec![Ifc2x3Mutation::SetSnapshot { snapshot: base }]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn remove_then_inverse_restores_prior_instance() {
         let mut snap = Ifc2x3Snapshot::default();
         snap.document.instances.push(inst(2, "IFCDOOR"));
@@ -342,7 +342,7 @@ mod tests {
         assert_eq!(inv, vec![Ifc2x3Mutation::SetSnapshot { snapshot: base }]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_text_round_trips() {
         let mutation = Ifc2x3Mutation::SetHeader { header: Part21Header::default() };
         let printed = OpText::print_op(&mutation);
@@ -356,7 +356,7 @@ mod tests {
     /// real COMPLEX (2-entity) instance, and every `Part21Value` tag (`Unset`/`Derived`/`Int`/
     /// `Real`/`Str`/`Enum`/`Ref`/`List`/`Typed`). Replaces the prior `serde_json` stub's implicit
     /// coverage — this is the real proof the JSON-transfer elimination didn't just move the bug.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_text_binary_roundtrip_law() {
         use protocol::{OpBinary, OpText};
         let mutations = demo_mutation_cases();
@@ -374,7 +374,7 @@ mod tests {
     //#endregion 🔖️op_text_binary_roundtrip_law
 
     //#region 🔖️LosslessLogicalModel
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn exact_native_direct_pack_and_dsl_roundtrips() {
         let imported = exact_fixture();
         let direct = crate::artifacts::ifc::standards::v2x3::engine::encode_ifc2x3(&imported).expect("direct export");
@@ -392,7 +392,7 @@ mod tests {
         assert_exact("DSL export", &crate::artifacts::ifc::standards::v2x3::engine::encode_ifc2x3(&parsed).expect("DSL export"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn exact_native_between_noop_inverse_absorb_and_supported_rewrite() {
         let imported = exact_fixture();
         let self_diff = <Ifc2x3Diff as DiffAlgebra<Ifc2x3Snapshot>>::between(&imported, &imported);
@@ -426,7 +426,7 @@ mod tests {
         assert_exact("absorbed export", &crate::artifacts::ifc::standards::v2x3::engine::encode_ifc2x3(&absorbed_result).expect("absorbed export"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn exact_native_set_snapshot_codecs_retain_complete_logical_model() {
         let imported = exact_fixture();
         let projection = Ifc2x3Snapshot::default();
@@ -484,7 +484,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn exact_native_materializes_logical_edits_and_restores_interior_order() {
         let imported = exact_fixture();
         let mut edited = imported.clone();

@@ -153,13 +153,13 @@ pub async fn render(view: LowpolyView<'_>, loaded: Option<&LowpolyDocument>, act
 mod tests {
     use crate::editor::lowpoly::testkit::{app, render};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn renders_world_scene() {
         let mut a = app();
         assert!(render(&mut a, super::LOWPOLY_PLAY_BODY_MAIN).contains("world-3d"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn window_kind_actions_scope_mesh_ops_to_main_only() {
         let definition = crate::editor::lowpoly::create_lowpoly_app();
         let resolve = |window_id: &str| -> Vec<String> {

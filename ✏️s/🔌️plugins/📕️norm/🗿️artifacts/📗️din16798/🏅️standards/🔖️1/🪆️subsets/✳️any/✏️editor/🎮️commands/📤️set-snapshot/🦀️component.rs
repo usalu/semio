@@ -36,7 +36,7 @@ mod tests {
     use crate::artifacts::din16798::op::Din16798Mutation;
     use semio_framework_plugin::HistoryView;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn handle_commits_the_payload_document_under_its_action_id() {
         let projection = Din16798Snapshot::default();
         let config = NormConfig::default();

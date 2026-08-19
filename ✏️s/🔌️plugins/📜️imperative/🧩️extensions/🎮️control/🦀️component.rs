@@ -89,7 +89,7 @@ semio_framework_plugin::extension_exports!(bundle);
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn catalogue_includes_control_kinds() {
         let raw = catalogue_json();
         assert!(raw.contains("control.if"));

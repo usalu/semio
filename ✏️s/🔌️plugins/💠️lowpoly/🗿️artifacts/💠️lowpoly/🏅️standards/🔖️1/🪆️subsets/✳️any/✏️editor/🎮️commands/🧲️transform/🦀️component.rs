@@ -113,7 +113,7 @@ mod tests {
     use crate::editor::lowpoly::LowpolyCommand;
     use semio_framework_plugin::{testkit, PluginApp};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn gumball_drag_coalesces_to_one_committed_edit() {
         // 🧲️ THE COALESCING REGRESSION: a multi-tick gumball translate must emit ZERO operations mid-drag and
         // exactly ONE commit operation (base → final mesh) on drag end — never a full-mesh patch per tick.

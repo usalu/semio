@@ -236,7 +236,7 @@ pub async fn diff_generation_from_ops(base: &Procedural3dSnapshot, ops: Vec<Gene
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn diff_absorb_prefers_incoming_scalars() {
         let mut first = Procedural3dDiff {
             show_mode: Some("shaded".into()),

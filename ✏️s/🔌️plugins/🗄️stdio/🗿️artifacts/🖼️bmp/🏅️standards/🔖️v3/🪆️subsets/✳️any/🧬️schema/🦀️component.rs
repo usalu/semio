@@ -49,7 +49,7 @@ pub struct BmpArtifact {
 
 //#region 🔖️Conversions
 impl Default for BmpArtifact {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self::from_snapshot(BmpSnapshot::default())
     }
 }

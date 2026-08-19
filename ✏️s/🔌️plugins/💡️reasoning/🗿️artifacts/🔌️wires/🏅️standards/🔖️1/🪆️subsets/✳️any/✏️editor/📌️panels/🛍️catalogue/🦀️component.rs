@@ -75,7 +75,7 @@ mod tests {
     use super::*;
     use crate::editor::wires::testkit::{metabolism_app, render as render_body};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn catalogue_lists_identity_and_relationship_kinds() {
         let mut app = metabolism_app();
         let json = render_body(&mut app, WIRES_PLAY_BODY_CATALOGUE);
@@ -83,7 +83,7 @@ mod tests {
         assert!(json.contains("Relationship kinds"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn definition_binds_the_catalogue_tab_to_this_body_key() {
         let definition = definition();
         assert_eq!(definition.body_key.as_deref(), Some(WIRES_PLAY_BODY_CATALOGUE));

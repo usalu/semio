@@ -46,13 +46,13 @@ pub async fn render(graph: &MathematicalGraph, camera: &MathematicalCamera) -> U
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn renders_node_graph_scene() {
         let json = serde_json::to_string(&render(&MathematicalGraph::default(), &MathematicalCamera::default())).unwrap();
         assert!(json.contains("node-graph"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn definition_declares_the_node_graph_surface_and_body_key() {
         let definition = definition();
         assert_eq!(definition.body_key, MATH_PLAY_BODY_GRAPH);

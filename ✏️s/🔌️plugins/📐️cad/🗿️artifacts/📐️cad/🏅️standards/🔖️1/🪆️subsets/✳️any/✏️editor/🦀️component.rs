@@ -31,7 +31,7 @@ use crate::artifacts::cad::standards::v1::subsets::any::io::{export_solids_as, C
 use crate::artifacts::cad::op::CadMutation;
 use crate::artifacts::cad::{artifact_kind, cad_pane_from_model_definition_id, CadCamera, CadPaneId, CadSnapshot, CadWorkingScene, CAD_DOCUMENT_SCHEMA};
 use base64::Engine as _;
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::{BrepKernel, GeometryHandle};
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::{Brep, BrepKernel, GeometryHandle};
 use semio_framework::kernel::Effect;
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView,
     tree_item, world3d_camera_projection_json, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppActionRegistry, CommandDefinition, ConfigView, ContextMenuItemSpec, ContextMenuRequest, ArtifactView,
@@ -154,7 +154,7 @@ pub struct CadPlayRuntime {
 }
 
 impl Default for CadPlayRuntime {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self {
             selected_node_ids: Vec::new(),
             hovered_reference_id: None,
@@ -358,11 +358,11 @@ pub async fn apply_transformation_mutations(_document: &CadSnapshot, _qid: &str)
 /// ⚠️ Same documented gap as `apply_transformation_mutations` — there is no live per-pane object
 /// list on `CadSnapshot` to collect solids from anymore (only composed model-child HANDLES,
 /// unresolved at this boundary).
-pub async fn collect_pane_solids(_kernel: &mut dyn BrepKernel, _envelope: &CadPlayView, _pane: CadPaneId) -> Vec<GeometryHandle> {
+pub async fn collect_pane_solids(_kernel: &mut Brep, _envelope: &CadPlayView, _pane: CadPaneId) -> Vec<GeometryHandle> {
     Vec::new()
 }
 
-pub async fn collect_modelspace_solids(kernel: &mut dyn BrepKernel, envelope: &CadPlayView) -> Vec<GeometryHandle> {
+pub async fn collect_modelspace_solids(kernel: &mut Brep, envelope: &CadPlayView) -> Vec<GeometryHandle> {
     CadPaneId::all().into_iter().flat_map(|pane| collect_pane_solids(kernel, envelope, pane)).collect()
 }
 
@@ -1452,7 +1452,7 @@ mod tests {
 
     /// 🧪️ The shell's example picker reaches the production bridge and produces the typed command
     /// that replaces the CAD document instead of falling through to the framework-only action path.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn production_action_bridge_loads_the_declared_example() {
         let command = <CadPlayApp as ArtifactEditor>::command_from_action("setActiveExample", Some(&json!({ "exampleId": CAD_EXAMPLE_FOREST_LEFT }))).expect("declared example action");
         assert!(matches!(command, CadCommand::SetActiveExample(set_active_example::SetActiveExample { example_id }) if example_id == CAD_EXAMPLE_FOREST_LEFT));
@@ -1465,14 +1465,14 @@ mod tests {
     /// which walks EVERY action this app's window kinds render, stages each one's declared args the way
     /// the host does, and skips the framework-injected ids. It is what catches the next
     /// `setActiveExample`: chrome that declares an action no command row backs.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn every_rendered_action_bridges_through_the_framework_harness() {
         semio_framework_plugin::testkit::assert_declared_actions_bridge_to_commands::<EditorApp<CadPlayApp>>(cad_app_manifest_for_testkit);
     }
 
     /// ⚖️ Text and binary are two projections of the same command, and every printed line starts with
     /// that row's wire keyword — the guard that a command decomposition cannot silently rename a row.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn every_command_round_trips_text_and_binary_under_its_own_wire_keyword() {
         for command in every_command() {
             store::os_store::test_support::assert_op_text_binary_equivalence(&command);
@@ -1506,7 +1506,7 @@ mod tests {
         // `every_command_round_trips_text_and_binary_under_its_own_wire_keyword` above.
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn forest_example_uses_per_object_brep_meshes() {
         let scene = forest_working_scene();
         let runtime = CadPlayRuntime::default();
@@ -1519,7 +1519,7 @@ mod tests {
         assert!(scene.building_objects.iter().all(|object| object.solid_handle.is_some()));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn cad_document_from_dwg_creates_one_object_per_layer_with_geometry() {
         let mut drawing = semio_s_plugin_stdio::artifacts::dwg::DwgDrawing::default();
         let outline = drawing.ensure_layer("outline");
@@ -1538,7 +1538,7 @@ mod tests {
         assert!(scene.shape_model.is_some(), "a real per-layer object must mint a shape-model child");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn cad_document_from_empty_dwg_mints_no_shape_model_child() {
         let drawing = semio_s_plugin_stdio::artifacts::dwg::DwgDrawing::default();
         let working = cad_working_scene_from_dwg(&drawing);
@@ -1548,7 +1548,7 @@ mod tests {
         assert!(scene.shape_model.is_none(), "no layers means no real geometry to mint a child from");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn quad_panes_each_populate_distinct_objects() {
         let scene = forest_working_scene();
         assert!(!scene.objects.is_empty(), "shape pane");
@@ -1557,7 +1557,7 @@ mod tests {
         assert!(!scene.structure_classic_objects.is_empty(), "structure classic pane");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn initial_snapshot_is_cut_concrete_forest_not_placeholder_box() {
         let scene = CadPlayApp::initial_snapshot();
         assert_eq!(scene.id, CAD_EXAMPLE_FOREST_LEFT);
@@ -1570,7 +1570,7 @@ mod tests {
         assert!(working.objects.iter().all(|object| object.solid_handle.is_some()));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn forest_energy_world_mesh_survives_scene_roundtrip() {
         let scene = forest_working_scene();
         let roundtrip: CadWorkingScene = serde_json::from_str(&serde_json::to_string(&scene).expect("serialize")).expect("deserialize");
@@ -1584,7 +1584,7 @@ mod tests {
         assert!(slab_min_z > 2.5, "structure world mesh min z {slab_min_z}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn forest_references_use_xy_ground_plane_and_z_up() {
         let scene = forest_play_scene();
         let reference = scene.references_by_model_definition_id.get(CAD_MODEL_DEFINITION_ENERGY).and_then(|references| references.first()).expect("energy reference");
@@ -1599,7 +1599,7 @@ mod tests {
         assert_eq!(reference.width_world, 28.6);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn align_mesh_to_fixture_centroid_corrects_drifted_surface() {
         let scene = forest_working_scene();
         let geometry = scene.energy_geometry.as_ref().expect("energy geometry");
@@ -1613,7 +1613,7 @@ mod tests {
         assert!(min_z > 2.5, "aligned mesh min z {min_z}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn forest_surface_meshes_fall_back_to_typology_extent_without_pane_geometry() {
         // ⚠️ CORRECTED (ticket 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS
         // wave G4): this test used to assert the mesh stayed at its authored height even with no
@@ -1636,13 +1636,13 @@ mod tests {
         assert!(!slab_mesh.positions.is_empty(), "structure slab mesh must still be real geometry, just typology-shaped");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn cad_document_schema_matches_domain() {
         let scene = empty_cad_snapshot();
         assert_eq!(scene.schema, CAD_PLAY_DOCUMENT_SCHEMA);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn default_example_and_forest_scene_parse_as_projections() {
         let default_json = serde_json::to_string(&default_document()).unwrap();
         let default_scene: CadSnapshot = serde_json::from_str(&default_json).unwrap();
@@ -1654,7 +1654,7 @@ mod tests {
     }
     //#endregion 🔖️Fixtures
     //#region 🔖️Render
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn renders_world_scene_for_each_pane() {
         let app = CadPlayApp::default();
         let scene = forest_play_scene();
@@ -1670,7 +1670,7 @@ mod tests {
 
 
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn app_definition_declares_one_window_scoped_dislocate_utility() {
         let definition = create_cad_app();
         let utility_ids: Vec<&str> = definition.utilities.iter().map(|utility| utility.id.as_str()).collect();
@@ -1693,7 +1693,7 @@ mod tests {
     /// built `AppDefinition` with the same id, body key, surface kind and (empty) manifest measures the
     /// pre-consolidation scalar `.window_kind(..)`/`.panel_tab(..)` calls produced — measures stay
     /// config-derived per frame via `ArtifactApp::window_measures`, never frozen into the manifest.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn manifest_stitches_every_taxonomy_node_with_its_pre_migration_shape() {
         let definition = create_cad_app();
         let windows: Vec<(&str, &str)> = definition.window_kinds.iter().map(|window| (window.id.as_str(), window.body_key.as_str())).collect();
@@ -1730,7 +1730,7 @@ mod tests {
         assert_eq!(definition.artifact_kinds.iter().map(|kind| kind.id.as_str()).collect::<Vec<_>>(), vec!["3d.cad"]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn internal_and_plumbing_actions_excluded_from_palette() {
         let definition = create_cad_app();
         let hidden_actions = [
@@ -1759,7 +1759,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn engagement_input_and_possible_engagements_present() {
         let mut app = new_app();
         let engagements = app.window_engagements();
@@ -1768,7 +1768,7 @@ mod tests {
         assert!(shape.possible_engagements.as_ref().is_some_and(|rows| !rows.is_empty()));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn window_engagements_registered_for_all_four_panes() {
         let mut app = new_app();
         let engagements = app.window_engagements();
@@ -1777,14 +1777,14 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn forest_example_includes_reference_overlay() {
         let scene = forest_play_scene();
         let references = edit::world_references_json(&scene, CadPaneId::Shape).expect("references");
         assert!(references.contains("ref-concrete-forest"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn typology_extent_derives_from_authored_geometry() {
         let scene = forest_working_scene();
         let column = scene.building_objects.iter().find(|object| object.typology == "building.building.column").expect("column object");
@@ -1794,7 +1794,7 @@ mod tests {
     }
     //#endregion 🔖️Render
     //#region 🔖️ViewModel
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn gumball_config_fields_present_regardless_of_dislocate_activation() {
         // 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): mesh selection is
         // framework-owned now and `ArtifactApp::render` has no `InteractionView` (see
@@ -1813,7 +1813,7 @@ mod tests {
     /// 🎥️ `setCamera`/`setProjection`/`setProjectionParam` are `ActionKind::View` (see the `.view_action`
     /// registrations below) — they must never emit a `CadMutation` (no VCS edit, no undo entry) and
     /// instead write a coalesced `CadConfigMutation`, isolated per pane.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_camera_writes_config_not_mutations() {
         let app = CadPlayApp::default();
         let scene = default_document();
@@ -1825,14 +1825,14 @@ mod tests {
         assert_eq!(cad_pane_camera_runtime(&runtime, CadPaneId::Shape).zoom, 1.0, "panes stay isolated");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn gumball_inactive_without_selection() {
         let selection = edit::world_selection_json(&default_document(), &CadPlayRuntime::default(), Some(CAD_DISLOCATE_UTILITY_ID), CadDislocateOptions::default());
         assert!(selection.contains("\"gumballActive\":false"));
         assert!(!selection.contains("\"gumballTarget\""));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn active_utility_flows_from_config_into_scene() {
         let app = CadPlayApp::default();
         let scene = default_document();
@@ -1850,7 +1850,7 @@ mod tests {
     /// replacement — `render`/`window_measures` have no per-instance parameter anymore, see
     /// `CadDislocateOptions`'s doc comment in `cad_document_engine`) — so the gumball is active in
     /// EVERY pane with an active selection once the Dislocate utility is on, not isolated per window.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dislocate_gumball_config_fields_present_in_every_pane_once_the_utility_is_active() {
         // 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): mesh selection is
         // framework-owned now and `ArtifactApp::render` has no `InteractionView` (see
@@ -1871,7 +1871,7 @@ mod tests {
         assert!(building_json.contains(r#"transformMode\":\"transform"#));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn context_menu_resolves_labels_from_the_registry() {
         // 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): `context_menu` is no longer
         // selection-gated — `ArtifactApp::context_menu` has no `InteractionView` parameter, so it
@@ -1892,7 +1892,7 @@ mod tests {
     /// 🗂️ GROUPED-PROGRESSIVELY-DISCLOSED-CONTEXT-MENUS: the selection context menu stays a shallow,
     /// disclosed list (top-level verbs + a handful of taxonomy groups) rather than a flat wall of rows,
     /// and the destructive `deleteObject` action stays the trailing item.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn context_menu_is_grouped_and_keeps_delete_object_last() {
         let app = CadPlayApp::default();
         let scene = default_document();
@@ -1911,7 +1911,7 @@ mod tests {
     /// @emoji 🎛️ Dislocate move/rotate options are now keyed by PANE (`CadConfig::dislocate_shape`/
     /// `dislocate_building`/…), not by an arbitrary host-pushed window-instance id — the direct
     /// replacement for the pre-B1 per-window-instance isolation test.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dislocate_move_and_rotate_options_are_per_pane() {
         let app = CadPlayApp::default();
         let scene = default_document();
@@ -1935,7 +1935,7 @@ mod tests {
         assert_eq!(rotate_pressed(building::WINDOW_KIND_ID), Some(false));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn engagement_hud_no_longer_carries_utility_switcher_options() {
         let mut app = new_app();
         let engagements = app.window_engagements();
@@ -1944,7 +1944,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn switching_utility_emits_no_operations_and_no_history_entry() {
         // 🧰️ The key regression guard: switching the host-owned active utility must be a pure View
         // action — zero operations, no projection mutation, and (proven below) no intervening
@@ -1965,7 +1965,7 @@ mod tests {
         assert_eq!(app.snapshot().expect("snapshot").nodes.len(), before, "a single undo reverts the addNode — proving the utility switch created no history entry");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn sun_measures_registered_for_all_four_panes_and_default_off() {
         let app = CadPlayApp::default();
         let base_config = CadConfig::default();
@@ -1990,7 +1990,7 @@ mod tests {
 
     //#endregion 🔖️ViewModel
     //#region 🔖️Operations
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_object_action_is_a_documented_no_op() {
         // ⚠️ `addObject` is a documented no-op pending the child-dispatch seam (see
         // `commands/🧱️object/component.rs`'s module doc) — this locks in the honest current
@@ -2003,7 +2003,7 @@ mod tests {
         assert!(emit.artifact_mutations.is_empty(), "addObject is a documented no-op until the child-dispatch seam lands");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_object_through_wrapper_is_a_documented_no_op() {
         let mut app = new_app();
         let before = serde_json::to_string(&app.snapshot().expect("snapshot")).unwrap();
@@ -2012,14 +2012,14 @@ mod tests {
         assert_eq!(before, after, "addObject is a documented no-op until the child-dispatch seam lands");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn focus_model_definition_emits_document_operation() {
         let mut app = new_app();
         app.dispatch_typed(CadCommand::FocusModelDefinition(focus_model_definition::FocusModelDefinition { model_definition_id: "aec.building".into() }), &meta("local")).expect("focus model definition");
         assert_eq!(app.snapshot().expect("snapshot").active_model_definition_id, "aec.building");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn derive_transformation_populates_energy_pane() {
         // ⚠️ `apply_transformation_mutations` is a documented no-op pending the child-dispatch seam
         // (see its own doc comment in this file) — this instead exercises the real derive algorithm
@@ -2036,7 +2036,7 @@ mod tests {
         assert!(derived.iter().any(|object| object.typology.starts_with("energy.energy.")));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn forest_transformation_uses_live_shape_pane() {
         // ⚠️ CORRECTED (ticket 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS
         // wave G4): this test used to derive from `forest_working_scene().objects` and compare
@@ -2065,7 +2065,7 @@ mod tests {
         assert_ne!(wall_typologies, box_typologies, "a thin wall panel and a cube must classify their dominant faces differently, proving the derive tracks the LIVE input's real shape, not a memoized result:\n  box:  {box_typologies:?}\n  wall: {wall_typologies:?}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn save_selected_emits_download_effect() {
         let app = CadPlayApp::default();
         let scene = default_document();
@@ -2082,7 +2082,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn load_raw_request_emits_file_open_effect() {
         let app = CadPlayApp::default();
         let emit = drive(&app, &default_document(), "loadRawRequest", None);
@@ -2096,7 +2096,7 @@ mod tests {
     }
     //#endregion 🔖️Operations
     //#region 🔖️Engagement
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn engagement_starts_box_interaction_session() {
         let app = CadPlayApp::default();
         let scene = default_document();
@@ -2106,7 +2106,7 @@ mod tests {
         assert!(runtime.engagement_session.is_some());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn world_pointer_move_updates_live_preview_without_committing_or_emitting_mutations() {
         let app = CadPlayApp::default();
         let scene = default_document();
@@ -2127,13 +2127,13 @@ mod tests {
     /// `CadSnapshot`/`CadMutation` — driven through the real `worldPointerMove` handler (the natural
     /// per-tick gesture handler) via the existing `drive` helper, config threaded explicitly across
     /// calls (the pure `CadPlayApp` no longer holds any of this state itself).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn gesture_preview_is_none_without_a_live_engagement_session() {
         let app = CadPlayApp::default();
         assert!(app.gesture_preview(&CadConfig::default()).is_none(), "no live engagement session, nothing to preview");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn gesture_preview_reflects_the_live_rubber_band_preview_and_clears_on_abort() {
         let app = CadPlayApp::default();
         let scene = default_document();
@@ -2160,7 +2160,7 @@ mod tests {
         assert!(app.gesture_preview(&config).is_none(), "the engagement session was aborted: nothing left to preview");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn gesture_preview_is_a_pure_read_never_mutating_the_engagement_session() {
         let app = CadPlayApp::default();
         let scene = default_document();
@@ -2176,7 +2176,7 @@ mod tests {
     }
     //#endregion 🔖️GesturePreview
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn engagement_repeat_last_restarts_the_last_finalized_interaction() {
         let app = CadPlayApp::default();
         let mut scene = default_document();
@@ -2218,7 +2218,7 @@ mod tests {
     }
     //#endregion 🔖️Engagement
     //#region 🔖️Import
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn import_spatial_modelspace_round_trips() {
         let payload = json!({
             "schema": "spatial.modelspace",
@@ -2245,7 +2245,7 @@ mod tests {
         assert!(scene.shape_model.is_some(), "a real imported object must mint a shape-model child");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn import_cad_file_action_accepts_spatial_json_text_string_payload() {
         let app = CadPlayApp::default();
         let scene = default_document();
@@ -2275,7 +2275,7 @@ mod tests {
         assert!(next.shape_model.is_some(), "a real imported object must mint a shape-model child");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn import_cad_file_action_imports_obj_by_extension() {
         // ⚠️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 3: `import_cad_object_by_extension`
         // now returns a `SemioModelElement` — composing it into the document needs the same
@@ -2293,7 +2293,7 @@ mod tests {
     }
     //#endregion 🔖️Import
     //#region 🔖️History
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn undo_redo_round_trips_added_node_through_generic_helper() {
         // ⚠️ `AddObject` is a documented no-op pending the child-dispatch seam (see
         // `commands/🧱️object/component.rs`'s module doc) — this exercises the generic
@@ -2304,7 +2304,7 @@ mod tests {
         semio_framework_plugin::testkit::assert_undo_redo_round_trip(&mut app, CadCommand::AddNode(add_node::AddNode { kind: "solid".into() }), |app| app.snapshot().expect("snapshot").nodes.len(), before, before + 1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn undo_redo_round_trips_added_node_through_wrapper() {
         let mut app = new_app();
         let before = app.snapshot().expect("snapshot").nodes.len();
@@ -2317,7 +2317,7 @@ mod tests {
         assert_eq!(app.snapshot().expect("snapshot").nodes.len(), before + 1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn coalesced_translate_drag_is_a_single_undo_step() {
         // ⚠️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 3: `translateSelection`
         // (and the `addObject` that used to seed the dragged object) are documented no-ops pending
@@ -2339,7 +2339,7 @@ mod tests {
     /// DISJOINT edits (A translates object A, B patches object B's label), and after exchanging operations
     /// over a `MemoryBackbone` both converge to contain BOTH edits — impossible under whole-document
     /// `setDocument` snapshots.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn two_instances_converge_disjoint_edits_via_backbone() {
         // ⚠️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 3: `PatchObject` is a
         // documented no-op pending the child-dispatch seam (object fields now live inside composed
@@ -2386,7 +2386,7 @@ mod tests {
         assert_eq!(label_b_in_b, "Renamed By B", "instance B keeps its own edit");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn ingest_operations_is_idempotent_for_cad() {
         let mut sender = new_app();
         let (near, mut far) = MemoryBackbone::pair("mem://cad-doc", "mem://cad-doc");

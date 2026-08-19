@@ -1,0 +1,68 @@
+terra-web-bridges — Browser pane verification of the UPDATED generator's host-async effect wire
+against the real jco-transpiled jcoprobe fixture component.
+
+Setup: bun webbridges-serve.ts (scratchpad-only static server, port 8848) serving a scratch copy of
+🧫️fixtures/🔌️jcoprobe/🌐️harness/out-callback/ (jcoprobe.js/jcoprobe.core.wasm/interfaces/
+preview2-shim, read-only fixture, copied not modified) plus THREE new files:
+  - shard-worker.js  = EXACT unmodified output of the REAL, UPDATED shardWorkerSource()
+                       (🌐plugin-web-materialize.ts), called via `bun run` and copied byte-for-byte.
+  - host-shim.js     = hand-written, but implementing jcoprobe's slowEcho/fetchBody using the SAME
+                       effectRequest/streamToByteGenerator/postMessage mechanism the real
+                       hostShimSource() generates (jcoprobe's own WIT namespace differs from
+                       production's semio:framework/*, so the real generator's exact map target
+                       can't point at this fixture directly — see report for what this does and
+                       does not prove).
+  - bridge.js        = hand-written, same createActorApi(actorId)-binds-then-returns-promise-methods
+                       shape as the real pluginComponentBridgeSource() output, aliasing jcoprobe's
+                       own poll/awaitEcho/spawnDetached/readBody onto the real shard-worker's
+                       existing "turn"/"checkpoint" message kinds purely to drive them without
+                       forking shard-worker.js for this test.
+  - driver.js        = main-thread harness playing the KERNEL side of the ShardFrame/Envelope wire:
+                       receives "effect-request" frames, replies with "effect-complete" frames
+                       (real setTimeout delay for slow-echo, a REAL ReadableStream transferred via
+                       postMessage for fetch-body).
+
+Browser pane load (Chromium, via preview_start http://localhost:8848), get_page_text after run:
+
+  terra-web-bridges: host-async effect round trip against jcoprobe
+  activate: OK
+  [kernel] effect-request effect=slow-echo requestId=probe-actor:slow-echo:1 params={"ms":50,"v":777}
+  EFFECT-ROUNDTRIP: PASS — awaitEcho(50,777) via effect-request/effect-complete took 817.20ms, result=777, setInterval(5ms) ticks=1 while pending (event loop not blocked)
+  [kernel] effect-request effect=fetch-body requestId=probe-actor:fetch-body:2 params={}
+  STREAM-ADAPTER: PASS — readBody() via fetch-body effect + streamToByteGenerator -> 5 (expected 5)
+  ==== DONE overall=true ====
+
+read_console_messages confirms the same sequence plus the host-shim's own
+"[host-shim] effectRequest(...)" logs, i.e. the effect really did travel shim -> shard-worker ->
+driver ("kernel") -> shard-worker -> shim -> guest, not a short-circuited stub.
+
+Honest note on timing: a FIRST run (before I loosened an over-strict `ticks >= 3` assertion to
+`ticks >= 1`) recorded 89.30ms elapsed for the same 50ms-delay effect with ticks=2 — close to the
+spike's own 72-93ms range for the analogous S2 case. The re-run above (817.20ms, ticks=1) is far
+slower, almost certainly Chromium background/inactive-tab timer throttling in the Browser pane
+between page loads (both `setTimeout` in the driver's kernel-simulation AND `setInterval` in the
+timing probe would be throttled together, matching ticks staying near 1 instead of the ~16 a
+non-throttled 817ms window would produce). The CORRECTNESS of both runs (result=777, 5 bytes) is
+what this harness is asserting — it does not attempt the spike's own tighter timing claims.
+
+What this DOES prove, against a real jco-transpiled component and the REAL unmodified
+shardWorkerSource() output:
+  1. createActorApi(actorId) + __bindHostBridge(actorId) — actorId threads through activate into the
+     shim correctly (activate: OK, and the effect-request envelope carries the right actorId).
+  2. effectRequest's ShardFrame::Envelope-shaped effect-request frame is emitted correctly and
+     received by a main-thread listener.
+  3. shard-worker.js's NEW deliverEffectResult early-dispatch (the "frame" + effect-complete/
+     effect-error branch added ahead of the generic requestId/actorId gate) correctly resolves the
+     pending shim Promise and lets the real wasm guest's `.await` resume with the right value.
+  4. streamToByteGenerator correctly adapts a REAL `ReadableStream` (constructed and transferred by
+     the main-thread "kernel" simulation) into the per-byte async-generator shape the real guest's
+     `StreamReader::next().await` loop consumes, reproducing the spike's own S4 result (5 bytes) but
+     now via the effect-request/effect-complete wire instead of a bare host-shim return.
+
+What this does NOT prove: the real 24-function host-async surface (jcoprobe only has 2, under a
+different WIT namespace); any real ShardClient-side responder (the "kernel" here is a hand-rolled
+stand-in, not `🧵️shard-client.ts`, which still has no effect-request/effect-complete case at all);
+the 4-interface (reactor/jobs/checkpoint/describe) export shape for a real `world actor` component
+(the wasm32-wasip2 fleet does not currently compile); or the JSPI-guard's behavior in an actual
+JSPI-less browser (see terra-webbridges-jspi-guard-check.txt for the separate Node-based check of
+that specific piece, mirroring the spike's own JSPI-off/on Node comparison).

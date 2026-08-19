@@ -27,7 +27,7 @@ pub struct SemioCadBounds {
 /// entity set has no honest min/max — `[0,0]`/`[0,0]` matches what `compute` returns for zero
 /// entities (the fold's identity value), keeping the inference-default law correct.
 impl Default for SemioCadBounds {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { min: SemioPoint2 { x: 0.0, y: 0.0 }, max: SemioPoint2 { x: 0.0, y: 0.0 }, entity_count: 0 }
     }
 }
@@ -114,7 +114,7 @@ mod tests {
         CadEntityRecord { handle: handle.into(), layer: layer.into(), entity }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn bounds_matches_hand_built_entity_extent() {
         let snapshot = SemioCadSnapshot {
             schema: STDIO_SEMIOCAD_DOCUMENT_SCHEMA.into(),
@@ -128,13 +128,13 @@ mod tests {
         assert_eq!(bounds.entity_count, 3);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = SemioCadSnapshot { schema: STDIO_SEMIOCAD_DOCUMENT_SCHEMA.into(), layers: Vec::new(), blocks: Vec::new(), entities: vec![record("h0", "0", CadEntity::Line { a: point(0.0, 0.0), b: point(1.0, 1.0) })] };
         assert_eq!(compute_semio_cad_bounds(&snapshot), compute_semio_cad_bounds(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(compute_semio_cad_bounds(&SemioCadSnapshot::default()), SemioCadBounds::default());
     }

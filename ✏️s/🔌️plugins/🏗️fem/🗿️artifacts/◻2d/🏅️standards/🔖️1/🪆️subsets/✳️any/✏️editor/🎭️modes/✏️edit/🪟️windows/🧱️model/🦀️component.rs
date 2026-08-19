@@ -181,13 +181,13 @@ mod tests {
     use super::*;
     use crate::editor::fem2d::testkit::{fem2d_app, render as render_body};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn renders_fem2d_model_scene() {
         let mut app = fem2d_app();
         assert!(render_body(&mut app, BODY_KEY).contains("canvas-2d"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mesh_preview_renders_region_edges() {
         let mut app = fem2d_app();
         crate::editor::fem2d::testkit::dispatch(&mut app, crate::editor::fem2d::Fem2dCommand::SetActiveExample(crate::editor::fem2d::commands::set_active_example::SetActiveExample { example_id: "default".into() }));
@@ -195,7 +195,7 @@ mod tests {
         assert!(json.contains("mesh-edge-"), "expected mesh-edge preview layers in the model scene");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fem2d_model_extent_degenerate_model_returns_one() {
         assert_eq!(fem2d_model_extent(&crate::artifacts::fem2d::schema::empty_fem2d_snapshot()), 1.0);
     }

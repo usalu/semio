@@ -88,7 +88,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn splits_pages_on_pagebreak() {
         let pdf = semio_framework_plugin::resolve_ready(SemioDocumentToPdf::serialize(&sample_semio())).expect("serialize");
         assert_eq!(pdf.pages.len(), 2);
@@ -97,7 +97,7 @@ mod tests {
         assert_eq!(pdf.declared_version, "1.7");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn empty_document_yields_zero_pages() {
         let snap = SemioDocumentSnapshot { schema: STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA.into(), styles: Vec::new(), images: Vec::new(), blocks: Vec::new() };
         let pdf = semio_framework_plugin::resolve_ready(SemioDocumentToPdf::serialize(&snap)).expect("serialize");

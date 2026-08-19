@@ -101,7 +101,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn serialize_then_deserialize_round_trips_triangle_and_vertex_counts() {
         let original = sample_semio_mesh();
         let dwg = semio_framework_plugin::resolve_ready(SemioMeshToDwg::serialize(&original)).expect("serialize");
@@ -114,7 +114,7 @@ mod tests {
         assert_eq!(prim.positions.len(), 4);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn non_triangle_topology_is_a_hard_error() {
         let mut semio = sample_semio_mesh();
         semio.meshes[0].primitives[0].topology = SemioTopology::TriangleFan;

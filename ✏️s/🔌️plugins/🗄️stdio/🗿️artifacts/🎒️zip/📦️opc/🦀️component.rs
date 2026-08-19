@@ -28,7 +28,7 @@ pub enum OpcError {
 }
 
 impl std::fmt::Display for OpcError {
-    async fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Zip(e) => write!(f, "opc: zip layer: {e}"),
             Self::Xml { part, detail } => write!(f, "opc: xml parse of {part}: {detail}"),
@@ -575,7 +575,7 @@ mod tests {
         pkg
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn round_trip_preserves_parts_and_relationships() {
         let pkg = sample_package();
         let bytes = encode_opc(&pkg).expect("encode");
@@ -588,7 +588,7 @@ mod tests {
         assert_eq!(root_rels[0].rel_type, REL_TYPE_OFFICE_DOCUMENT);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn resolve_relationship_target_is_relative_to_owner_directory() {
         // A relationship owned by "word/document.xml" (rels file at
         // "word/_rels/document.xml.rels") targeting "media/image1.png" resolves against
@@ -598,7 +598,7 @@ mod tests {
         assert_eq!(resolve_relationship_target("", "word/document.xml"), "word/document.xml");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn owner_and_rels_path_round_trip_including_root() {
         assert_eq!(rels_part_path_for(""), "_rels/.rels");
         assert_eq!(owner_for_rels_path("_rels/.rels"), Some(String::new()));
@@ -608,7 +608,7 @@ mod tests {
         assert_eq!(owner_for_rels_path("xl/_rels/workbook.xml.rels"), Some("xl/workbook.xml".to_string()));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn content_types_override_wins_over_default() {
         let mut ct = OpcContentTypes::default();
         ct.set_default("xml", "application/xml");
@@ -618,7 +618,7 @@ mod tests {
         assert_eq!(ct.resolve("word/unknownext.bin"), None);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn decode_rejects_missing_content_types() {
         let snap = ZipSnapshot { schema: STDIO_ZIP_DOCUMENT_SCHEMA.into(), entries: vec![ZipEntry { name: "word/document.xml".into(), data: b"<x/>".to_vec(), ..Default::default() }], comment: String::new() };
         let bytes = crate::artifacts::zip::standards::v2_0::subsets::any::io::encode_zip(&snap).unwrap();
@@ -626,7 +626,7 @@ mod tests {
         assert_eq!(err, OpcError::MissingContentTypes);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn sniff_recognizes_content_types_entry() {
         let pkg = sample_package();
         let bytes = encode_opc(&pkg).unwrap();

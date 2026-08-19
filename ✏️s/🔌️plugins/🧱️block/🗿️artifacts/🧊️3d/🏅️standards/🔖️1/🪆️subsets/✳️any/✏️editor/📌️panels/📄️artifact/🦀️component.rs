@@ -54,7 +54,7 @@ mod tests {
     use super::*;
     use crate::editor::block3d::testkit::{new_app, render as render_body};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn renders_document_tree() {
         let mut app = new_app();
         assert!(render_body(&mut app, BLOCK3D_BODY_DOCUMENT).contains("Representations"));

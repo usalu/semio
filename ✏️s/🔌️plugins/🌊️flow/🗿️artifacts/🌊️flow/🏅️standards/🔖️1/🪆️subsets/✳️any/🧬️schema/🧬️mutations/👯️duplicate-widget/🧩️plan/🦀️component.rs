@@ -65,7 +65,7 @@ mod tests {
         DuplicateWidget { source_id: "note-1".into(), new_id: "note-2".into(), synapse_id: "note-1-to-note-2".into(), from_port: "out".into(), to_port: "in".into() }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn plan_folds_to_the_same_snapshot_as_applying_create_then_connect_by_hand() {
         let base = base_with_source_widget();
         let payload = sample_payload();
@@ -80,7 +80,7 @@ mod tests {
         assert_eq!(via_composite, by_hand);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fold_plan_inverse_restores_base_exactly() {
         let base = base_with_source_widget();
         let payload = sample_payload();
@@ -93,14 +93,14 @@ mod tests {
         assert_eq!(restored, base);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn precondition_rejects_a_missing_source_widget() {
         let base = FlowSnapshot::default();
         let error = precondition(&sample_payload(), &base).expect_err("note-1 does not exist yet");
         assert!(error.contains("note-1"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn precondition_rejects_a_new_id_already_taken() {
         let base = base_with_source_widget();
         let payload = DuplicateWidget { new_id: "note-1".into(), ..sample_payload() };

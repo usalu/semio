@@ -331,7 +331,7 @@ mod tests {
     /// hatch retained for `apply_to_artifact`'s own callers — no `SourcingMutation` variant reaches
     /// it any more (the former whole-snapshot-replace variant is banned outright, see `📓️taxonomy.md`), so this exercises the
     /// function directly rather than through a mutation's `diff()`.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn diff_set_snapshot_carries_whole_replacement() {
         let base = CurateSnapshot::default();
         let next = CurateSnapshot::default();
@@ -339,7 +339,7 @@ mod tests {
         assert_eq!(diff.apply(&base).expect("valid mutation diff"), next);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_keeps_later_artifact_replacement() {
         let mut first = CurateDiff {
             artifact: Some(Box::new(CurateArtifact::default())),

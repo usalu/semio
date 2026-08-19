@@ -575,7 +575,7 @@ pub struct RigExtrinsic {
 }
 
 impl Default for RigExtrinsic {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { camera_id: String::new(), rotation_wxyz: [1.0, 0.0, 0.0, 0.0], translation_m: [0.0; 3] }
     }
 }
@@ -623,7 +623,7 @@ pub struct IngestParams {
 }
 
 impl Default for IngestParams {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { frame_sample_stride: 5, max_frames: 200, downscale_long_edge_px: 1600, min_sharpness: 0.3 }
     }
 }
@@ -647,7 +647,7 @@ pub struct FeatureParams {
 }
 
 impl Default for FeatureParams {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { detector: FeatureDetector::default(), target_count: 4000, octaves: 4, edge_threshold: 10.0 }
     }
 }
@@ -672,7 +672,7 @@ pub struct MatchParams {
 }
 
 impl Default for MatchParams {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { matcher: MatcherKind::default(), ratio_test: 0.8, cross_check: true, sequential_window: 8, max_pairs_per_frame: 16, loop_closure: true }
     }
 }
@@ -698,7 +698,7 @@ pub struct SfmParams {
 }
 
 impl Default for SfmParams {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { ransac_iterations: 1000, ransac_threshold_px: 2.0, min_track_length: 3, ba_max_iterations: 50, robust_loss: RobustLossKind::default(), huber_delta_px: 1.5 }
     }
 }
@@ -723,7 +723,7 @@ pub struct DenseParams {
 }
 
 impl Default for DenseParams {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { resolution: DenseResolution::default(), window_radius_px: 3, min_view_consistency: 3, confidence_threshold: 0.5, max_points: 500_000 }
     }
 }
@@ -751,7 +751,7 @@ pub struct MeshParams {
 }
 
 impl Default for MeshParams {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self {
             tsdf_voxel_size_mm: 5.0,
             tsdf_truncation_mm: 20.0,
@@ -777,7 +777,7 @@ pub struct MotionParams {
 }
 
 impl Default for MotionParams {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { enabled: false, max_tracks: 64, track_window_px: 21, min_track_quality: 0.3, min_track_length_frames: 5 }
     }
 }
@@ -799,7 +799,7 @@ pub struct GeoParams {
 }
 
 impl Default for GeoParams {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { enabled: false, origin_lon: None, origin_lat: None, origin_alt: None, gsd_m: 0.05, dsm_cell_m: 0.1, dtm_filter_radius_m: 2.0, ortho_max_px: 4096 }
     }
 }
@@ -868,7 +868,7 @@ pub struct CameraPosePreview {
 }
 
 impl Default for CameraPosePreview {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { camera_id: String::new(), rotation_wxyz: [1.0, 0.0, 0.0, 0.0], translation: [0.0; 3] }
     }
 }
@@ -954,7 +954,7 @@ pub struct RemodelMesh {
 }
 
 impl Default for RemodelMesh {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { mesh: mint_and_stash_mesh(MeshData::default()), source: MeshSource::default(), texture_asset_id: None, watertight: None }
     }
 }
@@ -1190,7 +1190,7 @@ mod tests {
         scene
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn default_scene_has_placeholder_mesh() {
         let scene = default_remodel_scene();
         assert_eq!(scene.results.mesh.source, MeshSource::Placeholder);
@@ -1210,7 +1210,7 @@ mod tests {
         assert_eq!(scene.results.qc, None);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn scene_roundtrips_through_json() {
         let scene = default_remodel_scene();
         let json = serde_json::to_string(&scene).expect("serialize");
@@ -1218,7 +1218,7 @@ mod tests {
         assert_eq!(parsed, scene);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn populated_scene_roundtrips_through_json() {
         let scene = populated_scene_fixture();
         let json = serde_json::to_string(&scene).expect("serialize");
@@ -1226,7 +1226,7 @@ mod tests {
         assert_eq!(parsed, scene);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn packed_f32_roundtrips_exactly() {
         let values = vec![1.5_f32, -2.25, 3.0, f32::MIN_POSITIVE, -0.0];
         let packed = PackedF32::from_f32_slice(&values);
@@ -1241,7 +1241,7 @@ mod tests {
         assert_eq!(empty.to_f32_vec(), Vec::<f32>::new());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn packed_u8_roundtrips_exactly() {
         let values = vec![0_u8, 128, 255, 64];
         let packed = PackedU8::from_u8_slice(&values);
@@ -1256,7 +1256,7 @@ mod tests {
         assert_eq!(empty.to_u8_vec(), Vec::<u8>::new());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn reconstruction_stage_serde_is_stable() {
         let cases: [(ReconstructionStage, &str); 18] = [
             (ReconstructionStage::Idle, "\"idle\""),

@@ -32,7 +32,7 @@ mod tests {
     use super::*;
     use semio_framework_plugin::HistoryView;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn handle_emits_no_mutation_since_the_report_is_always_recomputed() {
         let projection = En1996Snapshot::default();
         let config = NormConfig::default();

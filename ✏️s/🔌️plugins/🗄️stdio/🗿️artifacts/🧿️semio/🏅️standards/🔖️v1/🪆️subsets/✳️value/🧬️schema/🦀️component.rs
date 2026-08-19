@@ -18,7 +18,7 @@ pub struct SemioValueArtifact {
 }
 
 impl Default for SemioValueArtifact {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self::from_snapshot(SemioValueSnapshot::default())
     }
 }

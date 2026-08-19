@@ -33,7 +33,7 @@ mod tests {
     use crate::editor::remodel::testkit::{app, dispatch};
     use crate::editor::remodel::RemodelCommand;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_sfm_params_command_materializes_typed_fields_into_operations() {
         let mut app = app();
         let result = dispatch(&mut app, RemodelCommand::SetSfmParams(set_sfm_params::SetSfmParams { ransac_iterations: 500, ransac_threshold_px: 1.5, min_track_length: 4, ba_max_iterations: 20, robust_loss: "cauchy".into(), huber_delta_px: 2.5 }));
@@ -45,7 +45,7 @@ mod tests {
         assert_eq!(params.robust_loss, RobustLossKind::Cauchy);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_geo_params_command_materializes_typed_fields_into_operations() {
         let mut app = app();
         dispatch(&mut app, RemodelCommand::SetGeoParams(set_geo_params::SetGeoParams { enabled: true, origin_lon: None, origin_lat: None, origin_alt: None, gsd_m: 0.02, dsm_cell_m: 0.2, dtm_filter_radius_m: 2.0, ortho_max_px: 2048 }));
@@ -56,7 +56,7 @@ mod tests {
         assert_eq!(params.ortho_max_px, 2048);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_mesh_params_command_materializes_watertight_knobs() {
         let mut app = app();
         dispatch(
@@ -80,7 +80,7 @@ mod tests {
         assert!(params.self_intersection_check);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_ingest_params_command_materializes_min_sharpness() {
         let mut app = app();
         dispatch(&mut app, RemodelCommand::SetIngestParams(SetIngestParams { frame_sample_stride: 5, max_frames: 200, downscale_long_edge_px: 1600, min_sharpness: 0.42 }));
@@ -89,7 +89,7 @@ mod tests {
 
     /// 🔤️ The three string-keyed enum fields fall back to their documented defaults on an unknown value
     /// rather than failing the dispatch.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn unknown_enum_keywords_fall_back_to_the_documented_defaults() {
         let mut app = app();
         dispatch(&mut app, RemodelCommand::SetFeatureParams(set_feature_params::SetFeatureParams { detector: "nonsense".into(), target_count: 10, octaves: 1, edge_threshold: 1.0 }));
@@ -101,7 +101,7 @@ mod tests {
         assert_eq!(params.dense.resolution, DenseResolution::Medium);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_motion_params_command_materializes_typed_fields() {
         let mut app = app();
         dispatch(&mut app, RemodelCommand::SetMotionParams(set_motion_params::SetMotionParams { enabled: true, max_tracks: 32, track_window_px: 11, min_track_quality: 0.4, min_track_length_frames: 7 }));

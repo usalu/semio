@@ -659,7 +659,7 @@ mod tests {
     use protocol::command::DiffAlgebra;
     use protocol::MutationDiff;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn insert_then_remove_sheet_apply_and_inverse() {
         let base = fixture();
         let insert = XlsxMutation::InsertSheet { sheet: XlsxSheet { name: "New".into(), cells: vec![] } };
@@ -674,7 +674,7 @@ mod tests {
         assert_eq!(after, base);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn remove_sheet_inverse_restores_removed_sheet() {
         // 🎯️ Targets `"Sheet2"`, the LAST sheet in `fixture()` — like docx's own `RemovePart`
         // precedent (see that artifact's `sample_mutations` doc comment), `sheets` is a
@@ -693,7 +693,7 @@ mod tests {
         assert_eq!(after, base);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn rename_sheet_apply_and_inverse() {
         // 🎯️ Targets `"Sheet2"` (the last sheet, empty) — same last-position caveat as
         // `remove_sheet_inverse_restores_removed_sheet` above: `RenameSheet`'s diff is a
@@ -713,7 +713,7 @@ mod tests {
         assert_eq!(after, base);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_and_remove_cell_apply_and_inverse() {
         let base = fixture();
         let set_existing = XlsxMutation::SetCell { sheet_name: "Sheet1".into(), row: 1, col: 0, value: XlsxCellValue::Boolean(true) };
@@ -744,7 +744,7 @@ mod tests {
         assert_eq!(after3, base);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn shared_string_mutations_apply_and_inverse() {
         let base = fixture();
         let insert = XlsxMutation::InsertSharedString { value: "world".into() };
@@ -776,7 +776,7 @@ mod tests {
     }
 
     //#region 🔖️MutationDiffLaw
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mutation_diff_law() {
         for mutation in demo_mutation_cases() {
             let base = fixture();
@@ -793,7 +793,7 @@ mod tests {
     //#endregion 🔖️MutationDiffLaw
 
     //#region 🔖️InverseLaw
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inverse_law() {
         for mutation in demo_mutation_cases() {
             let base = fixture();
@@ -828,7 +828,7 @@ mod tests {
         sheets.modified.iter().find(|m| m.key == sheet_name).expect("sheet modified").diff.cells.as_ref().expect("cells diff present")
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_law() {
         // Canonical: SetCell(1,0)+RemoveCell(1,0) on a fresh row -> annihilated add (mirrors
         // Insert+Remove-before): net effect is "never existed".
@@ -907,7 +907,7 @@ mod tests {
     //#endregion 🔖️AbsorbLaw
 
     //#region 🔖️BetweenRoundtripLaw
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn between_roundtrip_law() {
         let a = sweep_a();
         let b = sweep_b();
@@ -931,7 +931,7 @@ mod tests {
     //#endregion 🔖️BetweenRoundtripLaw
 
     //#region 🔖️CodecRetentionLaw
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn codec_retention_law() {
         let snap = crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::io::export::serializers::build_minimal_xlsx(XlsxWorkbook {
             sheets: vec![XlsxSheet {
@@ -956,7 +956,7 @@ mod tests {
     /// 🎯️ THE acceptance criterion: `sweep_a`/`sweep_b` differ in every mutable field across BOTH
     /// `opc` and `workbook` (see the fixtures' doc comment for exactly how each collection flavor
     /// — removed/modified/added — is exercised).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn field_sweep() {
         let a = sweep_a();
         let b = sweep_b();
@@ -1024,7 +1024,7 @@ mod tests {
     /// content-types, relationships incl. `OpcTargetMode::External`, workbook sheets/cells/shared
     /// strings) and `SetCell`'s direct `XlsxCellValue` payload (incl. `Formula.cached` and raw
     /// `,`/`:`/`[`/`]` bytes-through-hex in a string value).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_text_binary_roundtrip_law() {
         let mut snapshot_with_opc = sweep_b();
         snapshot_with_opc.opc.relationships.get_mut("xl/toModify.xml").unwrap()[0].target_mode = OpcTargetMode::External;

@@ -947,7 +947,7 @@ mod tests {
     // #endregion 🔖️Fixtures
 
     // #region 🔖️DetectTests
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fast_corners_detects_planted_corner_not_flat_region() {
         let img = corner_image(48);
         let corners = fast_corners(&img, 0.2);
@@ -958,7 +958,7 @@ mod tests {
         assert!(fast_corners(&flat, 0.2).is_empty(), "a flat image should have no corners");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn harris_response_is_low_on_flat_and_high_on_corner() {
         let mut flat = ImageGray::new(32, 32);
         for v in flat.data.iter_mut() {
@@ -974,7 +974,7 @@ mod tests {
         assert!(max_corner > max_flat * 10.0 + 1e-4, "corner response {max_corner} should exceed flat response {max_flat}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn detect_orb_keypoints_returns_roughly_target_count_and_spread() {
         let img = textured_image(64);
         let pyramid = build_pyramid(&img, 3);
@@ -991,7 +991,7 @@ mod tests {
         assert!(max_y - min_y > 20.0, "keypoints should spread across y, got span {}", max_y - min_y);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn detect_harris_keypoints_clusters_near_known_corner() {
         let img = corner_image(48);
         let keypoints = detect_harris_keypoints(&img, 30);
@@ -1001,7 +1001,7 @@ mod tests {
         assert!(detect_harris_keypoints(&flat, 30).is_empty(), "a flat image should have no harris keypoints");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn detect_orb_keypoints_returns_empty_for_empty_pyramid_or_zero_target() {
         let img = textured_image(32);
         let pyramid = build_pyramid(&img, 2);
@@ -1010,7 +1010,7 @@ mod tests {
         assert!(detect_orb_keypoints(&empty_pyramid, 10).is_empty(), "an empty pyramid should yield no keypoints");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn detect_harris_keypoints_returns_empty_for_zero_target_or_empty_image() {
         let img = textured_image(16);
         assert!(detect_harris_keypoints(&img, 0).is_empty(), "zero target_count should yield no keypoints");
@@ -1018,7 +1018,7 @@ mod tests {
         assert!(detect_harris_keypoints(&ImageGray::new(5, 0), 10).is_empty(), "a zero-height image should yield no keypoints");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn shi_tomasi_grid_prefers_planted_corner_and_caps_per_cell() {
         let img = corner_image(48);
         let cell = 16u32;
@@ -1033,7 +1033,7 @@ mod tests {
         assert!(results.iter().any(|&(x, y, score)| (x as i32 - 24).abs() <= 8 && (y as i32 - 24).abs() <= 8 && score > 0.0), "expected a high min-eigenvalue point near the planted corner at (24, 24), got {results:?}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn shi_tomasi_grid_handles_zero_cell_without_panicking() {
         let img = corner_image(8);
         let results = shi_tomasi_grid(&img, 0, 2);
@@ -1043,7 +1043,7 @@ mod tests {
     // #endregion 🔖️DetectTests
 
     // #region 🔖️DescribeTests
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn describe_orb_is_deterministic_and_self_hamming_zero() {
         let img = textured_image(48);
         let pyramid = build_pyramid(&img, 2);
@@ -1056,7 +1056,7 @@ mod tests {
     // #endregion 🔖️DescribeTests
 
     // #region 🔖️MatchTests
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn match_brute_recovers_known_translation_correspondences() {
         let size = 72u32;
         let img_a = lcg_texture(size, 123);
@@ -1089,13 +1089,13 @@ mod tests {
         assert!(f64::from(correct) / f64::from(checked) >= 0.9, "expected at least 90% correct correspondences, got {correct}/{checked}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn match_brute_desc_b_empty_returns_empty() {
         let desc_a = [Descriptor256([0, 0, 0, 0])];
         assert!(match_brute(&desc_a, &[], 0.75, false).is_empty(), "matching against an empty pool should yield no matches");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn match_brute_single_candidate_bypasses_ratio_test() {
         let desc_a = [Descriptor256([0, 0, 0, 0]), Descriptor256([u64::MAX, 0, 0, 0])];
         let desc_b = [Descriptor256([0, 0, 0, 0])];
@@ -1104,7 +1104,7 @@ mod tests {
         assert!(matches.iter().all(|m| m.b == 0));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn match_brute_mutual_filters_non_reciprocal_matches() {
         let a0 = Descriptor256([0, 0, 0, 0]);
         let a1 = Descriptor256([0xF, 0, 0, 0]);
@@ -1120,7 +1120,7 @@ mod tests {
         assert_eq!(mutual[0].b, 0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn match_guided_epipolar_recovers_match_along_horizontal_line_and_filters_off_line_candidate() {
         let zero = Descriptor256([0, 0, 0, 0]);
         let kp_a = [Keypoint { x: 10.0, y: 20.0, octave: 0, angle: 0.0, response: 1.0 }];
@@ -1141,7 +1141,7 @@ mod tests {
         assert_eq!(matches[0].distance, 0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn match_guided_epipolar_handles_vertical_epipolar_line() {
         let zero = Descriptor256([0, 0, 0, 0]);
         let kp_a = [Keypoint { x: 15.0, y: 5.0, octave: 0, angle: 0.0, response: 1.0 }];
@@ -1156,7 +1156,7 @@ mod tests {
         assert_eq!(matches[0].b, 0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn match_guided_epipolar_returns_empty_for_empty_kp_b_and_degenerate_matrix() {
         let kp_a = [Keypoint { x: 10.0, y: 20.0, octave: 0, angle: 0.0, response: 1.0 }];
         let desc_a = [Descriptor256([0, 0, 0, 0])];
@@ -1168,7 +1168,7 @@ mod tests {
         assert!(match_guided_epipolar(&kp_a, &desc_a, &kp_b, &desc_b, &degenerate_f, 3.0).is_empty(), "a degenerate (all-zero) F matrix should yield no matches");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn match_zncc_fallback_finds_correct_correspondence_within_radius() {
         let size = 64u32;
         let img_a = lcg_texture(size, 55);
@@ -1184,14 +1184,14 @@ mod tests {
         assert!(matches[0].distance < 100, "expected a high zncc correlation (low distance), got {}", matches[0].distance);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn match_zncc_fallback_returns_empty_for_empty_kp_b() {
         let img = lcg_texture(32, 1);
         let kp_a = [Keypoint { x: 16.0, y: 16.0, octave: 0, angle: 0.0, response: 1.0 }];
         assert!(match_zncc_fallback(&img, &kp_a, &img, &[], 5.0).is_empty(), "an empty kp_b should yield no matches");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn match_zncc_fallback_no_match_when_correlation_below_threshold() {
         let img_a = lcg_texture(48, 1);
         let img_b = lcg_texture(48, 2);
@@ -1202,7 +1202,7 @@ mod tests {
     // #endregion 🔖️MatchTests
 
     // #region 🔖️FlowTests
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn klt_track_recovers_known_shift_and_flags_out_of_bounds() {
         let size = 48u32;
         let img_a = smooth_texture(size);
@@ -1221,7 +1221,7 @@ mod tests {
         assert!(!tracked[3].valid, "a point leaving the image bounds after translation should be invalid");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn forward_backward_prune_invalidates_degenerate_track_and_keeps_good_one() {
         let size = 48u32;
         let img_a = smooth_texture(size);
@@ -1239,7 +1239,7 @@ mod tests {
         assert!(!tracked[1].valid, "an implausible/degenerate track should be invalidated by the fb round-trip check");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn forward_backward_prune_skips_already_invalid_points() {
         let size = 32u32;
         let img = smooth_texture(size);
@@ -1251,7 +1251,7 @@ mod tests {
         assert_eq!(tracked[0], original, "an already-invalid track point should be left untouched");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn klt_track_returns_invalid_for_empty_pyramid_levels() {
         let empty_pyr = Pyramid { levels: Vec::new(), scale: 0.5 };
         let other_pyr = Pyramid { levels: vec![ImageGray::new(8, 8)], scale: 0.5 };
@@ -1263,7 +1263,7 @@ mod tests {
         assert_eq!(tracked[0].error, f32::INFINITY);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn klt_track_flags_invalid_on_singular_flat_region() {
         let flat = ImageGray::new(32, 32);
         let pyr = build_pyramid(&flat, 2);
@@ -1337,7 +1337,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn akaze_repeatability_is_at_least_orb_repeatability_under_scale_and_rotation() {
         let size = 96u32;
         let img_a = blob_image(size);
@@ -1364,7 +1364,7 @@ mod tests {
         assert!(akaze_repeatability >= orb_repeatability, "expected AKAZE repeatability ({akaze_repeatability:.3}) to be at least ORB's repeatability ({orb_repeatability:.3}) under a 1.25x scale + 12deg rotation");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn describe_akaze_is_deterministic_and_self_hamming_zero() {
         let img = textured_image(64);
         let scale_space = build_akaze_scale_space(&img, 3, 4);
@@ -1375,28 +1375,28 @@ mod tests {
         assert_eq!(d1[0].hamming_distance(&d1[0]), 0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fed_tau_schedule_returns_empty_for_non_positive_time() {
         assert!(fed_tau_schedule(0.0, AKAZE_FED_TAU_MAX).is_empty());
         assert!(fed_tau_schedule(-1.0, AKAZE_FED_TAU_MAX).is_empty());
         assert!(!fed_tau_schedule(1.0, AKAZE_FED_TAU_MAX).is_empty(), "a positive evolution time should produce at least one FED step");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn diffusion_step_returns_input_clone_for_zero_sized_image() {
         let empty = ImageGray { width: 0, height: 0, data: Vec::new() };
         let out = diffusion_step(&empty, &[], 0.1);
         assert_eq!(out, empty, "a zero-width/height image should pass through diffusion_step unchanged");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn akaze_grid_top_k_returns_empty_for_no_candidates_or_zero_target() {
         assert!(akaze_grid_top_k(Vec::new(), 64, 64, 16, 10).is_empty(), "no candidates should yield no selection");
         let candidates = vec![AkazeCandidate { x: 1.0, y: 1.0, response: 1.0, level: 0 }];
         assert!(akaze_grid_top_k(candidates, 64, 64, 16, 0).is_empty(), "a zero target_count should yield no selection");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn quadratic_refine_2d_returns_zero_offset_for_singular_hessian() {
         let response = vec![1.0f32; 25];
         let (ox, oy) = quadratic_refine_2d(&response, 5, 2, 2);

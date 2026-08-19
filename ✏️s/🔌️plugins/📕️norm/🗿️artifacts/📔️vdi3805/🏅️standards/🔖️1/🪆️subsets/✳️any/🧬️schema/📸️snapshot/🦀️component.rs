@@ -41,7 +41,7 @@ crate::impl_norm_artifact_record!(Vdi3805Snapshot, extension = "vdi3805", envelo
 //#endregion 🔖️HandcraftedArtifactCodecs
 
 impl Default for Vdi3805Snapshot {
-    async fn default() -> Self {
+    fn default() -> Self {
         crate::artifacts::vdi3805::reference_fixture()
     }
 }

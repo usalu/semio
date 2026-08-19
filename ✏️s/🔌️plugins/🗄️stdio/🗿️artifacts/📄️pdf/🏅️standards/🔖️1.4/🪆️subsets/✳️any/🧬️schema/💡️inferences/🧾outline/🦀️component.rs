@@ -29,7 +29,7 @@ mod tests {
     use super::*;
     use crate::artifacts::pdf::standards::v1_4::subsets::any::schema::snapshot::PageDoc;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn counts_words_and_chars_in_page_text() {
         let snapshot = PdfSnapshot { schema: "stdio.pdf".into(), page: PageDoc { width: 612.0, height: 792.0, text: "hello world".into() } };
         let outline = PdfOutline::compute(&snapshot);
@@ -38,7 +38,7 @@ mod tests {
         assert_eq!(outline.char_count, "hello world".chars().count() as u32);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn outline_is_deterministic() {
         let snapshot = PdfSnapshot::default();
         assert_eq!(PdfOutline::compute(&snapshot), PdfOutline::compute(&snapshot));

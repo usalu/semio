@@ -526,7 +526,7 @@ mod tests {
         vec![[0.0, 0.0], [side, 0.0], [side, side], [0.0, side]]
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn triangulate_square_area_matches_input() {
         let outer = square(10.0);
         let expected = shoelace_area(&outer);
@@ -536,7 +536,7 @@ mod tests {
         assert!((total_area(&mesh) - expected).abs() < 1e-9);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn triangulate_respects_hole_area() {
         let outer = square(10.0);
         let hole = vec![[3.0, 3.0], [7.0, 3.0], [7.0, 7.0], [3.0, 7.0]];
@@ -553,7 +553,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn triangulate_honors_constrained_boundary_edges() {
         // L-shape: non-convex outer boundary.
         let outer = vec![[0.0, 0.0], [10.0, 0.0], [10.0, 5.0], [5.0, 5.0], [5.0, 10.0], [0.0, 10.0]];
@@ -580,7 +580,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn refined_mesh_respects_min_angle() {
         // A long thin rectangle: all INPUT corners are 90 degrees (refinable), but the single
         // diagonal edge spade's initial CDT picks to fill it naturally produces slivers absent
@@ -595,7 +595,7 @@ mod tests {
         assert!(quality.min_angle_deg >= opts.min_angle_deg - epsilon, "min_angle={}", quality.min_angle_deg);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn quad_grid_has_expected_topology() {
         let mesh = quad_grid(0.0, 0.0, 3.0, 2.0, 3, 2);
         assert_eq!(mesh.quads.len(), 6);
@@ -607,7 +607,7 @@ mod tests {
         assert_eq!(mesh.quads[5], [6, 7, 11, 10]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn to_quadratic_welds_shared_edges() {
         let domain = PlanarDomain { outer: square(4.0), holes: vec![] };
         let mesh = triangulate(&domain, &no_refine()).expect("triangulates");
@@ -625,7 +625,7 @@ mod tests {
         assert_eq!(new_points, unique_edges.len());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn extrude_tri_mesh_volume_matches_area_times_height() {
         let domain = PlanarDomain { outer: square(4.0), holes: vec![] };
         let mesh = triangulate(&domain, &no_refine()).expect("triangulates");
@@ -637,7 +637,7 @@ mod tests {
         assert!((total - area * height).abs() < 1e-6, "total={} expected={}", total, area * height);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn extrude_quad_mesh_volume_matches_area_times_height() {
         let mesh = quad_grid(0.0, 0.0, 4.0, 3.0, 4, 3);
         let area = 12.0;
@@ -648,7 +648,7 @@ mod tests {
         assert!((total - area * height).abs() < 1e-6, "total={} expected={}", total, area * height);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn split_to_tets_preserves_volume() {
         let domain = PlanarDomain { outer: square(4.0), holes: vec![] };
         let mesh = triangulate(&domain, &no_refine()).expect("triangulates");
@@ -666,7 +666,7 @@ mod tests {
         assert!((pre_hex - post_hex_total).abs() < 1e-9);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn split_to_tets_shared_faces_are_parity_consistent() {
         // Two Hex8 cells sharing the quad face [1,2,6,5] (cell A's +x face / cell B's -x face).
         let points = vec![
@@ -714,7 +714,7 @@ mod tests {
         assert_eq!(from_a, from_b, "shared face must split identically from both cells");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn volume_mesh_quality_detects_inverted_cell() {
         let points = vec![[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]];
         let good = VolumeMesh { points: points.clone(), cells: vec![Cell::Tet4([0, 1, 2, 3])] };
@@ -728,7 +728,7 @@ mod tests {
     /// 🧱️ A `side`x`side` square extruded `height` tall, 1 layer, split to tets — `boundary_faces`'s
     /// total triangle area must equal the analytic box surface `2*side² + 4*side*height` (top + bottom
     /// + 4 sides), which also confirms every internal (shared, appears-twice) face was excluded.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn boundary_faces_area_matches_extruded_box_surface() {
         let side = 4.0;
         let height = 3.0;
@@ -762,7 +762,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn triangulate_rejects_degenerate_outer_boundary() {
         let domain = PlanarDomain { outer: vec![[0.0, 0.0], [1.0, 0.0]], holes: vec![] };
         match triangulate(&domain, &no_refine()) {
@@ -771,7 +771,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn triangulate_rejects_degenerate_hole() {
         let domain = PlanarDomain { outer: square(10.0), holes: vec![vec![[3.0, 3.0], [4.0, 4.0]]] };
         match triangulate(&domain, &no_refine()) {
@@ -780,7 +780,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn point_in_polygon_returns_false_for_degenerate_polygon() {
         assert!(!point_in_polygon([0.0, 0.0], &[]));
         assert!(!point_in_polygon([0.0, 0.0], &[[0.0, 0.0], [1.0, 0.0]]));
@@ -789,7 +789,7 @@ mod tests {
     /// 📊️ `tri_mesh_quality` flags a clockwise-wound (negative signed area) triangle via
     /// `min_jacobian_sign_positive`, and reports `0.0` angle bounds for an empty mesh instead of the
     /// unhelpful `f64::INFINITY`/`NEG_INFINITY` an empty min/max fold would otherwise leave behind.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn tri_mesh_quality_detects_inverted_winding_and_handles_empty_mesh() {
         let ccw = TriMesh2 { points: vec![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0]], tris: vec![[0, 1, 2]] };
         assert!(tri_mesh_quality(&ccw).min_jacobian_sign_positive);
@@ -806,7 +806,7 @@ mod tests {
 
     /// 🔺️ A `Cell::Tet4` already present in the input `VolumeMesh` passes through `split_to_tets`
     /// completely unchanged — the only cell kind besides `Wedge6`/`Hex8` `split_to_tets` accepts.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn split_to_tets_passes_through_existing_tet4_cells() {
         let points = vec![[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]];
         let tet = Cell::Tet4([0, 1, 2, 3]);

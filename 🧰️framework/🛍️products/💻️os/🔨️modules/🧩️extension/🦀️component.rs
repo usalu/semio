@@ -96,7 +96,7 @@ impl ExtensionPackageManifest {
     /// ✅️ Contract freeze §4 registration gate: `extends` must equal the first declared
     /// dependency's plugin id (vacuously true when both are empty — an extension that declares no
     /// host and no dependencies yet).
-    pub fn extends_matches_primary_dependency(&self) -> bool {
+    pub async fn extends_matches_primary_dependency(&self) -> bool {
         match self.dependencies.first() {
             Some(dependency) => dependency.plugin_id == self.extends,
             None => self.extends.is_empty(),
@@ -115,7 +115,7 @@ pub struct ExtensionPackage {
 }
 
 /// 📨 Canonical semio binary envelope for an `.sxt` package.
-pub fn extension_package_envelope() -> SemioEnvelope {
+pub async fn extension_package_envelope() -> SemioEnvelope {
     SemioEnvelope {
         plugin: EXTENSION_PACKAGE_PLUGIN.into(),
         artifact: EXTENSION_PACKAGE_ARTIFACT.into(),
@@ -126,13 +126,13 @@ pub fn extension_package_envelope() -> SemioEnvelope {
 //#endregion 🔖️Package
 
 //#region 🔖️Zip
-fn zip_file_options() -> zip::write::SimpleFileOptions {
+async fn zip_file_options() -> zip::write::SimpleFileOptions {
     zip::write::SimpleFileOptions::default()
         .compression_method(zip::CompressionMethod::Deflated)
         .last_modified_time(zip::DateTime::default())
 }
 
-fn write_zip_file<W: Write + Seek>(
+async fn write_zip_file<W: Write + Seek>(
     writer: &mut zip::ZipWriter<W>,
     name: &str,
     bytes: &[u8],
@@ -143,14 +143,14 @@ fn write_zip_file<W: Write + Seek>(
     Ok(())
 }
 
-fn read_zip_entry<R: Read + Seek>(archive: &mut zip::ZipArchive<R>, name: &str) -> Result<Vec<u8>, ExtensionPackageError> {
+async fn read_zip_entry<R: Read + Seek>(archive: &mut zip::ZipArchive<R>, name: &str) -> Result<Vec<u8>, ExtensionPackageError> {
     let mut file = archive.by_name(name).map_err(|_| ExtensionPackageError::MissingEntry(name.into()))?;
     let mut bytes = Vec::new();
     file.read_to_end(&mut bytes)?;
     Ok(bytes)
 }
 
-fn build_zip_payload(
+async fn build_zip_payload(
     manifest: &ExtensionPackageManifest,
     component_wasm: &[u8],
     assets: &[(String, Vec<u8>)],
@@ -163,10 +163,12 @@ fn build_zip_payload(
     }
 
     let mut writer = zip::ZipWriter::new(Cursor::new(Vec::new()));
-    let options = zip_file_options();
+    // 🪡️ `SimpleFileOptions` is `Copy` (zip 2.x `write.rs`); `options` is awaited exactly ONCE here
+    // and reused by value below — the original awaited the same future 3 times, E0382 (R10 residue #2).
+    let options = zip_file_options().await;
     let manifest_bytes = serde_json::to_vec(manifest)?;
-    write_zip_file(&mut writer, MANIFEST_ENTRY, &manifest_bytes, options)?;
-    write_zip_file(&mut writer, COMPONENT_ENTRY, component_wasm, options)?;
+    write_zip_file(&mut writer, MANIFEST_ENTRY, &manifest_bytes, options).await?;
+    write_zip_file(&mut writer, COMPONENT_ENTRY, component_wasm, options).await?;
 
     let mut sorted_assets: Vec<&(String, Vec<u8>)> = assets.iter().collect();
     sorted_assets.sort_by(|a, b| a.0.cmp(&b.0));
@@ -176,20 +178,20 @@ fn build_zip_payload(
         } else {
             format!("{ASSETS_PREFIX}{name}")
         };
-        write_zip_file(&mut writer, &entry, bytes, options)?;
+        write_zip_file(&mut writer, &entry, bytes, options).await?;
     }
 
     Ok(writer.finish()?.into_inner())
 }
 
-fn parse_zip_payload(payload: &[u8]) -> Result<ExtensionPackage, ExtensionPackageError> {
+async fn parse_zip_payload(payload: &[u8]) -> Result<ExtensionPackage, ExtensionPackageError> {
     let mut archive = zip::ZipArchive::new(Cursor::new(payload))?;
-    let manifest_bytes = read_zip_entry(&mut archive, MANIFEST_ENTRY)?;
+    let manifest_bytes = read_zip_entry(&mut archive, MANIFEST_ENTRY).await?;
     let manifest: ExtensionPackageManifest = serde_json::from_slice(&manifest_bytes)?;
     if manifest.package_format != EXTENSION_PACKAGE_FORMAT {
         return Err(ExtensionPackageError::InvalidPackageFormat(manifest.package_format));
     }
-    let component_wasm = read_zip_entry(&mut archive, COMPONENT_ENTRY)?;
+    let component_wasm = read_zip_entry(&mut archive, COMPONENT_ENTRY).await?;
     if component_wasm.is_empty() {
         return Err(ExtensionPackageError::EmptyComponent);
     }
@@ -218,8 +220,8 @@ fn parse_zip_payload(payload: &[u8]) -> Result<ExtensionPackage, ExtensionPackag
     })
 }
 
-fn expect_extension_envelope(envelope: &SemioEnvelope) -> Result<(), ExtensionPackageError> {
-    let expected = extension_package_envelope();
+async fn expect_extension_envelope(envelope: &SemioEnvelope) -> Result<(), ExtensionPackageError> {
+    let expected = extension_package_envelope().await;
     if envelope != &expected {
         return Err(ExtensionPackageError::UnexpectedEnvelope(envelope.binary_token()));
     }
@@ -229,30 +231,30 @@ fn expect_extension_envelope(envelope: &SemioEnvelope) -> Result<(), ExtensionPa
 
 //#region 🔖️Api
 /// 📦️ Packs an extension into a `.sxt` byte stream (semio binary envelope + deterministic zip).
-pub fn pack(
+pub async fn pack(
     manifest: &ExtensionPackageManifest,
     component_wasm: &[u8],
     assets: &[(String, Vec<u8>)],
 ) -> Result<Vec<u8>, ExtensionPackageError> {
-    let payload = build_zip_payload(manifest, component_wasm, assets)?;
-    Ok(wrap_binary(&extension_package_envelope(), &payload))
+    let payload = build_zip_payload(manifest, component_wasm, assets).await?;
+    Ok(wrap_binary(&extension_package_envelope().await, &payload))
 }
 
 /// 📥️ Unpacks a `.sxt` byte stream into manifest, component, and assets.
-pub fn unpack(bytes: &[u8]) -> Result<ExtensionPackage, ExtensionPackageError> {
+pub async fn unpack(bytes: &[u8]) -> Result<ExtensionPackage, ExtensionPackageError> {
     let (envelope, payload) = unwrap_binary(bytes)?;
-    expect_extension_envelope(&envelope)?;
-    parse_zip_payload(&payload)
+    expect_extension_envelope(&envelope).await?;
+    parse_zip_payload(&payload).await
 }
 
 /// ✅ Verifies a `.sxt` byte stream and returns its package manifest.
-pub fn verify(bytes: &[u8]) -> Result<ExtensionPackageManifest, ExtensionPackageError> {
-    Ok(unpack(bytes)?.manifest)
+pub async fn verify(bytes: &[u8]) -> Result<ExtensionPackageManifest, ExtensionPackageError> {
+    Ok(unpack(bytes).await?.manifest)
 }
 
 /// 🔓️ Blake3 content hash of the full `.sxt` bytes (same primitive as `BlobStore::put` dedup).
-pub fn content_hash(bytes: &[u8]) -> String {
-    semio_framework_hash::hash_bytes(bytes)
+pub async fn content_hash(bytes: &[u8]) -> String {
+    semio_framework_hash::hash_bytes(bytes).await
 }
 //#endregion 🔖️Api
 
@@ -260,7 +262,7 @@ pub fn content_hash(bytes: &[u8]) -> String {
 mod tests {
     use super::*;
 
-    fn sample_manifest() -> ExtensionPackageManifest {
+    async fn sample_manifest() -> ExtensionPackageManifest {
         ExtensionPackageManifest {
             extension_id: "flow.math".into(),
             label: "Flow Math".into(),
@@ -276,7 +278,7 @@ mod tests {
 
     //#region 🔖️DependencyAndContributionTests
     #[test]
-    fn extends_matches_primary_dependency_holds_for_the_sample_and_the_vacuous_case() {
+    async fn extends_matches_primary_dependency_holds_for_the_sample_and_the_vacuous_case() {
         assert!(sample_manifest().extends_matches_primary_dependency());
 
         let vacuous = ExtensionPackageManifest { extends: String::new(), dependencies: Vec::new(), ..sample_manifest() };
@@ -284,7 +286,7 @@ mod tests {
     }
 
     #[test]
-    fn extends_matches_primary_dependency_rejects_mismatch_and_missing_dependency() {
+    async fn extends_matches_primary_dependency_rejects_mismatch_and_missing_dependency() {
         let mismatched = ExtensionPackageManifest { extends: "cad".into(), ..sample_manifest() };
         assert!(!mismatched.extends_matches_primary_dependency());
 
@@ -293,7 +295,7 @@ mod tests {
     }
 
     #[test]
-    fn dependencies_default_absent_on_the_wire() {
+    async fn dependencies_default_absent_on_the_wire() {
         let bare = serde_json::json!({
             "extensionId": "flow.math",
             "label": "Flow Math",
@@ -309,7 +311,7 @@ mod tests {
     }
 
     #[test]
-    fn package_plugin_dependency_round_trips_as_a_plain_string_pair() {
+    async fn package_plugin_dependency_round_trips_as_a_plain_string_pair() {
         let dependency = PackagePluginDependency { plugin_id: "cad".into(), version: "^1.0.0".into() };
         let json = serde_json::to_value(&dependency).unwrap();
         assert_eq!(json, serde_json::json!({ "pluginId": "cad", "version": "^1.0.0" }));
@@ -319,7 +321,7 @@ mod tests {
     //#endregion 🔖️DependencyAndContributionTests
 
     #[test]
-    fn pack_unpack_verify_round_trip() {
+    async fn pack_unpack_verify_round_trip() {
         let manifest = sample_manifest();
         let component = b"\0asm\x01\x00\x00\x00fake-component".to_vec();
         let assets = vec![
@@ -345,14 +347,14 @@ mod tests {
     }
 
     #[test]
-    fn content_hash_is_stable_blake3() {
+    async fn content_hash_is_stable_blake3() {
         let packed = pack(&sample_manifest(), b"component-bytes", &[]).expect("pack");
         assert_eq!(content_hash(&packed), semio_framework_hash::hash_bytes(&packed));
         assert_ne!(content_hash(&packed), content_hash(b"other"));
     }
 
     #[test]
-    fn verify_rejects_wrong_envelope() {
+    async fn verify_rejects_wrong_envelope() {
         let foreign = wrap_binary(
             &SemioEnvelope {
                 plugin: "os".into(),
@@ -366,7 +368,7 @@ mod tests {
     }
 
     #[test]
-    fn pack_rejects_empty_component() {
+    async fn pack_rejects_empty_component() {
         assert!(matches!(
             pack(&sample_manifest(), b"", &[]),
             Err(ExtensionPackageError::EmptyComponent)

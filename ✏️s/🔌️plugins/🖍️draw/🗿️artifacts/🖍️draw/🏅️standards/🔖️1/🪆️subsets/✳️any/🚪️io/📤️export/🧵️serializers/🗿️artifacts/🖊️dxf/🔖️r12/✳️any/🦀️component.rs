@@ -15,7 +15,7 @@ pub struct DrawIntoDxf;
 impl Serializer<DrawSnapshot> for DrawIntoDxf {
     const INTO: Dialect = DXF_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    async fn serialize(_from: &DrawSnapshot) -> IoResult<IoPayload> {
+    fn serialize(_from: &DrawSnapshot) -> IoResult<IoPayload> {
         Err(IoError { message: "DrawIntoDxf: DXF export is not yet implemented".to_string(), diagnostics: Vec::new() })
     }
 }

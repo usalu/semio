@@ -56,7 +56,7 @@ pub enum DxfValue {
 }
 
 impl Default for DxfValue {
-    async fn default() -> Self {
+    fn default() -> Self {
         DxfValue::Str { value: String::new() }
     }
 }
@@ -306,7 +306,7 @@ pub struct DxfSnapshot {
 }
 
 impl Default for DxfSnapshot {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { schema: STDIO_DXF_DOCUMENT_SCHEMA.into(), header_vars: Vec::new(), tables: DxfTables::default(), other_tables: Vec::new(), blocks: Vec::new(), entities: Vec::new() }
     }
 }
@@ -1086,7 +1086,7 @@ mod tests {
         .to_string()
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn parses_every_section_and_entity_kind() {
         let snap = parse_dxf_document(&sample_dxf_text()).expect("parse");
         assert_eq!(snap.header_vars.len(), 2);
@@ -1126,7 +1126,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn codec_retention_is_a_fixed_point_from_generation_two() {
         let snap1 = parse_dxf_document(&sample_dxf_text()).expect("parse");
         let text2 = print_dxf_document(&snap1);
@@ -1134,7 +1134,7 @@ mod tests {
         assert_eq!(snap1, snap2, "decode(encode(decode(text))) must be a fixed point");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn snapshot_parse_dsl_print_dsl_round_trips() {
         let snap = parse_dxf_document(&sample_dxf_text()).expect("parse");
         let printed = store::ArtifactDsl::print_dsl(&snap);

@@ -98,7 +98,7 @@ impl store::ArtifactPack for NoteConfig {
 
 
 impl Default for NoteConfig {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { engagement_input: String::new(), camera: NoteCamera::default(), active_utility_id: "selectDirect".into(), locale: "en-US".into() }
     }
 }
@@ -230,7 +230,7 @@ impl Mutation<NoteConfig> for NoteConfigMutation {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn note_config_default_matches_the_pre_migration_runtime_defaults() {
         let config = NoteConfig::default();
         assert_eq!(config.active_utility_id, "selectDirect");
@@ -239,7 +239,7 @@ mod tests {
     }
 
     /// 🧮️ B1 Config dsl/pack round-trip law (WORKFLOWS-END-TO-END-TYPED-PORTS-REAL-SCHEMA-FLOW-CONFIG-ON-NODE).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn note_config_dsl_pack_round_trips() {
         let config = NoteConfig {
             engagement_input: "Renaming…".into(),
@@ -250,7 +250,7 @@ mod tests {
         store::os_store::test_support::assert_dsl_pack_equivalence(&config);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn note_config_operation_text_and_binary_round_trip_every_variant() {
         let config = NoteConfig {
             engagement_input: "Renaming…".into(),
@@ -267,7 +267,7 @@ mod tests {
 
     /// 🧮️ Every `NoteConfigMutation`'s `backwards()` is the whole-config snapshot from just before it —
     /// mirrors `shooting_op`'s analogous coverage.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn note_config_operation_backwards_is_always_a_snapshot_of_the_prior_config() {
         let base = NoteConfig::default();
         let operation = NoteConfigMutation::SetActiveUtility { utility_id: "pencil".into() };

@@ -95,7 +95,7 @@ pub struct BlockCamera2d {
 }
 
 impl Default for BlockCamera2d {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { x: 0.0, y: 0.0, zoom: 1.0 }
     }
 }
@@ -114,7 +114,7 @@ pub struct BlockCamera3d {
 }
 
 impl Default for BlockCamera3d {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { position: [0.0, 0.0, 0.0], target: [0.0, 0.0, 0.0], zoom: 1.0 }
     }
 }
@@ -182,32 +182,32 @@ pub async fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyEr
 /// the same `Dialect` — real framework testkit functions (W0-F gap closure), not local stand-ins.
 #[cfg(test)]
 mod surface_tests {
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn block2d_viewer_never_mutates() {
         semio_framework_plugin::testkit::assert_viewer_never_mutates::<crate::viewer::block2d::Block2dViewer>();
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn block2d_editor_and_viewer_share_dialect() {
         semio_framework_plugin::testkit::assert_editor_and_viewer_share_dialect::<crate::editor::block2d::Block2dPlayApp, crate::viewer::block2d::Block2dViewer>();
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn block3d_viewer_never_mutates() {
         semio_framework_plugin::testkit::assert_viewer_never_mutates::<crate::viewer::block3d::Block3dViewer>();
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn block3d_editor_and_viewer_share_dialect() {
         semio_framework_plugin::testkit::assert_editor_and_viewer_share_dialect::<crate::editor::block3d::Block3dPlayApp, crate::viewer::block3d::Block3dViewer>();
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn block5d_viewer_never_mutates() {
         semio_framework_plugin::testkit::assert_viewer_never_mutates::<crate::viewer::block5d::Block5dViewer>();
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn block5d_editor_and_viewer_share_dialect() {
         semio_framework_plugin::testkit::assert_editor_and_viewer_share_dialect::<crate::editor::block5d::Block5dPlayApp, crate::viewer::block5d::Block5dViewer>();
     }

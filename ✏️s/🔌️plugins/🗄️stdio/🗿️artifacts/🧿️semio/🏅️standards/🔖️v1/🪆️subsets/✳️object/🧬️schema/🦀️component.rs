@@ -32,7 +32,7 @@ pub struct SemioObjectArtifact {
 }
 
 impl Default for SemioObjectArtifact {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self::from_snapshot(SemioObjectSnapshot::default())
     }
 }
@@ -154,7 +154,7 @@ pub mod derived_construction {
     mod tests {
         use super::*;
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn typed_constructors_build_a_populated_snapshot() {
             let snapshot = SemioObjectBuilderConstruction::new()
                 .with_transform(SemioTransform { translation: crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint3 { x: 1.0, y: 0.0, z: 0.0 }, ..SemioTransform::identity() })

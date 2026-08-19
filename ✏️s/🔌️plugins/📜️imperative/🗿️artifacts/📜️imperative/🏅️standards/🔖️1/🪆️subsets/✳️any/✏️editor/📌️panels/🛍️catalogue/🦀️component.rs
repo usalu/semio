@@ -37,7 +37,7 @@ mod tests {
     use super::*;
     use crate::editor::imperative::testkit::{imperative_app, render as render_body};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn catalogue_lists_step_kinds_in_native_locale_by_default() {
         let mut app = imperative_app();
         let json = render_body(&mut app, IMPERATIVE_PLAY_BODY_CATALOGUE);
@@ -46,7 +46,7 @@ mod tests {
         assert!(json.contains("While"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn catalogue_resolves_native_german_from_the_config_locale() {
         use crate::editor::imperative::commands::set_locale;
         use crate::editor::imperative::testkit::dispatch;

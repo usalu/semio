@@ -88,7 +88,7 @@ pub struct BmpSnapshot {
 }
 
 impl Default for BmpSnapshot {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self {
             schema: STDIO_BMP_DOCUMENT_SCHEMA.into(),
             header_size: 40,

@@ -177,7 +177,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn serialize_then_deserialize_round_trips_at_the_semio_level() {
         let original = sample_semio_mesh();
         let ply = semio_framework_plugin::resolve_ready(SemioMeshToPly::serialize(&original)).expect("serialize");
@@ -191,7 +191,7 @@ mod tests {
         assert_eq!(original.meshes[0].primitives[0].indices, round_tripped.meshes[0].primitives[0].indices);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn non_uniform_color_presence_is_a_hard_error() {
         let mut semio = sample_semio_mesh();
         semio.meshes[0].primitives.push(SemioPrimitive {
@@ -208,7 +208,7 @@ mod tests {
         assert!(format!("{err:?}").contains("colors"), "got {err:?}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn non_triangle_non_points_topology_is_a_hard_error() {
         let mut semio = sample_semio_mesh();
         semio.meshes[0].primitives[0].topology = SemioTopology::LineStrip;

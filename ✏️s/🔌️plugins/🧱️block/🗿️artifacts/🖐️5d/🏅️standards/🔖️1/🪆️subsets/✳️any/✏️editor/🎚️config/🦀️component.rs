@@ -84,7 +84,7 @@ impl store::ArtifactPack for Block5dConfig {
 
 
 impl Default for Block5dConfig {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { locale: "en-US".into() }
     }
 }
@@ -202,7 +202,7 @@ impl Mutation<Block5dConfig> for Block5dConfigMutation {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn block5d_config_default_has_locale() {
         let config = Block5dConfig::default();
         assert_eq!(config.locale, "en-US");
@@ -211,7 +211,7 @@ mod tests {
     /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: selection moved off this config
     /// onto the framework's `grip` interaction domain — this now exercises `SetLocale` for the
     /// backwards-restores-snapshot contract.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn config_operation_backwards_restores_the_pre_operation_snapshot() {
         let base = Block5dConfig::default();
         let operation = Block5dConfigMutation::SetLocale { value: "de-DE".into() };

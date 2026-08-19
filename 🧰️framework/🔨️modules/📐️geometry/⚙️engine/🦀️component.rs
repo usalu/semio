@@ -82,10 +82,12 @@ impl Point {
     pub async fn distance(self, other: Self) -> f64 {
         self.0.distance(other.0)
     }
-    pub async fn x(&self) -> f64 {
+    // 🚫️async: E1 pure field accessor consumed by sync closures (sort_by/dedup_by/map) — see R9
+    pub fn x(&self) -> f64 {
         self.0.x
     }
-    pub async fn y(&self) -> f64 {
+    // 🚫️async: E1 pure field accessor consumed by sync closures (sort_by/dedup_by/map) — see R9
+    pub fn y(&self) -> f64 {
         self.0.y
     }
     /// 🔓️ Escape hatch for the renderer bridge crate to interop with `kurbo`/`vello`.
@@ -143,10 +145,12 @@ impl Vec2 {
     pub async fn dot(self, other: Self) -> f64 {
         self.0.dot(other.0)
     }
-    pub async fn x(&self) -> f64 {
+    // 🚫️async: E1 pure field accessor consumed by sync closures (sort_by/dedup_by/map) — see R9
+    pub fn x(&self) -> f64 {
         self.0.x
     }
-    pub async fn y(&self) -> f64 {
+    // 🚫️async: E1 pure field accessor consumed by sync closures (sort_by/dedup_by/map) — see R9
+    pub fn y(&self) -> f64 {
         self.0.y
     }
     /// 🔓️ Escape hatch for the renderer bridge crate to interop with `kurbo`/`vello`.
@@ -156,8 +160,9 @@ impl Vec2 {
 }
 
 impl From<(f64, f64)> for Vec2 {
+    // 🚫️async: E1 `From::from` — pure kurbo wrap, inlined sync rather than routed through the async `Vec2::new` — see R9
     fn from((x, y): (f64, f64)) -> Self {
-        Self::new(x, y)
+        Self(kurbo::Vec2::new(x, y))
     }
 }
 
@@ -489,7 +494,7 @@ pub async fn append_shape_to_path<'a>(path: &mut BezPath, shape: impl Into<Shape
     let shape = shape.into();
     with_shape_ref!(shape, |s| {
         for el in kurbo::Shape::path_elements(&s.0, tolerance) {
-            path.push(el.into());
+            path.push(el.into()).await;
         }
     });
 }
@@ -505,14 +510,14 @@ pub async fn clamp_f64(value: f64, min: f64, max: f64) -> f64 {
 
 #[inline]
 pub async fn distance_between(left: Point, right: Point) -> f64 {
-    (right - left).hypot()
+    (right - left).hypot().await
 }
 
 #[inline]
 pub async fn normalize_or_zero(vector: Vec2) -> Vec2 {
-    let len = vector.hypot();
+    let len = vector.hypot().await;
     if len <= f64::EPSILON {
-        return Vec2::new(0.0, 0.0);
+        return Vec2::new(0.0, 0.0).await;
     }
     vector / len
 }
@@ -535,16 +540,16 @@ pub async fn ray_from_origin_to_axis_aligned_rectangle_edge(hw: f64, hh: f64, ux
         }
     }
     if !t_best.is_finite() || t_best <= 0.0 || t_best == f64::INFINITY {
-        return Point::new(hw, 0.0);
+        return Point::new(hw, 0.0).await;
     }
-    Point::new(ux * t_best, uy * t_best)
+    Point::new(ux * t_best, uy * t_best).await
 }
 
 pub async fn distance_point_to_polyline(point: Point, path: &BezPath, _segments: usize) -> f64 {
     let mut smallest = f64::INFINITY;
     let mut start: Option<Point> = None;
     let mut previous: Option<Point> = None;
-    for el in path.elements() {
+    for el in path.elements().await {
         match el {
             PathEl::MoveTo(p) => {
                 start = Some(p);
@@ -552,13 +557,13 @@ pub async fn distance_point_to_polyline(point: Point, path: &BezPath, _segments:
             }
             PathEl::LineTo(p) => {
                 if let Some(prev) = previous {
-                    smallest = smallest.min(distance_to_segment(point, prev, p));
+                    smallest = smallest.min(distance_to_segment(point, prev, p).await);
                 }
                 previous = Some(p);
             }
             PathEl::ClosePath => {
                 if let (Some(first), Some(prev)) = (start, previous) {
-                    smallest = smallest.min(distance_to_segment(point, prev, first));
+                    smallest = smallest.min(distance_to_segment(point, prev, first).await);
                 }
             }
             _ => {}
@@ -569,12 +574,12 @@ pub async fn distance_point_to_polyline(point: Point, path: &BezPath, _segments:
 
 pub async fn distance_point_to_cubic_bezier(point: Point, curve: CubicBez, segments: usize) -> f64 {
     let mut smallest = f64::INFINITY;
-    let mut previous = curve.eval(0.0);
+    let mut previous = curve.eval(0.0).await;
     let n = segments.max(1);
     for index in 1..=n {
         let t = index as f64 / n as f64;
-        let next = curve.eval(t);
-        smallest = smallest.min(distance_to_segment(point, previous, next));
+        let next = curve.eval(t).await;
+        smallest = smallest.min(distance_to_segment(point, previous, next).await);
         previous = next;
     }
     smallest
@@ -582,13 +587,13 @@ pub async fn distance_point_to_cubic_bezier(point: Point, curve: CubicBez, segme
 
 async fn distance_to_segment(point: Point, start: Point, end: Point) -> f64 {
     let segment = end - start;
-    let segment_len_squared = segment.dot(segment);
+    let segment_len_squared = segment.dot(segment).await;
     if segment_len_squared <= f64::EPSILON {
-        return distance_between(point, start);
+        return distance_between(point, start).await;
     }
-    let projection = clamp_f64((point - start).dot(segment) / segment_len_squared, 0.0, 1.0);
+    let projection = clamp_f64((point - start).dot(segment).await / segment_len_squared, 0.0, 1.0).await;
     let closest = start + segment * projection;
-    distance_between(point, closest)
+    distance_between(point, closest).await
 }
 // #endregion 🔖️GenericGeometry
 
@@ -597,34 +602,34 @@ async fn distance_to_segment(point: Point, start: Point, end: Point) -> f64 {
 
 /// 📐️ De Casteljau evaluation of a cubic bezier at parameter `t`.
 pub async fn cubic_point_at(c: CubicBez, t: f64) -> Point {
-    c.eval(clamp_f64(t, 0.0, 1.0))
+    c.eval(clamp_f64(t, 0.0, 1.0).await).await
 }
 
 async fn lerp_point(a: Point, b: Point, t: f64) -> Point {
-    Point::new(a.x() + (b.x() - a.x()) * t, a.y() + (b.y() - a.y()) * t)
+    Point::new(a.x() + (b.x() - a.x()) * t, a.y() + (b.y() - a.y()) * t).await
 }
 
 /// ✂️ Splits a cubic bezier at parameter `t` via De Casteljau subdivision.
 pub async fn cubic_split(c: CubicBez, t: f64) -> (CubicBez, CubicBez) {
-    let (p0, p1, p2, p3) = (c.p0(), c.p1(), c.p2(), c.p3());
-    let a = lerp_point(p0, p1, t);
-    let b = lerp_point(p1, p2, t);
-    let cc = lerp_point(p2, p3, t);
-    let d = lerp_point(a, b, t);
-    let e = lerp_point(b, cc, t);
-    let f = lerp_point(d, e, t);
-    (CubicBez::new(p0, a, d, f), CubicBez::new(f, e, cc, p3))
+    let (p0, p1, p2, p3) = (c.p0().await, c.p1().await, c.p2().await, c.p3().await);
+    let a = lerp_point(p0, p1, t).await;
+    let b = lerp_point(p1, p2, t).await;
+    let cc = lerp_point(p2, p3, t).await;
+    let d = lerp_point(a, b, t).await;
+    let e = lerp_point(b, cc, t).await;
+    let f = lerp_point(d, e, t).await;
+    (CubicBez::new(p0, a, d, f).await, CubicBez::new(f, e, cc, p3).await)
 }
 
 /// 📏️ Polyline-approximated arc length of a cubic bezier.
 pub async fn cubic_arc_length(c: CubicBez, segments: usize) -> f64 {
     let n = segments.max(1);
     let mut total = 0.0;
-    let mut previous = c.eval(0.0);
+    let mut previous = c.eval(0.0).await;
     for i in 1..=n {
         let t = i as f64 / n as f64;
-        let next = c.eval(t);
-        total += distance_between(previous, next);
+        let next = c.eval(t).await;
+        total += distance_between(previous, next).await;
         previous = next;
     }
     total
@@ -637,7 +642,7 @@ pub async fn cubic_nearest_t(point: Point, c: CubicBez, segments: usize) -> f64 
     let mut best_dist = f64::INFINITY;
     for i in 0..=n {
         let t = i as f64 / n as f64;
-        let d = distance_between(point, c.eval(t));
+        let d = distance_between(point, c.eval(t).await).await;
         if d < best_dist {
             best_dist = d;
             best_t = t;
@@ -659,19 +664,19 @@ pub async fn segment_intersection(a0: Point, a1: Point, b0: Point, b1: Point) ->
     if !(0.0..=1.0).contains(&t) || !(0.0..=1.0).contains(&u) {
         return None;
     }
-    Some(Point::new(x1 + t * (x2 - x1), y1 + t * (y2 - y1)))
+    Some(Point::new(x1 + t * (x2 - x1), y1 + t * (y2 - y1)).await)
 }
 
 /// ⭕️ Up to two intersection points of a circle and a line segment.
 pub async fn circle_line_intersections(center: Point, r: f64, p0: Point, p1: Point) -> Vec<Point> {
-    let d = Vec2::new(p1.x() - p0.x(), p1.y() - p0.y());
-    let f = Vec2::new(p0.x() - center.x(), p0.y() - center.y());
-    let a = d.dot(d);
+    let d = Vec2::new(p1.x() - p0.x(), p1.y() - p0.y()).await;
+    let f = Vec2::new(p0.x() - center.x(), p0.y() - center.y()).await;
+    let a = d.dot(d).await;
     if a <= f64::EPSILON {
         return Vec::new();
     }
-    let b = 2.0 * f.dot(d);
-    let c = f.dot(f) - r * r;
+    let b = 2.0 * f.dot(d).await;
+    let c = f.dot(f).await - r * r;
     let disc = b * b - 4.0 * a * c;
     if disc < 0.0 {
         return Vec::new();
@@ -680,7 +685,7 @@ pub async fn circle_line_intersections(center: Point, r: f64, p0: Point, p1: Poi
     let mut out = Vec::new();
     for t in [(-b - sq) / (2.0 * a), (-b + sq) / (2.0 * a)] {
         if (0.0..=1.0).contains(&t) {
-            out.push(Point::new(p0.x() + t * d.x(), p0.y() + t * d.y()));
+            out.push(Point::new(p0.x() + t * d.x(), p0.y() + t * d.y()).await);
         }
     }
     out
@@ -741,12 +746,12 @@ pub async fn polygon_centroid(points: &[Point]) -> Point {
     if points.is_empty() {
         return Point::ZERO;
     }
-    let area = polygon_area(points);
+    let area = polygon_area(points).await;
     if area.abs() <= f64::EPSILON {
         let n = points.len() as f64;
         let sx: f64 = points.iter().map(Point::x).sum();
         let sy: f64 = points.iter().map(Point::y).sum();
-        return Point::new(sx / n, sy / n);
+        return Point::new(sx / n, sy / n).await;
     }
     let mut cx = 0.0;
     let mut cy = 0.0;
@@ -758,12 +763,12 @@ pub async fn polygon_centroid(points: &[Point]) -> Point {
         cy += (a.y() + b.y()) * cross;
     }
     let factor = 1.0 / (6.0 * area);
-    Point::new(cx * factor, cy * factor)
+    Point::new(cx * factor, cy * factor).await
 }
 
 /// 🧮️ Axis-aligned bounding box of a point set.
 pub async fn bounding_box(points: &[Point]) -> Option<geom_sel::WorldBox> {
-    geom_sel::world_box_from_points(points)
+    geom_sel::world_box_from_points(points).await
 }
 // #endregion 🔖️PolygonExtensions
 
@@ -796,7 +801,7 @@ pub mod geom_sel {
     }
 
     async fn world_box_corners(b: WorldBox) -> [Point; 4] {
-        [Point::new(b.min_x, b.min_y), Point::new(b.max_x, b.min_y), Point::new(b.max_x, b.max_y), Point::new(b.min_x, b.max_y)]
+        [Point::new(b.min_x, b.min_y).await, Point::new(b.max_x, b.min_y).await, Point::new(b.max_x, b.max_y).await, Point::new(b.min_x, b.max_y).await]
     }
 
     pub async fn world_box_from_points(points: &[Point]) -> Option<WorldBox> {
@@ -855,26 +860,32 @@ pub mod geom_sel {
     }
 
     async fn segments_intersect(a0: Point, a1: Point, b0: Point, b1: Point) -> bool {
-        let o1 = orientation(a0, a1, b0);
-        let o2 = orientation(a0, a1, b1);
-        let o3 = orientation(b0, b1, a0);
-        let o4 = orientation(b0, b1, a1);
+        let o1 = orientation(a0, a1, b0).await;
+        let o2 = orientation(a0, a1, b1).await;
+        let o3 = orientation(b0, b1, a0).await;
+        let o4 = orientation(b0, b1, a1).await;
         if o1 != o2 && o3 != o4 {
             return true;
         }
-        point_on_segment(b0, a0, a1) || point_on_segment(b1, a0, a1) || point_on_segment(a0, b0, b1) || point_on_segment(a1, b0, b1)
+        point_on_segment(b0, a0, a1).await || point_on_segment(b1, a0, a1).await || point_on_segment(a0, b0, b1).await || point_on_segment(a1, b0, b1).await
     }
 
     async fn world_box_edges(box_: WorldBox) -> [(Point, Point); 4] {
-        let [a, b, c, d] = world_box_corners(box_);
+        let [a, b, c, d] = world_box_corners(box_).await;
         [(a, b), (b, c), (c, d), (d, a)]
     }
 
     pub async fn segment_intersects_world_box(start: Point, end: Point, box_: WorldBox) -> bool {
-        if world_box_contains_point(box_, start) || world_box_contains_point(box_, end) {
+        if world_box_contains_point(box_, start).await || world_box_contains_point(box_, end).await {
             return true;
         }
-        world_box_edges(box_).iter().any(|&(a, b)| segments_intersect(start, end, a, b))
+        let edges = world_box_edges(box_).await;
+        for (a, b) in edges {
+            if segments_intersect(start, end, a, b).await {
+                return true;
+            }
+        }
+        false
     }
 
     async fn polygon_segments(polygon: &[Point]) -> Vec<(Point, Point)> {
@@ -889,24 +900,47 @@ pub mod geom_sel {
     }
 
     pub async fn polygon_contains_world_box(polygon: &[Point], box_: WorldBox) -> bool {
-        world_box_corners(box_).iter().all(|&p| point_in_polygon(p, polygon))
+        let corners = world_box_corners(box_).await;
+        for p in corners {
+            if !point_in_polygon(p, polygon).await {
+                return false;
+            }
+        }
+        true
     }
 
     pub async fn polygon_intersects_world_box(polygon: &[Point], box_: WorldBox) -> bool {
-        if world_box_corners(box_).iter().any(|&p| point_in_polygon(p, polygon)) {
-            return true;
+        let corners = world_box_corners(box_).await;
+        for p in corners {
+            if point_in_polygon(p, polygon).await {
+                return true;
+            }
         }
-        if polygon.iter().any(|&p| world_box_contains_point(box_, p)) {
-            return true;
+        for &p in polygon {
+            if world_box_contains_point(box_, p).await {
+                return true;
+            }
         }
-        polygon_segments(polygon).iter().any(|&(s, e)| segment_intersects_world_box(s, e, box_))
+        let segments = polygon_segments(polygon).await;
+        for (s, e) in segments {
+            if segment_intersects_world_box(s, e, box_).await {
+                return true;
+            }
+        }
+        false
     }
 
     pub async fn segment_intersects_polygon(start: Point, end: Point, polygon: &[Point]) -> bool {
-        if point_in_polygon(start, polygon) || point_in_polygon(end, polygon) {
+        if point_in_polygon(start, polygon).await || point_in_polygon(end, polygon).await {
             return true;
         }
-        polygon_segments(polygon).iter().any(|&(a, b)| segments_intersect(start, end, a, b))
+        let segments = polygon_segments(polygon).await;
+        for (a, b) in segments {
+            if segments_intersect(start, end, a, b).await {
+                return true;
+            }
+        }
+        false
     }
 
     pub async fn cubic_bezier_axis_bounds(c: CubicBez) -> WorldBox {
@@ -921,7 +955,7 @@ pub mod geom_sel {
     }
 
     pub async fn cubic_bezier_point(c: CubicBez, t: f64) -> Point {
-        c.eval(t.clamp(0.0, 1.0))
+        c.eval(t.clamp(0.0, 1.0)).await
     }
 }
 // #endregion 🔖️GeomSel
@@ -931,94 +965,94 @@ pub mod geom_sel {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn distance_between_matches_pythagoras() {
-        let a = Point::new(0.0, 0.0);
-        let b = Point::new(3.0, 4.0);
-        assert!((distance_between(a, b) - 5.0).abs() < 1e-9);
+        let a = Point::new(0.0, 0.0).await;
+        let b = Point::new(3.0, 4.0).await;
+        assert!((distance_between(a, b).await - 5.0).abs() < 1e-9);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn normalize_or_zero_handles_zero_vector() {
-        let v = normalize_or_zero(Vec2::new(0.0, 0.0));
+        let v = normalize_or_zero(Vec2::new(0.0, 0.0).await).await;
         assert_eq!(v.x(), 0.0);
         assert_eq!(v.y(), 0.0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn cubic_split_endpoints_match_source_and_split_point() {
-        let c = CubicBez::new(Point::new(0.0, 0.0), Point::new(0.0, 10.0), Point::new(10.0, 10.0), Point::new(10.0, 0.0));
-        let mid = cubic_point_at(c, 0.5);
-        let (left, right) = cubic_split(c, 0.5);
-        assert!(distance_between(left.p0(), c.p0()) < 1e-9);
-        assert!(distance_between(right.p3(), c.p3()) < 1e-9);
-        assert!(distance_between(left.p3(), mid) < 1e-9);
-        assert!(distance_between(right.p0(), mid) < 1e-9);
+        let c = CubicBez::new(Point::new(0.0, 0.0).await, Point::new(0.0, 10.0).await, Point::new(10.0, 10.0).await, Point::new(10.0, 0.0).await).await;
+        let mid = cubic_point_at(c, 0.5).await;
+        let (left, right) = cubic_split(c, 0.5).await;
+        assert!(distance_between(left.p0().await, c.p0().await).await < 1e-9);
+        assert!(distance_between(right.p3().await, c.p3().await).await < 1e-9);
+        assert!(distance_between(left.p3().await, mid).await < 1e-9);
+        assert!(distance_between(right.p0().await, mid).await < 1e-9);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn cubic_nearest_t_finds_endpoint_for_endpoint_query() {
-        let c = CubicBez::new(Point::new(0.0, 0.0), Point::new(0.0, 10.0), Point::new(10.0, 10.0), Point::new(10.0, 0.0));
-        let t = cubic_nearest_t(c.p0(), c, 64);
+        let c = CubicBez::new(Point::new(0.0, 0.0).await, Point::new(0.0, 10.0).await, Point::new(10.0, 10.0).await, Point::new(10.0, 0.0).await).await;
+        let t = cubic_nearest_t(c.p0().await, c, 64).await;
         assert!(t < 0.05);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn segment_intersection_finds_crossing_point() {
-        let hit = segment_intersection(Point::new(0.0, 0.0), Point::new(10.0, 10.0), Point::new(0.0, 10.0), Point::new(10.0, 0.0));
+        let hit = segment_intersection(Point::new(0.0, 0.0).await, Point::new(10.0, 10.0).await, Point::new(0.0, 10.0).await, Point::new(10.0, 0.0).await).await;
         let hit = hit.expect("segments cross");
-        assert!(distance_between(hit, Point::new(5.0, 5.0)) < 1e-9);
+        assert!(distance_between(hit, Point::new(5.0, 5.0).await).await < 1e-9);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn segment_intersection_none_for_parallel_lines() {
-        let hit = segment_intersection(Point::new(0.0, 0.0), Point::new(10.0, 0.0), Point::new(0.0, 5.0), Point::new(10.0, 5.0));
+        let hit = segment_intersection(Point::new(0.0, 0.0).await, Point::new(10.0, 0.0).await, Point::new(0.0, 5.0).await, Point::new(10.0, 5.0).await).await;
         assert!(hit.is_none());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn circle_line_intersections_finds_two_points_through_center() {
-        let hits = circle_line_intersections(Point::new(0.0, 0.0), 5.0, Point::new(-10.0, 0.0), Point::new(10.0, 0.0));
+        let hits = circle_line_intersections(Point::new(0.0, 0.0).await, 5.0, Point::new(-10.0, 0.0).await, Point::new(10.0, 0.0).await).await;
         assert_eq!(hits.len(), 2);
-        assert!(distance_between(hits[0], Point::new(-5.0, 0.0)) < 1e-9);
-        assert!(distance_between(hits[1], Point::new(5.0, 0.0)) < 1e-9);
+        assert!(distance_between(hits[0], Point::new(-5.0, 0.0).await).await < 1e-9);
+        assert!(distance_between(hits[1], Point::new(5.0, 0.0).await).await < 1e-9);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn convex_hull_of_square_with_interior_point_drops_interior() {
-        let points = vec![Point::new(0.0, 0.0), Point::new(10.0, 0.0), Point::new(10.0, 10.0), Point::new(0.0, 10.0), Point::new(5.0, 5.0)];
-        let hull = convex_hull(&points);
+        let points = vec![Point::new(0.0, 0.0).await, Point::new(10.0, 0.0).await, Point::new(10.0, 10.0).await, Point::new(0.0, 10.0).await, Point::new(5.0, 5.0).await];
+        let hull = convex_hull(&points).await;
         assert_eq!(hull.len(), 4);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn polygon_area_of_unit_square_is_one() {
-        let square = vec![Point::new(0.0, 0.0), Point::new(1.0, 0.0), Point::new(1.0, 1.0), Point::new(0.0, 1.0)];
-        assert!((polygon_area(&square).abs() - 1.0).abs() < 1e-9);
+        let square = vec![Point::new(0.0, 0.0).await, Point::new(1.0, 0.0).await, Point::new(1.0, 1.0).await, Point::new(0.0, 1.0).await];
+        assert!((polygon_area(&square).await.abs() - 1.0).abs() < 1e-9);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn polygon_centroid_of_square_is_center() {
-        let square = vec![Point::new(0.0, 0.0), Point::new(10.0, 0.0), Point::new(10.0, 10.0), Point::new(0.0, 10.0)];
-        let centroid = polygon_centroid(&square);
-        assert!(distance_between(centroid, Point::new(5.0, 5.0)) < 1e-9);
+        let square = vec![Point::new(0.0, 0.0).await, Point::new(10.0, 0.0).await, Point::new(10.0, 10.0).await, Point::new(0.0, 10.0).await];
+        let centroid = polygon_centroid(&square).await;
+        assert!(distance_between(centroid, Point::new(5.0, 5.0).await).await < 1e-9);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn bounding_box_covers_all_points() {
-        let points = vec![Point::new(-2.0, 3.0), Point::new(5.0, -1.0), Point::new(1.0, 8.0)];
-        let bb = bounding_box(&points).expect("non-empty");
+        let points = vec![Point::new(-2.0, 3.0).await, Point::new(5.0, -1.0).await, Point::new(1.0, 8.0).await];
+        let bb = bounding_box(&points).await.expect("non-empty");
         assert_eq!(bb.min_x, -2.0);
         assert_eq!(bb.max_x, 5.0);
         assert_eq!(bb.min_y, -1.0);
         assert_eq!(bb.max_y, 8.0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn point_in_polygon_detects_interior_and_exterior() {
-        let square = [Point::new(0.0, 0.0), Point::new(10.0, 0.0), Point::new(10.0, 10.0), Point::new(0.0, 10.0)];
-        assert!(geom_sel::point_in_polygon(Point::new(5.0, 5.0), &square));
-        assert!(!geom_sel::point_in_polygon(Point::new(15.0, 5.0), &square));
+        let square = [Point::new(0.0, 0.0).await, Point::new(10.0, 0.0).await, Point::new(10.0, 10.0).await, Point::new(0.0, 10.0).await];
+        assert!(geom_sel::point_in_polygon(Point::new(5.0, 5.0).await, &square).await);
+        assert!(!geom_sel::point_in_polygon(Point::new(15.0, 5.0).await, &square).await);
     }
 }
 // #endregion 🔖️Tests
@@ -1049,16 +1083,16 @@ impl Vec3 {
 
     #[allow(clippy::should_implement_trait, reason = "value-semantics add/sub used pervasively as plain methods (not operator overloads) by dependent crates outside this campaign wave's scope; renaming is a breaking API change")]
     pub async fn add(self, other: Self) -> Self {
-        Self::new(self.x + other.x, self.y + other.y, self.z + other.z)
+        Self::new(self.x + other.x, self.y + other.y, self.z + other.z).await
     }
 
     #[allow(clippy::should_implement_trait, reason = "value-semantics add/sub used pervasively as plain methods (not operator overloads) by dependent crates outside this campaign wave's scope; renaming is a breaking API change")]
     pub async fn sub(self, other: Self) -> Self {
-        Self::new(self.x - other.x, self.y - other.y, self.z - other.z)
+        Self::new(self.x - other.x, self.y - other.y, self.z - other.z).await
     }
 
     pub async fn scale(self, s: f32) -> Self {
-        Self::new(self.x * s, self.y * s, self.z * s)
+        Self::new(self.x * s, self.y * s, self.z * s).await
     }
 
     pub async fn dot(self, other: Self) -> f32 {
@@ -1066,19 +1100,19 @@ impl Vec3 {
     }
 
     pub async fn cross(self, other: Self) -> Self {
-        Self::new(self.y * other.z - self.z * other.y, self.z * other.x - self.x * other.z, self.x * other.y - self.y * other.x)
+        Self::new(self.y * other.z - self.z * other.y, self.z * other.x - self.x * other.z, self.x * other.y - self.y * other.x).await
     }
 
     pub async fn length(self) -> f32 {
-        self.dot(self).sqrt()
+        self.dot(self).await.sqrt()
     }
 
     pub async fn normalize(self) -> Self {
-        let len = self.length();
+        let len = self.length().await;
         if len < 1e-8 {
             return Self::ZERO;
         }
-        self.scale(1.0 / len)
+        self.scale(1.0 / len).await
     }
 }
 // #endregion 🔖️Vec3
@@ -1102,15 +1136,15 @@ impl Mat4 {
     }
 
     pub async fn look_at(eye: Vec3, target: Vec3, up: Vec3) -> Self {
-        let f = target.sub(eye).normalize();
-        let s = f.cross(up).normalize();
-        let u = s.cross(f);
-        Self { cols: [[s.x, u.x, -f.x, 0.0], [s.y, u.y, -f.y, 0.0], [s.z, u.z, -f.z, 0.0], [-s.dot(eye), -u.dot(eye), f.dot(eye), 1.0]] }
+        let f = target.sub(eye).await.normalize().await;
+        let s = f.cross(up).await.normalize().await;
+        let u = s.cross(f).await;
+        Self { cols: [[s.x, u.x, -f.x, 0.0], [s.y, u.y, -f.y, 0.0], [s.z, u.z, -f.z, 0.0], [-s.dot(eye).await, -u.dot(eye).await, f.dot(eye).await, 1.0]] }
     }
 
     #[allow(clippy::should_implement_trait, reason = "value-semantics mul used pervasively as a plain method (not operator overload) by dependent crates outside this campaign wave's scope; renaming is a breaking API change")]
     pub async fn mul(self, other: Self) -> Self {
-        let mut out = Self::identity();
+        let mut out = Self::identity().await;
         for col in 0..4 {
             for row in 0..4 {
                 out.cols[col][row] = self.cols[0][row] * other.cols[col][0] + self.cols[1][row] * other.cols[col][1] + self.cols[2][row] * other.cols[col][2] + self.cols[3][row] * other.cols[col][3];
@@ -1125,16 +1159,16 @@ impl Mat4 {
         let z = p.x * self.cols[0][2] + p.y * self.cols[1][2] + p.z * self.cols[2][2] + self.cols[3][2];
         let w = p.x * self.cols[0][3] + p.y * self.cols[1][3] + p.z * self.cols[2][3] + self.cols[3][3];
         if w.abs() < 1e-8 {
-            return Vec3::new(x, y, z);
+            return Vec3::new(x, y, z).await;
         }
-        Vec3::new(x / w, y / w, z / w)
+        Vec3::new(x / w, y / w, z / w).await
     }
 
     pub async fn transform_direction(self, dir: Vec3) -> Vec3 {
         let x = dir.x * self.cols[0][0] + dir.y * self.cols[1][0] + dir.z * self.cols[2][0];
         let y = dir.x * self.cols[0][1] + dir.y * self.cols[1][1] + dir.z * self.cols[2][1];
         let z = dir.x * self.cols[0][2] + dir.y * self.cols[1][2] + dir.z * self.cols[2][2];
-        Vec3::new(x, y, z).normalize()
+        Vec3::new(x, y, z).await.normalize().await
     }
 
     /// 🧮️ Full 4x4 inverse via Gauss-Jordan elimination on an augmented `[A | I]` matrix.
@@ -1156,7 +1190,7 @@ impl Mat4 {
                 }
             }
             if best_val < 1e-8 {
-                return Self::identity();
+                return Self::identity().await;
             }
             if best_row != pivot {
                 a.swap(pivot, best_row);
@@ -1189,7 +1223,7 @@ impl Mat4 {
     }
 
     pub async fn translation(v: Vec3) -> Self {
-        let mut m = Self::identity();
+        let mut m = Self::identity().await;
         m.cols[3] = [v.x, v.y, v.z, 1.0];
         m
     }
@@ -1229,123 +1263,123 @@ impl Mat4 {
 mod algebra_tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn vec3_normalize_zero_stays_zero() {
-        assert_eq!(Vec3::ZERO.normalize(), Vec3::ZERO);
+        assert_eq!(Vec3::ZERO.normalize().await, Vec3::ZERO);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn vec3_cross_is_perpendicular() {
-        let a = Vec3::new(1.0, 0.0, 0.0);
-        let b = Vec3::new(0.0, 1.0, 0.0);
-        let c = a.cross(b);
-        assert!((c.dot(a)).abs() < 1e-6);
-        assert!((c.dot(b)).abs() < 1e-6);
+        let a = Vec3::new(1.0, 0.0, 0.0).await;
+        let b = Vec3::new(0.0, 1.0, 0.0).await;
+        let c = a.cross(b).await;
+        assert!((c.dot(a).await).abs() < 1e-6);
+        assert!((c.dot(b).await).abs() < 1e-6);
         assert!((c.z - 1.0).abs() < 1e-6);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mat4_identity_transforms_point_unchanged() {
-        let p = Vec3::new(1.0, 2.0, 3.0);
-        let out = Mat4::identity().transform_point(p);
+        let p = Vec3::new(1.0, 2.0, 3.0).await;
+        let out = Mat4::identity().await.transform_point(p).await;
         assert!((out.x - p.x).abs() < 1e-6 && (out.y - p.y).abs() < 1e-6 && (out.z - p.z).abs() < 1e-6);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mat4_inverse_round_trips_translation() {
-        let m = Mat4::translation(Vec3::new(3.0, -2.0, 5.0));
-        let inv = m.inverse();
-        let p = Vec3::new(1.0, 1.0, 1.0);
-        let round = inv.transform_point(m.transform_point(p));
+        let m = Mat4::translation(Vec3::new(3.0, -2.0, 5.0).await).await;
+        let inv = m.inverse().await;
+        let p = Vec3::new(1.0, 1.0, 1.0).await;
+        let round = inv.transform_point(m.transform_point(p).await).await;
         assert!((round.x - p.x).abs() < 1e-4 && (round.y - p.y).abs() < 1e-4 && (round.z - p.z).abs() < 1e-4);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn vec3_array_round_trip() {
-        let v = Vec3::from_array([1.0, 2.0, 3.0]);
-        assert_eq!(v.to_array(), [1.0, 2.0, 3.0]);
+        let v = Vec3::from_array([1.0, 2.0, 3.0]).await;
+        assert_eq!(v.to_array().await, [1.0, 2.0, 3.0]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn vec3_add_sub_scale_dot_length_match_hand_computation() {
-        let a = Vec3::new(1.0, 2.0, 3.0);
-        let b = Vec3::new(0.5, 0.5, 0.5);
-        assert_eq!(a.add(b), Vec3::new(1.5, 2.5, 3.5));
-        assert_eq!(a.sub(b), Vec3::new(0.5, 1.5, 2.5));
-        assert_eq!(a.scale(2.0), Vec3::new(2.0, 4.0, 6.0));
-        assert!((a.dot(a) - 14.0).abs() < 1e-6);
-        assert!((Vec3::new(3.0, 4.0, 0.0).length() - 5.0).abs() < 1e-6);
+        let a = Vec3::new(1.0, 2.0, 3.0).await;
+        let b = Vec3::new(0.5, 0.5, 0.5).await;
+        assert_eq!(a.add(b).await, Vec3::new(1.5, 2.5, 3.5).await);
+        assert_eq!(a.sub(b).await, Vec3::new(0.5, 1.5, 2.5).await);
+        assert_eq!(a.scale(2.0).await, Vec3::new(2.0, 4.0, 6.0).await);
+        assert!((a.dot(a).await - 14.0).abs() < 1e-6);
+        assert!((Vec3::new(3.0, 4.0, 0.0).await.length().await - 5.0).abs() < 1e-6);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mat4_perspective_maps_near_and_far_planes_to_depth_zero_and_one() {
-        let m = Mat4::perspective(std::f32::consts::FRAC_PI_2, 1.0, 1.0, 10.0);
-        let near = m.transform_point(Vec3::new(0.0, 0.0, -1.0));
-        let far = m.transform_point(Vec3::new(0.0, 0.0, -10.0));
+        let m = Mat4::perspective(std::f32::consts::FRAC_PI_2, 1.0, 1.0, 10.0).await;
+        let near = m.transform_point(Vec3::new(0.0, 0.0, -1.0).await).await;
+        let far = m.transform_point(Vec3::new(0.0, 0.0, -10.0).await).await;
         assert!(near.z.abs() < 1e-5, "near plane depth was {}", near.z);
         assert!((far.z - 1.0).abs() < 1e-5, "far plane depth was {}", far.z);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mat4_look_at_places_target_along_negative_z() {
-        let m = Mat4::look_at(Vec3::new(0.0, 0.0, 5.0), Vec3::ZERO, Vec3::new(0.0, 1.0, 0.0));
-        let cam_space = m.transform_point(Vec3::ZERO);
+        let m = Mat4::look_at(Vec3::new(0.0, 0.0, 5.0).await, Vec3::ZERO, Vec3::new(0.0, 1.0, 0.0).await).await;
+        let cam_space = m.transform_point(Vec3::ZERO).await;
         assert!(cam_space.x.abs() < 1e-5);
         assert!(cam_space.y.abs() < 1e-5);
         assert!((cam_space.z + 5.0).abs() < 1e-5);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mat4_mul_composes_transforms_in_matrix_order() {
-        let t = Mat4::translation(Vec3::new(1.0, 0.0, 0.0));
-        let s = Mat4::scale_vec(Vec3::new(2.0, 2.0, 2.0));
-        let combined = t.mul(s);
-        let out = combined.transform_point(Vec3::new(1.0, 1.0, 1.0));
+        let t = Mat4::translation(Vec3::new(1.0, 0.0, 0.0).await).await;
+        let s = Mat4::scale_vec(Vec3::new(2.0, 2.0, 2.0).await).await;
+        let combined = t.mul(s).await;
+        let out = combined.transform_point(Vec3::new(1.0, 1.0, 1.0).await).await;
         assert!((out.x - 3.0).abs() < 1e-6 && (out.y - 2.0).abs() < 1e-6 && (out.z - 2.0).abs() < 1e-6);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mat4_transform_direction_ignores_translation_and_normalizes() {
-        let m = Mat4::translation(Vec3::new(5.0, 5.0, 5.0));
-        let dir = m.transform_direction(Vec3::new(2.0, 0.0, 0.0));
+        let m = Mat4::translation(Vec3::new(5.0, 5.0, 5.0).await).await;
+        let dir = m.transform_direction(Vec3::new(2.0, 0.0, 0.0).await).await;
         assert!((dir.x - 1.0).abs() < 1e-6 && dir.y.abs() < 1e-6 && dir.z.abs() < 1e-6);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mat4_inverse_of_singular_matrix_returns_identity() {
         let singular = Mat4 { cols: [[0.0; 4]; 4] };
-        assert_eq!(singular.inverse().to_cols_array(), Mat4::identity().to_cols_array());
+        assert_eq!(singular.inverse().await.to_cols_array().await, Mat4::identity().await.to_cols_array().await);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mat4_scale_vec_scales_each_axis() {
-        let m = Mat4::scale_vec(Vec3::new(2.0, 3.0, 4.0));
-        let p = m.transform_point(Vec3::new(1.0, 1.0, 1.0));
+        let m = Mat4::scale_vec(Vec3::new(2.0, 3.0, 4.0).await).await;
+        let p = m.transform_point(Vec3::new(1.0, 1.0, 1.0).await).await;
         assert!((p.x - 2.0).abs() < 1e-6 && (p.y - 3.0).abs() < 1e-6 && (p.z - 4.0).abs() < 1e-6);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mat4_from_quat_identity_is_identity() {
-        let m = Mat4::from_quat(0.0, 0.0, 0.0, 1.0);
-        let p = Vec3::new(1.0, 2.0, 3.0);
-        let out = m.transform_point(p);
+        let m = Mat4::from_quat(0.0, 0.0, 0.0, 1.0).await;
+        let p = Vec3::new(1.0, 2.0, 3.0).await;
+        let out = m.transform_point(p).await;
         assert!((out.x - p.x).abs() < 1e-6 && (out.y - p.y).abs() < 1e-6 && (out.z - p.z).abs() < 1e-6);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mat4_from_quat_90_degrees_about_z_rotates_x_to_y() {
         let half = std::f32::consts::FRAC_PI_4;
-        let m = Mat4::from_quat(0.0, 0.0, half.sin(), half.cos());
-        let out = m.transform_point(Vec3::new(1.0, 0.0, 0.0));
+        let m = Mat4::from_quat(0.0, 0.0, half.sin(), half.cos()).await;
+        let out = m.transform_point(Vec3::new(1.0, 0.0, 0.0).await).await;
         assert!(out.x.abs() < 1e-5);
         assert!((out.y - 1.0).abs() < 1e-5);
         assert!(out.z.abs() < 1e-5);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mat4_to_cols_array_matches_column_major_layout() {
-        let m = Mat4::translation(Vec3::new(1.0, 2.0, 3.0));
-        let arr = m.to_cols_array();
+        let m = Mat4::translation(Vec3::new(1.0, 2.0, 3.0).await).await;
+        let arr = m.to_cols_array().await;
         assert_eq!(arr[12], 1.0);
         assert_eq!(arr[13], 2.0);
         assert_eq!(arr[14], 3.0);

@@ -89,18 +89,18 @@ mod tests {
     //#endregion 🧸️Fixtures
 
     //#region 🧪️InferenceLaws
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = sample_snapshot();
         assert_eq!(Fem2dInference::infer(&snapshot), Fem2dInference::infer(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(Fem2dInference::infer(&Fem2dSnapshot::default()), Fem2dInference::default());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn bounds_matches_node_extent() {
         let snapshot = sample_snapshot();
         let inferred = Fem2dInference::infer(&snapshot);

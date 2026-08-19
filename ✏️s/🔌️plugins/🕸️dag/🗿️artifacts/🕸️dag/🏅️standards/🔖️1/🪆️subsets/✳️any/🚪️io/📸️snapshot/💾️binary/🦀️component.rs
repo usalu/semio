@@ -93,7 +93,7 @@ mod tests {
     use super::*;
     use crate::artifacts::dag::dsl;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn pack_round_trips_and_agrees_with_dsl() {
         let document = dsl::parse_dsl(dsl::DAG_EXAMPLE_TEXT).expect("parse default fixture");
         store::os_store::test_support::assert_dsl_pack_equivalence(&document);
@@ -106,7 +106,7 @@ mod tests {
     /// `DagMutation`'s `Edit` round-trips through `protocol::MutationEnvelope`s beside this file's
     /// existing dsl/pack round-trip law (same pattern as `mathematical`'s own
     /// `command_envelope_round_trip_holds_for_an_applied_operation`).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn command_envelope_round_trip_holds_for_an_applied_operation() {
         use crate::artifacts::dag::op::DagMutation;
         use crate::artifacts::dag::DAG_DOCUMENT_SCHEMA;
@@ -128,7 +128,7 @@ mod tests {
 mod semio_protocol_conformance {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn component_protocol_semio_is_protocol_dialect() {
         let g = ::dsl::parse_grammar(COMPONENT_PROTOCOL_SEMIO).expect("parse protocol.semio");
         assert_eq!(g.dialect, ::dsl::SemioDialect::Protocol);
@@ -136,7 +136,7 @@ mod semio_protocol_conformance {
         let _ = COMPONENT_PROTOCOL_PATH;
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn verify_protocol_bytes_against_encoded_pack() {
         let document = crate::artifacts::dag::dsl::parse_dsl(crate::artifacts::dag::dsl::DAG_EXAMPLE_TEXT)
             .expect("parse fixture");

@@ -199,14 +199,14 @@ mod tests {
     use crate::editor::forms::commands::patch_questions::PatchQuestions;
     use crate::editor::forms::commands::remove_question::RemoveQuestion;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_question_action_appends_question() {
         let mut app = forms_app();
         dispatch(&mut app, FormsCommand::AddQuestion(AddQuestion { kind: "text".into(), step_id: None }));
         assert!(crate::artifacts::forms::schema::flatten_questions(&app.snapshot().expect("projection")).iter().any(|(_, question)| question.kind == "text"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_question_undo_redo_round_trip() {
         let mut app = forms_app();
         let before = crate::artifacts::forms::schema::flatten_questions(&app.snapshot().expect("projection")).len();
@@ -215,7 +215,7 @@ mod tests {
 
     /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the dropped question is no longer
     /// auto-selected by this command (selection is framework-owned now) — only the document edit itself.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn drop_question_kind_inserts_the_question() {
         let mut app = forms_app();
         let step_id = forms_steps(&app.snapshot().expect("projection"))[0].id.clone();
@@ -224,7 +224,7 @@ mod tests {
         assert!(forms_steps(&spec)[0].blocks.iter().any(|question| question.kind == "slider"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inspector_patch_updates_required() {
         let mut app = forms_app();
         dispatch(&mut app, FormsCommand::SetActiveExample(crate::editor::forms::commands::set_active_example::SetActiveExample { example_id: "default".into() }));
@@ -234,7 +234,7 @@ mod tests {
         assert!(!forms_steps(&spec)[0].blocks[0].required.unwrap_or(true));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn remove_question_removes_it_from_the_document() {
         let mut app = forms_app();
         let question_id = forms_steps(&app.snapshot().expect("projection"))[0].blocks[0].id.clone();
@@ -242,7 +242,7 @@ mod tests {
         assert!(crate::artifacts::forms::schema::flatten_questions(&app.snapshot().expect("projection")).iter().all(|(_, question)| question.id != question_id));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn move_question_relocates_it_to_the_target_step() {
         let mut app = forms_app();
         dispatch(&mut app, FormsCommand::AddStep(crate::editor::forms::commands::add_step::AddStep {}));

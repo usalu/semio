@@ -119,7 +119,7 @@ mod tests {
         forward
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn every_variant_registers_an_approved_semantic_descriptor() {
         for mutation in every_mutation() {
             let descriptor = protocol::SemanticMutation::semantics(&mutation);
@@ -128,7 +128,7 @@ mod tests {
         assert_eq!(<En1990Mutation as protocol::SemanticMutation<En1990Snapshot>>::kinds().len(), every_mutation().len(), "kinds() must register exactly one descriptor per dispatch variant");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn every_variant_round_trips_via_inverse() {
         let base = En1990Snapshot::default();
         for mutation in every_mutation() {
@@ -142,7 +142,7 @@ mod tests {
         crate::artifacts::en1990::en1990_qk(snapshot)
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn insert_remove_variable_action_round_trips() {
         let base = En1990Snapshot::default();
 
@@ -160,7 +160,7 @@ mod tests {
         assert_eq!(qk(&after_remove)[0], qk(&base)[1]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn remove_variable_action_of_an_out_of_range_index_is_rejected() {
         let base = En1990Snapshot::default();
         let remove = En1990Mutation::RemoveVariableAction(remove_variable_action::mutation::RemoveVariableAction { index: 99 });
@@ -168,7 +168,7 @@ mod tests {
         protocol::testkit::assert_missing_target_is_error(&base, &remove);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn reorder_variable_actions_round_trips() {
         let base = En1990Snapshot::default();
         assert!(qk(&base).len() >= 2, "fixture must have at least two variable actions to exercise reorder");
@@ -179,7 +179,7 @@ mod tests {
         assert_eq!(qk(&after)[1], qk(&base)[0]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn change_variable_action_category_and_value_round_trip() {
         let base = En1990Snapshot::default();
 
@@ -201,7 +201,7 @@ mod tests {
     /// (reachable here as `protocol::testkit`), exercised against the three most structurally
     /// distinct variants: the repurposed enum-typed slot (`change-annex`), a plain `f64` scalar
     /// (`change-resistance`), and an index-addressed table field (`change-variable-action-value`).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn change_annex_satisfies_the_inverse_and_absorb_laws() {
         let base = En1990Snapshot::default();
         let mutation = En1990Mutation::ChangeAnnex(set_snapshot::mutation::ChangeAnnex { new_annex: AnnexChoice::En });
@@ -210,7 +210,7 @@ mod tests {
         let d2 = En1990Mutation::ChangeResistance(change_resistance::mutation::ChangeResistance { new_resistance_kn: 400.0 }).diff(&base).diff().clone();
         protocol::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn change_resistance_satisfies_the_inverse_and_absorb_laws() {
         let base = En1990Snapshot::default();
         let mutation = En1990Mutation::ChangeResistance(change_resistance::mutation::ChangeResistance { new_resistance_kn: 400.0 });
@@ -219,7 +219,7 @@ mod tests {
         let d2 = En1990Mutation::ChangePermanentAction(change_permanent_action::mutation::ChangePermanentAction { new_g_k: 130.0 }).diff(&base).diff().clone();
         protocol::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn change_variable_action_value_satisfies_the_inverse_and_absorb_laws() {
         let base = En1990Snapshot::default();
         let mutation = En1990Mutation::ChangeVariableActionValue(change_variable_action_value::mutation::ChangeVariableActionValue { index: 0, new_value: 65.0 });
@@ -237,31 +237,31 @@ mod tests {
     /// (target-missing/no-op). `assert_outcome_policy_matrix` is not landed under that literal name
     /// yet (only the differently-shaped `assert_policy_matrix` exists) — flagged, not improvised
     /// around.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn remove_variable_action_missing_target_is_error() {
         let base = En1990Snapshot::default();
         protocol::testkit::assert_missing_target_is_error(&base, &En1990Mutation::RemoveVariableAction(remove_variable_action::mutation::RemoveVariableAction { index: 99 }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn reorder_variable_actions_missing_target_is_error() {
         let base = En1990Snapshot::default();
         protocol::testkit::assert_missing_target_is_error(&base, &En1990Mutation::ReorderVariableActions(reorder_variable_actions::mutation::ReorderVariableActions { from: 99, to: 0 }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn change_variable_action_category_missing_target_is_error() {
         let base = En1990Snapshot::default();
         protocol::testkit::assert_missing_target_is_error(&base, &En1990Mutation::ChangeVariableActionCategory(change_variable_action_category::mutation::ChangeVariableActionCategory { index: 99, new_category: "x".into() }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn change_variable_action_value_missing_target_is_error() {
         let base = En1990Snapshot::default();
         protocol::testkit::assert_missing_target_is_error(&base, &En1990Mutation::ChangeVariableActionValue(change_variable_action_value::mutation::ChangeVariableActionValue { index: 99, new_value: 1.0 }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn insert_variable_action_out_of_range_index_is_clamped() {
         let base = En1990Snapshot::default();
         let mutation = En1990Mutation::InsertVariableAction(insert_variable_action::mutation::InsertVariableAction { index: 999, category: "snow".into(), value: 10.0 });
@@ -270,7 +270,7 @@ mod tests {
         assert!(outcome.messages().iter().any(|message| message.code.0 == "mutation.clamped"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn change_seismic_action_non_finite_is_fatal() {
         let base = En1990Snapshot::default();
         let mutation = En1990Mutation::ChangeSeismicAction(change_seismic_action::mutation::ChangeSeismicAction { new_seismic_a_ed_kn: f64::NAN });
@@ -279,7 +279,7 @@ mod tests {
         assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn change_consequence_class_out_of_domain_is_fatal() {
         let base = En1990Snapshot::default();
         let mutation = En1990Mutation::ChangeConsequenceClass(change_consequence_class::mutation::ChangeConsequenceClass { new_consequence_class: 9 });
@@ -288,7 +288,7 @@ mod tests {
         assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn change_resistance_is_deterministic() {
         let base = En1990Snapshot::default();
         let mutation = En1990Mutation::ChangeResistance(change_resistance::mutation::ChangeResistance { new_resistance_kn: 400.0 });

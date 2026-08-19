@@ -165,7 +165,7 @@ mod tests {
         DocStep { id: id.into(), kind: kind.into(), params: DocDictionary::new(), bodies: StdBTreeMap::new() }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn default_snapshot_dsl_round_trips() {
         let document = parse_dsl(IMPERATIVE_EXAMPLE_TEXT).expect("parse 📜️default.imperative");
         store::os_store::test_support::assert_dsl_round_trip(&document);
@@ -178,7 +178,7 @@ mod tests {
     /// real-behavior law now lives at the CONVERTER: `Path`s with nested `control.*` bodies round-trip
     /// losslessly through `flow_content_snapshot_from_path`/`path_from_flow_content_snapshot`, and the
     /// full snapshot (built from that `Path`) still satisfies the DSL/pack round-trip laws.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn flow_content_round_trips_nested_control_bodies() {
         let inner = step("step-inner", "log.print");
         let mut owner = step("step-if", "control.if");
@@ -199,7 +199,7 @@ mod tests {
     /// 🔁 Replaces the retired `dsl_parses_dictionary_and_atom_variants` — same rationale as
     /// [`flow_content_round_trips_nested_control_bodies`], for `seed`'s `text_content_snapshot_from_seed`/
     /// `seed_from_text_content_snapshot` converter and every `Value`/`Atom` variant it carries.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn text_content_round_trips_dictionary_and_atom_variants() {
         let seed = StdBTreeMap::from([
             ("a".into(), Value::Atom(Atom::Null)),
@@ -221,7 +221,7 @@ mod tests {
 
     /// 🔁 Retired-format twin was `dsl_rejects_unterminated_string`; the new hand-rolled body grammar
     /// has no quoted-string literals, so the equivalent rejection is a malformed hex value (odd length).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dsl_rejects_malformed_hex_value() {
         let text = "schema=zzz";
         assert!(<ImperativeSnapshot as store::ArtifactDsl>::parse_dsl(text).is_err());
@@ -230,7 +230,7 @@ mod tests {
     /// 🔁 Retired-format twin was `dsl_rejects_wrong_leading_keyword`; the new hand-rolled body is
     /// line-based (`schema=`/`flow=`/`text=`), not keyword-based, so the equivalent rejection is an
     /// unrecognized line.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dsl_rejects_unrecognized_body_line() {
         let text = r#"notimperative schema="x""#;
         assert!(<ImperativeSnapshot as store::ArtifactDsl>::parse_dsl(text).is_err());
@@ -239,7 +239,7 @@ mod tests {
     /// 🔁 Retired-format twin was `dsl_rejects_invalid_number_literal`; the new hand-rolled body
     /// requires all three lines (`schema=`/`flow=`/`text=`), so the equivalent rejection is a body
     /// missing a required line.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dsl_rejects_incomplete_body_missing_required_line() {
         let text = "schema=696d70657261746976652e646f63756d656e74";
         assert!(<ImperativeSnapshot as store::ArtifactDsl>::parse_dsl(text).is_err());

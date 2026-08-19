@@ -221,7 +221,7 @@ mod tests {
     use crate::artifacts::en1997::mutations::En1997Mutation;
     use protocol::{Mutation as _, MutationDiff};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn change_mutation_diff_updates_only_its_field() {
         let base = En1997Snapshot::default();
         let mutation = En1997Mutation::ChangeVEdKn(crate::artifacts::en1997::mutations::change_v_ed_kn::mutation::ChangeVEdKn { new_v_ed_kn: 620.0 });

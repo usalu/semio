@@ -125,7 +125,7 @@ impl store::ArtifactPack for FlowConfig {
 
 
 impl Default for FlowConfig {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self {
             preview_off_node_ids: Vec::new(),
             camera: CameraJson { x: 0.0, y: 0.0, zoom: 1.0 },
@@ -317,7 +317,7 @@ impl Mutation<FlowConfig> for FlowConfigMutation {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn flow_config_default_matches_flow_play_runtime_defaults() {
         let config = FlowConfig::default();
         assert_eq!(config.camera, CameraJson { x: 0.0, y: 0.0, zoom: 1.0 });
@@ -333,7 +333,7 @@ mod tests {
     }
 
     /// 🎞️ A fixture exercising every field — the dsl/pack round-trip law for `FlowConfig`.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn flow_config_dsl_pack_round_trip() {
         let config = FlowConfig {
             preview_off_node_ids: vec!["n2".into()],
@@ -352,7 +352,7 @@ mod tests {
         store::os_store::test_support::assert_dsl_pack_equivalence(&config);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn flow_config_operation_text_binary_round_trips_every_variant() {
         store::os_store::test_support::assert_op_line_round_trip(&FlowConfigMutation::Snapshot { config: FlowConfig { locale: "de-DE".into(), ..FlowConfig::default() } });
         store::os_store::test_support::assert_op_line_round_trip(&FlowConfigMutation::SetPreviewOff { node_ids: vec!["n1".into()] });
@@ -368,7 +368,7 @@ mod tests {
         store::os_store::test_support::assert_op_line_round_trip(&FlowConfigMutation::SetLocale { value: "de-DE".into() });
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn flow_config_operation_backwards_restores_the_pre_operation_snapshot() {
         let base = FlowConfig { locale: "en-US".into(), ..FlowConfig::default() };
         let operation = FlowConfigMutation::SetPreviewOff { node_ids: vec!["n2".into()] };

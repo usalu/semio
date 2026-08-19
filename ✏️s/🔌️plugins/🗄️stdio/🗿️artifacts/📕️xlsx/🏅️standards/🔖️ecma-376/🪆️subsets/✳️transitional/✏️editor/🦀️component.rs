@@ -182,25 +182,25 @@ pub async fn create_xlsx_transitional_editor() -> semio_framework_plugin::AppDef
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_xlsx_transitional_editor_builds_a_definition_for_the_editor_role() {
         let def = create_xlsx_transitional_editor();
         assert_eq!(def.role, semio_framework_plugin::AppRole::Editor);
         assert_eq!(def.dialect, XLSX_TRANSITIONAL_DIALECT.into());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn editor_dialect_matches_the_artifact_coordinate() {
         assert_eq!(<XlsxTransitionalEditor as ArtifactEditor>::DIALECT, XLSX_TRANSITIONAL_DIALECT);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn editor_declares_the_main_window() {
         let def = create_xlsx_transitional_editor();
         assert!(def.window_kinds.iter().any(|w| w.id == main::WINDOW_KIND_ID));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn flat_cells_orders_by_sheet_then_cell_storage_order() {
         use crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::snapshot::{XlsxCell, XlsxSheet, XlsxWorkbook};
         let document = XlsxSnapshot {
@@ -214,7 +214,7 @@ mod tests {
         assert_eq!(rows, vec![("S1".to_string(), 1, 0, XlsxCellValue::Number(1.0)), ("S2".to_string(), 2, 1, XlsxCellValue::Boolean(true))]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn render_value_resolves_shared_strings_and_shows_formula_cache() {
         let strings = vec!["hello".to_string()];
         assert_eq!(render_xlsx_cell_value(&XlsxCellValue::SharedString(0), &strings), "hello");
@@ -223,7 +223,7 @@ mod tests {
         assert_eq!(render_xlsx_cell_value(&XlsxCellValue::Empty, &strings), "");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn parse_cell_value_detects_bool_and_number_before_falling_back_to_inline_string() {
         assert_eq!(parse_xlsx_cell_value("true"), XlsxCellValue::Boolean(true));
         assert_eq!(parse_xlsx_cell_value("false"), XlsxCellValue::Boolean(false));

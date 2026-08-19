@@ -84,7 +84,7 @@ mod tests {
     use semio_framework_plugin::{PluginApp, ViewModel};
     use serde_json::{json, Value};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn renders_icon_render_scene_with_real_request() {
         let mut app = shooting_app();
         let node = app.render(BODY_ICON, None, &ViewModel::default()).expect("render");
@@ -100,7 +100,7 @@ mod tests {
         assert!(payload["iconRender"]["footer"].as_str().unwrap().contains("256×256"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn window_measures_surface_three_icon_measures() {
         let mut app = shooting_app();
         let measures = icon_window_measures(&mut app);
@@ -108,7 +108,7 @@ mod tests {
         assert!(measures.iter().any(|measure| matches!(measure, WindowMeasure::Select { .. })));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn definition_declares_the_icon_render_surface_and_body_key() {
         let definition = definition();
         assert_eq!(definition.body_key, SHOOTING_PLAY_BODY_ICON);

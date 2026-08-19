@@ -98,7 +98,7 @@ mod tests {
         JsonSnapshot { schema: crate::artifacts::json::STDIO_JSON_DOCUMENT_SCHEMA.into(), value: crate::artifacts::json::schema::snapshot::parse_json_text(text).expect("valid json fixture") }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn maps_nodes_and_edges() {
         let semio = semio_framework_plugin::resolve_ready(SemioFlowFromJson::deserialize(&sample_json())).expect("deserialize");
         assert_eq!(semio.nodes.len(), 2);
@@ -110,7 +110,7 @@ mod tests {
         assert_eq!(semio.edges[0].to.port, "in");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn missing_required_member_is_a_real_error() {
         let bad = JsonSnapshot { schema: crate::artifacts::json::STDIO_JSON_DOCUMENT_SCHEMA.into(), value: crate::artifacts::json::schema::snapshot::parse_json_text("{}").unwrap() };
         assert!(semio_framework_plugin::resolve_ready(SemioFlowFromJson::deserialize(&bad)).is_err());

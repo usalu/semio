@@ -26,7 +26,7 @@ pub struct CurateIntoJson;
 impl Serializer<CurateSnapshot> for CurateIntoJson {
     const INTO: Dialect = JSON_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Exact;
-    async fn serialize(from: &CurateSnapshot) -> IoResult<IoPayload> {
+    fn serialize(from: &CurateSnapshot) -> IoResult<IoPayload> {
         let bytes = serialize_bytes(from).map_err(|error| IoError { message: format!("CurateIntoJson: {error}"), diagnostics: Vec::new() })?;
         let text = String::from_utf8(bytes).map_err(|error| IoError { message: format!("CurateIntoJson: non-utf8 json output: {error}"), diagnostics: Vec::new() })?;
         Ok(IoOutcome::clean(IoPayload::Text(text)))

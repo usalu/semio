@@ -164,7 +164,7 @@ mod tests {
         BinarySnapshot { bytes: vec![1, 2, 3, 4, 5], ..Default::default() }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mutation_diff_law() {
         let b = base();
         for m in demo_mutation_cases() {
@@ -176,7 +176,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inverse_law() {
         let b = base();
         for m in demo_mutation_cases() {
@@ -195,7 +195,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_law_cartesian() {
         let b = base();
         let variants = demo_mutation_cases();
@@ -214,7 +214,7 @@ mod tests {
 
     /// 🧪️ F6-PILOT: `OpText`/`OpBinary` round-trip laws (handcrafted impls over the
     /// `dsl::DslOps`-derived `DslVariants`).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_text_binary_roundtrip_law() {
         for m in demo_mutation_cases() {
             let printed = m.print_op();

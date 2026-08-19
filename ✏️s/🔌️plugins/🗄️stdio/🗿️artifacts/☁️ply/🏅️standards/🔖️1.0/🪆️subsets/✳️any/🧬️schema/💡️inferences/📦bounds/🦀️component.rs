@@ -117,7 +117,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn bounds_matches_hand_built_element_extent() {
         let snapshot = PlySnapshot { schema: STDIO_PLY_DOCUMENT_SCHEMA.into(), format: PlyFormat::Ascii, comments: Vec::new(), elements: vec![vertex_element(vec![[-1.0, 0.0, 2.0], [3.0, 5.0, -2.0], [0.0, 1.0, 1.0]]), face_element(2)] };
         let bounds = compute_ply_bounds(&snapshot);
@@ -127,13 +127,13 @@ mod tests {
         assert_eq!(bounds.face_count, 2);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = PlySnapshot { schema: STDIO_PLY_DOCUMENT_SCHEMA.into(), format: PlyFormat::Ascii, comments: Vec::new(), elements: vec![vertex_element(vec![[1.0, 1.0, 1.0]])] };
         assert_eq!(compute_ply_bounds(&snapshot), compute_ply_bounds(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(compute_ply_bounds(&PlySnapshot::default()), PlyBounds::default());
     }

@@ -257,7 +257,7 @@ pub(crate) async fn demo_diff_cases() -> Vec<BinaryDiff> {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn insert_then_remove_before_matches_canonical_shape() {
         // Insert(0xAA) at offset 2, then Remove 1 byte at offset 0 -- byte-level analog of the
         // line-diff canonical case: {removed:[0], added:[(1,0xAA)]}.
@@ -271,7 +271,7 @@ mod tests {
         assert_eq!(BinaryDiff { splices: merged }.apply(&base).unwrap(), after);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn insert_insert_same_offset_both_survive() {
         let d1 = vec![ByteSplice { offset: 2, remove_len: 0, insert: vec![0xAA] }];
         let d2 = vec![ByteSplice { offset: 2, remove_len: 0, insert: vec![0xBB] }];
@@ -284,7 +284,7 @@ mod tests {
         assert!(after.bytes.windows(2).any(|w| w == [0xBB, 0xAA]) || after.bytes.contains(&0xAA) && after.bytes.contains(&0xBB));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn modify_then_remove_drops_the_modify() {
         let d1 = vec![ByteSplice { offset: 0, remove_len: 1, insert: vec![0xFF] }];
         let d2 = vec![ByteSplice { offset: 0, remove_len: 1, insert: vec![] }];
@@ -296,7 +296,7 @@ mod tests {
         assert_eq!(BinaryDiff { splices: merged }.apply(&base).unwrap(), after);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_associative_over_a_triple() {
         let base = BinarySnapshot { bytes: vec![10, 20, 30, 40, 50], ..Default::default() };
         let d1 = BinaryDiff { splices: vec![ByteSplice { offset: 1, remove_len: 1, insert: vec![] }] };
@@ -321,7 +321,7 @@ mod tests {
         assert_eq!(left.apply(&base).unwrap(), sequential);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn between_roundtrip_synthetic() {
         let a = BinarySnapshot { bytes: vec![1, 2, 3, 4, 5], ..Default::default() };
         let b = BinarySnapshot { bytes: vec![1, 9, 9, 4, 5, 6], ..Default::default() };
@@ -330,7 +330,7 @@ mod tests {
         assert!(BinaryDiff::between(&a, &a).is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inverse_diff_level_roundtrip() {
         let base = BinarySnapshot { bytes: vec![1, 2, 3, 4], ..Default::default() };
         let d = BinaryDiff { splices: vec![ByteSplice { offset: 1, remove_len: 2, insert: vec![9, 9, 9] }] };
@@ -339,7 +339,7 @@ mod tests {
         assert_eq!(inv.apply(&next).unwrap(), base);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn apply_rejects_invalid_splice_without_mutating_base() {
         let base = BinarySnapshot { bytes: vec![1, 2, 3], ..Default::default() };
         let diff = BinaryDiff { splices: vec![ByteSplice { offset: 2, remove_len: 2, insert: vec![9] }] };
@@ -348,7 +348,7 @@ mod tests {
     }
 
     /// 🧪️ F6-PILOT: `DiffCodec` round-trip laws (derived via `dsl::DslDiff`).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn diff_codec_text_binary_roundtrip_law() {
         use protocol::DiffCodec;
         for d in demo_diff_cases() {

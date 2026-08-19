@@ -453,12 +453,12 @@ mod tests {
     use semio_framework_plugin::testkit::meta;
     use semio_framework_plugin::PluginApp;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn deck_schema_is_animate_present() {
         assert_eq!(default_present_snapshot().schema, PRESENT_DOCUMENT_SCHEMA);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn undo_redo_round_trip_through_the_wrapper() {
         let mut app = present_app();
         app.dispatch_typed(PresentCommand::SeedGrid(seed_grid::SeedGrid { rows: 2, columns: 2 }), &meta("local")).expect("seed grid");
@@ -469,7 +469,7 @@ mod tests {
         assert_eq!(crate::artifacts::present::present_working_scene(&app.snapshot().expect("projection")).1.len(), 4);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn render_unknown_body_key_reports_it_by_name() {
         use semio_framework_plugin::ViewModel;
         let mut app = present_app();
@@ -478,7 +478,7 @@ mod tests {
         assert!(json_str.contains("Unknown body: some.unknown.body"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn app_manifest_declares_expected_operations_and_shell_actions() {
         use semio_framework_plugin::ActionKind;
         let definition = create_animate_present_app();
@@ -491,7 +491,7 @@ mod tests {
     }
 
     //#region 🔖️ManifestSanity
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn the_manifest_stitches_every_taxonomy_node() {
         let json = serde_json::to_string(&create_animate_present_app()).expect("app definition json");
         assert!(json.contains(tile_editor::PRESENT_PLAY_WINDOW_MAIN), "window kind missing from the manifest: {json}");
@@ -504,7 +504,7 @@ mod tests {
 
     /// 🕹️ The `tiles` domain is declared `HierarchyProvider::Flat`, non-transitive, broadcast, and
     /// bound to the tile-editor window (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn the_manifest_declares_the_tiles_interaction_domain() {
         let definition = create_animate_present_app();
         let domain = definition.interactions.iter().find(|interaction| interaction.id == PRESENT_INTERACTION_DOMAIN).expect("tiles interaction domain declared");
@@ -519,7 +519,7 @@ mod tests {
     /// 🧬️ Two independent instances start empty, apply DISJOINT edits (A adds a tile, B sets the
     /// source), and exchanging operations over a `MemoryBackbone` converges both sides to contain BOTH
     /// edits — impossible with whole-document snapshots, which would clobber one another.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn two_instances_converge_disjoint_edits_via_backbone() {
         use store::MemoryBackbone;
         let mut instance_a = present_app();
@@ -545,7 +545,7 @@ mod tests {
     }
 
     //#region 🔖️PortTests
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn present_io_declares_frames_in_and_document_ports() {
         let ports = AnimatePresentPlayApp::io().expect("io").all_ports();
         assert!(ports.iter().any(|port| port.id == "document:in"));
@@ -553,7 +553,7 @@ mod tests {
         assert!(ports.iter().any(|port| port.id == "frames:in"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn import_media_frames_in_inserts_a_new_tile() {
         use semio_framework_plugin::{Media, MediaClass, MediaForm, MediaPayload, MediaType};
         use serde_json::json;
@@ -566,7 +566,7 @@ mod tests {
         assert_eq!(after_tiles.last().expect("imported tile").name, "hero-frame");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn import_media_frames_in_places_repeated_imports_in_distinct_cells() {
         use semio_framework_plugin::{Media, MediaClass, MediaForm, MediaPayload, MediaType};
         use serde_json::json;
@@ -580,7 +580,7 @@ mod tests {
         assert_ne!(tiles[0].crop, tiles[1].crop, "repeated imports land in distinct cells");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn import_media_rejects_unknown_port() {
         use semio_framework_plugin::{Media, MediaClass, MediaForm, MediaPayload, MediaType};
         let mut app = testkit::present_app_with_registry();
@@ -588,7 +588,7 @@ mod tests {
         assert!(app.import_media("not-a-port", &media, &meta("local")).is_err());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn empty_present_snapshot_has_no_tiles() {
         let snapshot = crate::artifacts::present::schema::empty_present_snapshot();
         assert!(crate::artifacts::present::present_working_scene(&snapshot).1.is_empty());
@@ -597,7 +597,7 @@ mod tests {
     /// 🌱️ Relocated from the former artifact-tree `⚙️engine`'s own tests (ticket
     /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) alongside `present_io`'s relocation to
     /// this file's `🔖️Io` region.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn present_io_declares_the_frames_in_port() {
         let io = present_io();
         assert_eq!(io.document_schema, PRESENT_DOCUMENT_SCHEMA);
@@ -610,7 +610,7 @@ mod tests {
         assert!(!port.required);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn frame_import_placement_is_deterministic_and_non_overlapping() {
         let first = next_frame_tile_crop(0);
         let second = next_frame_tile_crop(1);
@@ -626,7 +626,7 @@ mod tests {
     /// 🏷️ Every declared manifest action id must be reachable as exactly one command row, and every
     /// row's wire keyword must be distinct — the cross-cutting invariant `app_commands!` is there to
     /// hold.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn command_ids_are_unique() {
         let commands = every_command();
         let ids: Vec<&str> = commands.iter().map(|command| command.command_id()).collect();
@@ -638,7 +638,7 @@ mod tests {
     }
 
     /// ⚖️ LAW: text and binary are two projections of the same command, for every single row.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn every_command_round_trips_through_text_and_binary() {
         for command in every_command() {
             store::os_store::test_support::assert_op_text_binary_equivalence(&command);
@@ -648,7 +648,7 @@ mod tests {
     /// ⚖️ LAW: the leading token of every printed op line is the row's `dsl` wire keyword. This is what
     /// a missing `#[dsl(keyword = ..)]` on a payload struct silently breaks (the record prints with no
     /// keyword at all and no longer parses).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
         let expected_keywords: [(&str, &str); 18] = [
             ("seedGrid", "seed-grid"),
@@ -680,7 +680,7 @@ mod tests {
     /// ⚖️ The rows whose `Option` fields make `None`/`Some` distinct wire cases, pinned to the exact
     /// bytes captured from the pre-merge `present_protocol` crate. A regression here is a real format
     /// break, not a test-fixture mismatch.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn optional_field_rows_keep_their_pre_migration_bytes() {
         let with_crop = PresentCommand::AddTile(add_tile::AddTile { crop: Some(crate::artifacts::present::FigureTileFrame { x: 0.1, y: 0.1, width: 0.2, height: 0.2 }) });
         let without_crop = PresentCommand::AddTile(add_tile::AddTile { crop: None });

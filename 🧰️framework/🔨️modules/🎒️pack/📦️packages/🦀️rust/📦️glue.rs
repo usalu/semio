@@ -3,6 +3,10 @@
 //! The crate's `[lib] name` is `pack`: the container format keeps the one canonical name every
 //! downstream caller already spells.
 
+// 🔓️ R7: `async fn` in a public trait is our deliberate crate-wide shape (R3 answers the lint's
+// underlying `Send` concern structurally — see `AsyncPackSource`/`RangeTransport`). Never take
+// rustc's suggested `-> impl Future<...> + Send` fix; it re-imposes `Send` R3 forbids.
+#![allow(async_fn_in_trait)]
 #![allow(ambiguous_glob_reexports, unused_imports)]
 
 // 📡️ Codec primitives, container identity and pack sources are owned by the replication module —

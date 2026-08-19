@@ -139,14 +139,14 @@ async fn vortices_json(document: &Block3dSnapshot) -> String {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn definition_declares_the_shared_mesh_window_kind() {
         let def = definition();
         assert_eq!(def.id, "framework.window.mesh");
         assert_eq!(def.body_key, "framework.window.mesh");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn render_produces_a_scene_node_for_the_empty_document() {
         let document = crate::artifacts::block3d::schema::empty_block3d_snapshot();
         let _node = render(&document);

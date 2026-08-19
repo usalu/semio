@@ -499,7 +499,7 @@ pub mod history {
 
         /// 📜️ `from_next`/`next` are the pair `Body`'s `EngineRep` impl uses to carry the label
         /// high-water-mark forward across a rebuild instead of restarting at 0 (see `crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology`).
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn from_next_seeds_the_counter_and_next_reports_it_without_advancing() {
             let mut source = LabelSource::from_next(42);
             assert_eq!(source.next(), 42);
@@ -508,7 +508,7 @@ pub mod history {
             assert_eq!(source.next(), 43);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn label_source_never_repeats() {
             let mut source = LabelSource::new();
             let a = source.next_label();
@@ -518,7 +518,7 @@ pub mod history {
             assert_eq!(b.0, 1);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn recorder_generated_then_deleted_cancels_out() {
             let mut rec = OpRecorder::new();
             let label = PersistentLabel(5);
@@ -529,7 +529,7 @@ pub mod history {
             assert_eq!(delta.deleted, vec![label]);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn recorder_generated_entity_is_not_also_reported_modified() {
             let mut rec = OpRecorder::new();
             let label = PersistentLabel(1);
@@ -540,7 +540,7 @@ pub mod history {
             assert!(delta.modified.is_empty());
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn recorder_deduplicates_repeated_reports() {
             let mut rec = OpRecorder::new();
             let label = PersistentLabel(2);
@@ -550,7 +550,7 @@ pub mod history {
             assert_eq!(delta.modified.len(), 1);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn op_delta_merge_concatenates_all_three_lists() {
             let mut a = OpDelta { generated: vec![PersistentLabel(1)], modified: vec![PersistentLabel(2)], deleted: vec![] };
             let b = OpDelta { generated: vec![], modified: vec![], deleted: vec![PersistentLabel(3)] };
@@ -560,7 +560,7 @@ pub mod history {
             assert_eq!(a.deleted, vec![PersistentLabel(3)]);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn empty_delta_reports_is_empty() {
             assert!(OpDelta::default().is_empty());
             assert!(!OpDelta { generated: vec![PersistentLabel(0)], ..Default::default() }.is_empty());
@@ -635,7 +635,7 @@ mod tests {
         loop_id
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn loop_coedges_walks_the_full_ring_once() {
         let mut body = Body::new();
         let frame = Frame3::from_normal(Pnt3::new(0.0, 0.0, 0.0), Vec3::Z).unwrap();
@@ -647,7 +647,7 @@ mod tests {
         assert_eq!(coedges[0], body.loops.get(loop_id).unwrap().first);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn face_loops_includes_outer_and_all_inner_loops() {
         let mut body = Body::new();
         let frame = Frame3::WORLD;
@@ -664,7 +664,7 @@ mod tests {
         assert_eq!(body.face_coedges(face).len(), 6);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn shell_and_solid_traversal_returns_all_members() {
         let mut body = Body::new();
         let frame = Frame3::WORLD;
@@ -679,7 +679,7 @@ mod tests {
         assert_eq!(body.solid_faces(solid), vec![f1, f2]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn coedge_endpoints_respects_orientation() {
         let mut body = Body::new();
         let v0 = insert_vertex(&mut body, Pnt3::new(0.0, 0.0, 0.0));
@@ -693,7 +693,7 @@ mod tests {
         assert_eq!(body.coedge_endpoints(rev), Some((v1, v0)));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn vertex_edges_and_edge_coedges_find_all_incident_entries() {
         let mut body = Body::new();
         let v0 = insert_vertex(&mut body, Pnt3::new(0.0, 0.0, 0.0));
@@ -707,7 +707,7 @@ mod tests {
         assert_eq!(body.edge_coedges(edge).len(), 2);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn serde_round_trips_a_whole_body() {
         let mut body = Body::new();
         let frame = Frame3::WORLD;
@@ -721,7 +721,7 @@ mod tests {
         assert_eq!(back.faces.len(), body.faces.len());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn deep_copy_produces_an_independent_body() {
         let mut body = Body::new();
         let v = insert_vertex(&mut body, Pnt3::new(0.0, 0.0, 0.0));
@@ -734,7 +734,7 @@ mod tests {
     /// real closed solid (a box built exclusively through the checked euler editors) rather than a
     /// hand-assembled fixture, so the seed under test has the same shape a real diff constructor's
     /// extraction would produce.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn engine_rep_build_round_trips_a_closed_box_through_to_seed() {
         let mut body = Body::new();
         let mut rec = history::OpRecorder::new();
@@ -754,7 +754,7 @@ mod tests {
 
     /// 🌱 The same law on a simpler, loop-free-of-holes single face — guards the `outer`/`inners`
     /// index bookkeeping independently of a full closed solid's shell/solid wrapping.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn engine_rep_build_round_trips_a_loose_planar_face() {
         let mut body = Body::new();
         let mut rec = history::OpRecorder::new();
@@ -767,7 +767,7 @@ mod tests {
 
     /// 🌱 `LabelSource` determinism (the frozen W1 `EngineRep` contract, "build(s) equals build(s)
     /// for byte-identical s"): rebuilding the same seed twice must not re-mint or collide labels.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn engine_rep_build_is_deterministic_for_identical_seeds() {
         let mut body = Body::new();
         let mut rec = history::OpRecorder::new();
@@ -782,7 +782,7 @@ mod tests {
     /// 🌱 The seed's `next_label` must survive `build`, not reset to 0 — otherwise two independent
     /// diff-constructor calls against the same `base` mint colliding labels the instant they merge
     /// (the exact defect §2 of the design flags for a `LabelSource` that restarts at 0 every build).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn engine_rep_build_preserves_the_label_high_water_mark() {
         let mut body = Body::new();
         let mut rec = history::OpRecorder::new();

@@ -32,7 +32,7 @@ pub struct SemioBrepArtifact {
 }
 
 impl Default for SemioBrepArtifact {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self::from_snapshot(SemioBrepSnapshot::default())
     }
 }

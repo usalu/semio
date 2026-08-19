@@ -23,7 +23,7 @@ pub struct ObjBounds {
 /// `compute` returns for zero vertices (the fold's identity value), keeping the inference-default
 /// law correct.
 impl Default for ObjBounds {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { min: [0.0, 0.0, 0.0], max: [0.0, 0.0, 0.0], vertex_count: 0, face_count: 0, group_count: 0 }
     }
 }
@@ -64,7 +64,7 @@ mod tests {
         ObjVertex { x, y, z, w: None }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn bounds_matches_hand_built_vertex_extent() {
         let snapshot = ObjSnapshot {
             schema: STDIO_OBJ_DOCUMENT_SCHEMA.into(),
@@ -91,7 +91,7 @@ mod tests {
         assert_eq!(bounds.group_count, 1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = ObjSnapshot {
             schema: STDIO_OBJ_DOCUMENT_SCHEMA.into(),
@@ -109,7 +109,7 @@ mod tests {
         assert_eq!(compute_obj_bounds(&snapshot), compute_obj_bounds(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(compute_obj_bounds(&ObjSnapshot::default()), ObjBounds::default());
     }

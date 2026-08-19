@@ -112,7 +112,7 @@ mod tests {
     }
 
     //#region mutation_diff_law
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mutation_diff_law_matches_apply_pdf_mutation() {
         let base = snap(612.0, 792.0, "base");
         let cases = vec![PdfMutation::NoMutation, PdfMutation::SetSnapshot { snapshot: snap(300.0, 400.0, "next") }];
@@ -127,7 +127,7 @@ mod tests {
     //#endregion mutation_diff_law
 
     //#region inverse_law
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mutation_apply_inverse_round_trips_every_variant() {
         let base = snap(612.0, 792.0, "base");
         for m in [PdfMutation::NoMutation, PdfMutation::SetSnapshot { snapshot: snap(300.0, 400.0, "next") }] {
@@ -147,7 +147,7 @@ mod tests {
     /// 🧪️ F6: `protocol::OpText`/`OpBinary` LAW, exercised for every variant incl. `SetSnapshot`'s
     /// nested-struct payload -- both text (`print_op`/`parse_op`) and binary
     /// (`encode_op`/`decode_op`) sides.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_text_binary_roundtrip_law() {
         use protocol::{OpBinary, OpText};
         let cases = vec![PdfMutation::NoMutation, PdfMutation::SetSnapshot { snapshot: snap(300.5, 400.25, "hello world") }];

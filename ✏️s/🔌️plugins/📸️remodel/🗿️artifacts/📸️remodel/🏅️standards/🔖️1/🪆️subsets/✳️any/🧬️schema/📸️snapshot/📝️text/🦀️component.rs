@@ -118,12 +118,12 @@ mod tests {
         scene
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn default_scene_roundtrips_through_dsl() {
         store::os_store::test_support::assert_dsl_round_trip(&default_remodel_scene());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn populated_scene_roundtrips_through_dsl() {
         store::os_store::test_support::assert_dsl_round_trip(&populated_scene_fixture());
     }

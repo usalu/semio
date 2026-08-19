@@ -130,7 +130,7 @@ mod tests {
     }
 
     //#region 🧪️Honesty
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn aabb_of_a_populated_primitive_is_the_real_componentwise_extent() {
         let values = store::infer_field::<SemioMeshSnapshot, MeshAabb>(&two_primitive_snapshot(), None);
         let aabb = values.get(&aabb_key("mesh-a", "prim-1")).expect("prim-1 aabb present");
@@ -138,7 +138,7 @@ mod tests {
         assert_eq!(aabb.max, SemioPoint3 { x: 1.0, y: 2.0, z: 3.0 });
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn aabb_of_an_empty_primitive_is_the_honest_default_not_a_faked_extent() {
         let snapshot = SemioMeshSnapshot { meshes: vec![SemioMesh { id: "mesh-a".into(), primitives: vec![SemioPrimitive { id: "empty".into(), ..Default::default() }] }], ..Default::default() };
         let values = store::infer_field::<SemioMeshSnapshot, MeshAabb>(&snapshot, None);
@@ -147,7 +147,7 @@ mod tests {
     //#endregion 🧪️Honesty
 
     //#region 🧪️CacheTransparencyLaw
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn disabled_cache_matches_pure_recompute() {
         let snapshot = two_primitive_snapshot();
         let pure = store::infer_field::<SemioMeshSnapshot, MeshAabb>(&snapshot, None);
@@ -158,7 +158,7 @@ mod tests {
     //#endregion 🧪️CacheTransparencyLaw
 
     //#region 🧪️IncrementalityLaw
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn identical_snapshot_recompute_is_a_cache_hit() {
         let mut cache = InferenceCache::new(InferenceCacheConfig { enabled: true, record_stats: true, ..Default::default() });
         let base = two_primitive_snapshot();
@@ -170,7 +170,7 @@ mod tests {
         assert_eq!(after.hits - before.hits, 2, "both primitives must be cache hits");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn changing_one_primitives_positions_misses_only_that_primitives_cache_entry() {
         let mut cache = InferenceCache::new(InferenceCacheConfig { enabled: true, record_stats: true, ..Default::default() });
         let base = two_primitive_snapshot();
@@ -186,7 +186,7 @@ mod tests {
         assert_eq!(values.get(&aabb_key("mesh-a", "prim-2")), Some(&SemioAabb { min: SemioPoint3 { x: 5.0, y: 5.0, z: 5.0 }, max: SemioPoint3 { x: 5.0, y: 5.0, z: 5.0 } }), "prim-2's aabb must be untouched");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn changing_an_unrelated_field_on_the_same_primitive_does_not_miss() {
         let mut cache = InferenceCache::new(InferenceCacheConfig { enabled: true, record_stats: true, ..Default::default() });
         let base = two_primitive_snapshot();

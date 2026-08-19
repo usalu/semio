@@ -44,7 +44,7 @@ pub struct StlTriangle {
 }
 
 impl Default for StlTriangle {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { normal: [0.0; 3], vertices: [[0.0; 3]; 3] }
     }
 }
@@ -73,7 +73,7 @@ pub struct StlSnapshot {
 }
 
 impl Default for StlSnapshot {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { schema: STDIO_STL_DOCUMENT_SCHEMA.into(), solid_name: String::new(), triangles: Vec::new() }
     }
 }

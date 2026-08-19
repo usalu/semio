@@ -29,13 +29,13 @@ mod tests {
     use crate::artifacts::note::{NoteBlockNode, NoteImageAsset, NoteTableCell, NoteTextParagraph, NoteTextRun, NOTE_DOCUMENT_SCHEMA};
     use std::collections::BTreeMap;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn semio_example_dsl_round_trips() {
         let document = parse_dsl(SEMIO_NOTE_EXAMPLE_TEXT).expect("parse semio example");
         store::os_store::test_support::assert_dsl_round_trip(&document);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn note_dsl_round_trips_representative_document() {
         let mut assets = BTreeMap::new();
         assets.insert("asset-1".into(), NoteImageAsset { mime: "image/png".into(), data: "data:image/png;base64,abc==".into(), width: Some(10.0), height: Some(20.0) });
@@ -143,7 +143,7 @@ mod tests {
 mod semio_grammar_conformance {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn component_grammar_semio_is_grammar_dialect() {
         let g = ::dsl::parse_grammar(COMPONENT_GRAMMAR_SEMIO).expect("parse grammar.semio");
         assert_eq!(g.dialect, ::dsl::SemioDialect::Grammar);

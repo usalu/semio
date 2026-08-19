@@ -75,13 +75,13 @@ pub async fn apply(payload: &NodeGraphEdit, doc: &ArtifactView<'_, WorkflowSnaps
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn space_command_op_text_round_trips_every_variant() {
         use crate::engine::space::SpaceCommand;
         store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::NodeGraphEdit(NodeGraphEdit { operations_json: "[]".into() }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn node_graph_edit_set_fixture_moves_node_and_persists_camera() {
         use crate::engine::space::testkit::{apply_mutations, studio_emit};
         use crate::engine::space::SpaceCommand;

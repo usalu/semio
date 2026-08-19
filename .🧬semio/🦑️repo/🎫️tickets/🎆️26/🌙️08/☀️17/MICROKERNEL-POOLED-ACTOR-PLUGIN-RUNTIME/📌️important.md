@@ -106,6 +106,87 @@ half to the follow-up that re-accepts `pack-waker`; the `🌎️hub/📇️direc
 `http-hyper` `pack-waker` `adopt-stdio` `adopt-a`…`adopt-f` · `parity-rebaseline` `bench-web-rows`
 `census-zero`. Reports are `📓️terra-<slug>-report.md`, audits `📓️luna-<topic>-audit.md`.
 
+## R11 — OPEN extension points de-dyn via GENERICS + ASSOCIATED TYPES, never an enum, never a box
+
+`kernel-ripple` escalated the first genuine architectural blocker of the de-dyn program: four traits in
+`🧰️framework/🔨️modules/🚪️io` are **open host-extension points with no closed implementor set**, so
+`dyn_enum_close!` cannot apply and **R1 bans the boxed-future alternative**. Ruling, after reading every
+one of their 17 use sites:
+
+**They are not one problem, they are two.**
+
+**(a) Parameters and borrowed references — trivially generic.** `&mut dyn PayloadSource`,
+`&dyn RandomAccessPayload`, `&'a mut dyn PayloadSink` (`:387, :435, :479, :504, :545, :624, :2156`) become
+`<S: PayloadSource>(source: &mut S)` etc. No design question; just do it.
+
+**(b) The real one: a trait method that RETURNS a runtime-chosen implementation.**
+```rust
+async fn resolve_decode(&self, request: &ResourceRequest) -> CodecResult<Box<dyn PayloadSource>>;
+async fn resolve_encode(&self, request: &ResourceRequest) -> CodecResult<Box<dyn PayloadSink>>;
+```
+A resolver decides *at runtime* whether to hand back a file, a memory slice, a stream. An enum in `🚪️io`
+cannot enumerate what third-party resolvers will return, so the closed-set mechanism genuinely does not fit.
+
+**Resolution — associated types push the choice to the implementor:**
+```rust
+pub trait ResourceResolver {
+    type Source: PayloadSource;
+    type Sink: PayloadSink;
+    async fn resolve_decode(&self, request: &ResourceRequest) -> CodecResult<Self::Source>;
+    async fn resolve_encode(&self, request: &ResourceRequest) -> CodecResult<Self::Sink>;
+}
+```
+and every holder of `Arc<dyn ResourceResolver>` (`:370, :418`) takes a generic parameter instead.
+
+**Why this is the right shape, not a dodge:** the openness is real but it lives at the *implementor*, not
+the *call site*. A resolver that genuinely needs runtime variance declares its own enum over the source
+kinds **it** supports — and may generate it with `dyn_enum_close!`. So the erasure happens where the set is
+actually closed, which is the whole principle behind **O1**. Nothing is boxed, nothing is `dyn`, and no
+caller loses expressiveness.
+
+**Consequence to accept honestly:** this monomorphises the codec paths and the type parameter threads
+through their holders. If it threads through more than ~10 public types, **stop and report** — that is a
+coordinator call, exactly as it was for `SpaceMember`.
+
+**Generalises to every remaining open family**: open set ⇒ generics (+ associated types where a method
+returns an implementation); closed set ⇒ `dyn_enum_close!`; exactly one impl ⇒ delete the trait object and
+use the concrete type. **Never** reintroduce a boxed trait object to avoid the work.
+
+## R10 — 🚫 NEVER build a NAME-KEYED `.await` inserter. Use the span-keyed shared tool.
+
+**This already happened and cost a packet most of its budget.** `math-dedyn` hit the point where
+`insert-await.py` reached fixpoint with residue, built a bulk tool that appended `.await` to any call
+matching a locally-declared `async fn` **name**, and it **corrupted ~250 of its own 1,479 edits**.
+
+The reason is not carelessness, it is arithmetic: first-party async fns are named `len`, `new`, `get`,
+`fill`, `count`, `is_empty`, `clear`, `push`, `contains`, `split`, `as_str` — and those names also belong
+to `Vec`, `HashMap`, `str`, `u64` and every other std type in scope. A name-keyed pass **cannot tell them
+apart**, so it awaits sync std methods and silently produces nonsense that compiles in some places.
+
+This is the *same* defect the ticket already recorded as rule 27 (span-keyed edits are safe; name-keyed
+edits hit production code that merely shares an identifier). **It was rediscovered the expensive way
+because the rule was buried in a report instead of in the rules.** Hence R10, stated as a prohibition:
+
+- ✅ Use `insert-await.py`. It is **span-keyed** — it applies only the byte span rustc itself points at,
+  only when the diagnostic yields exactly ONE candidate, and it refuses ambiguity rather than guessing.
+- ⛔ Do **not** write a name/regex-based awaiter, however tempting, and however "obviously safe" the name
+  list looks. There is no safe name list; the collisions are with std.
+- **When the shared tool reaches fixpoint, the residue is HAND work, not tool work.** That residue is
+  where the genuinely interesting cases live (below), and each needs a decision recorded in the report.
+
+### The residue shapes no tool can fix — recognise them, fix them by hand
+1. **`.await` inside a sync closure.** `sort_by`, `dedup_by`, `map`, `filter` take **sync** closures;
+   `.await` is illegal there (E0728). Fix by either hoisting the await out of the closure, precomputing
+   the keys before the sort, or — if the awaited fn is a pure accessor — R9.
+2. **Awaiting one future repeatedly inside a loop/closure.** A future is consumed by a single `.await`;
+   awaiting it n times is a *bug the async conversion exposed*, not a conversion artifact. Hoist it.
+3. **Self- or mutually-recursive async fns** — need `Box::pin` to break the infinite future size.
+4. **Futures stored in structs**, and `map`/`and_then` chains over futures.
+
+If you build a recovery tool for a bad bulk edit, make it **diagnostic-driven** (delete exactly the byte
+span rustc flags), never name-driven — and **save it into the ticket folder** so the next packet inherits
+it rather than rebuilding it.
+
 ## R9 — E1 is TRANSITIVE: a pure computation whose consumers cannot be async stays sync
 
 The blind codemod made pure in-memory helpers `async`. Where those helpers are consumed by code that

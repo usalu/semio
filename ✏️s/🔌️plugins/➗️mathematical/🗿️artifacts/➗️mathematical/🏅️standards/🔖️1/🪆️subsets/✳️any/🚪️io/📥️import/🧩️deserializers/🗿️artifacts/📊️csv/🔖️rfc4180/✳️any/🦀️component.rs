@@ -17,7 +17,7 @@ pub struct CsvIntoMathematical;
 impl Deserializer<MathematicalSnapshot> for CsvIntoMathematical {
     const FROM: Dialect = CSV_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    async fn deserialize(payload: &IoPayload) -> IoResult<MathematicalSnapshot> {
+    fn deserialize(payload: &IoPayload) -> IoResult<MathematicalSnapshot> {
         let IoPayload::Binary(bytes) = payload else {
             return Err(IoError { message: "CsvIntoMathematical: expected a binary csv payload".to_string(), diagnostics: Vec::new() });
         };

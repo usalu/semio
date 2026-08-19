@@ -127,7 +127,7 @@ mod tests {
         ]
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn every_variant_registers_an_approved_semantic_descriptor() {
         for mutation in every_mutation() {
             let descriptor = protocol::SemanticMutation::semantics(&mutation);
@@ -136,7 +136,7 @@ mod tests {
         assert_eq!(<RasterMutation as protocol::SemanticMutation<RasterSnapshot>>::kinds().len(), every_mutation().len(), "kinds() must register exactly one descriptor per dispatch variant");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn every_variant_round_trips_via_inverse() {
         let mut base = empty_raster_snapshot();
         base.layers.push(pixel_layer("l1", "Base"));
@@ -148,7 +148,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_remove_layer_round_trip() {
         let snapshot = empty_raster_snapshot();
         let added = round_trip(&snapshot, &RasterMutation::CreateLayer(create_layer::mutation::CreateLayer { parent_id: None, index: 0, layer: Box::new(pixel_layer("l1", "Base")) }));
@@ -157,7 +157,7 @@ mod tests {
         assert!(removed.layers.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn rename_and_change_layer_visible_round_trip() {
         let snapshot = empty_raster_snapshot();
         let added = round_trip(&snapshot, &RasterMutation::CreateLayer(create_layer::mutation::CreateLayer { parent_id: None, index: 0, layer: Box::new(pixel_layer("l1", "Base")) }));
@@ -167,7 +167,7 @@ mod tests {
         assert!(!layer_visible(&hidden.layers[0]));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn reorder_layer_into_group_round_trip() {
         let mut snapshot = empty_raster_snapshot();
         snapshot.layers.push(RasterLayerNode::Group { id: "g1".into(), name: "Group".into(), visible: true, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), mask: None, children: Vec::new() });
@@ -178,7 +178,7 @@ mod tests {
         assert_eq!(crate::artifacts::raster::schema::layer_node_id(&children[0]), "l1");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn resize_layer_is_a_graceful_no_op_on_a_group() {
         let mut snapshot = empty_raster_snapshot();
         snapshot.layers.push(RasterLayerNode::Group { id: "g1".into(), name: "Group".into(), visible: true, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), mask: None, children: Vec::new() });
@@ -189,7 +189,7 @@ mod tests {
         assert!(mutation.inverse(&snapshot).is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn store_applies_layer_create() {
         let mut store = RasterStore::new(create_document_envelope(RASTER_DOCUMENT_SCHEMA, "raster", empty_raster_snapshot(), None));
         store.dispatch(ArtifactCommand::Apply { mutations: vec![RasterMutation::CreateLayer(create_layer::mutation::CreateLayer { parent_id: None, index: 0, layer: Box::new(pixel_layer("l1", "Base")) })], description: None }).expect("apply");
@@ -254,7 +254,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn raster_op_text_round_trips_every_variant() {
         for mutation in every_mutation() {
             store::os_store::test_support::assert_op_line_round_trip(&mutation);
@@ -268,7 +268,7 @@ mod tests {
     /// exercised against three structurally distinct kinds: `create-layer` (id-keyed collection
     /// insert), `change-layer-opacity` (typical `f32` scalar), and `reorder-layers` (tree
     /// reposition).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_layer_satisfies_the_inverse_and_absorb_laws() {
         let base = empty_raster_snapshot();
         let mutation = RasterMutation::CreateLayer(create_layer::mutation::CreateLayer { parent_id: None, index: 0, layer: Box::new(pixel_layer("l1", "Base")) });
@@ -278,7 +278,7 @@ mod tests {
         protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn change_layer_opacity_satisfies_the_inverse_and_absorb_laws() {
         let mut base = empty_raster_snapshot();
         base.layers.push(pixel_layer("l1", "Base"));
@@ -289,7 +289,7 @@ mod tests {
         protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn reorder_layers_satisfies_the_inverse_and_absorb_laws() {
         let mut base = empty_raster_snapshot();
         base.layers.push(pixel_layer("l1", "Base"));
@@ -305,19 +305,19 @@ mod tests {
     //#region 🧪️OutcomeLaws
     /// ⚖️ `📋️contract-freeze.md` §C2 laws, per verb family (`assert_outcome_policy_matrix` is not yet
     /// landed in `📡️spr/🧪️testkit` — TODO(1-D testkit laws pending) once it lands).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn delete_missing_layer_is_a_target_missing_error() {
         let base = empty_raster_snapshot();
         protocol::os_spr::testkit::assert_missing_target_is_error(&base, &RasterMutation::DeleteLayer(delete_layer::mutation::DeleteLayer { layer_id: "does-not-exist".into() }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn rename_missing_layer_is_a_target_missing_error() {
         let base = empty_raster_snapshot();
         protocol::os_spr::testkit::assert_missing_target_is_error(&base, &RasterMutation::RenameLayer(rename_layer::mutation::RenameLayer { layer_id: "does-not-exist".into(), new_name: "New".into() }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_layer_duplicate_id_never_applies() {
         let mut base = empty_raster_snapshot();
         base.layers.push(pixel_layer("l1", "Base"));

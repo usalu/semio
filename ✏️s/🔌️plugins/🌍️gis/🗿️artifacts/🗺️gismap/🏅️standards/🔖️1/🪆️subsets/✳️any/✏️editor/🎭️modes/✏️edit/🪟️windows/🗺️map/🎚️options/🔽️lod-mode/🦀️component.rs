@@ -56,7 +56,7 @@ mod tests {
     use super::*;
     use crate::editor::gis2d::terminology::gis2d_labels;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn the_tier_list_always_starts_with_the_automatic_mode() {
         let config = Gis2dConfig::default();
         let entries = lod_select_entries(gis2d_labels(&config));
@@ -64,7 +64,7 @@ mod tests {
         assert_eq!(lod_arg_options().len(), entries.len(), "the palette arg schema and the window select share one vocabulary");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn the_measure_mirrors_the_config_value() {
         let config = Gis2dConfig::default();
         let WindowMeasure::Select { value, items, .. } = measure(&config, gis2d_labels(&config)) else {

@@ -20,7 +20,7 @@ pub struct CsvIntoForms;
 impl Deserializer<FormsSnapshot> for CsvIntoForms {
     const FROM: Dialect = CSV_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    async fn deserialize(_payload: &IoPayload) -> IoResult<FormsSnapshot> {
+    fn deserialize(_payload: &IoPayload) -> IoResult<FormsSnapshot> {
         Err(IoError { message: "CsvIntoForms: forms cannot be reconstructed from a flattened results table — not implemented".to_string(), diagnostics: Vec::new() })
     }
 }

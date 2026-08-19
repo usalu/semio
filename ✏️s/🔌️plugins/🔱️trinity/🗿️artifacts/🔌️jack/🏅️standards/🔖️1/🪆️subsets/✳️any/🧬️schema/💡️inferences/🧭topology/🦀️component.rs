@@ -28,7 +28,7 @@ pub struct JackTopology {
 /// (`node_count: 0`) is honestly cycle-free — `compute_topology(&JackSnapshot::default())` must
 /// equal `JackTopology::default()` (the inference-default law), so this matches that zero case.
 impl Default for JackTopology {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { topo_order: Vec::new(), depth: BTreeMap::new(), cycle_free: true, node_count: 0 }
     }
 }
@@ -118,7 +118,7 @@ mod tests {
     //#endregion 🧸️Fixtures
 
     //#region 🧪️TopologyLaws
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn chain_is_cycle_free_with_increasing_depth() {
         let topology = compute_topology(&chain_snapshot());
         assert!(topology.cycle_free);
@@ -129,7 +129,7 @@ mod tests {
         assert_eq!(topology.depth.get("leaf"), Some(&2));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn a_cycle_is_reported_as_not_cycle_free() {
         let snapshot = chain_snapshot();
         let mut edges = snapshot.edges();
@@ -140,7 +140,7 @@ mod tests {
         assert!(topology.topo_order.is_empty(), "every node in the 3-cycle has nonzero indegree");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn empty_snapshot_yields_default_topology() {
         assert_eq!(compute_topology(&JackSnapshot::default()), JackTopology::default());
     }

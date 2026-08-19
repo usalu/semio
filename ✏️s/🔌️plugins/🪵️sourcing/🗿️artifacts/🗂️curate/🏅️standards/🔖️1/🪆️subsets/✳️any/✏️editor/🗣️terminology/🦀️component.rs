@@ -39,7 +39,7 @@ pub async fn sourcing_curate_labels(cfg: &SourcingCurateConfig) -> &'static Sour
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn labels_resolve_native_english_and_german_from_the_config_locale() {
         assert_eq!(sourcing_curate_labels(&SourcingCurateConfig::default()).window_pool.as_str(), "Pool");
         assert_eq!(sourcing_curate_labels(&SourcingCurateConfig { locale: "de-DE".into(), ..SourcingCurateConfig::default() }).col_curated.as_str(), "Kuratiert");

@@ -105,7 +105,7 @@ mod tests {
     }
 
     //#region between_roundtrip_law
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn between_roundtrip_law() {
         let a = snap(612.0, 792.0, "hello");
         let b = snap(300.0, 400.0, "world");
@@ -116,7 +116,7 @@ mod tests {
     //#endregion between_roundtrip_law
 
     //#region inverse_law
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inverse_law_diff_level() {
         let a = snap(612.0, 792.0, "hello");
         let b = snap(300.0, 400.0, "world");
@@ -128,7 +128,7 @@ mod tests {
     //#endregion inverse_law
 
     //#region absorb_law
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_law_sequential_composition() {
         let s0 = snap(612.0, 792.0, "a");
         let s1 = snap(300.0, 792.0, "a"); // width changed
@@ -142,7 +142,7 @@ mod tests {
         assert_eq!(sequential, s2);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_law_associativity() {
         let s0 = snap(1.0, 1.0, "a");
         let s1 = snap(2.0, 1.0, "a");
@@ -172,7 +172,7 @@ mod tests {
         snap(300.5, 400.25, "changed text")
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn field_sweep_between_roundtrips_both_directions() {
         let (a, b) = (sweep_a(), sweep_b());
         assert_eq!(PdfDiff::between(&a, &b).apply(&a).unwrap(), b);
@@ -180,7 +180,7 @@ mod tests {
         assert!(PdfDiff::between(&a, &a).is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn field_sweep_every_field_present_in_diff() {
         let (a, b) = (sweep_a(), sweep_b());
         let d = PdfDiff::between(&a, &b);
@@ -198,7 +198,7 @@ mod tests {
     /// fully derived via `#[derive(dsl::DslDiff)]` -- exercises every field present AND the
     /// fully-empty diff, both text (`print_diff`/`parse_diff`) and binary
     /// (`encode_diff`/`decode_diff`) sides.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn diff_codec_text_binary_roundtrip_law() {
         use protocol::DiffCodec;
         let (a, b) = (sweep_a(), sweep_b());

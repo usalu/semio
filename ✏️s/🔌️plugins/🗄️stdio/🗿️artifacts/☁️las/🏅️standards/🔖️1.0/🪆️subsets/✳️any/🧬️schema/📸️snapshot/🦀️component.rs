@@ -62,7 +62,7 @@ pub struct LasHeader {
 }
 
 impl Default for LasHeader {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self {
             version_major: 1,
             version_minor: 2,
@@ -155,7 +155,7 @@ pub struct LasSnapshot {
 }
 
 impl Default for LasSnapshot {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { schema: STDIO_LAS_DOCUMENT_SCHEMA.into(), header: LasHeader::default(), vlrs: Vec::new(), points: Vec::new() }
     }
 }

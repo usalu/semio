@@ -98,7 +98,7 @@ mod tests {
         SequenceSnapshot::from_fixture(SequenceFixture { schema: crate::artifacts::sequence::SEQUENCE_DOCUMENT_SCHEMA.into(), steps, edges })
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn linear_chain_orders_by_dependency_and_depth_by_distance_from_root() {
         let snapshot = snapshot_from(vec![step("a"), step("b"), step("c")], vec![edge("e1", "a", "b"), edge("e2", "b", "c")]);
         let topology = compute_sequence_topology(&snapshot);
@@ -110,7 +110,7 @@ mod tests {
         assert_eq!(topology.node_count, 3);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn a_two_step_cycle_is_reported_as_not_cycle_free_but_stays_total() {
         let snapshot = snapshot_from(vec![step("a"), step("b")], vec![edge("e1", "a", "b"), edge("e2", "b", "a")]);
         let topology = compute_sequence_topology(&snapshot);
@@ -119,7 +119,7 @@ mod tests {
         assert_eq!(topology.topo_order.len(), 2, "still covers every step even though it is not a valid topological order");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn a_dangling_edge_is_ignored() {
         let snapshot = snapshot_from(vec![step("a")], vec![edge("e1", "a", "missing")]);
         let topology = compute_sequence_topology(&snapshot);
@@ -127,7 +127,7 @@ mod tests {
         assert_eq!(topology.depth.get("a"), Some(&0));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn diamond_depth_takes_the_longest_incoming_path() {
         // a -> b -> d, a -> c -> d: d's depth must be 2 (via either b or c), not 1.
         let snapshot = snapshot_from(

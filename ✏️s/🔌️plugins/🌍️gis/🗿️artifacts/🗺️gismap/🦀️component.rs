@@ -269,14 +269,14 @@ pub async fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn map_artifact_kind_matches_the_map_out_interchange_kind() {
         let kind = artifact_kind();
         assert_eq!(kind.id, "2d.map");
         assert_eq!(kind.schema, GIS_MAP_SCHEMA);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn the_map_snapshot_defaults_to_empty_feature_collections() {
         let document = GisMapSnapshot::default();
         assert!(document.positions.is_empty());

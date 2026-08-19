@@ -15,7 +15,7 @@ pub struct VcsIntoJson;
 impl Serializer<VcsSnapshot> for VcsIntoJson {
     const INTO: Dialect = JSON_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Exact;
-    async fn serialize(from: &VcsSnapshot) -> IoResult<IoPayload> {
+    fn serialize(from: &VcsSnapshot) -> IoResult<IoPayload> {
         let _ = STDIO_JSON_DOCUMENT_SCHEMA;
         let value = serde_json::to_value(from).map_err(|error| IoError { message: format!("VcsIntoJson: {error}"), diagnostics: Vec::new() })?;
         let bytes = serde_json::to_vec_pretty(&value).map_err(|error| IoError { message: format!("VcsIntoJson: {error}"), diagnostics: Vec::new() })?;

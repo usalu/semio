@@ -93,7 +93,7 @@ pub enum DwgXRecordValue {
 }
 
 impl Default for DwgXRecordValue {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self::String { group_code: 1, value: String::new() }
     }
 }
@@ -399,7 +399,7 @@ pub enum DwgTableControlBody {
 }
 
 impl Default for DwgTableControlBody {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self::Layer(DwgTableControlEntries::default())
     }
 }
@@ -873,7 +873,7 @@ pub enum DwgTableRecordBody {
 }
 
 impl Default for DwgTableRecordBody {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self::RegisteredApplication(DwgRegisteredApplicationTableRecord::default())
     }
 }
@@ -3941,7 +3941,7 @@ pub struct DwgSnapshot {
 }
 
 impl Default for DwgSnapshot {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self {
             schema: STDIO_DWG_DOCUMENT_SCHEMA.into(),
             version: String::new(),
@@ -4041,7 +4041,7 @@ pub enum DwgExportError {
 }
 
 impl fmt::Display for DwgExportError {
-    async fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::InvalidLogical(message) => write!(formatter, "invalid logical DWG: {message}"),
             Self::InvalidVersion(message) => write!(formatter, "invalid DWG version: {message}"),

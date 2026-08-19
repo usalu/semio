@@ -93,7 +93,7 @@ pub enum JsonMutation {
 }
 
 impl Default for JsonMutation {
-    async fn default() -> Self {
+    fn default() -> Self {
         JsonMutation::NoMutation
     }
 }
@@ -521,7 +521,7 @@ mod tests {
     }
 
     //#region mutation_diff_law
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mutation_diff_law_all_variants() {
         let base = snap(objv(vec![("a", num("1")), ("list", arr(vec![num("1"), num("2")]))]));
 
@@ -535,14 +535,14 @@ mod tests {
         apply_and_check(&base, JsonMutation::SetScalar { path: vec![JsonPathSegment::Key("a".into())], value: str_("replaced") });
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_member_on_missing_key_adds_at_end() {
         let base = snap(objv(vec![("a", num("1"))]));
         let (result, _) = apply_and_check(&base, JsonMutation::SetMember { path: vec![], key: "b".into(), value: num("2") });
         assert_eq!(result.value, objv(vec![("a", num("1")), ("b", num("2"))]));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn remove_member_missing_key_is_noop() {
         let base = snap(objv(vec![("a", num("1"))]));
         let (result, diff) = apply_and_check(&base, JsonMutation::RemoveMember { path: vec![], key: "missing".into() });
@@ -550,7 +550,7 @@ mod tests {
         assert!(diff.diff().is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn nested_path_targets_inner_member() {
         let base = snap(objv(vec![("outer", objv(vec![("inner", num("1"))]))]));
         let (result, _) = apply_and_check(&base, JsonMutation::SetMember { path: vec![JsonPathSegment::Key("outer".into())], key: "inner".into(), value: num("42") });
@@ -559,7 +559,7 @@ mod tests {
     //#endregion mutation_diff_law
 
     //#region inverse_law
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inverse_law_mutation_level_round_trips() {
         let base = snap(objv(vec![("a", num("1")), ("list", arr(vec![num("1"), num("2")]))]));
         let mutations = vec![
@@ -580,7 +580,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inverse_law_diff_level_matches_mutation_diff() {
         let base = snap(objv(vec![("a", num("1"))]));
         let mutation = JsonMutation::SetMember { path: vec![], key: "a".into(), value: num("2") };
@@ -595,7 +595,7 @@ mod tests {
     /// 🧪️ F6: `OpText`/`OpBinary` round-trip laws over the hand-rolled `JsonMutation` grammar —
     /// exercises every variant, incl. nested/array/object payload values and a multi-segment
     /// `JsonPath` (mixing both `Key`/`Index` segment kinds).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_text_binary_roundtrip_law() {
         use protocol::{OpBinary, OpText};
 

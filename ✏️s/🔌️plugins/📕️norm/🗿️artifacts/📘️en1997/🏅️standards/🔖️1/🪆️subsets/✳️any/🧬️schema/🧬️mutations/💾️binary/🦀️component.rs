@@ -30,7 +30,7 @@ mod tests {
         En1997Mutation::ChangeVEdKn(change_v_ed_kn::mutation::ChangeVEdKn { new_v_ed_kn: 620.0 })
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_binary_round_trips_and_agrees_with_text() {
         let mutation = sample_mutation();
         store::os_store::test_support::assert_op_text_binary_equivalence(&mutation);
@@ -38,7 +38,7 @@ mod tests {
         assert_eq!(decode_op(&bytes).expect("decode"), mutation);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn document_text_round_trips_through_store() {
         let envelope = store::create_document_envelope("norm.en1997/v1", "en1997", En1997Snapshot::default(), None);
         let mut store = store::ArtifactStore::new(envelope).expect("valid artifact store fixture");

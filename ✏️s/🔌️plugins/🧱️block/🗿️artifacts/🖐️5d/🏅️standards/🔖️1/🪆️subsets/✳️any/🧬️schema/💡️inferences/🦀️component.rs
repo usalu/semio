@@ -132,18 +132,18 @@ mod tests {
     //#endregion 🧸️Fixtures
 
     //#region 🧪️InferenceLaws
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = snapshot_with_grips(vec![grip("g0", [1.0, 2.0, 3.0], 0.5), grip("g1", [-1.0, 0.0, 4.0], 0.25)]);
         assert_eq!(Block5dInference::infer(&snapshot), Block5dInference::infer(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(Block5dInference::infer(&Block5dSnapshot::default()), Block5dInference::default());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn bounds_match_grip_positions_inflated_by_radius_3d() {
         let snapshot = snapshot_with_grips(vec![grip("g0", [1.0, 2.0, 3.0], 0.5), grip("g1", [-1.0, 0.0, 4.0], 0.25)]);
         let inferred = Block5dInference::infer(&snapshot);
@@ -155,7 +155,7 @@ mod tests {
     //#endregion 🧪️InferenceLaws
 
     //#region 🧪️PuzzleCatalogFragment
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn puzzle5d_catalog_fragment_maps_grips() {
         let mut definition = Block5dSnapshot { schema: BLOCK_5D_SCHEMA.into(), part_kind: BlockKindIdentity { id: "left".into(), name: "left".into(), label: "Left".into(), ..Default::default() }, ..Block5dSnapshot::default() };
         definition.grips.push(Block5dGripTemplate { id: "g0".into(), grip_kind: "b-l".into(), angle: -1.57, radius_2d: 0.36, position: [4.05, 4.68, 3.0], direction: [0.0, 1.0, 0.0], radius_3d: 0.36 });

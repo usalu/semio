@@ -223,7 +223,7 @@ mod tests {
 
     const REAL_FIXTURE: &str = include_str!("../📚️examples/🎬️demo/🖼️assets/🌦️example.epw");
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn sniffs_and_parses_a_real_shaped_location_line() {
         let line = "LOCATION,Hannover,Niedersachsen,DEU,semio-fixture,10238,52.37,9.74,1.0,55.0";
         assert!(sniff_real_bytes(line.as_bytes()));
@@ -233,17 +233,17 @@ mod tests {
         assert_eq!(loc.elevation, "55.0");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn rejects_a_short_location_line() {
         assert!(parse_location_line("LOCATION,Hannover").is_err());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn rejects_a_record_with_the_wrong_column_count() {
         assert!(parse_record_line("2026,1,15,1,0").is_err());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn decodes_the_real_fixture_with_all_24_records_and_35_columns() {
         let snap = decode_epw(REAL_FIXTURE).expect("decode real fixture");
         assert_eq!(snap.location.city, "Hannover");
@@ -265,7 +265,7 @@ mod tests {
     /// (`✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/📚️examples/🎬️demo/🖼️assets/🌦️example.epw`,
     /// verified upstream by `verify_epw.py`): all 24 records × 35 columns exact, all 8 header
     /// lines exact, byte-for-byte incl. CRLF.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn codec_retention_law() {
         let snap = decode_epw(REAL_FIXTURE).expect("decode real fixture");
         let reencoded = encode_epw(&snap);

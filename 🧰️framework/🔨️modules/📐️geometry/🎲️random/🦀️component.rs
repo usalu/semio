@@ -40,30 +40,30 @@ pub struct Rng {
 impl Rng {
     /// 🌱️ Seeds all four state words via [`SplitMix64`] so even adjacent seeds decorrelate immediately.
     pub async fn from_seed(seed: u64) -> Self {
-        let mut sm = SplitMix64::new(seed);
+        let mut sm = SplitMix64::new(seed).await;
         let mut s = [0u64; 4];
         for slot in s.iter_mut() {
-            *slot = sm.next_u64();
+            *slot = sm.next_u64().await;
         }
         Self { s }
     }
 
     /// 🎲️ Next raw 64-bit word (the xoshiro256** `scramble` output), advancing the state.
     pub async fn next_u64(&mut self) -> u64 {
-        let result = rotl(self.s[1].wrapping_mul(5), 7).wrapping_mul(9);
+        let result = rotl(self.s[1].wrapping_mul(5), 7).await.wrapping_mul(9);
         let t = self.s[1] << 17;
         self.s[2] ^= self.s[0];
         self.s[3] ^= self.s[1];
         self.s[1] ^= self.s[2];
         self.s[0] ^= self.s[3];
         self.s[2] ^= t;
-        self.s[3] = rotl(self.s[3], 45);
+        self.s[3] = rotl(self.s[3], 45).await;
         result
     }
 
     /// 🎯️ Uniform `f64` in `[0, 1)`, built from the top 53 bits of a raw draw (the mantissa width of `f64`).
     pub async fn next_f64(&mut self) -> f64 {
-        (self.next_u64() >> 11) as f64 * (1.0 / (1u64 << 53) as f64)
+        (self.next_u64().await >> 11) as f64 * (1.0 / (1u64 << 53) as f64)
     }
 
     /// 🎯️ Uniform `u64` in `[lo, hi)`. Rejects draws that fall in the trailing partial bucket of
@@ -78,7 +78,7 @@ impl Rng {
         }
         let limit = u64::MAX - (u64::MAX % range);
         loop {
-            let x = self.next_u64();
+            let x = self.next_u64().await;
             if x < limit {
                 return lo + x % range;
             }
@@ -87,14 +87,14 @@ impl Rng {
 
     /// 🪙️ `true` with probability `p` (clamped semantics: `p <= 0.0` never fires, `p >= 1.0` always fires).
     pub async fn next_bool(&mut self, p: f64) -> bool {
-        self.next_f64() < p
+        self.next_f64().await < p
     }
 
     /// 🔀️ In-place Fisher-Yates shuffle: uniform over all `n!` permutations.
     pub async fn shuffle<T>(&mut self, items: &mut [T]) {
         let n = items.len();
         for i in (1..n).rev() {
-            let j = self.next_range(0, (i + 1) as u64) as usize;
+            let j = self.next_range(0, (i + 1) as u64).await as usize;
             items.swap(i, j);
         }
     }
@@ -104,7 +104,7 @@ impl Rng {
         if items.is_empty() {
             return None;
         }
-        let idx = self.next_range(0, items.len() as u64) as usize;
+        let idx = self.next_range(0, items.len() as u64).await as usize;
         items.get(idx)
     }
 
@@ -129,7 +129,7 @@ impl Rng {
         let mut selected: std::collections::HashSet<usize> = std::collections::HashSet::with_capacity(k);
         let mut result = Vec::with_capacity(k);
         for j in (n - k)..n {
-            let t = self.next_range(0, (j + 1) as u64) as usize;
+            let t = self.next_range(0, (j + 1) as u64).await as usize;
             let picked = if selected.contains(&t) { j } else { t };
             selected.insert(picked);
             result.push(picked);
@@ -202,8 +202,8 @@ impl AliasTable {
     /// ⚖️ Draws one index in O(1): pick a bucket uniformly, then coin-flip between its own item and its alias.
     pub async fn sample(&self, rng: &mut Rng) -> usize {
         let n = self.prob.len();
-        let i = rng.next_range(0, n as u64) as usize;
-        if rng.next_f64() < self.prob[i] {
+        let i = rng.next_range(0, n as u64).await as usize;
+        if rng.next_f64().await < self.prob[i] {
             i
         } else {
             self.alias[i]
@@ -216,8 +216,8 @@ impl AliasTable {
 /// 🔔️ Standard normal via the Box-Muller transform, scaled to `(mean, std_dev)`. Draws `u1` from
 /// `(0, 1]` (not `[0, 1)`) so `ln(u1)` never sees an exact zero.
 pub async fn normal(rng: &mut Rng, mean: f64, std_dev: f64) -> f64 {
-    let u1 = 1.0 - rng.next_f64();
-    let u2 = rng.next_f64();
+    let u1 = 1.0 - rng.next_f64().await;
+    let u2 = rng.next_f64().await;
     let z0 = (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos();
     mean + std_dev * z0
 }
@@ -229,7 +229,7 @@ pub async fn geometric(rng: &mut Rng, p: f64) -> u64 {
     if p >= 1.0 {
         return 1;
     }
-    let u = 1.0 - rng.next_f64();
+    let u = 1.0 - rng.next_f64().await;
     (u.ln() / (1.0 - p).ln()).floor() as u64 + 1
 }
 
@@ -243,7 +243,7 @@ pub async fn poisson(rng: &mut Rng, lambda: f64) -> u64 {
     let mut p = 1.0;
     loop {
         k += 1;
-        p *= rng.next_f64();
+        p *= rng.next_f64().await;
         if p <= l {
             break;
         }
@@ -255,12 +255,12 @@ pub async fn poisson(rng: &mut Rng, lambda: f64) -> u64 {
 /// NetworkX `utils.powerlaw_sequence`'s `random() ** (-1 / (exponent - 1))` inverse-transform.
 pub async fn powerlaw_sequence(rng: &mut Rng, n: usize, exponent: f64) -> Vec<f64> {
     debug_assert!(exponent != 1.0, "powerlaw_sequence: exponent must not be 1.0");
-    (0..n)
-        .map(|_| {
-            let u = 1.0 - rng.next_f64();
-            u.powf(-1.0 / (exponent - 1.0))
-        })
-        .collect()
+    let mut out = Vec::with_capacity(n);
+    for _ in 0..n {
+        let u = 1.0 - rng.next_f64().await;
+        out.push(u.powf(-1.0 / (exponent - 1.0)));
+    }
+    out
 }
 
 /// 📊️ Samples a rank in `1..=n` from a Zipf distribution via rejection sampling: draws from the
@@ -272,8 +272,8 @@ pub async fn zipf(rng: &mut Rng, n: usize, exponent: f64) -> u64 {
     let am1 = exponent - 1.0;
     let b = 2f64.powf(am1);
     loop {
-        let u = 1.0 - rng.next_f64();
-        let v = rng.next_f64();
+        let u = 1.0 - rng.next_f64().await;
+        let v = rng.next_f64().await;
         let x = u.powf(-1.0 / am1).floor();
         if x < 1.0 {
             continue;
@@ -288,8 +288,12 @@ pub async fn zipf(rng: &mut Rng, n: usize, exponent: f64) -> u64 {
 /// 🎯️ `n` draws from a discrete distribution given as a weight vector, matching NetworkX
 /// `utils.discrete_sequence`; builds one [`AliasTable`] and draws from it `n` times.
 pub async fn discrete_sequence(rng: &mut Rng, n: usize, distribution: &[f64]) -> Vec<usize> {
-    let table = AliasTable::new(distribution);
-    (0..n).map(|_| table.sample(rng)).collect()
+    let table = AliasTable::new(distribution).await;
+    let mut out = Vec::with_capacity(n);
+    for _ in 0..n {
+        out.push(table.sample(rng).await);
+    }
+    out
 }
 
 /// ➕️ Running sum of `weights`, normalized so the last entry is `1.0` (a no-operation on an all-zero or
@@ -318,69 +322,96 @@ mod tests {
     use super::*;
 
     // #region 🔖️SplitMix64Tests
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn split_mix64_is_deterministic_for_same_seed() {
-        let mut a = SplitMix64::new(42);
-        let mut b = SplitMix64::new(42);
+        let mut a = SplitMix64::new(42).await;
+        let mut b = SplitMix64::new(42).await;
         for _ in 0..16 {
-            assert_eq!(a.next_u64(), b.next_u64());
+            assert_eq!(a.next_u64().await, b.next_u64().await);
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn split_mix64_differs_across_seeds() {
-        let mut a = SplitMix64::new(1);
-        let mut b = SplitMix64::new(2);
-        assert_ne!(a.next_u64(), b.next_u64());
+        let mut a = SplitMix64::new(1).await;
+        let mut b = SplitMix64::new(2).await;
+        assert_ne!(a.next_u64().await, b.next_u64().await);
     }
     // #endregion 🔖️SplitMix64Tests
 
     // #region 🔖️RngDeterminismTests
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn rng_next_u64_is_deterministic_for_same_seed() {
-        let mut a = Rng::from_seed(1234);
-        let mut b = Rng::from_seed(1234);
-        let seq_a: Vec<u64> = (0..64).map(|_| a.next_u64()).collect();
-        let seq_b: Vec<u64> = (0..64).map(|_| b.next_u64()).collect();
-        assert_eq!(seq_a, seq_b);
-    }
-
-    #[test]
-    async fn rng_next_f64_is_deterministic_for_same_seed() {
-        let mut a = Rng::from_seed(9876);
-        let mut b = Rng::from_seed(9876);
-        let seq_a: Vec<f64> = (0..64).map(|_| a.next_f64()).collect();
-        let seq_b: Vec<f64> = (0..64).map(|_| b.next_f64()).collect();
-        assert_eq!(seq_a, seq_b);
-    }
-
-    #[test]
-    async fn rng_state_round_trip_resumes_identically() {
-        let mut original = Rng::from_seed(4242);
-        for _ in 0..17 {
-            original.next_u64();
+        let mut a = Rng::from_seed(1234).await;
+        let mut b = Rng::from_seed(1234).await;
+        let mut seq_a: Vec<u64> = Vec::with_capacity(64);
+        for _ in 0..64 {
+            seq_a.push(a.next_u64().await);
         }
-        let snapshot = original.state();
-        let mut resumed = Rng::from_state(snapshot);
-        let expected: Vec<u64> = (0..32).map(|_| original.next_u64()).collect();
-        let actual: Vec<u64> = (0..32).map(|_| resumed.next_u64()).collect();
+        let mut seq_b: Vec<u64> = Vec::with_capacity(64);
+        for _ in 0..64 {
+            seq_b.push(b.next_u64().await);
+        }
+        assert_eq!(seq_a, seq_b);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn rng_next_f64_is_deterministic_for_same_seed() {
+        let mut a = Rng::from_seed(9876).await;
+        let mut b = Rng::from_seed(9876).await;
+        let mut seq_a: Vec<f64> = Vec::with_capacity(64);
+        for _ in 0..64 {
+            seq_a.push(a.next_f64().await);
+        }
+        let mut seq_b: Vec<f64> = Vec::with_capacity(64);
+        for _ in 0..64 {
+            seq_b.push(b.next_f64().await);
+        }
+        assert_eq!(seq_a, seq_b);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn rng_state_round_trip_resumes_identically() {
+        let mut original = Rng::from_seed(4242).await;
+        for _ in 0..17 {
+            original.next_u64().await;
+        }
+        let snapshot = original.state().await;
+        let mut resumed = Rng::from_state(snapshot).await;
+        let mut expected: Vec<u64> = Vec::with_capacity(32);
+        for _ in 0..32 {
+            expected.push(original.next_u64().await);
+        }
+        let mut actual: Vec<u64> = Vec::with_capacity(32);
+        for _ in 0..32 {
+            actual.push(resumed.next_u64().await);
+        }
         assert_eq!(expected, actual);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn rng_different_seeds_diverge() {
-        let mut a = Rng::from_seed(1);
-        let mut b = Rng::from_seed(2);
-        let seq_a: Vec<u64> = (0..8).map(|_| a.next_u64()).collect();
-        let seq_b: Vec<u64> = (0..8).map(|_| b.next_u64()).collect();
+        let mut a = Rng::from_seed(1).await;
+        let mut b = Rng::from_seed(2).await;
+        let mut seq_a: Vec<u64> = Vec::with_capacity(8);
+        for _ in 0..8 {
+            seq_a.push(a.next_u64().await);
+        }
+        let mut seq_b: Vec<u64> = Vec::with_capacity(8);
+        for _ in 0..8 {
+            seq_b.push(b.next_u64().await);
+        }
         assert_ne!(seq_a, seq_b);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn rng_has_no_obvious_short_cycle() {
         for seed in [0u64, 1, 42, u64::MAX, 0xDEAD_BEEF] {
-            let mut rng = Rng::from_seed(seed);
-            let draws: Vec<u64> = (0..2000).map(|_| rng.next_u64()).collect();
+            let mut rng = Rng::from_seed(seed).await;
+            let mut draws: Vec<u64> = Vec::with_capacity(2000);
+            for _ in 0..2000 {
+                draws.push(rng.next_u64().await);
+            }
             let unique: std::collections::HashSet<u64> = draws.iter().copied().collect();
             assert!(unique.len() > 1990, "seed {seed} produced too many repeats: {} unique of 2000", unique.len());
         }
@@ -388,23 +419,23 @@ mod tests {
     // #endregion 🔖️RngDeterminismTests
 
     // #region 🔖️RngStatisticalTests
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn next_f64_stays_within_unit_interval() {
-        let mut rng = Rng::from_seed(7);
+        let mut rng = Rng::from_seed(7).await;
         for _ in 0..10_000 {
-            let x = rng.next_f64();
+            let x = rng.next_f64().await;
             assert!((0.0..1.0).contains(&x));
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn next_range_stays_within_bounds_and_is_roughly_uniform() {
-        let mut rng = Rng::from_seed(2024);
+        let mut rng = Rng::from_seed(2024).await;
         let buckets = 10;
         let mut counts = vec![0u64; buckets];
         let draws = 100_000;
         for _ in 0..draws {
-            let x = rng.next_range(0, buckets as u64);
+            let x = rng.next_range(0, buckets as u64).await;
             assert!(x < buckets as u64);
             counts[x as usize] += 1;
         }
@@ -415,57 +446,57 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn next_range_degenerate_empty_range_returns_lo() {
-        let mut rng = Rng::from_seed(5);
-        assert_eq!(rng.next_range(3, 3), 3);
+        let mut rng = Rng::from_seed(5).await;
+        assert_eq!(rng.next_range(3, 3).await, 3);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn next_bool_respects_extremes() {
-        let mut rng = Rng::from_seed(11);
+        let mut rng = Rng::from_seed(11).await;
         for _ in 0..100 {
-            assert!(!rng.next_bool(0.0));
+            assert!(!rng.next_bool(0.0).await);
         }
         for _ in 0..100 {
-            assert!(rng.next_bool(1.0));
+            assert!(rng.next_bool(1.0).await);
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn shuffle_preserves_multiset() {
-        let mut rng = Rng::from_seed(99);
+        let mut rng = Rng::from_seed(99).await;
         let original: Vec<i32> = (0..50).collect();
         let mut shuffled = original.clone();
-        rng.shuffle(&mut shuffled);
+        rng.shuffle(&mut shuffled).await;
         let mut sorted_shuffled = shuffled.clone();
         sorted_shuffled.sort_unstable();
         assert_eq!(sorted_shuffled, original);
         assert_ne!(shuffled, original, "a 50-element shuffle landing on the identity permutation is astronomically unlikely");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn choose_returns_none_for_empty_slice() {
-        let mut rng = Rng::from_seed(3);
+        let mut rng = Rng::from_seed(3).await;
         let empty: Vec<i32> = Vec::new();
-        assert_eq!(rng.choose(&empty), None);
+        assert_eq!(rng.choose(&empty).await, None);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn choose_always_returns_an_element_from_the_slice() {
-        let mut rng = Rng::from_seed(3);
+        let mut rng = Rng::from_seed(3).await;
         let items = [10, 20, 30, 40];
         for _ in 0..50 {
-            let picked = rng.choose(&items).expect("non-empty slice");
+            let picked = rng.choose(&items).await.expect("non-empty slice");
             assert!(items.contains(picked));
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn sample_without_replacement_returns_k_distinct_indices_in_range() {
-        let mut rng = Rng::from_seed(456);
+        let mut rng = Rng::from_seed(456).await;
         for (n, k) in [(10, 3), (100, 100), (1000, 1), (50, 0)] {
-            let sample = rng.sample_without_replacement(n, k);
+            let sample = rng.sample_without_replacement(n, k).await;
             assert_eq!(sample.len(), k);
             let unique: std::collections::HashSet<usize> = sample.iter().copied().collect();
             assert_eq!(unique.len(), k);
@@ -475,15 +506,15 @@ mod tests {
     // #endregion 🔖️RngStatisticalTests
 
     // #region 🔖️AliasTableTests
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn alias_table_sampling_frequency_matches_weights() {
         let weights = [1.0, 2.0, 3.0, 4.0];
-        let table = AliasTable::new(&weights);
-        let mut rng = Rng::from_seed(321);
+        let table = AliasTable::new(&weights).await;
+        let mut rng = Rng::from_seed(321).await;
         let draws = 200_000;
         let mut counts = [0u64; 4];
         for _ in 0..draws {
-            counts[table.sample(&mut rng)] += 1;
+            counts[table.sample(&mut rng).await] += 1;
         }
         let total: f64 = weights.iter().sum();
         for (i, &w) in weights.iter().enumerate() {
@@ -493,84 +524,87 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn alias_table_empty_weights_always_samples_index_zero() {
-        let table = AliasTable::new(&[]);
-        let mut rng = Rng::from_seed(1);
+        let table = AliasTable::new(&[]).await;
+        let mut rng = Rng::from_seed(1).await;
         for _ in 0..20 {
-            assert_eq!(table.sample(&mut rng), 0);
+            assert_eq!(table.sample(&mut rng).await, 0);
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn alias_table_all_zero_weights_always_samples_index_zero() {
-        let table = AliasTable::new(&[0.0, 0.0, 0.0]);
-        let mut rng = Rng::from_seed(2);
+        let table = AliasTable::new(&[0.0, 0.0, 0.0]).await;
+        let mut rng = Rng::from_seed(2).await;
         for _ in 0..20 {
-            assert_eq!(table.sample(&mut rng), 0);
+            assert_eq!(table.sample(&mut rng).await, 0);
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn alias_table_single_weight_always_samples_it() {
-        let table = AliasTable::new(&[5.0]);
-        let mut rng = Rng::from_seed(3);
+        let table = AliasTable::new(&[5.0]).await;
+        let mut rng = Rng::from_seed(3).await;
         for _ in 0..20 {
-            assert_eq!(table.sample(&mut rng), 0);
+            assert_eq!(table.sample(&mut rng).await, 0);
         }
     }
     // #endregion 🔖️AliasTableTests
 
     // #region 🔖️DistributionTests
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn normal_stays_within_six_std_devs_of_mean() {
-        let mut rng = Rng::from_seed(55);
+        let mut rng = Rng::from_seed(55).await;
         let mean = 10.0;
         let std_dev = 2.0;
         for _ in 0..10_000 {
-            let x = normal(&mut rng, mean, std_dev);
+            let x = normal(&mut rng, mean, std_dev).await;
             assert!((x - mean).abs() < 6.0 * std_dev, "normal draw {x} outside 6-sigma band");
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn geometric_is_always_at_least_one() {
-        let mut rng = Rng::from_seed(66);
+        let mut rng = Rng::from_seed(66).await;
         for _ in 0..1000 {
-            assert!(geometric(&mut rng, 0.3) >= 1);
+            assert!(geometric(&mut rng, 0.3).await >= 1);
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn geometric_p_one_always_returns_one() {
-        let mut rng = Rng::from_seed(67);
+        let mut rng = Rng::from_seed(67).await;
         for _ in 0..100 {
-            assert_eq!(geometric(&mut rng, 1.0), 1);
+            assert_eq!(geometric(&mut rng, 1.0).await, 1);
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn poisson_lambda_zero_always_returns_zero() {
-        let mut rng = Rng::from_seed(77);
+        let mut rng = Rng::from_seed(77).await;
         for _ in 0..100 {
-            assert_eq!(poisson(&mut rng, 0.0), 0);
+            assert_eq!(poisson(&mut rng, 0.0).await, 0);
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn poisson_mean_is_roughly_lambda() {
-        let mut rng = Rng::from_seed(78);
+        let mut rng = Rng::from_seed(78).await;
         let lambda = 4.0;
         let draws = 20_000;
-        let sum: u64 = (0..draws).map(|_| poisson(&mut rng, lambda)).sum();
+        let mut sum: u64 = 0;
+        for _ in 0..draws {
+            sum += poisson(&mut rng, lambda).await;
+        }
         let mean = sum as f64 / draws as f64;
         assert!((mean - lambda).abs() < 0.2, "poisson mean {mean} too far from lambda {lambda}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn powerlaw_sequence_values_are_positive_and_at_least_one() {
-        let mut rng = Rng::from_seed(88);
-        let values = powerlaw_sequence(&mut rng, 500, 2.5);
+        let mut rng = Rng::from_seed(88).await;
+        let values = powerlaw_sequence(&mut rng, 500, 2.5).await;
         assert_eq!(values.len(), 500);
         for v in values {
             assert!(v >= 1.0, "powerlaw value {v} below the theoretical minimum of 1.0");
@@ -578,53 +612,53 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn zipf_ranks_are_within_bounds() {
-        let mut rng = Rng::from_seed(89);
+        let mut rng = Rng::from_seed(89).await;
         let n = 100;
         for _ in 0..2000 {
-            let rank = zipf(&mut rng, n, 2.0);
+            let rank = zipf(&mut rng, n, 2.0).await;
             assert!((1..=n as u64).contains(&rank));
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn zipf_favors_low_ranks() {
-        let mut rng = Rng::from_seed(90);
+        let mut rng = Rng::from_seed(90).await;
         let n = 20;
         let draws = 20_000;
         let mut low_rank_hits = 0u64;
         for _ in 0..draws {
-            if zipf(&mut rng, n, 2.0) <= 2 {
+            if zipf(&mut rng, n, 2.0).await <= 2 {
                 low_rank_hits += 1;
             }
         }
         assert!(low_rank_hits as f64 / draws as f64 > 0.5, "zipf should heavily favor the lowest ranks");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn discrete_sequence_draws_only_from_nonzero_weight_indices() {
-        let mut rng = Rng::from_seed(91);
+        let mut rng = Rng::from_seed(91).await;
         let distribution = [0.0, 1.0, 0.0, 3.0];
-        let draws = discrete_sequence(&mut rng, 200, &distribution);
+        let draws = discrete_sequence(&mut rng, 200, &distribution).await;
         assert_eq!(draws.len(), 200);
         for d in draws {
             assert!(d == 1 || d == 3);
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn cumulative_distribution_ends_at_one_and_is_nondecreasing() {
-        let cdf = cumulative_distribution(&[1.0, 2.0, 3.0, 4.0]);
+        let cdf = cumulative_distribution(&[1.0, 2.0, 3.0, 4.0]).await;
         assert!((cdf.last().unwrap() - 1.0).abs() < 1e-12);
         for pair in cdf.windows(2) {
             assert!(pair[1] >= pair[0]);
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn cumulative_distribution_of_empty_weights_is_empty() {
-        let cdf = cumulative_distribution(&[]);
+        let cdf = cumulative_distribution(&[]).await;
         assert!(cdf.is_empty());
     }
     // #endregion 🔖️DistributionTests

@@ -108,13 +108,13 @@ pub mod derived_construction {
     mod tests {
         use super::*;
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn new_requires_lang_and_builds_clean() {
             let snapshot = PdfUaBuilderConstruction::new("en-US").add_page(PdfPage::new(200.0, 200.0)).set_info(PdfInfo { title: Some("An Accessible Doc".into()), ..PdfInfo::default() }).build().expect("conforming construction must build");
             assert_eq!(snapshot.pages.len(), 1);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn hard_violation_injected_via_raw_mutate_still_fails_build() {
             let mut snapshot = PdfUaBuilderConstruction::new("en-US").add_page(PdfPage::new(100.0, 100.0)).build().unwrap();
             // Strip the seeded /StructTreeRoot to simulate a stripped-down document reaching the
@@ -322,14 +322,14 @@ pub mod derived_analysis {
             ]
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn fully_tagged_conforming_document_has_no_diagnostics() {
             let snapshot = PdfSnapshot { objects: tagged_catalog_objects(), info: PdfInfo { title: Some("A Title".into()), ..PdfInfo::default() }, ..PdfSnapshot::default() };
             let diagnostics = check_ua_conformance(&snapshot);
             assert!(diagnostics.is_empty(), "got {diagnostics:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn missing_markinfo_and_structtreeroot_are_hard() {
             let objects = vec![PdfIndirectObject { id: ObjRef { num: 1, gen: 0 }, value: PdfObject::Dict(vec![PdfDictEntry { key: "Type".into(), value: PdfObject::Name("Catalog".into()) }]) }];
             let snapshot = PdfSnapshot { objects, ..PdfSnapshot::default() };
@@ -338,7 +338,7 @@ pub mod derived_analysis {
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_STRUCT_TREE_ROOT && d.severity == Severity::Error), "got {diagnostics:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn marked_false_is_still_hard() {
             let objects = vec![
                 PdfIndirectObject {
@@ -357,7 +357,7 @@ pub mod derived_analysis {
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_MARKINFO && d.severity == Severity::Error), "got {diagnostics:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn missing_lang_title_and_displaydoctitle_are_soft() {
             let snapshot = PdfSnapshot { objects: tagged_catalog_objects().into_iter().filter(|o| o.id.num != 4).collect(), ..PdfSnapshot::default() };
             let mut objects = snapshot.objects.clone();

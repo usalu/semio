@@ -33,7 +33,7 @@ pub struct WiresArtifact {
 
 //#region 🔖️Conversions
 impl Default for WiresArtifact {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self {
             wires_fixture: crate::artifacts::wires::empty_wires_fixture(),
             content: crate::artifacts::wires::wires_content_child_handle_and_cache(Vec::new(), Vec::new()),

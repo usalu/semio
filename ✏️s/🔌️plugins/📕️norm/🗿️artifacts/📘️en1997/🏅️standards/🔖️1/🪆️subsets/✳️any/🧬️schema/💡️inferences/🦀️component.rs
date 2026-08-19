@@ -72,13 +72,13 @@ mod tests {
     use super::*;
     use protocol::Inference;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = En1997Snapshot::default();
         assert_eq!(En1997Inference::infer(&snapshot), En1997Inference::infer(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(En1997Inference::infer(&En1997Snapshot::default()), En1997Inference::default());
     }
@@ -175,7 +175,7 @@ pub async fn evaluate(document: &En1997Snapshot) -> CheckReport {
 mod compliance_report_tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn full_geotechnical_worked_example() {
         let report = check_full_geotechnical(500.0, 80.0, 2.0, 30.0, 0.0, 18.0, 2.0, 1.5, 30_000.0, 0.3, DesignApproach::Da1Str, AnnexChoice::De, 25.0, 800.0, 0.7, 0.6, 80.0, 12.0, 2500.0, 0.28, 1, 8.0);
         assert_eq!(report.checks.len(), 5);
@@ -183,7 +183,7 @@ mod compliance_report_tests {
         assert_eq!(report.checks[4].status, CheckStatus::Pass);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn evaluate_runs_all_parts() {
         let report = evaluate(&En1997Snapshot::default());
         assert_eq!(report.checks.len(), 5);

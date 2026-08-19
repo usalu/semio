@@ -202,7 +202,7 @@ pub struct CadProjectionDsl {
 }
 
 impl Default for CadProjectionDsl {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self {
             kind: "threePoint".into(),
             orthographic_view: "top".into(),
@@ -242,7 +242,7 @@ pub struct CadCamera {
 }
 
 impl Default for CadCamera {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { position: default_camera_position(), target: default_camera_target(), zoom: one_f64(), fov: default_fov(), projection: CadProjectionDsl::default() }
     }
 }

@@ -28,7 +28,7 @@ mod tests {
     use super::*;
     use crate::artifacts::puzzle3d::dsl;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn pack_round_trips_and_agrees_with_dsl() {
         let document = dsl::parse_dsl(dsl::PUZZLE3D_CONCRETE_FOREST_EXAMPLE_TEXT).expect("parse concrete-forest example");
         semio_framework_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&document);
@@ -41,7 +41,7 @@ mod tests {
     /// `Puzzle3dMutation`'s `Edit` round-trips through `protocol::MutationEnvelope`s beside this
     /// file's existing dsl/pack round-trip law (same pattern as `dag`'s own
     /// `command_envelope_round_trip_holds_for_an_applied_operation`).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn command_envelope_round_trip_holds_for_an_applied_operation() {
         use crate::artifacts::puzzle3d::op::Puzzle3dMutation;
         use crate::artifacts::puzzle3d::spr::Puzzle3dStore;

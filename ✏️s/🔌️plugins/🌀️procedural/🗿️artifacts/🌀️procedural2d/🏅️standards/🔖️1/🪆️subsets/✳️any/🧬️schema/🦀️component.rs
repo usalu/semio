@@ -32,7 +32,7 @@ pub struct Procedural2dArtifact {
 //#endregion 🔖️Procedural2dArtifact
 
 impl Default for Procedural2dArtifact {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self {
             fixture: FlowFixture::default(),
             generation: GenerationPlayState::default(),
@@ -393,7 +393,7 @@ pub async fn empty_procedural2d_snapshot() -> Procedural2dSnapshot {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn default_snapshot_parses_the_bundled_example() {
         assert!(!default_snapshot().fixture.widgets.is_empty());
     }

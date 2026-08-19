@@ -146,7 +146,7 @@ mod tests {
     use crate::editor::puzzle2d::config::Puzzle2dPlayRuntime;
     use crate::editor::puzzle2d::modes::edit::puzzle2d_engagement;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn brush_params_are_tagged_utility_options_not_engagement_controls() {
         let labels = puzzle2d_labels(&Puzzle2dConfig::default());
         let host = puzzle_board_host();

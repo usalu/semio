@@ -241,7 +241,7 @@ pub async fn boxes_overlap2(a: (Pnt2, Pnt2), b: (Pnt2, Pnt2), tol: f64) -> bool 
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn unweighted_bezier_eval_matches_de_casteljau_by_hand() {
         // Quadratic bezier: (0,0),(1,2),(2,0) at t=0.5 -> (1, 1)
         let b = RationalBezier2::unweighted(vec![Pnt2::new(0.0, 0.0), Pnt2::new(1.0, 2.0), Pnt2::new(2.0, 0.0)]);
@@ -250,14 +250,14 @@ mod tests {
         assert!((p.y - 1.0).abs() < 1e-12);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn eval_at_endpoints_matches_first_and_last_control_point() {
         let b = RationalBezier3::unweighted(vec![Pnt3::new(0.0, 0.0, 0.0), Pnt3::new(1.0, 5.0, -2.0), Pnt3::new(3.0, 1.0, 4.0)]);
         assert_eq!(b.eval(0.0), b.controls[0]);
         assert_eq!(b.eval(1.0), *b.controls.last().unwrap());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn subdivide_matches_original_at_endpoints_and_split_point() {
         let b = RationalBezier3::unweighted(vec![Pnt3::new(0.0, 0.0, 0.0), Pnt3::new(1.0, 2.0, 0.0), Pnt3::new(2.0, -1.0, 1.0), Pnt3::new(3.0, 0.0, 2.0)]);
         let t = 0.35;
@@ -268,7 +268,7 @@ mod tests {
         assert!(right.eval(1.0).distance(b.eval(1.0)) < 1e-9);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn subdivide_of_rational_bezier_preserves_curve_points() {
         // Quarter circle as a rational quadratic Bezier.
         let s = std::f64::consts::FRAC_1_SQRT_2;
@@ -284,7 +284,7 @@ mod tests {
         assert!((sample.x * sample.x + sample.y * sample.y - 1.0).abs() < 1e-9);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn control_hull_box_contains_all_sampled_curve_points() {
         let b = RationalBezier3::unweighted(vec![Pnt3::new(0.0, 0.0, 0.0), Pnt3::new(5.0, 5.0, 5.0), Pnt3::new(-3.0, 2.0, -1.0), Pnt3::new(1.0, -2.0, 3.0)]);
         let (lo, hi) = b.control_hull_box();
@@ -296,7 +296,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn elevate_preserves_the_curve_exactly() {
         let b = RationalBezier3::unweighted(vec![Pnt3::new(0.0, 0.0, 0.0), Pnt3::new(1.0, 3.0, -1.0), Pnt3::new(2.0, -1.0, 2.0)]);
         let elevated = b.elevate();
@@ -307,7 +307,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn subdivide_until_flat_leaves_cover_the_full_parameter_range() {
         let b = RationalBezier2::unweighted(vec![Pnt2::new(0.0, 0.0), Pnt2::new(1.0, 5.0), Pnt2::new(2.0, -3.0), Pnt2::new(3.0, 1.0)]);
         let leaves = subdivide_until_flat(&b, 0.1, 12);
@@ -317,7 +317,7 @@ mod tests {
         assert!(leaves.last().unwrap().eval(1.0).distance(b.eval(1.0)) < 1e-9);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn boxes_overlap_detects_disjoint_and_touching_boxes() {
         let a = (Pnt2::new(0.0, 0.0), Pnt2::new(1.0, 1.0));
         let b = (Pnt2::new(0.5, 0.5), Pnt2::new(2.0, 2.0));

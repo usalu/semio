@@ -23,7 +23,7 @@ mod tests {
     use crate::editor::procedural2d::testkit::{app, dispatch};
     use crate::editor::procedural2d::Procedural2dCommand;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_locale_updates_config_locale() {
         let mut app = app();
         dispatch(&mut app, Procedural2dCommand::SetLocale(SetLocale { value: "de-DE".into() }));

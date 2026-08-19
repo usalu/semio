@@ -375,7 +375,7 @@ mod tests {
     use super::*;
     use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primitives::{make_box, make_planar_face_from_points};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn offset_solid_box_grows_volume() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
@@ -386,7 +386,7 @@ mod tests {
         assert!(v1 > v0, "v0={v0} v1={v1}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn thicken_rectangle_positive_volume() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
@@ -396,7 +396,7 @@ mod tests {
         assert!(v > 0.0, "volume {v}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn shell_box_has_faces() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
@@ -407,7 +407,7 @@ mod tests {
         assert!(faces.len() >= 6, "face count {}", faces.len());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn offset_determinism_face_count() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
@@ -417,7 +417,7 @@ mod tests {
         assert_eq!(body.solid_faces(a).len(), body.solid_faces(b).len());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn draft_zero_angle_errors() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();

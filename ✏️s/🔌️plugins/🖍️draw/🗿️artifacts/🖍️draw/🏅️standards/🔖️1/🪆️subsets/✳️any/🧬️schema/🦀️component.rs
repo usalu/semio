@@ -37,7 +37,7 @@ pub struct DrawArtifact {
 
 //#region 🔖️Conversions
 impl Default for DrawArtifact {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self {
             schema: DRAW_DOCUMENT_SCHEMA.into(),
             id: String::new(),
@@ -1238,14 +1238,14 @@ mod tests {
     use super::*;
     use crate::artifacts::draw::DrawCircle;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn default_document_has_path_layer() {
         let doc = default_draw_document("test", None);
         assert_eq!(doc.layers.len(), 1);
         assert!(matches!(doc.layers[0], DrawLayerNode::Path(_)));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn scene_nodes_include_shape_bounds() {
         let layer = create_draw_shape_layer_rect("Rect");
         let doc = DrawSnapshot { layers: vec![layer], ..default_draw_document("scene", None) };
@@ -1254,7 +1254,7 @@ mod tests {
         assert!(!nodes[0].segments.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn resolve_boolean_layer_segments_unions_two_rects() {
         let mut doc = default_draw_document("bool-test", None);
         doc.layers.clear();
@@ -1279,7 +1279,7 @@ mod tests {
         assert_eq!(boolean_node.fill_rule.as_deref(), Some("evenodd"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn resolve_boolean_layer_segments_flattens_arcs_before_boolean_operation() {
         let mut doc = default_draw_document("bool-arc-test", None);
         doc.layers.clear();
@@ -1304,7 +1304,7 @@ mod tests {
         assert!(!boolean_node.segments.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn arc_segment_flattens_to_cubics_preserving_endpoints() {
         let segments = vec![PathSegment::Move { to: [10.0, 0.0] }, PathSegment::Arc { rx: 10.0, ry: 10.0, rotation: 0.0, large_arc: false, sweep: true, to: [0.0, 10.0] }];
         let flattened = flatten_curve_segments(&segments);
@@ -1318,7 +1318,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn resolve_trace_layer_segments_traces_solid_square_png() {
         let mut image_buffer = image::RgbaImage::new(8, 8);
         for y in 2..6 {
@@ -1341,7 +1341,7 @@ mod tests {
         assert_eq!(nodes[0].fill_rule.as_deref(), Some("evenodd"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn resolve_draw_artboard_skips_group_boolean_trace_kinds() {
         let mut doc = default_draw_document("artboard-test", None);
         doc.artboard = None;
@@ -1357,7 +1357,7 @@ mod tests {
         assert_eq!(artboard.height, 30.0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn default_draw_document_has_artboard_dimensions() {
         let doc = default_draw_document("blank", None);
         let artboard = doc.artboard.expect("default artboard");
@@ -1365,7 +1365,7 @@ mod tests {
         assert_eq!(artboard.height, 1024.0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn layer_id_base_and_kind_label_cover_all_seven_variants() {
         let shape = create_draw_shape_layer_rect("Shape");
         let path = create_draw_path_layer("Path", Vec::new());
@@ -1380,7 +1380,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn find_draw_layer_locates_nested_child_and_returns_none_for_missing() {
         let child = create_draw_shape_layer_rect("Child");
         let child_id = layer_id(&child).to_string();
@@ -1394,7 +1394,7 @@ mod tests {
         assert!(find_draw_layer(&doc, "missing-id").is_none());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn flatten_draw_layers_includes_nested_group_children() {
         let child_a = create_draw_shape_layer_rect("A");
         let child_b = create_draw_text_layer("B");
@@ -1407,7 +1407,7 @@ mod tests {
         assert_eq!(flat.len(), 3);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn draw_matrix_to_transform_round_trips_and_handles_zero_scale_x() {
         let transform = DrawTransform { x: 1.0, y: 2.0, scale_x: 2.0, scale_y: 3.0, rotation: std::f64::consts::FRAC_PI_6 };
         let matrix = draw_transform_to_matrix(&transform);
@@ -1423,7 +1423,7 @@ mod tests {
         assert_eq!(degenerate.scale_y, 0.0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn draw_play_layers_tree_row_id_formats_and_parses_back() {
         let shape = create_draw_shape_layer_rect("Shape");
         let id = layer_id(&shape).to_string();
@@ -1439,7 +1439,7 @@ mod tests {
         assert_eq!(draw_play_layer_id_from_tree_row_id("draw-play-layers."), None);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn layer_to_path_segments_covers_every_shape_kind_and_empty_polygon_and_unknown_kind() {
         let rect = create_draw_shape_layer_rect("Rect");
         assert!(!layer_to_path_segments(&rect).is_empty());
@@ -1470,7 +1470,7 @@ mod tests {
         assert!(layer_to_path_segments(&group).is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn draw_layer_world_bounds_covers_text_image_default_and_none_branches() {
         let text = DrawLayerNode::Text(DrawTextBody { base: default_layer_base("T"), x: 0.0, y: 0.0, content: "hi".into(), size: 10.0 });
         let (tx, ty, tw, th) = draw_layer_world_bounds(&text).expect("text bounds");
@@ -1489,7 +1489,7 @@ mod tests {
         assert!(draw_layer_world_bounds(&close_only).is_none());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn canvas_layer_records_excludes_groups_and_includes_bounds() {
         let child = create_draw_shape_layer_rect("Child");
         let mut group = create_draw_group_layer("Group");
@@ -1504,7 +1504,7 @@ mod tests {
         assert!(records[0].width.is_some());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn clone_draw_layer_node_assigns_new_ids_recursively_and_appends_suffix_only_at_top() {
         let shape = create_draw_shape_layer_rect("Rect");
         let clone = clone_draw_layer_node(&shape, " copy");
@@ -1524,7 +1524,7 @@ mod tests {
         assert_eq!(layer_base(&cloned_body.children[0]).name, "Child");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn transform_path_segments_transforms_every_segment_kind() {
         let segments = vec![
             PathSegment::Move { to: [1.0, 0.0] },
@@ -1550,7 +1550,7 @@ mod tests {
         assert!(matches!(transformed[5], PathSegment::Close));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn scale_path_segments_returns_untouched_clone_for_identity_scale_and_scales_otherwise() {
         let segments = vec![PathSegment::Move { to: [1.0, 2.0] }, PathSegment::Line { to: [3.0, 4.0] }];
         assert_eq!(scale_path_segments(&segments, 1.0, 1.0), segments);
@@ -1561,7 +1561,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn split_path_segments_by_contour_splits_on_move_and_handles_empty_input() {
         let segments = vec![PathSegment::Move { to: [0.0, 0.0] }, PathSegment::Line { to: [1.0, 0.0] }, PathSegment::Move { to: [5.0, 5.0] }, PathSegment::Line { to: [6.0, 5.0] }, PathSegment::Close];
         let contours = split_path_segments_by_contour(&segments);
@@ -1572,14 +1572,14 @@ mod tests {
         assert_eq!(empty_contours, vec![Vec::<PathSegment>::new()]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn path_segments_bounds_is_none_when_no_segment_carries_an_endpoint() {
         assert!(path_segments_bounds(&[PathSegment::Close]).is_none());
         let bounds = path_segments_bounds(&[PathSegment::Move { to: [1.0, 1.0] }, PathSegment::Line { to: [4.0, 5.0] }]).expect("bounds");
         assert_eq!(bounds, (1.0, 1.0, 3.0, 4.0));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn filter_path_segments_by_contour_area_keeps_all_for_non_positive_min_area_and_drops_small_contours() {
         let small = vec![PathSegment::Move { to: [0.0, 0.0] }, PathSegment::Line { to: [1.0, 0.0] }, PathSegment::Line { to: [1.0, 1.0] }, PathSegment::Close];
         let big = vec![PathSegment::Move { to: [0.0, 0.0] }, PathSegment::Line { to: [10.0, 0.0] }, PathSegment::Line { to: [10.0, 10.0] }, PathSegment::Close];
@@ -1592,7 +1592,7 @@ mod tests {
         assert_eq!(filtered, big);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn flatten_curve_segments_falls_back_to_line_for_degenerate_arc_and_passes_other_kinds_through() {
         let segments = vec![PathSegment::Move { to: [0.0, 0.0] }, PathSegment::Arc { rx: 0.0, ry: 0.0, rotation: 0.0, large_arc: false, sweep: true, to: [5.0, 5.0] }, PathSegment::Quad { ctrl: [1.0, 1.0], to: [2.0, 2.0] }, PathSegment::Close];
         let flattened = flatten_curve_segments(&segments);
@@ -1601,7 +1601,7 @@ mod tests {
         assert!(matches!(flattened[3], PathSegment::Close));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn flatten_segments_to_lines_samples_quad_and_cubic_into_lines() {
         let segments = vec![PathSegment::Move { to: [0.0, 0.0] }, PathSegment::Quad { ctrl: [1.0, 1.0], to: [2.0, 0.0] }, PathSegment::Cubic { ctrl1: [2.0, 1.0], ctrl2: [3.0, 1.0], to: [4.0, 0.0] }];
         let flattened = flatten_segments_to_lines(&segments);
@@ -1613,7 +1613,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn draw_layer_descendant_leaf_ids_flattens_nested_groups_to_leaves() {
         let leaf_a = create_draw_shape_layer_rect("A");
         let leaf_a_id = layer_id(&leaf_a).to_string();
@@ -1638,7 +1638,7 @@ mod tests {
         assert_eq!(draw_layer_descendant_leaf_ids(&leaf), vec![leaf_id_value]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn resolve_boolean_layer_segments_returns_empty_for_missing_children_and_invalid_operation() {
         let mut doc = default_draw_document("bool-empty", None);
         doc.layers.clear();
@@ -1661,7 +1661,7 @@ mod tests {
         assert!(resolve_boolean_layer_segments(&doc, &boolean_invalid).is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn decode_draw_image_asset_luma_handles_data_uri_prefix_resize_and_invalid_inputs() {
         let mut image_buffer = image::RgbaImage::new(4, 4);
         for pixel in image_buffer.pixels_mut() {
@@ -1689,7 +1689,7 @@ mod tests {
         assert!(decode_draw_image_asset_luma(&invalid_image).is_none());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn resolve_draw_artboard_falls_back_to_layer_bounds_and_returns_none_when_no_bounds() {
         let mut doc = default_draw_document("artboard-fallback", None);
         doc.artboard = Some(DrawArtboard { width: 0.0, height: 0.0 });
@@ -1708,7 +1708,7 @@ mod tests {
         assert!(resolve_draw_artboard(&doc).is_none());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn resolve_trace_layer_segments_returns_empty_without_assets_or_source_or_valid_decode() {
         let mut doc = default_draw_document("trace-empty", None);
         doc.layers.clear();
@@ -1726,7 +1726,7 @@ mod tests {
         assert!(resolve_trace_layer_segments(&doc, &trace_bad_decode).is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_layer_by_kind_covers_all_known_kinds_and_fallbacks() {
         assert_eq!(layer_kind_label(&create_layer_by_kind("shape:rect")), "shape:rect");
         assert_eq!(layer_kind_label(&create_layer_by_kind("shape:ellipse")), "shape:ellipse");
@@ -1742,20 +1742,20 @@ mod tests {
         assert_eq!(layer_kind_label(&create_layer_by_kind("nonsense")), "path");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn hex_to_rgba_handles_short_and_long_hex_and_invalid_digits() {
         assert_eq!(hex_to_rgba("#fff", 1.0), [1.0, 1.0, 1.0, 1.0]);
         assert_eq!(hex_to_rgba("#ff0000", 0.5), [1.0, 0.0, 0.0, 0.5]);
         assert_eq!(hex_to_rgba("#zzzzzz", 1.0), [0.0, 0.0, 0.0, 1.0]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn rgba_to_hex_round_trips_and_clamps_out_of_range_channels() {
         assert_eq!(rgba_to_hex([1.0, 0.0, 0.0, 1.0]), "#ff0000");
         assert_eq!(rgba_to_hex([-1.0, 2.0, 0.5, 1.0]), "#00ff80");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn find_draw_layer_location_reports_parent_and_index_or_none_when_missing() {
         let child = create_draw_shape_layer_rect("Child");
         let child_id = layer_id(&child).to_string();

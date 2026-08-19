@@ -31,14 +31,14 @@ mod tests {
     use super::*;
     use crate::editor::fem3d::testkit::{fem3d_app, render as render_body};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn renders_fem3d_model_scene() {
         let mut app = fem3d_app();
         let json = render_body(&mut app, FEM3D_BODY_MODEL);
         assert!(json.contains("world-3d"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn model_scene_renders_solid_mesh_and_oriented_member_instances_3d() {
         let mut app = fem3d_app();
         crate::editor::fem3d::testkit::dispatch(&mut app, crate::editor::fem3d::Fem3dCommand::SetActiveExample(crate::editor::fem3d::commands::set_active_example::SetActiveExample { example_id: "default".into() }));

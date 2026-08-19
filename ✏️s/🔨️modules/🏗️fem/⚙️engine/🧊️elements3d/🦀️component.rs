@@ -913,7 +913,7 @@ mod tests {
     use crate::model::{solve_linear_static, Model, NodalLoad, Node, Support};
 
     /// 🪵️ Headless axial elongation check along an arbitrary (non-axis-aligned) 3D direction.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn bar3_axial_matches_hand_calc_on_skew_member() {
         // A free 3D joint needs ≥3 non-coplanar bars to be determinate (see `truss_fixture` below),
         // so `b` gets two extra fixed-node bars (to `d` and `c`) besides the member under test (`e1`).
@@ -956,7 +956,7 @@ mod tests {
     }
 
     /// 🌀️ Rigid-body test: a pure 3D translation must produce zero internal force on a `Frame3`.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn frame3_rigid_translation_gives_zero_force() {
         let frame = Frame3 { id: "e1".into(), node_a: "a".into(), node_b: "b".into(), e: 210e9, g: 80.77e9, a: 0.005, iy: 1e-5, iz: 1e-5, j: 1e-6, roll: 0.0, density: 0.0 };
         let ctx = ElementContext { positions: vec![[0.0, 0.0, 0.0], [2.0, 1.0, 0.5]] };
@@ -973,7 +973,7 @@ mod tests {
     /// global X with `roll: 0.0`, for which `local_system`'s reference-vector logic aligns local y/z
     /// with global Y/Z exactly — so a UDL in global `wz` lands directly in the local z-bending plane
     /// that `recover` already reports via `v1 = f.get(2)`/`m1 = f.get(4)`.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn frame3_udl_cantilever_matches_hand_calc() {
         let (e, g, a, iy, iz, j) = (200e9, 80e9, 0.01, 8e-5, 8e-5, 1e-6);
         let l = 4.0;
@@ -1002,7 +1002,7 @@ mod tests {
     }
 
     /// 🏋️ `Bar3::mass` matches the hand-derived isotropic `m = ρAL/6` block form (3x3 identity blocks).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn bar3_mass_matches_hand_calc() {
         let (density, a, l) = (7850.0, 0.001, 5.0);
         let bar = Bar3 { id: "e1".into(), node_a: "a".into(), node_b: "b".into(), e: 200e9, a, density };
@@ -1019,7 +1019,7 @@ mod tests {
 
     /// ⚖️ Sum of ALL entries of `Bar3::mass` (a pure translational, no-rotation element) equals the
     /// total member mass `ρAL` — same partition-of-unity identity as `Bar2`'s.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn bar3_mass_total_equals_rho_a_l() {
         let (density, a, l) = (7850.0, 0.001, 5.0);
         let bar = Bar3 { id: "e1".into(), node_a: "a".into(), node_b: "b".into(), e: 200e9, a, density };
@@ -1037,7 +1037,7 @@ mod tests {
     /// 🏋️ `Frame3::mass`'s axial and torsion 2x2 submatrices each sum to their own hand-derived total
     /// (`ρAL` axial, `ρJL` torsion) — checked on a member along global X with `roll: 0.0`, for which
     /// `local_system` aligns local axes with global ones exactly (rotation is identity).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn frame3_mass_axial_and_torsion_blocks_sum_to_total() {
         let (e, g, a, iy, iz, j, density) = (200e9, 80e9, 0.01, 8e-5, 8e-5, 1e-6, 7850.0);
         let l = 4.0;
@@ -1051,7 +1051,7 @@ mod tests {
     }
 
     /// 🌀️ `Frame3` geometric stiffness must vanish under a pure rigid translation.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn frame3_geometric_stiffness_rigid_translation_gives_zero_force() {
         let frame = Frame3 { id: "e1".into(), node_a: "a".into(), node_b: "b".into(), e: 210e9, g: 80.77e9, a: 0.005, iy: 1e-5, iz: 1e-5, j: 1e-6, roll: 0.0, density: 0.0 };
         let ctx = ElementContext { positions: vec![[0.0, 0.0, 0.0], [2.0, 1.0, 0.5]] };
@@ -1066,7 +1066,7 @@ mod tests {
     }
 
     /// 🌀️ `Frame3` geometric stiffness is symmetric.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn frame3_geometric_stiffness_is_symmetric() {
         let frame = Frame3 { id: "e1".into(), node_a: "a".into(), node_b: "b".into(), e: 210e9, g: 80.77e9, a: 0.005, iy: 1e-5, iz: 1e-5, j: 1e-6, roll: 0.0, density: 0.0 };
         let ctx = ElementContext { positions: vec![[0.0, 0.0, 0.0], [2.0, 1.0, 0.5]] };
@@ -1082,7 +1082,7 @@ mod tests {
 
     /// 🌬️ `Bar3::equivalent_nodal_loads` splits a global UDL `wL/2` exactly evenly at both nodes —
     /// the 3D analogue of `elements2d::bar2_equivalent_nodal_loads_matches_wl_over_2`.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn bar3_equivalent_nodal_loads_matches_wl_over_2() {
         let (e, a, l) = (200e9, 0.001, 5.0);
         let bar = Bar3 { id: "e1".into(), node_a: "a".into(), node_b: "b".into(), e, a, density: 0.0 };
@@ -1101,7 +1101,7 @@ mod tests {
     /// 🌀️ `Bar3::geometric_stiffness`: zero under rigid translation, symmetric, and (same reasoning
     /// as `elements2d::bar2_geometric_stiffness_rigid_translation_gives_zero_force_and_is_symmetric`)
     /// zero along the bar's own axis.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn bar3_geometric_stiffness_rigid_translation_gives_zero_force_and_is_symmetric() {
         let (e, a) = (200e9, 0.001);
         let bar = Bar3 { id: "e1".into(), node_a: "a".into(), node_b: "b".into(), e, a, density: 0.0 };
@@ -1198,7 +1198,7 @@ mod solid_tests {
 
     /// 🧮️ Constant-strain patch test: an exact linear field imposed at every node must recover the
     /// exact analytical `σ=Dε` at the (single, exact) integration point.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn tet4_patch_test_recovers_exact_constant_stress() {
         let (e, nu) = (200e9, 0.3);
         let positions = skew_tet_positions();
@@ -1215,7 +1215,7 @@ mod solid_tests {
     }
 
     /// 🌀️ Rigid-body test: a pure translation of all 4 nodes must produce zero internal force.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn tet4_rigid_translation_gives_zero_force() {
         let (e, nu) = (200e9, 0.3);
         let positions = skew_tet_positions();
@@ -1239,7 +1239,7 @@ mod solid_tests {
 
     /// ⚖️ `Tet4::mass`'s total (the pure-`Tx` submatrix's sum) equals `ρV` — same partition-of-unity
     /// identity as `Bar3`'s.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn tet4_mass_total_equals_rho_v() {
         let (density, e, nu) = (2400.0, 200e9, 0.3);
         let positions = skew_tet_positions();
@@ -1254,7 +1254,7 @@ mod solid_tests {
     /// ⚖️ A single `Tet4` under self-weight only: the vertical reaction sum must equal `ρVg` — the
     /// same strong equilibrium check `analyses`'s beam self-weight test uses, now exercised on a
     /// continuum solid element (only possible once `Tet4::mass` exists).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn tet4_self_weight_matches_total_mass_times_gravity() {
         let (density, e, nu, g) = (2400.0, 30e9, 0.2, 9.81);
         let positions = [[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]];
@@ -1273,7 +1273,7 @@ mod solid_tests {
     }
 
     /// 🌀️ `Tet4::geometric_stiffness`: zero under rigid translation and symmetric.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn tet4_geometric_stiffness_rigid_translation_gives_zero_force_and_is_symmetric() {
         let (e, nu) = (200e9, 0.3);
         let positions = skew_tet_positions();
@@ -1303,7 +1303,7 @@ mod solid_tests {
     /// 🧮️ Constant-strain patch test, same field as `Tet4`'s — checked at all 8 Gauss points (a
     /// skewed-but-non-degenerate hex still reproduces an exact linear field everywhere, a fundamental
     /// isoparametric-interpolation property, not something specific to parallelepiped geometry).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn hex8_patch_test_recovers_exact_constant_stress() {
         let (e, nu) = (200e9, 0.3);
         let positions = skew_hex_positions();
@@ -1324,7 +1324,7 @@ mod solid_tests {
     }
 
     /// 🌀️ Rigid-body test: a pure translation of all 8 nodes must produce zero internal force.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn hex8_rigid_translation_gives_zero_force() {
         let (e, nu) = (200e9, 0.3);
         let positions = skew_hex_positions();
@@ -1344,7 +1344,7 @@ mod solid_tests {
     /// without incompatible modes is known to lock somewhat stiff in bending), so the tolerance is
     /// wide: just confirm the deflection is negative (toward the load), finite, and the right order
     /// of magnitude.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn hex8_meshed_cantilever_deflection_is_right_order_of_magnitude() {
         let (e, nu) = (200e9, 0.3);
         let (b, h, l, nx) = (0.2, 0.3, 4.0, 4usize);
@@ -1400,7 +1400,7 @@ mod solid_tests {
     /// ⚖️ `Hex8::mass`'s total (pure-`Tx` submatrix sum) equals `ρV` on the UNIT cube (skewed hex
     /// positions make an independent volume oracle fiddly — the axis-aligned unit cube's volume is
     /// trivially `1.0`, isolating the mass identity from any volume-computation risk).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn hex8_mass_total_equals_rho_v() {
         let density = 2400.0;
         let positions = [[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [1.0, 1.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0], [1.0, 0.0, 1.0], [1.0, 1.0, 1.0], [0.0, 1.0, 1.0]];
@@ -1413,7 +1413,7 @@ mod solid_tests {
     }
 
     /// 🌀️ `Hex8::geometric_stiffness`: zero under rigid translation and symmetric.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn hex8_geometric_stiffness_rigid_translation_gives_zero_force_and_is_symmetric() {
         let (e, nu) = (200e9, 0.3);
         let positions = skew_hex_positions();
@@ -1464,7 +1464,7 @@ mod shell_tests {
         [[0.0, 0.0, 0.0], [2.0, 0.0, 0.0], [0.2, 1.8, 0.0]]
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn shell_facet3_patch_test_reproduces_linear_membrane_and_constant_curvature() {
         let positions = aligned_triangle_positions();
         let el = ShellFacet3 { id: "s".into(), nodes: ["a".into(), "b".into(), "c".into()], e: E, nu: NU, thickness: THICKNESS, density: 0.0 };
@@ -1507,7 +1507,7 @@ mod shell_tests {
 
     /// 🌀️ Rigid-body test: a pure 3D translation (zero rotation, so the drilling DOF is untouched too)
     /// must produce zero internal force on a generic (non-axis-aligned) skew triangle.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn shell_facet3_rigid_translation_gives_zero_force() {
         let positions = [[0.0, 0.0, 0.0], [2.0, 0.0, 0.3], [0.5, 1.5, 0.7]];
         let el = ShellFacet3 { id: "s".into(), nodes: ["a".into(), "b".into(), "c".into()], e: E, nu: NU, thickness: THICKNESS, density: 0.0 };
@@ -1527,7 +1527,7 @@ mod shell_tests {
     /// 🏗️ Smoke test: a single flat `ShellFacet3` with one full edge fixed, loaded out-of-plane at the
     /// free node — deflection must be finite, nonzero, and in the same direction as the applied load
     /// (not a precision benchmark, just a physical-sanity check on assembly/BC wiring).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn shell_facet3_cantilever_deflects_toward_tip_load() {
         let (e, nu, t) = (200e9, 0.3, 0.01);
         let p = -1000.0;
@@ -1546,7 +1546,7 @@ mod shell_tests {
 
     /// ⚖️ `ShellFacet3::mass`'s total (pure-`Tx` submatrix sum) equals `ρtA` — same lumped-mass
     /// row-sum identity `PlateDkt`'s translational lump satisfies.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn shell_facet3_mass_total_equals_rho_t_area() {
         let (density, thickness) = (7850.0, 0.008);
         let positions = aligned_triangle_positions();
@@ -1564,7 +1564,7 @@ mod shell_tests {
     /// in-plane axial COMPRESSION at the free edge must produce a finite, positive lowest linear-
     /// buckling load factor — possible only now that `ShellFacet3::geometric_stiffness` exists (a
     /// `PlateDkt`-only panel would report no geometric stiffness at all, per its documented `None`).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn shell_facet3_membrane_compression_destabilizes_and_tension_stabilizes_out_of_plane_stiffness() {
         let positions = aligned_triangle_positions();
         let el = ShellFacet3 { id: "s".into(), nodes: ["a".into(), "b".into(), "c".into()], e: E, nu: NU, thickness: THICKNESS, density: 0.0 };

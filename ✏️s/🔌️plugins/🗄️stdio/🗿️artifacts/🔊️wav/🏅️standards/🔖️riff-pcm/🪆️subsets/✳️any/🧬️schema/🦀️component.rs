@@ -21,7 +21,7 @@ pub struct WavArtifact {
 }
 
 impl Default for WavArtifact {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self::from_snapshot(WavSnapshot::default())
     }
 }

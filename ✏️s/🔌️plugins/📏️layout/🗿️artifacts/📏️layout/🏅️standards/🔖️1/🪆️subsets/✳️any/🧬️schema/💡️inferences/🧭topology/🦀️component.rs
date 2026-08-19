@@ -131,13 +131,13 @@ mod tests {
     }
 
     //#region 🧪️TopologyLaws
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn empty_document_has_empty_topology() {
         let topology = compute_layout_topology(&[], &[], &[]);
         assert_eq!(topology, LayoutTopology::empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn a_page_dangling_its_spread_ref_still_sorts_cleanly() {
         // 🕳️ `spreadId` points at a spread that doesn't exist in this snapshot — the edge is simply
         // dropped (see `topological_sort`'s `indegree.contains_key` guard), not a cycle.
@@ -146,7 +146,7 @@ mod tests {
         assert_eq!(topology.topo_order, vec!["orphan"]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn master_and_spread_both_precede_their_page() {
         let topology = compute_layout_topology(&[parent_page("master-1")], &[spread("spread-1", vec!["page-1"])], &[page("page-1", "spread-1", Some("master-1"))]);
         assert!(topology.cycle_free);

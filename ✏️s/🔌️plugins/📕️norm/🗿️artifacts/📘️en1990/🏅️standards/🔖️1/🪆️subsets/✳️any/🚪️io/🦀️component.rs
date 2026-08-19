@@ -97,7 +97,7 @@ mod tests {
     use store::os_store::test_support::{self, ExampleAsset, IoFidelityClass, SubsetRoundtripSpec};
     use store::{ArtifactDsl, ArtifactPack};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dsl_and_pack_wire_roundtrip_default() {
         let snapshot = En1990Snapshot::default();
         let dsl = en1990_to_dsl_bytes(&snapshot);
@@ -160,7 +160,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn high_consequence_office_subset_roundtrip() {
         let asset = ExampleAsset { bytes: EN1990_HIGH_CONSEQUENCE_OFFICE_EXAMPLE_TEXT.as_bytes(), text: Some(EN1990_HIGH_CONSEQUENCE_OFFICE_EXAMPLE_TEXT), provenance: "high-consequence-office.dsl.semio (EN 1990 CC3 office example)" };
         test_support::assert_subset_roundtrip::<En1990AnyRoundtrip>(&asset, None);

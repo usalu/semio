@@ -91,7 +91,7 @@ mod tests {
     use crate::artifacts::sequence::{default_snapshot, SequenceStep, StepParams};
     use protocol::Mutation;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_step_diff_applies_onto_the_base_snapshot() {
         let base = default_snapshot();
         let step = SequenceStep { id: "step-99".into(), kind: "log.print".into(), params: StepParams::new(), x: 5.0, y: 6.0, slot: None, collapsed: false };

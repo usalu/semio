@@ -49,7 +49,7 @@ pub async fn animate_present_labels(config: &PresentConfig) -> &'static AnimateP
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn labels_resolve_native_english_and_german_from_the_config_locale() {
         assert_eq!(animate_present_labels(&PresentConfig::default()).tiles_section.as_str(), "Tiles");
         assert_eq!(animate_present_labels(&PresentConfig { locale: "de-DE".into(), ..PresentConfig::default() }).tiles_section.as_str(), "Kacheln");
@@ -58,7 +58,7 @@ mod tests {
     /// 🌱️ Relocated from the deleted `set-selected-ids` command's test mod (ticket
     /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) — exercises the same app-wide label
     /// resolution, unrelated to selection.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn animate_present_labels_resolve_native_by_default() {
         use crate::editor::animate::testkit::{present_app, render};
         use crate::editor::animate::{PRESENT_PLAY_BODY_CATALOGUE, PRESENT_PLAY_BODY_DETAILS};
@@ -71,7 +71,7 @@ mod tests {
         let _ = PRESENT_PLAY_BODY_DETAILS;
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn animate_present_labels_translate_panels_in_german() {
         use crate::editor::animate::commands::set_locale;
         use crate::editor::animate::testkit::{dispatch, present_app, render};

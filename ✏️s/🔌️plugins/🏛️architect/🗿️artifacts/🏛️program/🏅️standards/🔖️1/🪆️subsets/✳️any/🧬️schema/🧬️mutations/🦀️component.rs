@@ -329,7 +329,7 @@ mod tests {
     }
 
     //#region 👥stakeholders
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn stakeholders_create_rename_replace_delete_round_trip() {
         let snapshot = sample_plugin();
         let new_id = EntityId::new_serial("stakeholder", "stakeholder");
@@ -356,7 +356,7 @@ mod tests {
         assert_eq!(deleted.stakeholders.len(), snapshot.stakeholders.len());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn delete_stakeholder_of_a_missing_id_has_an_empty_inverse() {
         let snapshot = sample_plugin();
         let delete = ProgramMutation::DeleteStakeholder(super::super::delete_stakeholder::mutation::DeleteStakeholder { id: EntityId("nope".into()) });
@@ -365,7 +365,7 @@ mod tests {
     //#endregion 👥stakeholders
 
     //#region 🧱elements
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn elements_create_rename_replace_delete_round_trip() {
         let snapshot = sample_plugin();
         let new_id = EntityId::new_serial("element", "element");
@@ -394,7 +394,7 @@ mod tests {
     //#endregion 🧱elements
 
     //#region 🏷️📁🏛️meta-project-governance
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn update_meta_rename_and_replace_round_trip() {
         let snapshot = empty_plugin();
         let rename = ProgramMutation::RenameMeta(super::super::rename_meta::mutation::RenameMeta { new_title: "Clinic".into() });
@@ -408,7 +408,7 @@ mod tests {
         assert_eq!(replaced.meta.industry_sector, "healthcare");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn update_project_rename_and_replace_round_trip() {
         let snapshot = empty_plugin();
         let rename = ProgramMutation::RenameProject(super::super::rename_project::mutation::RenameProject { new_code: "CLN-001".into() });
@@ -422,7 +422,7 @@ mod tests {
         assert_eq!(replaced.project.client_name, "Sample Health");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn update_governance_rename_and_replace_round_trip() {
         let snapshot = empty_plugin();
         let rename = ProgramMutation::RenameGovernance(super::super::rename_governance::mutation::RenameGovernance { new_framework: "ISO 41001".into() });
@@ -438,7 +438,7 @@ mod tests {
     //#endregion 🏷️📁🏛️meta-project-governance
 
     //#region 🗺️🧹connect-disconnect-adjacency
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn connect_and_disconnect_adjacency_round_trip() {
         let snapshot = sample_plugin();
         let a = snapshot.elements[0].header.id.clone();
@@ -476,7 +476,7 @@ mod tests {
         assert_eq!(disconnected.adjacencies.len(), snapshot.adjacencies.len());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn connect_adjacency_upserts_an_existing_pair_by_endpoint_identity() {
         let snapshot = sample_plugin();
         let existing = &snapshot.adjacencies[0];
@@ -492,7 +492,7 @@ mod tests {
     //#endregion 🗺️🧹connect-disconnect-adjacency
 
     //#region 🧵connect-disconnect-trace
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn connect_and_disconnect_trace_round_trip() {
         let snapshot = sample_plugin();
         let trace = TraceLink::new(snapshot.elements[0].header.id.clone(), snapshot.elements[1].header.id.clone(), TraceKind::FullAuditTrail);
@@ -508,7 +508,7 @@ mod tests {
     //#endregion 🧵connect-disconnect-trace
 
     //#region 🗣️OpText
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn program_mutation_op_text_round_trips_a_sample_of_variants() {
         let stakeholder = sample_plugin().stakeholders[0].clone();
         store::os_store::test_support::assert_op_line_round_trip(&ProgramMutation::CreateStakeholder(super::super::create_stakeholder::mutation::CreateStakeholder { stakeholder: stakeholder.clone() }));
@@ -525,7 +525,7 @@ mod tests {
     /// (`protocol::os_spr::testkit`, added by the Wave 0 mechanism pass) against the three most
     /// structurally distinct new kinds: an id-keyed collection create/delete pair, a document-level
     /// scalar facet rename, and an edge upsert.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_stakeholder_obeys_the_inverse_and_absorb_laws() {
         let base = sample_plugin();
         let mut new_stakeholder = base.stakeholders[0].clone();
@@ -538,14 +538,14 @@ mod tests {
         protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn rename_meta_obeys_the_inverse_law() {
         let base = sample_plugin();
         let rename = ProgramMutation::RenameMeta(super::super::rename_meta::mutation::RenameMeta { new_title: "Renamed Program".into() });
         protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &rename);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn connect_adjacency_obeys_the_inverse_law() {
         let base = sample_plugin();
         let mut updated = base.adjacencies[0].clone();
@@ -556,7 +556,7 @@ mod tests {
     //#endregion ⚖️SemanticLaws
 
     //#region 📋️DescriptorLaws
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn semantic_kinds_cover_every_variant() {
         assert_eq!(ProgramMutation::kinds().len(), 266);
         let stakeholder = sample_plugin().stakeholders[0].clone();

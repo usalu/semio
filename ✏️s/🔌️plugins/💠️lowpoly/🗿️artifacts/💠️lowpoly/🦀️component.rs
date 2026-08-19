@@ -56,7 +56,7 @@ pub struct LowpolyTransform {
 }
 
 impl Default for LowpolyTransform {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { position: [0.0, 0.0, 0.0], rotation: [0.0, 0.0, 0.0], scale: [1.0, 1.0, 1.0] }
     }
 }
@@ -160,7 +160,7 @@ pub struct LowpolySelectionTargets {
 }
 
 impl Default for LowpolySelectionTargets {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { mesh: true, vertex: false, edge: false, face: false }
     }
 }
@@ -177,7 +177,7 @@ pub struct LowpolySelection {
 }
 
 impl Default for LowpolySelection {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { targets: LowpolySelectionTargets::default(), keys: Vec::new(), mode: "mesh".into(), ids: Vec::new() }
     }
 }
@@ -491,7 +491,7 @@ async fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn object_patch_apply_mutates_and_inverse_restores_all_fields() {
         let mesh_workspace = "{}".to_string();
         let original_mesh = mesh_child_handle("obj-1", &mesh_workspace);
@@ -510,7 +510,7 @@ mod tests {
         assert_eq!(object, original);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn snapshot_from_mesh_json_builds_single_object_with_base_layer() {
         let mesh_json = "{}".to_string();
         let snapshot = snapshot_from_mesh_json(&mesh_json, "obj-42", "Widget");
@@ -523,7 +523,7 @@ mod tests {
         assert_eq!(snapshot.objects[0].paint_layers[0].name, "Base");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn lowpoly_selection_defaults_target_whole_mesh() {
         let targets = LowpolySelectionTargets::default();
         assert!(targets.mesh);
@@ -534,7 +534,7 @@ mod tests {
     }
 }
 
-#[test]
+#[semio_framework_async_macros::async_test]
 async fn artifact_schema_descriptor_leaves_parse_and_field_states_match_snapshot_json() {
     use schema::{parse_state_class_kebab, ArtifactSchemaFields};
     let descriptor = crate::artifacts::lowpoly::schema::lowpoly_artifact_schema_descriptor();

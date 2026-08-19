@@ -31,7 +31,7 @@ pub struct SemioGraphTopology {
 /// zero case (same fix jack's own `JackTopology::default()` and sibling `✳️flow`'s
 /// `SemioFlowTopology::default()` document).
 impl Default for SemioGraphTopology {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { topo_order: Vec::new(), depth: BTreeMap::new(), cycle_free: true, node_count: 0 }
     }
 }
@@ -104,7 +104,7 @@ mod tests {
         SemioGraphSnapshot { schema: STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA.into(), nodes: vec![node("root"), node("mid"), node("leaf")], edges: vec![edge("e1", "root", "mid"), edge("e2", "mid", "leaf")] }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn chain_is_cycle_free_with_increasing_depth() {
         let topology = compute_semio_graph_topology(&chain_snapshot());
         assert!(topology.cycle_free);
@@ -115,7 +115,7 @@ mod tests {
         assert_eq!(topology.depth.get("leaf"), Some(&2));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn a_cycle_is_reported_as_not_cycle_free() {
         let mut snapshot = chain_snapshot();
         snapshot.edges.push(edge("e3", "leaf", "root"));
@@ -124,13 +124,13 @@ mod tests {
         assert!(topology.topo_order.is_empty(), "every node in the 3-cycle has nonzero indegree");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = chain_snapshot();
         assert_eq!(compute_semio_graph_topology(&snapshot), compute_semio_graph_topology(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(compute_semio_graph_topology(&SemioGraphSnapshot::default()), SemioGraphTopology::default());
     }

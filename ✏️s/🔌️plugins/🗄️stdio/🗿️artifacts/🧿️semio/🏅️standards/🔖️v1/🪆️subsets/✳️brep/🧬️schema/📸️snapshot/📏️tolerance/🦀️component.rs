@@ -26,7 +26,7 @@ impl Resolution {
 }
 
 impl Default for Resolution {
-    async fn default() -> Self {
+    fn default() -> Self {
         Resolution::DEFAULT
     }
 }
@@ -71,7 +71,7 @@ impl Tol {
 }
 
 impl Default for Tol {
-    async fn default() -> Self {
+    fn default() -> Self {
         Tol::DEFAULT
     }
 }
@@ -155,7 +155,7 @@ impl Iv {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn tol_contains_checks_absolute_distance() {
         let t = Tol::new(0.01);
         assert!(t.contains(0.005));
@@ -163,7 +163,7 @@ mod tests {
         assert!(!t.contains(0.02));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn tol_tighter_and_looser_pick_correctly() {
         let a = Tol::new(0.1);
         let b = Tol::new(0.5);
@@ -171,12 +171,12 @@ mod tests {
         assert_eq!(a.looser(b), b);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn negative_tolerance_clamps_to_zero() {
         assert_eq!(Tol::new(-1.0), Tol::new(0.0));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn check_containment_flags_violation() {
         // A vertex whose own tolerance ball (0.1) is larger than its incident edge's tube (0.01)
         // violates the containment hierarchy: the finer (vertex) must fit inside the coarser (edge).
@@ -188,7 +188,7 @@ mod tests {
         assert!(ok.is_none());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn interval_add_widens_conservatively() {
         let a = Iv::new(1.0, 2.0);
         let b = Iv::new(-1.0, 3.0);
@@ -196,19 +196,19 @@ mod tests {
         assert_eq!(sum, Iv::new(0.0, 5.0));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn interval_sign_is_none_when_straddling_zero() {
         let iv = Iv::new(-0.001, 0.001);
         assert_eq!(iv.sign(), None);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn interval_sign_certain_when_strictly_positive_or_negative() {
         assert_eq!(Iv::new(0.5, 1.0).sign(), Some(std::cmp::Ordering::Greater));
         assert_eq!(Iv::new(-1.0, -0.5).sign(), Some(std::cmp::Ordering::Less));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn interval_mul_contains_true_product_for_mixed_signs() {
         let a = Iv::new(-2.0, 3.0);
         let b = Iv::new(-1.0, 4.0);
@@ -219,7 +219,7 @@ mod tests {
     mod quick {
         use super::*;
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn interval_arithmetic_always_contains_scalar_result() {
             let mut rng = semio_framework_geometry::random::Rng::from_seed(3);
             for _ in 0..500 {

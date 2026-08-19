@@ -65,13 +65,13 @@ mod tests {
     use crate::artifacts::ifc::IfcSnapshot;
     use crate::artifacts::ifc::STDIO_IFC_DOCUMENT_SCHEMA;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn empty_snapshot_matches_schema() {
         let snapshot = empty_ifc_snapshot();
         assert_eq!(snapshot.schema, STDIO_IFC_DOCUMENT_SCHEMA);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn codec_round_trip() {
         let snap = empty_ifc_snapshot();
         let text = store::ArtifactDsl::print_dsl(&snap);
@@ -96,7 +96,7 @@ mod tests {
 
         /// ✅️ "committed files parse": all 6 handcrafted `.grammar.semio`/`.protocol.semio` files
         /// parse under the real dialect.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn committed_facet_files_parse() {
             for (label, text) in [("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO)] {
                 let grammar = dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
@@ -110,7 +110,7 @@ mod tests {
         /// ✅️ `grammar_conformance_law`: the snapshot grammar recognizes real `print_dsl` output
         /// for the demo snapshot, preamble-stripped-and-reconstructed the same way
         /// `m5_handcrafted_grammar_conformance` itself does.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn grammar_conformance_law() {
             let grammar = dsl::parse_grammar(snapshot::text::COMPONENT_GRAMMAR_SEMIO).expect("parse snapshot grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
@@ -129,7 +129,7 @@ mod tests {
 
         /// ✅️ `ops_grammar_conformance_law`: the mutations grammar recognizes real `print_op`
         /// output for every `IfcMutation` demo case.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn ops_grammar_conformance_law() {
             let grammar = dsl::parse_grammar(mutations::text::COMPONENT_GRAMMAR_SEMIO).expect("parse mutations grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
@@ -141,7 +141,7 @@ mod tests {
 
         /// ✅️ `diff_grammar_conformance_law`: the diff grammar recognizes real `print_diff` output
         /// for every representative `IfcDiff` demo case.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn diff_grammar_conformance_law() {
             let grammar = dsl::parse_grammar(diff::text::COMPONENT_GRAMMAR_SEMIO).expect("parse diff grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
@@ -154,7 +154,7 @@ mod tests {
         /// ✅️ `protocol_walk_law`: `walk_protocol` against REAL bytes for all three facets —
         /// snapshot pack (envelope-unwrapped first), every demo mutation's `encode_op`, every demo
         /// diff's `encode_diff` — asserting `consumed == bytes.len()`.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn protocol_walk_law() {
             let pack_spec = dsl::parse_protocol(snapshot::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
             let packed = store::ArtifactPack::encode_pack(&demo_ifc_snapshot());
@@ -179,7 +179,7 @@ mod tests {
 
         /// ✅️ `fixture_honesty_law`: the shipped `.dsl.semio`/`.pack.semio` fixtures are GENUINE
         /// `print_dsl`/`encode_pack` output of `demo_ifc_snapshot()`.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn fixture_honesty_law() {
             const FIXTURE_DSL: &str = include_str!("../../../../🔖️2x3/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
             const FIXTURE_PACK: &[u8] = include_bytes!("../../../../🔖️2x3/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🎒️example.pack.semio");

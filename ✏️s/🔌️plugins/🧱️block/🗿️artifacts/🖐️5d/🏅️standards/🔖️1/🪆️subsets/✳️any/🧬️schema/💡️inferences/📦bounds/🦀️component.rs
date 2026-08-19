@@ -55,13 +55,13 @@ mod tests {
         Block5dGripTemplate { id: id.into(), grip_kind: "rope".into(), angle: 0.0, radius_2d: 0.0, position, direction: [0.0, 1.0, 0.0], radius_3d }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn empty_catalog_yields_default_bounds() {
         let snapshot = Block5dSnapshot::default();
         assert_eq!(compute_block5d_bounds(&snapshot), Block5dBounds::default());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn single_grip_bounds_equal_its_own_inflated_footprint() {
         let mut snapshot = Block5dSnapshot::default();
         snapshot.grips.push(grip("g0", [1.0, 1.0, 1.0], 0.5));
@@ -70,7 +70,7 @@ mod tests {
         assert_eq!(bounds.vertex_count, 1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn multiple_grips_union_their_footprints() {
         let mut snapshot = Block5dSnapshot::default();
         snapshot.grips.push(grip("g0", [1.0, 2.0, 3.0], 0.5));

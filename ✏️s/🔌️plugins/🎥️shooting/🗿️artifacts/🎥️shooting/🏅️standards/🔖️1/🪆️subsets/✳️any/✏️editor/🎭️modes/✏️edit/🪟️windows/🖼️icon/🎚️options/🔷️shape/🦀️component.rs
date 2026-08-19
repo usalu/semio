@@ -28,7 +28,7 @@ mod tests {
     use crate::editor::shooting::config::ShootingConfig;
     use crate::editor::shooting::terminology::shooting_play_labels;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn shape_measure_offers_rectangle_and_ellipse() {
         let snapshot = crate::artifacts::shooting::schema::default_snapshot();
         let labels = shooting_play_labels(&ShootingConfig::default());

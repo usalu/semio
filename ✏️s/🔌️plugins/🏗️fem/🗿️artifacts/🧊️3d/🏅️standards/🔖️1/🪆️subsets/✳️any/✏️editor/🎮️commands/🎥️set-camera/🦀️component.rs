@@ -22,7 +22,7 @@ mod tests {
     use crate::editor::fem3d::testkit::{dispatch, fem3d_app, render};
     use crate::editor::fem3d::Fem3dCommand;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_camera_action_writes_config_not_artifact_mutations() {
         let mut app = fem3d_app();
         dispatch(&mut app, Fem3dCommand::SetCamera(SetCamera { json: "{\"x\":1}".into() }));

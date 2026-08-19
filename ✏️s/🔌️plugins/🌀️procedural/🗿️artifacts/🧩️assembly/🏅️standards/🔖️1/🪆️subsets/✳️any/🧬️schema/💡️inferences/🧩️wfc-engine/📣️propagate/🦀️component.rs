@@ -55,7 +55,7 @@ impl PropQueue {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn push_dedups_and_fifo_orders() {
         let mut q = PropQueue::new(4);
         q.push(NodeId(1));
@@ -66,7 +66,7 @@ mod tests {
         assert_eq!(q.pop(), None);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn popped_node_can_be_repushed() {
         let mut q = PropQueue::new(2);
         q.push(NodeId(0));
@@ -75,7 +75,7 @@ mod tests {
         assert_eq!(q.pop(), Some(NodeId(0)));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn clear_resets_membership() {
         let mut q = PropQueue::new(2);
         q.push(NodeId(0));
@@ -85,7 +85,7 @@ mod tests {
         assert_eq!(q.pop(), Some(NodeId(0)));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn push_all_enqueues_every_node_once() {
         let mut q = PropQueue::new(3);
         q.push_all(3);

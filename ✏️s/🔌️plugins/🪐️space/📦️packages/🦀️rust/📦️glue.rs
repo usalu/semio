@@ -30,6 +30,13 @@
 //! plugin-root `⚙️engine/🖥️app-surface/` precedent (packet P7b). Same content, same tests, same
 //! registration; only the module path changed (`apps::space::` → `engine::space::`).
 
+// 🧬️ R7/R3: this crate declares a first-party async trait (`engine::space::engine::OsParameterId`).
+// The `async_fn_in_trait` lint's real concern (callers cannot assume the returned future is `Send`) is
+// answered structurally — every former `dyn` seam in this program becomes a concrete enum, so `Send`
+// comes from the concrete type at each spawn site, never from a bound on the trait. Do NOT "fix" this by
+// adding `-> impl Future + Send` (breaks guest `?Send` futures) or by making the trait method sync.
+#![allow(async_fn_in_trait)]
+
 extern crate infinite_canvas as infinite_board_port_directed_dag;
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as store;

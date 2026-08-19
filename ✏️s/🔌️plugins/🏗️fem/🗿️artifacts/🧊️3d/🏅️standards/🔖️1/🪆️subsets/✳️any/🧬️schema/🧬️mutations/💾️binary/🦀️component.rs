@@ -44,7 +44,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_binary_round_trips_and_agrees_with_text() {
         let operation = Fem3dMutation::UpdateAnalysisSettings(update_analysis_settings::mutation::UpdateAnalysisSettings { settings: FemAnalysisSettings { modal_count: 5, buckling_count: 2, deformation_scale: 10.0 } });
         semio_framework_os_kernel::os_store::test_support::assert_op_text_binary_equivalence(&operation);
@@ -56,7 +56,7 @@ mod tests {
     /// banned outright (`📓️taxonomy.md`'s forbidden vocabulary — no replacement mutation). Builds the
     /// same `cantilever_fixture` content through a real sequence of semantic mutations instead, still
     /// exercising every collection kind (id-keyed create + a nested load) for the text/pack codecs.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fem3d_document_text_round_trips_through_the_store() {
         let fixture = cantilever_fixture();
         let mut store = crate::artifacts::fem3d::schema::mutations::Fem3dStore::new(create_document_envelope(crate::artifacts::fem3d::FEM_3D_SCHEMA, "fem3d", schema::empty_fem3d_snapshot(), None)).expect("valid store");
@@ -81,14 +81,14 @@ mod tests {
 mod semio_protocol_conformance {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn component_protocol_semio_is_protocol_dialect() {
         let g = ::dsl::parse_grammar(COMPONENT_PROTOCOL_SEMIO).expect("parse protocol.semio");
         assert_eq!(g.dialect, ::dsl::SemioDialect::Protocol);
         assert!(!COMPONENT_PROTOCOL_SEMIO.is_empty());
         let _ = COMPONENT_PROTOCOL_PATH;
     }
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn verify_protocol_bytes_against_encoded_spr() {
         let operation = Fem3dMutation::UpdateAnalysisSettings(update_analysis_settings::mutation::UpdateAnalysisSettings {
             settings: crate::artifacts::fem3d::FemAnalysisSettings { modal_count: 5, buckling_count: 2, deformation_scale: 10.0 },

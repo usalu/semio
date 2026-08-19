@@ -26,7 +26,7 @@ pub struct Ifc2x3Bounds {
 /// `compute_ifc2x3_bounds` returns for zero `IFCCARTESIANPOINT` instances (the fold's identity
 /// value), keeping the inference-default law correct.
 impl Default for Ifc2x3Bounds {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { min: [0.0, 0.0, 0.0], max: [0.0, 0.0, 0.0], point_count: 0 }
     }
 }
@@ -72,7 +72,7 @@ mod tests {
         Part21Instance { id, entities: vec![("IFCCARTESIANPOINT".into(), vec![Part21Value::List(vec![Part21Value::Real(x.into()), Part21Value::Real(y.into()), Part21Value::Real(z.into())])])] }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn bounds_matches_hand_built_point_extent() {
         let snapshot = Ifc2x3Snapshot {
             schema: STDIO_IFC2X3_DOCUMENT_SCHEMA.into(),
@@ -88,13 +88,13 @@ mod tests {
         assert_eq!(bounds.point_count, 3);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = Ifc2x3Snapshot { schema: STDIO_IFC2X3_DOCUMENT_SCHEMA.into(), document: Part21Document { header: Part21Header::default(), instances: vec![point_instance(1, 1.0, 1.0, 1.0)] }, edm_preamble: None };
         assert_eq!(compute_ifc2x3_bounds(&snapshot), compute_ifc2x3_bounds(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(compute_ifc2x3_bounds(&Ifc2x3Snapshot::default()), Ifc2x3Bounds::default());
     }

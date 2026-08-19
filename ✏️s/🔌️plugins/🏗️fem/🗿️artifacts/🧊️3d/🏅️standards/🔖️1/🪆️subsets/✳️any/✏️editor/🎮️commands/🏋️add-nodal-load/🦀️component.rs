@@ -83,13 +83,13 @@ mod tests {
         app
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn resolve_load_case_returns_none_when_none_exist() {
         let snapshot = Fem3dSnapshot::default();
         assert!(resolve_load_case(&snapshot, None).is_none());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_nodal_load_with_no_existing_case_creates_one() {
         let mut app = fem3d_app();
         dispatch(&mut app, Fem3dCommand::AddNodalLoad(AddNodalLoad { node_id: "n2".into(), dof: crate::artifacts::fem3d::FemDof::Tz, value: -5000.0, case_id: None }));
@@ -99,7 +99,7 @@ mod tests {
         assert!(matches!(snapshot.load_cases[0].loads[0], crate::artifacts::fem3d::FemLoad::Nodal { .. }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_member_udl_action_emits_op_3d() {
         let mut app = app_with_load_case();
         dispatch(&mut app, Fem3dCommand::AddMemberUdl(add_member_udl::AddMemberUdl { element_id: "e1".into(), wx: 0.0, wy: 0.0, wz: -2000.0, case_id: None }));
@@ -108,7 +108,7 @@ mod tests {
         assert!(matches!(load_case.loads[0], crate::artifacts::fem3d::FemLoad::MemberUdl { .. }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_nodal_load_targets_named_case() {
         let mut app = app_with_load_case();
         dispatch(&mut app, Fem3dCommand::AddLoadCase(add_load_case::AddLoadCase { name: "Live".into(), self_weight: false }));
@@ -119,7 +119,7 @@ mod tests {
         assert!(snapshot.load_cases[0].loads.is_empty(), "the untargeted case must stay untouched");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_self_weight_toggles_existing_case() {
         let mut app = app_with_load_case();
         let case_id = app.snapshot().expect("snapshot").load_cases[0].id.clone();
@@ -127,14 +127,14 @@ mod tests {
         assert!(app.snapshot().expect("snapshot").load_cases[0].self_weight);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_self_weight_unknown_case_is_a_no_op() {
         let mut app = app_with_load_case();
         dispatch(&mut app, Fem3dCommand::SetSelfWeight(set_self_weight::SetSelfWeight { case_id: "missing".into(), enabled: true }));
         assert!(!app.snapshot().expect("snapshot").load_cases[0].self_weight);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_combination_parses_terms_json() {
         let mut app = app_with_load_case();
         dispatch(&mut app, Fem3dCommand::AddCombination(add_combination::AddCombination { name: "ULS".into(), terms: "[[\"case-0\",1.35]]".into() }));
@@ -143,7 +143,7 @@ mod tests {
         assert_eq!(snapshot.combinations[0].terms.get("case-0"), Some(&1.35));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_combination_invalid_terms_json_is_a_no_op() {
         let mut app = app_with_load_case();
         dispatch(&mut app, Fem3dCommand::AddCombination(add_combination::AddCombination { name: "ULS".into(), terms: "not json".into() }));

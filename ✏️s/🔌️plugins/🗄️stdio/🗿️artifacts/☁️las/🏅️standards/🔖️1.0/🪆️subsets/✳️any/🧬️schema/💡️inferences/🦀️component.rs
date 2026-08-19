@@ -33,7 +33,7 @@ impl protocol::Inference<LasSnapshot> for LasInference {
 /// 🌱 Defined in terms of `infer` (not derived) — keeps the law correct regardless of whether
 /// `LasSnapshot::default()`'s `header` ever stops being all-zero.
 impl Default for LasInference {
-    async fn default() -> Self {
+    fn default() -> Self {
         <Self as protocol::Inference<LasSnapshot>>::infer(&LasSnapshot::default())
     }
 }
@@ -85,13 +85,13 @@ mod tests {
     use super::*;
     use protocol::Inference;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = LasSnapshot::default();
         assert_eq!(LasInference::infer(&snapshot), LasInference::infer(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(LasInference::infer(&LasSnapshot::default()), LasInference::default());
     }

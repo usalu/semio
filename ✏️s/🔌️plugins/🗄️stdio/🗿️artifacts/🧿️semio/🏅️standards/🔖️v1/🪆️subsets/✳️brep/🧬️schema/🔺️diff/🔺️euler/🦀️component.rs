@@ -448,7 +448,7 @@ mod tests {
         add_solid(body, shell, vec![], rec)
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn tetrahedron_satisfies_euler_poincare_formula() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
@@ -462,7 +462,7 @@ mod tests {
         assert_eq!(vertex_count - edge_count + face_count, 2, "V - E + F must equal 2 for a genus-0 closed solid");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn tetrahedron_build_records_every_entity_as_generated() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
@@ -472,7 +472,7 @@ mod tests {
         assert!(delta.deleted.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn each_face_loop_is_a_closed_ring_of_three_coedges() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
@@ -483,7 +483,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn split_edge_on_a_free_edge_creates_two_edges_and_a_vertex() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
@@ -501,7 +501,7 @@ mod tests {
         assert_eq!(body.edges.get(e2).unwrap().range, (1.5, 4.0));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn split_edge_within_a_loop_ring_preserves_ring_validity() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
@@ -530,7 +530,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn split_edge_on_a_self_referential_single_coedge_loop_produces_a_valid_two_coedge_ring() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
@@ -555,7 +555,7 @@ mod tests {
         assert_eq!(b.prev, coedges_after[0]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn split_rectangle_face_into_two() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
@@ -575,7 +575,7 @@ mod tests {
         assert!(issues.is_empty(), "validate_body issues: {:?}", issues.iter().map(|i| format!("{}:{}:{}", i.entity, i.code, i.message)).collect::<Vec<_>>());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn split_rejects_non_cutting_line() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
@@ -585,14 +585,14 @@ mod tests {
         assert!(matches!(err, KernelError::Operation(_)));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn split_rejects_missing_face() {
         let mut body = Body::new();
         let err = split_planar_face_by_line(&mut body, FaceId::from_raw(0, 0), Pnt3::new(0.0, 0.0, 0.0), Pnt3::new(1.0, 0.0, 0.0)).unwrap_err();
         assert!(matches!(err, KernelError::MissingEntity(_)));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn resolve_edge_containing_param_picks_survivor_after_split() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();

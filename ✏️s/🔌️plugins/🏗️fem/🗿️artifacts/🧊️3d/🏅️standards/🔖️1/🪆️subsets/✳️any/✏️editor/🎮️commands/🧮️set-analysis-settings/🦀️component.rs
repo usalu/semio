@@ -34,7 +34,7 @@ mod tests {
     use crate::editor::fem3d::testkit::{dispatch, fem3d_app};
     use crate::editor::fem3d::Fem3dCommand;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_analysis_settings_partially_updates_and_keeps_the_rest() {
         let mut app = fem3d_app();
         dispatch(&mut app, Fem3dCommand::SetAnalysisSettings(SetAnalysisSettings { modal_count: Some(5), buckling_count: None, deformation_scale: None }));

@@ -70,7 +70,7 @@ pub enum JpgError {
 }
 
 impl std::fmt::Display for JpgError {
-    async fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             JpgError::Unsupported(what) => write!(f, "jpg: unsupported: {what}"),
             JpgError::Malformed(what) => write!(f, "jpg: malformed: {what}"),
@@ -1148,7 +1148,7 @@ mod tests {
         sum / n as f64
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn idct_fdct_is_identity() {
         let mut block = [0f64; 64];
         for (i, v) in block.iter_mut().enumerate() {
@@ -1160,7 +1160,7 @@ mod tests {
         assert!(maxerr < 1e-6, "maxerr={maxerr}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn huffman_round_trips_all_dc_luma_symbols() {
         let table = build_huffman(&DC_LUMA_BITS, &dc_luma_values()).unwrap();
         let mut bw = BitWriter::new();
@@ -1175,7 +1175,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn single_block_round_trips_through_huffman() {
         let dc_table = build_huffman(&DC_LUMA_BITS, &dc_luma_values()).unwrap();
         let ac_table = build_huffman(&AC_LUMA_BITS, &ac_luma_values()).unwrap();
@@ -1198,7 +1198,7 @@ mod tests {
     /// codec could never have passed. Gradient exercises AC energy across
     /// every block; asserts mean-absolute-pixel-error stays well under a
     /// visually-lossless budget of 10/255.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn gradient_round_trip_under_mae_threshold() {
         let (w, h) = (48u32, 40u32);
         let img = gradient_image(w, h);
@@ -1216,7 +1216,7 @@ mod tests {
 
     /// 🖼️ Checkerboard: high-frequency content, harder for quantization to
     /// preserve than a gradient — same bar (MAE < 10/255).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn checkerboard_round_trip_under_mae_threshold() {
         let (w, h) = (32u32, 32u32);
         let img = checkerboard_image(w, h);
@@ -1228,7 +1228,7 @@ mod tests {
         assert!(err < 10.0, "checkerboard MAE too high: {err}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn solid_color_still_round_trips() {
         let (w, h) = (16u32, 16u32);
         let mut img = vec![0u8; (w * h * 4) as usize];
@@ -1247,7 +1247,7 @@ mod tests {
 
     /// 🚫 Progressive (SOF2) must be a typed `Unsupported` error, never
     /// silently decoded — hand-crafted minimal SOF2 segment.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn progressive_sof2_is_explicit_unsupported() {
         let mut bytes = vec![0xFFu8, 0xD8];
         bytes.extend_from_slice(&[0xFF, 0xC2, 0x00, 0x0B, 0x08, 0x00, 0x08, 0x00, 0x08, 0x01, 0x01, 0x11, 0x00]);
@@ -1256,7 +1256,7 @@ mod tests {
         assert!(matches!(result, Err(JpgError::Unsupported(_))), "expected Unsupported, got {result:?}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn non_jpeg_input_is_malformed_not_panic() {
         let result = decode_jpg(&[0x00, 0x01, 0x02, 0x03]);
         assert!(matches!(result, Err(JpgError::Malformed(_))));
@@ -1280,7 +1280,7 @@ mod tests {
         /// parse under the real dialect — independent of, and cheaper than, the two
         /// `recognize`/`walk_protocol` laws below (a parse failure here fails fast with a clearer
         /// message).
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn committed_facet_files_parse() {
             for (label, text) in [("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO)] {
                 let grammar = dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
@@ -1296,7 +1296,7 @@ mod tests {
         /// job, not this leaf's, per the recipe's own png precedent) recognizes real `print_dsl`
         /// output for the demo snapshot — same preamble-stripped body reconstruction
         /// `m5_handcrafted_grammar_conformance`'s own `dsl_body_from_fixture` uses.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn grammar_conformance_law() {
             let grammar = dsl::parse_grammar(snapshot::text::COMPONENT_GRAMMAR_SEMIO).expect("parse snapshot grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
@@ -1308,7 +1308,7 @@ mod tests {
 
         /// ✅️ `ops_grammar_conformance_law`: the mutations grammar recognizes real `print_op`
         /// output for every `JpgMutation` variant (`mutations::demo_mutation_cases()`).
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn ops_grammar_conformance_law() {
             let grammar = dsl::parse_grammar(mutations::text::COMPONENT_GRAMMAR_SEMIO).expect("parse mutations grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
@@ -1321,7 +1321,7 @@ mod tests {
         /// ✅️ `diff_grammar_conformance_law`: the diff grammar recognizes real `print_diff` output
         /// for every representative `JpgDiff` (`diff::demo_diff_cases()`), incl. the empty diff and
         /// every tri-state/`JpgFrameChange`/collection-triple shape.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn diff_grammar_conformance_law() {
             let grammar = dsl::parse_grammar(diff::text::COMPONENT_GRAMMAR_SEMIO).expect("parse diff grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
@@ -1335,7 +1335,7 @@ mod tests {
         /// snapshot pack (`encode_pack`, envelope-unwrapped first, matching how
         /// `m5_handcrafted_protocol_conformance` itself feeds `walk_protocol`), every demo
         /// mutation's `encode_op`, and every demo diff's `encode_diff`.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn protocol_walk_law() {
             let pack_spec = dsl::parse_protocol(snapshot::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
             let packed = store::ArtifactPack::encode_pack(&demo_jpg_snapshot());
@@ -1379,7 +1379,7 @@ mod tests {
         /// establishes as this artifact's own honest lossy-round-trip contract, plus the ACTUAL
         /// dimension bytes on wire (SOF0 width/height) matching, rather than asserting the
         /// impossible byte-exact struct equality.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn fixture_honesty_law() {
             const FIXTURE_DSL: &str = include_str!("../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
             const FIXTURE_PACK: &[u8] = include_bytes!("../📚️examples/🎬️demo/🖼️assets/🎒️example.pack.semio");

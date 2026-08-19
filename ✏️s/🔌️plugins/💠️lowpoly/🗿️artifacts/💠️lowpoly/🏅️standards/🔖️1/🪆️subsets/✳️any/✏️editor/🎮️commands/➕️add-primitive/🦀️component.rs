@@ -49,7 +49,7 @@ mod tests {
     use crate::editor::lowpoly::testkit::{app, dispatch};
     use crate::editor::lowpoly::LowpolyCommand;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_primitive_emits_objects_add_operation() {
         let mut a = app();
         dispatch(&mut a, LowpolyCommand::AddPrimitive(AddPrimitive { kind: Some("box".into()) }));
@@ -58,7 +58,7 @@ mod tests {
         assert!(projection.objects.iter().any(|object| object.name == "box"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_primitive_supports_every_known_kind() {
         let mut a = app();
         for kind in ["plane", "cylinder", "cone", "ico_sphere"] {

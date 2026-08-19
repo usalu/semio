@@ -182,7 +182,7 @@ mod tests {
         AdjacencyView::new(neighbors, vec![crate::wfc_engine::ids::RegionId(0); 5])
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn connectivity_accepts_single_connected_component() {
         let model = floor_wall_model();
         let adjacency = hub_adjacency();
@@ -192,7 +192,7 @@ mod tests {
         assert!(c.validate_complete(&assignment, &adjacency).is_ok());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn connectivity_rejects_split_components() {
         let model = floor_wall_model();
         let adjacency = hub_adjacency();
@@ -202,7 +202,7 @@ mod tests {
         assert!(c.validate_complete(&assignment, &adjacency).is_err());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn connectivity_trivially_accepts_zero_or_one_selected() {
         let model = floor_wall_model();
         let adjacency = hub_adjacency();
@@ -211,7 +211,7 @@ mod tests {
         assert!(c.validate_complete(&all_wall, &adjacency).is_ok());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn reachability_accepts_connected_path() {
         let model = floor_wall_model();
         let adjacency = hub_adjacency();
@@ -220,7 +220,7 @@ mod tests {
         assert!(c.validate_complete(&assignment, &adjacency).is_ok());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn reachability_rejects_blocked_path() {
         let model = floor_wall_model();
         let adjacency = hub_adjacency();

@@ -388,7 +388,7 @@ mod tests {
         SvgSnapshot { doc: XmlDocument { root: Some(crate::artifacts::svg::schema::snapshot::svg_element_to_xml_node(&svg_el)), doctype: None, declaration: None, prolog: Vec::new() }, ..SvgSnapshot::default() }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn maps_canvas_shapes_group_transform_and_text() {
         let drawing = semio_framework_plugin::resolve_ready(SemioDrawingFromSvg::deserialize(&sample_svg())).expect("deserialize");
         assert_eq!(drawing.canvas.width, 100.0);

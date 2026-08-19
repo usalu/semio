@@ -70,7 +70,7 @@ pub enum PdfEngineError {
 }
 
 impl std::fmt::Display for PdfEngineError {
-    async fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             PdfEngineError::NotPdf => write!(f, "pdf: not a PDF file (missing %PDF- magic)"),
             PdfEngineError::Unsupported(s) => write!(f, "pdf: unsupported: {s}"),
@@ -2552,24 +2552,24 @@ mod tests {
     use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::demo_pdf17_snapshot;
 
     //#region Filters
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn ascii_hex_decode_roundtrips() {
         assert_eq!(ascii_hex_decode(b"48656C6C6F>"), b"Hello");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn ascii85_decode_classic_vector() {
         let dec = ascii85_decode(b"9jqo^BlbD-BleB1DJ+*+F(f,q").unwrap();
         assert_eq!(&dec, b"Man is distinguished");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn run_length_decode_literal_and_repeat() {
         let out = run_length_decode(&[2, b'a', b'b', b'c', 254, b'x', 128]);
         assert_eq!(out, b"abcxxx".to_vec());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn png_predictor_decode_hand_checked_rows() {
         let mut raw = vec![0u8, 10, 20, 30, 40];
         raw.extend_from_slice(&[2u8, 5, 5, 5, 5]);
@@ -2577,7 +2577,7 @@ mod tests {
         assert_eq!(dec, vec![10, 20, 30, 40, 15, 25, 35, 45]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn xref_row_decoding_matches_spec_field_widths() {
         assert_eq!(decode_xref_row(&[1, 0x12, 0x34, 0x00], [1, 2, 1]), (1, 0x1234, 0));
         assert_eq!(decode_xref_row(&[2, 5, 3], [1, 1, 1]), (2, 5, 3));
@@ -2585,7 +2585,7 @@ mod tests {
     }
     //#endregion Filters
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn demo_snapshot_round_trip() {
         let snap = demo_pdf17_snapshot();
         let text = store::ArtifactDsl::print_dsl(&snap);
@@ -2596,7 +2596,7 @@ mod tests {
         assert_eq!(decoded, snap);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn bachelor_thesis_logical_lifecycle_preserves_original_native_bytes() {
         use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::diff::PdfDiff;
         use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::mutations::{apply_pdf_mutation, PdfMutation};
@@ -2669,7 +2669,7 @@ mod tests {
         assert_original("composer native export", encode_pdf(&composed.snapshot).expect("composer native export"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn pdf_snapshot_and_facets_forbid_native_shadow_state() {
         let rust = include_str!("../🧬️schema/📸️snapshot/🦀️component.rs");
         for forbidden in ["pub physical:", "pub source:", "pub lexical:", "pub native:", "pub raw_bytes:", "pub artifact_source:", "pub document_wire:", "pub raw_filter:"] {
@@ -2759,7 +2759,7 @@ mod tests {
 
         /// ✅️ "committed files parse": all 6 handcrafted `.grammar.semio`/`.protocol.semio` files
         /// parse under the real dialect.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn committed_facet_files_parse() {
             for (label, text) in [("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO)] {
                 let grammar = dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
@@ -2771,7 +2771,7 @@ mod tests {
         }
 
         /// ✅️ `grammar_conformance_law`: the snapshot grammar recognizes real `print_dsl` output.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn grammar_conformance_law() {
             let grammar = dsl::parse_grammar(snapshot::text::COMPONENT_GRAMMAR_SEMIO).expect("parse snapshot grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
@@ -2783,7 +2783,7 @@ mod tests {
 
         /// ✅️ `ops_grammar_conformance_law`: the mutations grammar recognizes real `print_op`
         /// output for every demo `PdfMutation` variant.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn ops_grammar_conformance_law() {
             let grammar = dsl::parse_grammar(mutations::text::COMPONENT_GRAMMAR_SEMIO).expect("parse mutations grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
@@ -2794,7 +2794,7 @@ mod tests {
         }
 
         /// ✅️ `diff_grammar_conformance_law`: the diff grammar recognizes real `print_diff` output.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn diff_grammar_conformance_law() {
             let grammar = dsl::parse_grammar(diff::text::COMPONENT_GRAMMAR_SEMIO).expect("parse diff grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
@@ -2807,7 +2807,7 @@ mod tests {
         /// ✅️ `protocol_walk_law`: `walk_protocol` against REAL bytes for all three facets. The
         /// snapshot protocol declares a `backward` block, so its own walk asserts a bounded
         /// `consumed` (not `== len`) — mutations/diff frames still consume every byte exactly.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn protocol_walk_law() {
             let pack_spec = dsl::parse_protocol(snapshot::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
             let packed = store::ArtifactPack::encode_pack(&demo_pdf17_snapshot());
@@ -2833,7 +2833,7 @@ mod tests {
 
         /// ✅️ `fixture_honesty_law`: the shipped `.dsl.semio`/`.pack.semio` fixtures are GENUINE
         /// `print_dsl`/`encode_pack` output of `demo_pdf17_snapshot()`.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn fixture_honesty_law() {
             const FIXTURE_DSL: &str = include_str!("../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
             const FIXTURE_PACK: &[u8] = include_bytes!("../📚️examples/🎬️demo/🖼️assets/🎒️example.pack.semio");
@@ -2852,7 +2852,7 @@ mod tests {
         /// ✅️ `op_diff_codec_binary_roundtrip_law`: the upgraded REAL `OpBinary`/`DiffCodec`
         /// binary frames round-trip every demo case (the FG1/FG2 binary-frame lesson's own early
         /// warning — independent of `protocol_walk_law`'s dialect-level check above).
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn op_diff_codec_binary_roundtrip_law() {
             for mutation in demo_mutation_cases() {
                 let bytes = mutation.encode_op().unwrap_or_else(|e| panic!("encode_op failed for {mutation:?}: {e:?}"));
@@ -2885,7 +2885,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn encode_then_decode_recovers_pages_and_text_via_identity_tounicode() {
         let snap = sample_snapshot();
         let bytes = encode_pdf(&snap).expect("encode ok");
@@ -2901,7 +2901,7 @@ mod tests {
         assert!(!decoded.pages[0].text.contains('\u{FFFD}'), "our own writer's Identity-H + ToUnicode round trip must never need U+FFFD");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn empty_page_text_produces_no_content_ops_and_still_decodes() {
         let snap = PdfSnapshot { pages: vec![PdfPage::new(200.0, 200.0)], ..PdfSnapshot::default() };
         let bytes = encode_pdf(&snap).unwrap();
@@ -2910,21 +2910,21 @@ mod tests {
         assert_eq!(decoded.pages[0].text, "");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn sniff_reports_real_version_not_a_constant() {
         assert_eq!(sniff_pdf(b"%PDF-1.7\n%stuff"), Some("1.7".to_string()));
         assert_eq!(sniff_pdf(b"%PDF-1.4\n"), Some("1.4".to_string()));
         assert_eq!(sniff_pdf(b"not a pdf"), None);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn decode_rejects_non_pdf() {
         assert_eq!(decode_pdf(b"hello world"), Err(PdfEngineError::NotPdf));
     }
     //#endregion WriterReaderRoundTrip
 
     //#region Encryption
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn decode_returns_unsupported_for_encrypted_trailer() {
         // 🔒 Minimal hand-built classic-xref file whose trailer declares /Encrypt.
         let mut body = Vec::new();
@@ -2944,7 +2944,7 @@ mod tests {
     //#endregion Encryption
 
     //#region BruteForceFallback
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn brute_force_scan_recovers_pages_when_xref_is_missing() {
         // 🩹 Same minimal file as the round-trip test, but with its xref/trailer/startxref tail
         // sliced off entirely (simulates a truncated/damaged file) -- requirement #2.
@@ -2963,7 +2963,7 @@ mod tests {
     /// PNG-predictor-encoded, Flate-compressed body -- exercises requirement #2's stream-xref +
     /// predictor path end to end (the bachelor-thesis fixture uses a classic table, so this path
     /// needs its own synthetic coverage).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn xref_stream_with_png_predictor_decodes() {
         let mut body = Vec::new();
         body.extend_from_slice(b"%PDF-1.7\n");
@@ -3014,7 +3014,7 @@ mod tests {
     //#endregion XrefStreamAndPredictor
 
     //#region ObjectStreams
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn object_stream_compressed_objects_resolve() {
         // 📦️ Object 3 (the Page) lives compressed inside an ObjStm (object 4); classic xref
         // marks object 3 as type-2 (compressed) pointing at stream 4, index 0.
@@ -3057,7 +3057,7 @@ mod tests {
     //#endregion ObjectStreams
 
     //#region Encodings
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn differences_and_agl_resolve_german_umlauts_and_ligature() {
         // 🔤️ `/Differences [31 /f_i]` style remap seen verbatim in the bachelor-thesis fixture,
         // plus a WinAnsiEncoding-direct umlaut, both resolved via AGL (never fabricated).
@@ -3078,7 +3078,7 @@ mod tests {
         assert_eq!(fd.decode(&[200]), "\u{FFFD}", "unresolvable subset-specific glyph name must emit U+FFFD, never fabricate");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn tounicode_cmap_bfrange_identity_and_bfchar() {
         let cmap = b"1 begincodespacerange\n<0000> <FFFF>\nendcodespacerange\n1 beginbfrange\n<0001> <0003> <0041>\nendbfrange\n1 beginbfchar\n<0009> <0058>\nendbfchar\n";
         let fd = parse_tounicode_cmap(cmap);
@@ -3090,7 +3090,7 @@ mod tests {
     //#endregion Encodings
 
     //#region PageTreeInheritance
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn page_tree_inherits_media_box_and_overrides_rotate() {
         let mut body = Vec::new();
         body.extend_from_slice(b"%PDF-1.7\n");

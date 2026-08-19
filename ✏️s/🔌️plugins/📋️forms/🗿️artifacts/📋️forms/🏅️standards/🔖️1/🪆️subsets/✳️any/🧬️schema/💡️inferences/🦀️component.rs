@@ -23,7 +23,7 @@ pub struct FormsInference {
 }
 
 impl Default for FormsInference {
-    async fn default() -> Self {
+    fn default() -> Self {
         <Self as protocol::Inference<FormsSnapshot>>::infer(&FormsSnapshot::default())
     }
 }
@@ -117,18 +117,18 @@ mod tests {
     //#endregion 🧸️Fixtures
 
     //#region 🧪️InferenceLaws
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = step_with_conditional_block();
         assert_eq!(FormsInference::infer(&snapshot), FormsInference::infer(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(FormsInference::infer(&FormsSnapshot::default()), FormsInference::default());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn topology_orders_the_conditioned_block_after_its_dependency() {
         let snapshot = step_with_conditional_block();
         let inferred = FormsInference::infer(&snapshot);
@@ -138,7 +138,7 @@ mod tests {
         assert!(inferred.topology.cycle_free);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn empty_steps_produce_empty_topology() {
         let snapshot = FormsSnapshot::default();
         let inferred = FormsInference::infer(&snapshot);

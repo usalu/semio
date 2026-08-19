@@ -51,7 +51,7 @@ mod tests {
 
     /// 🔳️ The factor slider's `min`/`max` are the contract `🎮️commands/🌐️set-grid-visible`'s handler clamps to —
     /// pinned here so the two can't drift apart.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn the_factor_slider_range_matches_the_command_handler_clamp() {
         let config = FlowConfig::default();
         match measure(&config, flow_play_labels(&config)) {

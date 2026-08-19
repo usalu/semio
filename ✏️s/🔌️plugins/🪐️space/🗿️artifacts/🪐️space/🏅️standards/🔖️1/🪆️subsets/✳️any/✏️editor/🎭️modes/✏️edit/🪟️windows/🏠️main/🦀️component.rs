@@ -103,12 +103,12 @@ pub async fn render(document: &SSpaceSnapshot, config: &SpaceIndexConfig) -> UiN
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn render_produces_a_node_for_the_default_document() {
         let _node = render(&SSpaceSnapshot::default(), &SpaceIndexConfig::default());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn render_reflects_live_presence_for_a_row() {
         use crate::artifacts::space::standards::v1::subsets::any::schema::snapshot::{SpaceArtifactDialect, SpaceArtifactRow};
         use crate::editor::space_index::config::SpaceIndexArtifactPresence;
@@ -123,7 +123,7 @@ mod tests {
     /// 🆔️ Contract §C0: `data-row-id="artifact:<id>"` must reach the table scene's own row id, and the
     /// row's open/delete buttons must be real, dispatchable `ActionDescriptor`s carrying the row's own
     /// id — per ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS lane 3-F.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn a_row_stamps_the_artifact_row_id_and_carries_dispatchable_open_and_delete_buttons() {
         use crate::artifacts::space::standards::v1::subsets::any::schema::snapshot::{SpaceArtifactDialect, SpaceArtifactRow};
         let mut document = SSpaceSnapshot::default();
@@ -143,7 +143,7 @@ mod tests {
     /// 🆔️ Contract §C0 lane 4-F: `render(...)` must wrap the table in a real button carrying the
     /// frozen `s-space-create-artifact` id, dispatching `createArtifact` with no args — the harness
     /// clicks this directly instead of hunting the command palette.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn render_wraps_the_table_with_a_real_create_artifact_button() {
         use crate::editor::space_index::SPACE_INDEX_CONTROLLER_ID;
         let UiNode::Stack(stack) = render(&SSpaceSnapshot::default(), &SpaceIndexConfig::default()) else { panic!("expected a Stack wrapping button + table") };

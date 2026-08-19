@@ -35,7 +35,7 @@ mod tests {
     use crate::editor::animate::{commands::add_tile, PresentCommand};
     use semio_framework_plugin::Effect;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn canvas_pointer_down_emits_interaction_select_for_a_hit_and_clears_on_miss() {
         let mut app = present_app_with_registry();
         dispatch(&mut app, PresentCommand::AddTile(add_tile::AddTile { crop: None }));

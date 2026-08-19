@@ -95,7 +95,7 @@ pub async fn render(document: &FormsSnapshot) -> UiNode {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn definition_declares_a_canvas2d_try_window() {
         let def = definition();
         assert_eq!(def.id, WINDOW_KIND_ID);
@@ -103,7 +103,7 @@ mod tests {
         assert!(matches!(def.surface_kind, SurfaceKind::Canvas2d));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn render_produces_a_node_for_the_default_document() {
         let document = crate::artifacts::forms::schema::building_component_spec();
         let node = render(&document);
@@ -111,7 +111,7 @@ mod tests {
         assert!(json.contains("\"stack\""));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn render_falls_back_to_a_placeholder_for_an_empty_document() {
         let document = crate::artifacts::forms::schema::empty_forms_snapshot();
         let node = render(&document);

@@ -37,7 +37,7 @@ mod tests {
     use crate::editor::animate::testkit::{dispatch, present_app};
     use crate::editor::animate::PresentCommand;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_source_replaces_source_and_clears_tiles_when_src_changes() {
         let mut app = present_app();
         dispatch(&mut app, PresentCommand::SeedGrid(crate::editor::animate::commands::seed_grid::SeedGrid { rows: 2, columns: 2 }));
@@ -53,7 +53,7 @@ mod tests {
         assert!(deck_tiles.is_empty(), "changing the source src clears stale tiles");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_source_with_same_src_keeps_existing_tiles() {
         let mut app = present_app();
         dispatch(&mut app, PresentCommand::SeedGrid(crate::editor::animate::commands::seed_grid::SeedGrid { rows: 2, columns: 2 }));
@@ -63,7 +63,7 @@ mod tests {
         assert_eq!(crate::artifacts::present::present_working_scene(&app.snapshot().expect("projection")).1.len(), 4, "unchanged src does not clear tiles");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_frame_updates_source_frame() {
         let mut app = present_app();
         dispatch(&mut app, PresentCommand::SetFrame(set_frame::SetFrame { frame: FigureTileFrame { x: 0.1, y: 0.2, width: 0.3, height: 0.4 } }));
@@ -79,7 +79,7 @@ mod tests {
     /// pack bytes rather than an `artifact_mutations` entry — `dispatch`'s in-process `VcsArtifactApp`
     /// never applies `effects` to its own store (that's the real host's job), so this asserts directly
     /// on the emitted effect rather than through `app.snapshot()`.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_active_example_demo_emits_a_reset_effect() {
         use semio_framework_plugin::Effect;
         let mut app = present_app();
@@ -98,7 +98,7 @@ mod tests {
         assert!(crate::artifacts::present::present_working_scene(&loaded).1.is_empty(), "resetting to demo loads the default deck, which has no tiles");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_active_example_unknown_id_is_a_no_op() {
         let deck = default_present_snapshot();
         let history = semio_framework_plugin::HistoryView::empty();

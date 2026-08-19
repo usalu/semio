@@ -6,7 +6,7 @@ use crate::editor::process3d::process3d_action;
 use crate::editor::process3d::terminology::Process3dLabels;
 use crate::editor::process3d::installed_catalogs;
 use crate::editor::process3d::PROCESS3D_INTERACTION_DOMAIN;
-use crate::artifacts::process3d::Process3dSnapshot;
+use crate::artifacts::process3d::{MachineCatalog, Process3dSnapshot};
 use semio_framework_plugin::{tree_item_desc, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, UiTreeActionPlacement, UiTreeItemAction, UiTreeItemNode};
 use serde_json::json;
 
@@ -75,7 +75,7 @@ mod tests {
     use crate::editor::process3d::testkit;
     use crate::editor::process3d::Process3dCommand;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn definition_binds_a_workshop_panel_tab_to_this_body_key() {
         let definition = definition();
         assert_eq!(definition.body_key.as_deref(), Some(PROCESS_3D_PLAY_BODY_WORKSHOP));
@@ -85,7 +85,7 @@ mod tests {
     /// auto-selects it (selection is framework-owned now, unreachable from `Emit` — see this file's
     /// `render` doc comment); this asserts the still-real document mutation and its `"machine:{id}"`
     /// tree item.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_workshop_machine_action_installs() {
         let mut app = testkit::app();
         let result = testkit::dispatch(&mut app, Process3dCommand::AddWorkshopMachine(add_workshop_machine::AddWorkshopMachine { catalog_id: "metal".into(), machine_id: "chopSaw".into() }));
@@ -96,7 +96,7 @@ mod tests {
         assert!(rendered.contains("machine:chopSaw"), "expected the newly installed machine's canonical target id in the tree: {rendered}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_workshop_machine_action_is_idempotent_when_already_installed() {
         let mut app = testkit::app();
         testkit::dispatch(&mut app, Process3dCommand::AddWorkshopMachine(add_workshop_machine::AddWorkshopMachine { catalog_id: "metal".into(), machine_id: "chopSaw".into() }));
@@ -106,7 +106,7 @@ mod tests {
         assert_eq!(app.snapshot().expect("snapshot").workshop.machines.len(), count_after_first);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn remove_workshop_machine_action_removes_the_machine() {
         let mut app = testkit::app();
         testkit::dispatch(&mut app, Process3dCommand::AddWorkshopMachine(add_workshop_machine::AddWorkshopMachine { catalog_id: "metal".into(), machine_id: "chopSaw".into() }));
@@ -118,7 +118,7 @@ mod tests {
         assert!(!rendered.contains("machine:chopSaw"), "removing the machine must drop its tree item: {rendered}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn catalogue_reflects_workshop_after_machine_removal() {
         let mut app = testkit::app();
         let before = testkit::render(&mut app, catalogue::PROCESS_3D_PLAY_BODY_CATALOGUE);
@@ -135,7 +135,7 @@ mod tests {
     /// off the document" path no longer has a real document to read from. The real, unaffected part
     /// of this test — `measure_for_capability` sizing a cut tool from a capability's own edited
     /// parameter — is asserted directly instead.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn workshop_machine_parameter_edit_sizes_the_capability_measure() {
         use crate::artifacts::process3d::schema::inferences::measure_for_capability;
         use crate::artifacts::process3d::{Capability, MeasureRecipe, ProcessMeasure, WorkingSolid};

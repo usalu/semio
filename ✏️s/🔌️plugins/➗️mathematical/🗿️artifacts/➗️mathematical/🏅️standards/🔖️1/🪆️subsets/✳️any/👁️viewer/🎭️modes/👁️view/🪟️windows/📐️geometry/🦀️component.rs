@@ -45,13 +45,13 @@ pub async fn render(document: &MathematicalSnapshot) -> UiNode {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn definition_declares_the_table_kind() {
         let definition = definition();
         assert_eq!(definition.id, WINDOW_KIND_ID);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn render_produces_a_table_scene_with_one_row_per_point() {
         let document = MathematicalSnapshot::default();
         let points = mathematical_geometry(&document).points;

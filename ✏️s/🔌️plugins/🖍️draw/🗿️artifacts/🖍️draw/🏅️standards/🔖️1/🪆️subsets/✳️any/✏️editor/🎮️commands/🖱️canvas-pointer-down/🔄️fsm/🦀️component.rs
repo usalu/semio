@@ -81,7 +81,7 @@ mod host {
     }
 
     impl<M: Machine> Default for NativeHost<M> {
-        async fn default() -> Self {
+        fn default() -> Self {
             Self::new()
         }
     }
@@ -166,7 +166,7 @@ mod host {
     }
 
     impl<M: Machine> Default for TestHost<M> {
-        async fn default() -> Self {
+        fn default() -> Self {
             Self::new()
         }
     }
@@ -219,7 +219,7 @@ mod host {
             }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn test_host_advance_fires_due_timers_only() {
             let mut host = TestHost::<DummyMachine>::new();
             host.schedule(ActorId(0), TimerId(0), 100);
@@ -230,7 +230,7 @@ mod host {
             assert_eq!(due, vec![(ActorId(0), TimerId(1))]);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn test_host_cancel_timer_removes_pending() {
             let mut host = TestHost::<DummyMachine>::new();
             host.schedule(ActorId(0), TimerId(0), 100);
@@ -238,7 +238,7 @@ mod host {
             assert_eq!(host.advance(200), Vec::new());
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn test_host_records_effects_and_task_lifecycle() {
             let mut host = TestHost::<DummyMachine>::new();
             host.execute_effect(ActorId(0), "audit");
@@ -300,7 +300,7 @@ mod inspect {
     }
 
     impl<M: Machine> Default for TraceInspector<M> {
-        async fn default() -> Self {
+        fn default() -> Self {
             Self { entries: Vec::new(), _marker: core::marker::PhantomData }
         }
     }
@@ -321,14 +321,14 @@ mod inspect {
     mod tests {
         use super::*;
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn null_inspector_observes_nothing_observable() {
             // Compile-only smoke test: NullInspector must be constructible and callable
             // without a concrete Machine — exercised indirectly by kernel tests.
             let _inspector = NullInspector;
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn trace_inspector_records_one_microstep_per_transition() {
             use super::super::kernel::{init, macrostep};
             use super::super::testing::support::{UnitToggleEvent, UnitToggleMachine};
@@ -353,7 +353,7 @@ mod kernel {
     //! 🧠️ Pure statechart core — SCXML-style run-to-completion over dense static tables.
     //!
     //! Nothing in this module executes I/O, sleeps, or reaches a host: every effectful
-    //! request becomes a [`Command`] pushed to a [`CommandSink`] for the caller to route.
+    //! request becomes a [`Command`] pushed onto the caller's `Vec<Command<M>>` sink for routing.
 
     use super::inspect::{InspectionEvent, Inspector};
     use crate::{ActionId, ActorId, Configuration, EventId, GuardId, InvokeId, Machine, NodeId, StatechartEvent, TimerId};
@@ -429,7 +429,11 @@ mod kernel {
     pub type GuardFn<M> = fn(&<M as Machine>::Context, Option<&<M as Machine>::Event>) -> bool;
 
     /// 🧵️ Mutates context and/or pushes commands; used for entry/exit/transition actions alike.
-    pub type ActionFn<M> = fn(&mut <M as Machine>::Context, Option<&<M as Machine>::Event>, &mut dyn CommandSink<M>);
+    // 🧬️ A former `&mut dyn CommandSink<M>` — that trait had exactly one impl (`Vec<Command<M>>`), and
+    // `impl Trait` is not nameable in a fn-pointer type, so per R11 ("exactly one impl ⇒ delete the
+    // trait object, use the concrete type") this slot names the concrete sink directly; the trait was
+    // then deleted outright (see 🔖️Commands below) once nothing referenced it any more.
+    pub type ActionFn<M> = fn(&mut <M as Machine>::Context, Option<&<M as Machine>::Event>, &mut Vec<Command<M>>);
 
     /// 🧵️ Builds the initial context from consumer-supplied input.
     pub type InputFn<M> = fn(<M as Machine>::Input) -> <M as Machine>::Context;
@@ -635,16 +639,12 @@ mod kernel {
         CancelTimer(TimerId),
     }
 
-    /// 🎇️ Where a running machine pushes the [`Command`]s it produces.
-    pub trait CommandSink<M: Machine> {
-        async fn push(&mut self, command: Command<M>);
-    }
-
-    impl<M: Machine> CommandSink<M> for Vec<Command<M>> {
-        async fn push(&mut self, command: Command<M>) {
-            Vec::push(self, command);
-        }
-    }
+    // 🧬️ `CommandSink` used to be a trait (`Box`/`&dyn`-free already, but still an indirection) with
+    // exactly one impl, `Vec<Command<M>>`. R11: "exactly one impl ⇒ delete the trait object, use the
+    // concrete type." `ActionFn<M>` is a fn-pointer type and cannot name `impl Trait`, so every caller
+    // in this file already had to settle on the one concrete sink type — once that cascade happened the
+    // trait had zero remaining callers. Deleted rather than kept as a vestigial one-impl abstraction;
+    // every former `&mut Vec<Command<M>>` below is `&mut Vec<Command<M>>` directly.
 
     //#endregion 🔖️Commands
 
@@ -771,7 +771,7 @@ mod kernel {
         selected
     }
 
-    async fn apply_transitions<M: Machine>(def: &MachineDefinition<M>, snapshot: &mut Snapshot<M>, transitions_idx: &[usize], event: Option<&M::Event>, sink: &mut impl CommandSink<M>, inspector: &mut impl Inspector<M>) {
+    async fn apply_transitions<M: Machine>(def: &MachineDefinition<M>, snapshot: &mut Snapshot<M>, transitions_idx: &[usize], event: Option<&M::Event>, sink: &mut Vec<Command<M>>, inspector: &mut impl Inspector<M>) {
         let nodes = def.nodes;
 
         let mut exit_ids: Vec<NodeId> = Vec::new();
@@ -868,7 +868,7 @@ mod kernel {
         }
     }
 
-    async fn run_to_completion<M: Machine>(snapshot: &mut Snapshot<M>, seed: Option<ActiveTrigger<M>>, sink: &mut impl CommandSink<M>, inspector: &mut impl Inspector<M>) -> StepReport {
+    async fn run_to_completion<M: Machine>(snapshot: &mut Snapshot<M>, seed: Option<ActiveTrigger<M>>, sink: &mut Vec<Command<M>>, inspector: &mut impl Inspector<M>) -> StepReport {
         let def = M::definition();
         inspector.observe(InspectionEvent::MacrostepStart);
         let mut queue: VecDeque<ActiveTrigger<M>> = VecDeque::new();
@@ -918,7 +918,7 @@ mod kernel {
 
     /// 🚀️ Builds a fresh [`Snapshot`] from `input`, entering the root's default descendant chain
     /// and settling any eventless/done transitions enabled immediately on init.
-    pub async fn init<M: Machine>(input: M::Input, sink: &mut impl CommandSink<M>) -> Snapshot<M> {
+    pub async fn init<M: Machine>(input: M::Input, sink: &mut Vec<Command<M>>) -> Snapshot<M> {
         let def = M::definition();
         let mut snapshot = Snapshot { configuration: <M::Config as Default>::default(), context: (def.context_from_input)(input), status: Status::Running, history: Vec::new() };
         let mut entry_ids: Vec<NodeId> = Vec::new();
@@ -943,14 +943,14 @@ mod kernel {
 
     /// 🏃️ Runs one external event to completion (a "macrostep"): the triggered microstep,
     /// then every enabled eventless/`on_done` microstep, until the configuration settles.
-    pub async fn macrostep<M: Machine>(snapshot: &mut Snapshot<M>, event: M::Event, sink: &mut impl CommandSink<M>, inspector: &mut impl Inspector<M>) -> StepReport {
+    pub async fn macrostep<M: Machine>(snapshot: &mut Snapshot<M>, event: M::Event, sink: &mut Vec<Command<M>>, inspector: &mut impl Inspector<M>) -> StepReport {
         let seed = ActiveTrigger { selector: RaisedSelector::Event(event.event_id()), event: Some(event) };
         run_to_completion(snapshot, Some(seed), sink, inspector)
     }
 
     /// ⏱️ Runs an `after`-timer firing to completion — the runtime's entry point when a
     /// [`crate::Host`] reports a scheduled [`TimerId`] elapsed.
-    pub async fn timer_elapsed<M: Machine>(snapshot: &mut Snapshot<M>, timer: TimerId, sink: &mut impl CommandSink<M>, inspector: &mut impl Inspector<M>) -> StepReport {
+    pub async fn timer_elapsed<M: Machine>(snapshot: &mut Snapshot<M>, timer: TimerId, sink: &mut Vec<Command<M>>, inspector: &mut impl Inspector<M>) -> StepReport {
         let seed = ActiveTrigger { selector: RaisedSelector::Timer(timer), event: None };
         run_to_completion(snapshot, Some(seed), sink, inspector)
     }
@@ -991,7 +991,7 @@ mod kernel {
             allow: bool,
         }
 
-        async fn toggle_inc(ctx: &mut ToggleContext, _event: Option<&ToggleEvent>, _sink: &mut dyn CommandSink<ToggleMachine>) {
+        async fn toggle_inc(ctx: &mut ToggleContext, _event: Option<&ToggleEvent>, _sink: &mut Vec<Command<ToggleMachine>>) {
             ctx.count += 1;
         }
 
@@ -1034,7 +1034,7 @@ mod kernel {
             }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn flat_machine_toggles_and_counts() {
             let mut sink: Vec<Command<ToggleMachine>> = Vec::new();
             let mut snapshot = init::<ToggleMachine>(true, &mut sink);
@@ -1048,7 +1048,7 @@ mod kernel {
             assert_eq!(snapshot.context.count, 2);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn guard_blocks_transition_when_false() {
             let mut sink: Vec<Command<ToggleMachine>> = Vec::new();
             let mut snapshot = init::<ToggleMachine>(false, &mut sink);
@@ -1132,7 +1132,7 @@ mod kernel {
             }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn hierarchical_machine_enters_default_descendant() {
             let mut sink: Vec<Command<PlayerMachine>> = Vec::new();
             let snapshot = init::<PlayerMachine>((), &mut sink);
@@ -1140,7 +1140,7 @@ mod kernel {
             assert!(!snapshot.matches("open"));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn hierarchical_machine_transitions_into_compound_default() {
             let mut sink: Vec<Command<PlayerMachine>> = Vec::new();
             let mut snapshot = init::<PlayerMachine>((), &mut sink);
@@ -1150,7 +1150,7 @@ mod kernel {
             assert!(snapshot.matches("playing"));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn shallow_history_restores_last_active_child() {
             let mut sink: Vec<Command<PlayerMachine>> = Vec::new();
             let mut snapshot = init::<PlayerMachine>((), &mut sink);
@@ -1237,7 +1237,7 @@ mod kernel {
             }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn parallel_regions_enter_together() {
             let mut sink: Vec<Command<RecorderMachine>> = Vec::new();
             let mut snapshot = init::<RecorderMachine>((), &mut sink);
@@ -1248,7 +1248,7 @@ mod kernel {
             assert!(snapshot.matches("video.capturing"));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn parallel_done_bubbles_only_once_every_region_finishes() {
             let mut sink: Vec<Command<RecorderMachine>> = Vec::new();
             let mut snapshot = init::<RecorderMachine>((), &mut sink);
@@ -1275,6 +1275,7 @@ mod persist {
 
     use super::kernel::{Snapshot, Status};
     use crate::{Configuration, Machine, NodeId};
+    use semio_framework_dispatch_macros::{dyn_enum, dyn_enum_close};
 
     //#region 🔖️Persist
 
@@ -1300,11 +1301,23 @@ mod persist {
     }
 
     /// 💾️ Migrates a [`PersistedSnapshot`] captured under an older machine fingerprint.
+    #[dyn_enum]
     pub trait Migration {
         /// The fingerprint this migration accepts as input.
         async fn source_fingerprint(&self) -> u64;
         /// Produces a [`PersistedSnapshot`] valid under a newer fingerprint.
         async fn migrate(&self, snapshot: PersistedSnapshot) -> PersistedSnapshot;
+    }
+
+    // 🧬️ `restore` takes a caller-supplied, potentially heterogeneous list of migrations — per R11,
+    // an open-shaped parameter like this becomes generic (`Mg: Migration`) rather than `dyn Migration`;
+    // when a real caller someday needs to mix several concrete migration types in one call, ITS crate
+    // declares its own closed `dyn_enum_close!` enum over just the types it needs and passes that as
+    // `Mg`. Today nothing outside tests implements `Migration`, so production callers that pass an
+    // empty slice use this zero-variant enum — the same uninhabited shape proven by
+    // `semio-framework-dispatch-macros`' own `NoWidgets`/`NoCounters` tests.
+    dyn_enum_close! {
+        pub enum NoMigrations: Migration {}
     }
 
     /// 💾️ Captures a running [`Snapshot`] as a portable, stable-id-addressed value.
@@ -1323,13 +1336,22 @@ mod persist {
     /// sequence until the fingerprint matches the current machine, then re-resolving
     /// stable ids back to dense [`NodeId`]s. `context` is supplied by the caller since
     /// the consumer's `Context` may itself need domain-specific deserialization.
-    pub async fn restore<M: Machine>(persisted: &PersistedSnapshot, context: M::Context, migrations: &[&dyn Migration]) -> Result<Snapshot<M>, RestoreError> {
+    pub async fn restore<M: Machine, Mg: Migration>(persisted: &PersistedSnapshot, context: M::Context, migrations: &[&Mg]) -> Result<Snapshot<M>, RestoreError> {
         let def = M::definition();
         let mut current = persisted.clone();
         while current.fingerprint != def.fingerprint {
-            let next = migrations.iter().find(|m| m.source_fingerprint() == current.fingerprint);
+            // 🧬️ `Iterator::find`'s closure is sync (R10 residue shape 1: `.await` inside a sync
+            // closure is E0728) — hoisted into a plain loop so each candidate's async fingerprint
+            // check can be awaited.
+            let mut next = None;
+            for m in migrations {
+                if m.source_fingerprint().await == current.fingerprint {
+                    next = Some(*m);
+                    break;
+                }
+            }
             match next {
-                Some(m) => current = m.migrate(current),
+                Some(m) => current = m.migrate(current).await,
                 None => return Err(RestoreError::FingerprintMismatch),
             }
         }
@@ -1360,7 +1382,7 @@ mod persist {
         use super::super::kernel::{init, macrostep};
         use super::super::testing::support::{unit_toggle_definition, UnitToggleContext, UnitToggleEvent, UnitToggleMachine};
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn persist_then_restore_round_trips_active_state() {
             let _ = unit_toggle_definition();
             let mut sink = Vec::new();
@@ -1373,17 +1395,17 @@ mod persist {
             assert_eq!(persisted.fingerprint, UnitToggleMachine::definition().fingerprint);
             assert!(persisted.states.iter().any(|s| s == "on"));
 
-            let restored = restore::<UnitToggleMachine>(&persisted, UnitToggleContext::default(), &[]).expect("restore should succeed");
+            let restored = restore::<UnitToggleMachine, NoMigrations>(&persisted, UnitToggleContext::default(), &[]).expect("restore should succeed");
             assert!(restored.matches("on"));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn restore_rejects_fingerprint_mismatch_without_migration() {
             let mut sink = Vec::new();
             let snapshot = init::<UnitToggleMachine>((), &mut sink);
             let mut persisted = persist(&snapshot);
             persisted.fingerprint = 9999;
-            let result = restore::<UnitToggleMachine>(&persisted, UnitToggleContext::default(), &[]);
+            let result = restore::<UnitToggleMachine, NoMigrations>(&persisted, UnitToggleContext::default(), &[]);
             assert!(matches!(result, Err(RestoreError::FingerprintMismatch)));
         }
 
@@ -1398,14 +1420,14 @@ mod persist {
             }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn restore_applies_migration_chain_until_fingerprint_matches() {
             let mut sink = Vec::new();
             let snapshot = init::<UnitToggleMachine>((), &mut sink);
             let mut persisted = persist(&snapshot);
             persisted.fingerprint = 9999;
             let migration = BumpFingerprint;
-            let migrations: &[&dyn Migration] = &[&migration];
+            let migrations: &[&BumpFingerprint] = &[&migration];
             let restored = restore::<UnitToggleMachine>(&persisted, UnitToggleContext::default(), migrations).expect("migration should bridge fingerprint");
             assert!(restored.matches("off"));
         }
@@ -1594,7 +1616,7 @@ mod runtime {
         use super::super::host::TestHost;
         use super::super::testing::support::{UnitToggleContext, UnitToggleEvent, UnitToggleMachine};
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn actor_system_drains_sent_events_through_one_macrostep_each() {
             let mut system: ActorSystem<UnitToggleMachine, TestHost<UnitToggleMachine>> = ActorSystem::new(TestHost::new());
             let root = system.spawn_root(());
@@ -1833,7 +1855,7 @@ mod testing {
         use super::*;
         use super::super::testing::support::{UnitToggleEvent, UnitToggleMachine};
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn explore_reaches_both_toggle_states() {
             let model = Model::<UnitToggleMachine>::new(vec![UnitToggleEvent::Flip]);
             let coverage = explore(&model, ());
@@ -1842,13 +1864,13 @@ mod testing {
             assert_eq!(coverage.visited_configurations, 2);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn conformance_fixture_passes_for_matching_sequence() {
             let steps = [ConformanceStep { event: UnitToggleEvent::Flip, expect_active: &["on"] }, ConformanceStep { event: UnitToggleEvent::Flip, expect_active: &["off"] }];
             assert!(run_conformance::<UnitToggleMachine>((), &steps).is_ok());
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn conformance_fixture_fails_with_descriptive_message() {
             let steps = [ConformanceStep { event: UnitToggleEvent::Flip, expect_active: &["off"] }];
             let err = run_conformance::<UnitToggleMachine>((), &steps).unwrap_err().to_string();
@@ -1856,7 +1878,7 @@ mod testing {
             assert!(err.contains("off"));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn invariant_reports_violation_by_name() {
             let mut sink: Vec<Command<UnitToggleMachine>> = Vec::new();
             let snapshot = init::<UnitToggleMachine>((), &mut sink);
@@ -1920,7 +1942,7 @@ impl<const W: usize> BitSet<W> {
 }
 
 impl<const W: usize> Default for BitSet<W> {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self::empty()
     }
 }
@@ -1956,7 +1978,7 @@ pub struct ConfigurationIter<'a, C: Configuration> {
 impl<'a, C: Configuration> Iterator for ConfigurationIter<'a, C> {
     type Item = NodeId;
 
-    async fn next(&mut self) -> Option<NodeId> {
+    fn next(&mut self) -> Option<NodeId> {
         loop {
             if self.current != 0 {
                 let bit = self.current.trailing_zeros();
@@ -2048,8 +2070,8 @@ pub trait StatechartSchema {
 
 pub use host::{Host, NativeHost, TestHost};
 pub use inspect::{InspectionEvent, Inspector, MicrostepTrace, NullInspector, TraceInspector};
-pub use kernel::{init, macrostep, timer_elapsed, ActionFn, Command, CommandSink, GuardFn, InputFn, MachineDefinition, NodeDef, NodeKind, OutputFn, Snapshot, Status, StepReport, TransitionDef, TransitionKind, Trigger, MICROSTEP_LIMIT, ROOT};
-pub use persist::{persist, restore, Migration, PersistedSnapshot, RestoreError};
+pub use kernel::{init, macrostep, timer_elapsed, ActionFn, Command, GuardFn, InputFn, MachineDefinition, NodeDef, NodeKind, OutputFn, Snapshot, Status, StepReport, TransitionDef, TransitionKind, Trigger, MICROSTEP_LIMIT, ROOT};
+pub use persist::{persist, restore, Migration, NoMigrations, PersistedSnapshot, RestoreError};
 pub use runtime::{route_command, ActorLogic, ActorSystem, MachineLogic};
 
 #[cfg(any(test, feature = "testing"))]
@@ -2116,7 +2138,7 @@ mod wasm_bridge {
     }
 
     impl<M: Machine> Default for WasmHost<M> {
-        async fn default() -> Self {
+        fn default() -> Self {
             Self::new()
         }
     }
@@ -2199,7 +2221,7 @@ mod wasm_smoke {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn bitset_set_clear_contains() {
         let mut bits = BitSet::<1>::empty();
         assert!(!bits.contains(NodeId(3)));
@@ -2209,7 +2231,7 @@ mod tests {
         assert!(!bits.contains(NodeId(3)));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn bitset_iter_ones_spans_words() {
         let mut bits = BitSet::<2>::empty();
         bits.set(NodeId(0));
@@ -2220,7 +2242,7 @@ mod tests {
         assert_eq!(ids, vec![0, 63, 64, 100]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn bitset_clear_all_and_is_empty() {
         let mut bits = BitSet::<1>::empty();
         assert!(bits.is_empty());
@@ -2236,7 +2258,7 @@ mod tests {
 #[cfg(feature = "macros")]
 #[cfg(test)]
 mod checkout_integration {
-    use crate::{ActorSystem, CommandSink, InvokeId, Machine, TestHost, TimerId, TraceInspector};
+    use crate::{ActorSystem, Command, InvokeId, Machine, TestHost, TimerId, TraceInspector};
 
     #[derive(Clone, Debug, Default, PartialEq)]
     pub struct CheckoutContext {
@@ -2257,11 +2279,11 @@ mod checkout_integration {
         ctx.attempts < 3
     }
 
-    async fn set_method(ctx: &mut CheckoutContext, _event: Option<&checkout::Event>, _sink: &mut dyn CommandSink<checkout::Checkout>) {
+    async fn set_method(ctx: &mut CheckoutContext, _event: Option<&checkout::Event>, _sink: &mut Vec<Command<checkout::Checkout>>) {
         ctx.method_set = true;
     }
 
-    async fn note_timeout(ctx: &mut CheckoutContext, _event: Option<&checkout::Event>, _sink: &mut dyn CommandSink<checkout::Checkout>) {
+    async fn note_timeout(ctx: &mut CheckoutContext, _event: Option<&checkout::Event>, _sink: &mut Vec<Command<checkout::Checkout>>) {
         ctx.attempts += 1;
     }
 
@@ -2318,7 +2340,7 @@ mod checkout_integration {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dsl_machine_walks_cart_to_receipt() {
         let mut system: ActorSystem<checkout::Checkout, TestHost<checkout::Checkout>> = ActorSystem::new(TestHost::new());
         let root = system.spawn_root(());
@@ -2353,7 +2375,7 @@ mod checkout_integration {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dsl_machine_cancel_resume_round_trips_via_shallow_history() {
         let mut sink: Vec<crate::Command<checkout::Checkout>> = Vec::new();
         let mut snapshot = crate::init::<checkout::Checkout>((), &mut sink);
@@ -2385,11 +2407,11 @@ mod checkout_integration {
 
         let persisted = super::persist(&snapshot);
         assert_eq!(persisted.fingerprint, checkout::Checkout::definition().fingerprint);
-        let restored = crate::restore::<checkout::Checkout>(&persisted, snapshot.context.clone(), &[]).expect("restore should succeed");
+        let restored = crate::restore::<checkout::Checkout, crate::NoMigrations>(&persisted, snapshot.context.clone(), &[]).expect("restore should succeed");
         assert!(restored.matches("processing"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dsl_machine_coverage_reaches_every_declared_state() {
         let model = crate::Model::<checkout::Checkout>::new(vec![
             checkout::Event::Confirm,

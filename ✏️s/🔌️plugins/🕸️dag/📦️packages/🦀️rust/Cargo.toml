@@ -34,3 +34,6 @@ graph = { path = "../../../../../🧰️framework/🔨️modules/🕸️graph/�
 serde.workspace = true
 serde_json.workspace = true
 thiserror.workspace = true
+
+[dev-dependencies]
+semio-framework-async-macros = { path = "../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }

@@ -31,7 +31,7 @@ pub struct GifArtifact {
 }
 
 impl Default for GifArtifact {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self::from_snapshot(GifSnapshot::default())
     }
 }

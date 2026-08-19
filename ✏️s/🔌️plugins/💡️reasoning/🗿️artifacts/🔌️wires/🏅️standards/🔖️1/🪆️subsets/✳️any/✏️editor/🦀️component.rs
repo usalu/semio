@@ -306,7 +306,7 @@ mod tests {
     //#region 🔖️CommandSurface
     /// 🏷️ Every declared manifest action id must be reachable as exactly one command row, and every
     /// row's wire keyword must be distinct — the cross-cutting invariant `app_commands!` is there to hold.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn command_ids_are_unique_and_match_the_declared_manifest_actions() {
         let commands = every_command();
         let ids: Vec<&str> = commands.iter().map(|command| command.command_id()).collect();
@@ -318,7 +318,7 @@ mod tests {
     }
 
     /// ⚖️ LAW: text and binary are two projections of the same command, for every single row.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn every_command_round_trips_through_text_and_binary() {
         for command in every_command() {
             store::os_store::test_support::assert_op_text_binary_equivalence(&command);
@@ -331,7 +331,7 @@ mod tests {
     /// `setActiveExample` → `active-example`, and all three `canvasPointer*` rows drop the `canvas-`
     /// prefix). This is what a missing `#[dsl(keyword = ..)]` on a payload struct silently breaks (the
     /// record prints with no keyword at all and no longer parses).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
         let expected_keys = [
             ("setActiveExample", "active-example"),
@@ -360,7 +360,7 @@ mod tests {
     /// rows, which shifts every later row's binary ordinal by 2 — `CanvasPointerUp`'s and `SetLocale`'s
     /// pinned hex below are updated for the new ordinals (8 and 9); `SetActiveExample` is unaffected
     /// (ordinal 0, before the deleted rows).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn commands_keep_their_pre_migration_wire_bytes() {
         let node = dsl::to_dsl_value(&serde_json::json!({ "id": "node-1", "nodeKind": "identity", "shape": "circle", "x": 0.0, "y": 0.0, "radius": 24.0, "text": "Alpha", "handles": [] })).unwrap();
         let _ = node;
@@ -396,7 +396,7 @@ mod tests {
     //#region 🔖️Interaction
     /// 🕹️ The "graph" domain is declared `HierarchyProvider::Flat`, single-select/pick/replace-only,
     /// and scoped to the canvas window (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn graph_interaction_domain_is_declared_flat_and_scoped_to_the_canvas_window() {
         let definition = create_wires_app();
         let graph = definition.interactions.iter().find(|interaction| interaction.id == WIRES_INTERACTION_GRAPH).expect("graph interaction domain declared");
@@ -409,7 +409,7 @@ mod tests {
 
     /// 🕹️ `wires_select_action_args` shapes the exact JSON the framework's `interactionSelect` action
     /// expects: `domainId`/`targets` (a JSON-stringified `Vec<InteractionTarget>`)/`merge`/`method`.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn wires_select_action_args_shapes_interaction_select_payload() {
         let args = wires_select_action_args(&["node-1".to_string()], WIRES_GRANULARITY_NODE, "replace");
         assert_eq!(args["domainId"], WIRES_INTERACTION_GRAPH);
@@ -421,7 +421,7 @@ mod tests {
     //#endregion 🔖️Interaction
 
     //#region 🔖️ManifestSanity
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn the_manifest_stitches_every_taxonomy_node() {
         let json = serde_json::to_string(&create_wires_app()).expect("app definition json");
         assert!(json.contains(WIRES_PLAY_WINDOW_CANVAS), "window kind missing from the manifest: {json}");
@@ -434,7 +434,7 @@ mod tests {
     //#endregion 🔖️ManifestSanity
 
     //#region 🔖️CrossCutting
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn wires_labels_resolve_native_by_default() {
         let mut app = metabolism_app();
         let json = render(&mut app, WIRES_PLAY_BODY_DOCUMENT);
@@ -444,7 +444,7 @@ mod tests {
         assert!(catalogue_json.contains("Relationship kinds"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn metabolism_board_fixture_uses_mindmap_schema() {
         let document = crate::artifacts::wires::schema::metabolism_wires_example_snapshot()
             .expect("valid metabolism fixture mutations");
@@ -453,13 +453,13 @@ mod tests {
         assert_eq!(crate::artifacts::wires::schema::fixture_nodes(&board).len(), 7);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
         let mut app = new_app();
         assert!(render(&mut app, "reasoning.wires.nope").contains("Unknown body"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn undo_redo_round_trip_through_the_wrapper() {
         let mut app = new_app();
         semio_framework_plugin::testkit::assert_undo_redo_round_trip(
@@ -471,7 +471,7 @@ mod tests {
         );
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn ingest_operations_is_idempotent() {
         semio_framework_plugin::testkit::assert_ingest_idempotent::<EditorApp<ReasoningWiresPlayApp>, usize>(WiresCommand::AddNode(add_node::AddNode { kind: "identity".into() }), |app| {
             crate::artifacts::wires::schema::fixture_nodes(&crate::artifacts::wires::wires_working_board(&app.snapshot().expect("snapshot"))).len()
@@ -480,7 +480,7 @@ mod tests {
 
     /// 🧪️ The definitional merge proof: A adds a node while B renames another node — disjoint edits
     /// on one backbone that must both survive on both instances (impossible under whole-document LWW).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn two_instances_converge_disjoint_graph_edits_via_backbone() {
         use crate::artifacts::wires::standards::v1::subsets::any::schema::inferences::find_board_node;
         use semio_framework_plugin::testkit::meta;

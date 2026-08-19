@@ -164,7 +164,7 @@ mod tests {
         crate::artifacts::dag::schema::default_node_for_kind("note", id, x, y)
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_move_resize_delete_node_round_trip() {
         let snapshot = default_snapshot();
         let node = sample_node("node-99", 5.0, 6.0);
@@ -178,7 +178,7 @@ mod tests {
         assert!(!removed.nodes().iter().any(|node| node.id == "node-99"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn rename_node_cascades_edge_endpoints() {
         let snapshot = default_snapshot();
         let Some(id) = snapshot.nodes().first().map(|node| node.id.clone()) else { return };
@@ -187,14 +187,14 @@ mod tests {
         assert!(renamed.edges().iter().all(|edge| !edge.source.starts_with(&format!("{id}@")) && !edge.target.starts_with(&format!("{id}@"))));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn delete_node_severs_and_reconnects_edges() {
         let snapshot = default_snapshot();
         let Some(id) = snapshot.nodes().first().map(|node| node.id.clone()) else { return };
         round_trip(&snapshot, &delete_node(id));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn reorder_nodes_round_trips() {
         let snapshot = default_snapshot();
         let nodes = snapshot.nodes();
@@ -207,41 +207,41 @@ mod tests {
     }
 
     //#region 🔖️MutationLaws
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_node_inverse_law() {
         let base = default_snapshot();
         assert_mutation_inverse_law(&base, &create_node(sample_node("node-99", 5.0, 6.0)));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn delete_node_inverse_law() {
         let base = default_snapshot();
         let Some(id) = base.nodes().first().map(|node| node.id.clone()) else { return };
         assert_mutation_inverse_law(&base, &delete_node(id));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn rename_node_inverse_law() {
         let base = default_snapshot();
         let Some(id) = base.nodes().first().map(|node| node.id.clone()) else { return };
         assert_mutation_inverse_law(&base, &rename_node(id, "renamed-node".into()));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn move_node_inverse_law() {
         let base = default_snapshot();
         let Some(id) = base.nodes().first().map(|node| node.id.clone()) else { return };
         assert_mutation_inverse_law(&base, &move_node(id, 42.0, -8.0));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn resize_node_inverse_law() {
         let base = default_snapshot();
         let Some(id) = base.nodes().first().map(|node| node.id.clone()) else { return };
         assert_mutation_inverse_law(&base, &resize_node(id, 200.0, 90.0));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn connect_disconnect_nodes_inverse_law() {
         let base = default_snapshot();
         let nodes = base.nodes();
@@ -256,7 +256,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn reorder_nodes_inverse_law() {
         let base = default_snapshot();
         let nodes = base.nodes();
@@ -268,7 +268,7 @@ mod tests {
         assert_mutation_inverse_law(&base, &reorder_nodes(order));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn move_node_diff_absorb_law() {
         use protocol::Mutation;
         let base = default_snapshot();
@@ -279,7 +279,7 @@ mod tests {
         assert_mutation_diff_absorb_law(&base, d1, d2);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dispatch_registers_semantic_descriptors() {
         register_dag_mutation_descriptors();
         for kind in DagMutation::kinds() {
@@ -293,7 +293,7 @@ mod tests {
     /// ✅️ §C2/fan-out-recipe laws (`26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS`):
     /// one `assert_missing_target_is_error`/Fatal/determinism check per verb family this facet
     /// implements (create/delete/rename/move/resize/change/replace/reorder/connect/disconnect).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_node_duplicate_id_is_fatal() {
         let base = default_snapshot();
         let Some(existing_id) = base.nodes().first().map(|node| node.id.clone()) else { return };
@@ -302,25 +302,25 @@ mod tests {
         assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn delete_node_missing_target_is_error() {
         let base = default_snapshot();
         assert_missing_target_is_error(&base, &delete_node("ghost-node".into()));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn rename_node_missing_target_is_error() {
         let base = default_snapshot();
         assert_missing_target_is_error(&base, &rename_node("ghost-node".into(), "x".into()));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn move_node_missing_target_is_error() {
         let base = default_snapshot();
         assert_missing_target_is_error(&base, &move_node("ghost-node".into(), 1.0, 1.0));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn move_node_non_finite_is_fatal() {
         let base = default_snapshot();
         let Some(id) = base.nodes().first().map(|node| node.id.clone()) else { return };
@@ -329,38 +329,38 @@ mod tests {
         assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn resize_node_missing_target_is_error() {
         let base = default_snapshot();
         assert_missing_target_is_error(&base, &resize_node("ghost-node".into(), 10.0, 10.0));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn change_node_name_missing_target_is_error() {
         let base = default_snapshot();
         assert_missing_target_is_error(&base, &change_node_name("ghost-node".into(), "x".into()));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn replace_node_kind_missing_target_is_error() {
         let base = default_snapshot();
         let Some(kind) = base.nodes().first().map(|node| node.kind.clone()) else { return };
         assert_missing_target_is_error(&base, &replace_node_kind("ghost-node".into(), kind));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn disconnect_nodes_missing_target_is_error() {
         let base = default_snapshot();
         assert_missing_target_is_error(&base, &disconnect_nodes("ghost-edge".into()));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn connect_nodes_missing_endpoint_is_error() {
         let base = default_snapshot();
         assert_missing_target_is_error(&base, &connect_nodes("edge-99".into(), "ghost-source@out".into(), "ghost-target@in".into(), infinite_board_port_directed_dag::EdgeRouteStyle::default(), Default::default()));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn connect_nodes_self_loop_is_fatal() {
         let base = default_snapshot();
         let Some(id) = base.nodes().first().map(|node| node.id.clone()) else { return };
@@ -369,7 +369,7 @@ mod tests {
         assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn reorder_nodes_duplicate_id_is_fatal() {
         let base = default_snapshot();
         let Some(id) = base.nodes().first().map(|node| node.id.clone()) else { return };
@@ -378,7 +378,7 @@ mod tests {
         assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn move_node_diff_is_deterministic() {
         let base = default_snapshot();
         let Some(id) = base.nodes().first().map(|node| node.id.clone()) else { return };

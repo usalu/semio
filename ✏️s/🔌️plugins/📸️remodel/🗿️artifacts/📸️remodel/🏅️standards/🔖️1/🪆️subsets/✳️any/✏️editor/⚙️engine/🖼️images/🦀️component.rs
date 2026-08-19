@@ -113,7 +113,7 @@ pub enum ImageError {
 }
 
 impl std::fmt::Display for ImageError {
-    async fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Decode(msg) => write!(f, "image decode failed: {msg}"),
             Self::Encode(msg) => write!(f, "image encode failed: {msg}"),
@@ -635,7 +635,7 @@ mod tests {
         ]
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn luma_conversion_matches_bt601_weights() {
         let mut rgba = ImageRgba8::new(3, 1);
         rgba.data.copy_from_slice(&[255, 0, 0, 255, 255, 255, 255, 255, 10, 20, 30, 255]);
@@ -646,7 +646,7 @@ mod tests {
         assert!((gray.get(2, 0) - expected).abs() < 1e-6);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn gray_sample_bilinear_interpolates_between_pixels() {
         let mut img = ImageGray::new(2, 2);
         img.data.copy_from_slice(&[0.0, 1.0, 0.0, 1.0]);
@@ -655,7 +655,7 @@ mod tests {
         assert!((img.sample(10.0, 10.0) - 1.0).abs() < 1e-6);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn rgba_sample_rgb_normalizes_and_interpolates() {
         let mut img = ImageRgba8::new(2, 1);
         img.data.copy_from_slice(&[0, 0, 0, 255, 255, 102, 0, 255]);
@@ -665,7 +665,7 @@ mod tests {
         assert!(mid[2].abs() < 1e-6);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn png_rgba_round_trip_is_lossless() {
         let mut img = ImageRgba8::new(4, 3);
         for (i, value) in img.data.iter_mut().enumerate() {
@@ -676,7 +676,7 @@ mod tests {
         assert_eq!(decoded, img);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn png_gray16_encode_decodes_back_losslessly() {
         let data: Vec<u16> = vec![0, 1, 500, 40_000, 65_535, 12_345];
         let bytes = encode_png_gray16(&data, 3, 2).expect("encode succeeds");
@@ -691,7 +691,7 @@ mod tests {
         assert_eq!(decoded, data);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn png_codec_rejects_dimension_mismatch() {
         let img = ImageRgba8 { width: 2, height: 2, data: vec![0; 3] };
         assert_eq!(encode_png(&img), Err(ImageError::Dimensions));
@@ -699,7 +699,7 @@ mod tests {
         assert!(matches!(decode_png(&[1, 2, 3]), Err(ImageError::Decode(_))));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn gaussian_blur_preserves_mean_and_reduces_variance() {
         let img = lcg_image(32, 32, 7);
         let blurred = gaussian_blur(&img, 1.5);
@@ -709,7 +709,7 @@ mod tests {
         assert!(var_after < var_before);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn box_blur_integral_matches_brute_force_average() {
         let img = lcg_image(9, 7, 21);
         let blurred = box_blur_integral(&img, 2);
@@ -729,7 +729,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn integral_image_rect_sums_match_brute_force() {
         let img = lcg_image(16, 16, 42);
         let integral = IntegralImage::build(&img);
@@ -748,7 +748,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn downsample_half_averages_two_by_two_blocks() {
         let mut img = ImageGray::new(4, 2);
         img.data.copy_from_slice(&[0.0, 1.0, 0.2, 0.4, 1.0, 0.0, 0.6, 0.8]);
@@ -758,7 +758,7 @@ mod tests {
         assert!((half.get(1, 0) - 0.5).abs() < 1e-6);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn scharr_gradients_recover_ramp_slopes() {
         let mut img = ImageGray::new(8, 8);
         for y in 0..8 {
@@ -775,7 +775,7 @@ mod tests {
         assert!((orientation[idx] - 0.07f32.atan2(0.03)).abs() < 1e-4);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn build_pyramid_halves_resolution_per_level() {
         let img = lcg_image(64, 48, 3);
         let pyramid = build_pyramid(&img, 4);
@@ -787,7 +787,7 @@ mod tests {
         assert_eq!(pyramid.levels[0], img);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn zncc_is_invariant_to_gain_and_bias_and_flips_sign() {
         let img = lcg_image(16, 16, 99);
         let a = extract_patch(&img, 8.0, 8.0, 3, 0.0);
@@ -801,7 +801,7 @@ mod tests {
         assert!(ssd(&a, &gained) > 0.0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn extract_patch_quarter_turn_matches_transpose_relation() {
         let img = smooth_image(32, 32);
         let radius = 3u32;
@@ -816,7 +816,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn census_transform_and_hamming_behave_on_known_pattern() {
         let mut img = ImageGray::new(5, 5);
         for (i, value) in img.data.iter_mut().enumerate() {
@@ -829,7 +829,7 @@ mod tests {
         assert_eq!(hamming_cost_census(u64::MAX, 0), 64);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn warp_affine_identity_returns_original() {
         let img = lcg_image(16, 16, 5);
         let identity = [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0]];
@@ -839,7 +839,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn warp_homography_inverse_round_trips_away_from_borders() {
         let img = smooth_image(48, 48);
         let h = [[1.0, 0.03, 1.5], [0.02, 1.0, -1.0], [2e-4, 1e-4, 1.0]];
@@ -858,7 +858,7 @@ mod tests {
         assert!(total / f64::from(count) < 2e-2);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn remap_identity_returns_original() {
         let img = lcg_image(12, 10, 11);
         let mut map_x = vec![0.0f32; 120];
@@ -873,7 +873,7 @@ mod tests {
         assert_eq!(out, img);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn non_max_suppression_keeps_planted_peaks_sorted() {
         let mut scores = vec![0.0f32; 81];
         scores[3 * 9 + 4] = 1.0;
@@ -931,7 +931,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn jpeg_round_trip_gradient_meets_psnr_floor() {
         let img = gradient_rgba8(64, 48);
         let bytes = encode_jpeg(&img, 90);
@@ -940,7 +940,7 @@ mod tests {
         assert!(psnr_rgba8(&img, &decoded) > 35.0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn jpeg_round_trip_checkerboard_meets_psnr_floor() {
         let img = checkerboard_rgba8(64, 32, 6);
         let bytes = encode_jpeg(&img, 90);
@@ -949,7 +949,7 @@ mod tests {
         assert!(psnr_rgba8(&img, &decoded) > 35.0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn jpeg_flat_color_round_trips_with_near_zero_error() {
         let img = flat_rgba8(32, 32, [200, 100, 50]);
         let bytes = encode_jpeg(&img, 90);
@@ -958,7 +958,7 @@ mod tests {
         assert!(psnr_rgba8(&img, &decoded) > 45.0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn jpeg_higher_quality_yields_lower_error() {
         let img = gradient_rgba8(48, 48);
         let psnr_high = psnr_rgba8(&img, &decode_jpeg(&encode_jpeg(&img, 100)).expect("decode succeeds"));
@@ -966,7 +966,7 @@ mod tests {
         assert!(psnr_high > psnr_low);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn jpeg_decode_never_panics_on_truncated_input() {
         let img = gradient_rgba8(32, 32);
         let bytes = encode_jpeg(&img, 80);
@@ -976,7 +976,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn jpeg_single_mcu_cosine_pattern_recovers_within_quantization_error() {
         let mut img = ImageRgba8::new(16, 16);
         for y in 0..16u32 {
@@ -999,13 +999,13 @@ mod tests {
         assert!(max_abs_error < 20, "max abs error {max_abs_error} exceeds quantization tolerance");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn jpeg_progressive_marker_is_unsupported() {
         let bytes = [0xFFu8, 0xD8, 0xFF, 0xC2, 0x00, 0x0B, 0x08, 0x00, 0x10, 0x00, 0x10, 0x03, 0x01, 0x22, 0x00, 0x02, 0x11, 0x01];
         assert!(matches!(decode_jpeg(&bytes), Err(ImageError::UnsupportedJpeg(_))));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn jpeg_decode_rejects_missing_soi() {
         assert!(matches!(decode_jpeg(&[0x00, 0x01, 0x02]), Err(ImageError::Decode(_))));
         assert!(matches!(decode_jpeg(&[]), Err(ImageError::Decode(_))));

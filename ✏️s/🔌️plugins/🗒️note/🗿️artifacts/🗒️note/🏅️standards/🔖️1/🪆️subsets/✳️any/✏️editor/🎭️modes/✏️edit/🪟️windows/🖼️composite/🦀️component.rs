@@ -105,7 +105,7 @@ mod tests {
     use crate::editor::note::testkit::{note_app, render as render_body};
     use crate::editor::note::NOTE_PLAY_BODY_COMPOSITE as BODY_COMPOSITE;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn renders_composite_canvas() {
         let mut app = note_app();
         let json = render_body(&mut app, BODY_COMPOSITE);
@@ -113,7 +113,7 @@ mod tests {
         assert!(json.contains("documentJson"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn definition_declares_the_ink_canvas_surface_and_body_key() {
         let definition = definition();
         assert_eq!(definition.body_key, NOTE_PLAY_BODY_COMPOSITE);

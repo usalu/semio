@@ -24,7 +24,7 @@ mod tests {
     use crate::editor::forms::FormsCommand;
     use ExportFixture;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn export_fixture_downloads_the_forms_dsl_text() {
         let mut app = forms_app();
         let result = dispatch(&mut app, FormsCommand::ExportFixture(ExportFixture {}));

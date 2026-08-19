@@ -32,7 +32,7 @@ mod tests {
         store::os_store::test_support::assert_dsl_pack_equivalence(&crate::artifacts::vdi3805::reference_fixture());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn pack_round_trips_the_reference_fixture() {
         let document = crate::artifacts::vdi3805::reference_fixture();
         let bytes = encode(&document);

@@ -727,13 +727,13 @@ mod tests {
     use semio_framework_plugin::testkit as plugin_testkit;
     use semio_framework_plugin::{PluginApp, VcsArtifactApp};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn initial_snapshot_is_empty_not_demo() {
         let _app = SpaceApp::default();
         assert!(SpaceApp::initial_snapshot().graph.nodes.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn demo_document_has_instances_and_edges() {
         let projection = demo_space_projection();
         assert!(projection.graph.nodes.len() >= 5);
@@ -741,7 +741,7 @@ mod tests {
         assert!(semio_framework_os::validate_workflow(&projection.graph).ok);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn space_window_kind_actions_scope_editing_to_workflow() {
         let definition = create_space_app().definition;
         let resolve = |window_id: &str| -> Vec<String> {
@@ -766,7 +766,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn space_manifest_uses_studio_app_id() {
         let app = create_space_app();
         assert_eq!(app.definition.id, S_PLAY_APP_ID);
@@ -778,7 +778,7 @@ mod tests {
     /// freshly-constructed `VcsArtifactApp` has no uncommitted edits at all (no `genesis()` on
     /// `SpaceApp`, empty `initial_snapshot`), so this must spawn a real edit before committing, exactly
     /// like the sibling `checkout_checkpoint_restores_projection` below.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn commit_checkpoint_round_trips_projection() {
         use crate::engine::space::commands::spawn_app;
         use serde_json::json;
@@ -790,7 +790,7 @@ mod tests {
         assert_eq!(app.snapshot().expect("projection").graph.nodes.len(), before);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn checkout_checkpoint_restores_projection() {
         use crate::engine::space::commands::spawn_app;
         use serde_json::json;
@@ -835,7 +835,7 @@ mod tests {
     /// `🧰️framework/**` — forbidden to this lane. Left failing per the brief's explicit instruction
     /// ("never delete/#\[ignore\] to force green; leave failing + sharedFileRequest"); see this lane's
     /// `📓️w2-g-report.md` for the sharedFileRequest.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn two_instances_converge_on_disjoint_edits_via_backbone() {
         use crate::engine::space::commands::spawn_app;
         testkit::seed_draw_plugin();
@@ -853,7 +853,7 @@ mod tests {
         );
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn space_declares_expected_actions_and_examples() {
         let studio = create_space_app();
         let workflow = studio.definition.window_kinds.iter().find(|window| window.id == crate::engine::space::modes::main::windows::workflow::S_PLAY_WINDOW_WORKFLOW).expect("workflow window");
@@ -865,7 +865,7 @@ mod tests {
         assert_eq!(studio.examples.len(), S_STUDIO_EXAMPLES.len());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn space_labels_resolve_native_english_by_default() {
         let projection = demo_space_projection();
         let history = empty_history();
@@ -883,7 +883,7 @@ mod tests {
         assert!(!parameters_json.contains("Parameter hinzufügen"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn space_labels_resolve_native_german_locale() {
         let projection = demo_space_projection();
         let history = empty_history();
@@ -902,7 +902,7 @@ mod tests {
 
     /// 🗂️ Grouped-disclosure context menu: at most 9 top-level rows (leaves+groups combined) and the
     /// destructive `removeAppInstance` row is always the final top-level entry.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn space_workflow_context_menu_stays_within_budget_with_destructive_tail() {
         let registry = semio_framework_plugin::AppActionRegistry::from_definition(&create_space_app().definition);
         let labels = semio_framework_plugin::resolve_labels_for_locale::<SStudioLabels>(&SpaceConfig::default().locale);
@@ -916,7 +916,7 @@ mod tests {
 
     // 🌉️ Keeps `studio_emit`/`empty_history` imports exercised at this module's own level too (every
     // command-group file also imports them directly from `testkit`).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn testkit_studio_emit_smoke_test() {
         let projection = demo_space_projection();
         let config = SpaceConfig::default();

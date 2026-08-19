@@ -40,7 +40,7 @@ mod tests {
 
     /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the new block is no longer
     /// auto-selected by this command (selection is framework-owned now) — only the document edit itself.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_block_action_appends_block() {
         let mut app = playbook_app();
         dispatch(&mut app, PlaybookCommand::AddBlock(AddBlock { kind: "text".into(), step_id: None }));
@@ -50,7 +50,7 @@ mod tests {
         assert_eq!(steps[0].blocks[0].kind, "text");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_block_materializes_declared_kind_default() {
         let mut app = playbook_app_with_registry();
         dispatch(&mut app, PlaybookCommand::AddStep(crate::editor::playbook::commands::add_step::AddStep {}));
@@ -63,7 +63,7 @@ mod tests {
     /// anymore — a deleted block's id, if selected, is pruned by the framework's own
     /// `revalidate_interaction_state_after_document_change` against `interaction_topology`, covered by
     /// `interaction_topology_covers_every_step_and_block` in the app root's own tests.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn remove_block_action_removes_it_from_the_document() {
         let mut app = playbook_app();
         dispatch(&mut app, PlaybookCommand::AddBlock(AddBlock { kind: "text".into(), step_id: None }));
@@ -74,7 +74,7 @@ mod tests {
         assert!(app.snapshot().expect("projection").steps()[0].blocks.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn move_block_relocates_between_steps() {
         let mut app = playbook_app();
         dispatch(&mut app, PlaybookCommand::AddStep(crate::editor::playbook::commands::add_step::AddStep {}));

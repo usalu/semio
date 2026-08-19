@@ -604,7 +604,7 @@ mod tests {
         assert_eq!(expected_diff.diff().apply(base).expect("valid mutation diff"), applied_snapshot, "diff.diff().apply(base) must equal the imperative mutation result for {mutation:?}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mutation_diff_law() {
         let base = base_snapshot();
         assert_mutation_diff_law(&base, LasMutation::NoMutation);
@@ -628,7 +628,7 @@ mod tests {
     //#endregion 🔖️mutation_diff_law
 
     //#region 🔖️inverse_law
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inverse_law() {
         let base = base_snapshot();
         let variants = vec![
@@ -677,7 +677,7 @@ mod tests {
         assert_eq!(merged.apply(base).expect("valid absorbed diff"), sequential, "absorb(d1,d2).apply(base) must equal sequential application for {m1:?} + {m2:?}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_law() {
         let base = base_snapshot();
 
@@ -709,7 +709,7 @@ mod tests {
         assert_absorb_law(&base, LasMutation::SetSystemIdentifier { system_identifier: "first".into() }, LasMutation::SetSystemIdentifier { system_identifier: "second".into() });
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_law_associativity() {
         let base = base_snapshot();
         let d1 = LasMutation::SetSystemIdentifier { system_identifier: "one".into() }.diff(&base);
@@ -735,7 +735,7 @@ mod tests {
     //#endregion 🔖️absorb_law
 
     //#region 🔖️between_roundtrip_law
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn between_roundtrip_law() {
         let a = base_snapshot();
         let mut b = base_snapshot();
@@ -756,7 +756,7 @@ mod tests {
     //#endregion 🔖️between_roundtrip_law
 
     //#region 🔖️codec_retention_law
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn codec_retention_law() {
         let bytes = std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🗿️artifacts/☁️las/📚️examples/🎬️demo/🖼️assets/☁️example.las"));
         let snap = match bytes {
@@ -898,7 +898,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn field_sweep_covers_every_mutable_field() {
         let a = sweep_a();
         let b = sweep_b();
@@ -984,7 +984,7 @@ mod tests {
     }
     //#endregion 🔖️field_sweep
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn out_of_range_index_mutation_is_rejected_without_mutating() {
         let base = base_snapshot();
         let mut snap = base.clone();
@@ -1004,7 +1004,7 @@ mod tests {
     /// (hand-rolled, `dsl::DslOps` blocked — see the `OpCodecs` region's doc comment), via
     /// `demo_mutation_cases()` — the single source of truth also reused by
     /// `⚙️engine/🦀️component.rs`'s `ops_grammar_conformance_law`/`protocol_walk_law`.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_text_binary_roundtrip_law() {
         for mutation in demo_mutation_cases() {
             let printed = mutation.print_op();

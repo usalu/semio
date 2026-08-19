@@ -76,7 +76,7 @@ mod tests {
         DrawLayerNode::Group(DrawGroupBody { base: base(id), children })
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn flat_layers_are_all_at_depth_zero() {
         let snapshot = DrawSnapshot { layers: vec![path_layer("a"), path_layer("b")], ..DrawSnapshot::default() };
         let topology = compute_draw_topology(&snapshot);
@@ -87,7 +87,7 @@ mod tests {
         assert!(topology.cycle_free);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn nested_group_children_get_incrementing_depth_and_precede_nothing_before_their_parent() {
         let snapshot = DrawSnapshot { layers: vec![group_layer("g1", vec![path_layer("child"), group_layer("g2", vec![path_layer("grandchild")])])], ..DrawSnapshot::default() };
         let topology = compute_draw_topology(&snapshot);
@@ -100,7 +100,7 @@ mod tests {
         assert!(topology.cycle_free);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn empty_layers_produce_an_empty_topology() {
         let topology = compute_draw_topology(&DrawSnapshot { layers: Vec::new(), ..DrawSnapshot::default() });
         assert!(topology.topo_order.is_empty());

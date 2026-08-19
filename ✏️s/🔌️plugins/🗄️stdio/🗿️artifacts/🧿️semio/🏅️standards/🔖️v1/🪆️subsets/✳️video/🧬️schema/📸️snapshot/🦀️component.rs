@@ -40,7 +40,7 @@ pub struct SemioRational {
 
 impl Default for SemioRational {
     /// 🎯️ `1/1`, not `0/0` — a rational's denominator must never default to zero.
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { num: 1, den: 1 }
     }
 }
@@ -93,7 +93,7 @@ pub struct SemioVideoSnapshot {
 }
 
 impl Default for SemioVideoSnapshot {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { schema: STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA.into(), streams: Default::default() }
     }
 }
@@ -389,7 +389,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn json_pack_round_trips() {
         let snap = sample_snapshot();
         let bytes = <SemioVideoSnapshot as store::ArtifactPack>::encode_pack(&snap);
@@ -397,7 +397,7 @@ mod tests {
         assert_eq!(snap, back);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dsl_text_round_trips() {
         let snap = sample_snapshot();
         let text = <SemioVideoSnapshot as store::ArtifactDsl>::print_dsl(&snap);
@@ -405,7 +405,7 @@ mod tests {
         assert_eq!(snap, back);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn stream_kind_defaults_to_video_and_rational_defaults_to_one_over_one() {
         assert_eq!(SemioVideoStreamKind::default(), SemioVideoStreamKind::Video);
         assert_eq!(SemioRational::default(), SemioRational { num: 1, den: 1 });

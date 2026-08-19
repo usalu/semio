@@ -92,7 +92,7 @@ pub async fn artifact_kind() -> ArtifactKindSpec {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn artifact_kind_declares_the_2d_block_interchange_kind() {
         let kind = artifact_kind();
         assert_eq!(kind.id, "2d.block");

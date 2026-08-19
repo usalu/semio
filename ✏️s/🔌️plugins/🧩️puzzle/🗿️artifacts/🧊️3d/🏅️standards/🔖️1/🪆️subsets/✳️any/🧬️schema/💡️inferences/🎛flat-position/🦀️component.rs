@@ -206,7 +206,7 @@ mod tests {
     //#endregion 🧸️Fixtures
 
     //#region 🧪️IncrementalityLaw
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn changing_a_leaf_own_vortex_does_not_recompute_ancestors() {
         let mut cache = InferenceCache::new(InferenceCacheConfig { enabled: true, record_stats: true, ..Default::default() });
         let base = chain_snapshot();
@@ -222,7 +222,7 @@ mod tests {
         assert_eq!(planes.get("root"), Some(&orientation_to_plane([0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 1.0])));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn changing_the_root_position_recomputes_the_whole_chain() {
         let mut cache = InferenceCache::new(InferenceCacheConfig { enabled: true, record_stats: true, ..Default::default() });
         let base = chain_snapshot();
@@ -237,7 +237,7 @@ mod tests {
         assert_eq!(after.misses - before.misses, 3, "root + mid + leaf must all miss when the root's own plane changes");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn changing_an_attraction_center_param_never_touches_the_plane_chain() {
         let mut plane_cache = InferenceCache::new(InferenceCacheConfig { enabled: true, record_stats: true, ..Default::default() });
         let base = chain_snapshot();
@@ -260,7 +260,7 @@ mod tests {
     //#endregion 🧪️IncrementalityLaw
 
     //#region 🧪️CacheTransparencyLaw
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn disabled_cache_matches_pure_recompute() {
         let snapshot = chain_snapshot();
         let mut disabled = InferenceCache::new(InferenceCacheConfig { enabled: false, ..Default::default() });

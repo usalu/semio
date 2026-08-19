@@ -39,12 +39,12 @@ pub async fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyEr
 mod surface_tests {
     use semio_framework_plugin::testkit::{assert_editor_and_viewer_share_dialect, assert_viewer_never_mutates};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn note_viewer_never_mutates() {
         assert_viewer_never_mutates::<crate::viewer::note::NoteViewer>();
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn note_editor_and_viewer_share_dialect() {
         assert_editor_and_viewer_share_dialect::<crate::editor::note::NotePlayApp, crate::viewer::note::NoteViewer>();
     }
@@ -59,7 +59,7 @@ mod surface_tests {
     /// tree independently — so this test proves the fix holds under the NEW mechanism directly,
     /// not by re-checking the old capability row (kept, unread, debt D1): a real `Plugin` with a
     /// real (non-stub) manifest carrying at least one app and one artifact-kind row.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn plugin_assembles_a_real_manifest_not_the_assembly_failed_stub() {
         let plugin = super::plugin().expect("note plugin must assemble cleanly under the new declaration tree");
         assert_ne!(plugin.manifest.plugin_id, "assembly-failed", "manifest must not be the try_build()-failed stub");

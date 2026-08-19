@@ -238,18 +238,18 @@ mod tests {
     /// 🗂️ The manifest-facing `ArtifactKindSpec.schema` ("flow.artifact") is deliberately NOT
     /// `FLOW_DOCUMENT_SCHEMA` ("flow.fixture") — the former names the artifact kind in the OS media
     /// catalogue, the latter keys the store envelope. Pinned so a future edit can't silently merge them.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn artifact_kind_keeps_the_media_schema_distinct_from_the_store_schema() {
         assert_eq!(artifact_kind().schema, "flow.artifact");
         assert_eq!(FLOW_DOCUMENT_SCHEMA, "flow.fixture");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn default_snapshot_has_widgets() {
         assert!(!FlowSnapshot::default().to_fixture().widgets.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn widget_content_round_trips_through_the_composed_child_snapshot() {
         let fixture = flow::FlowFixture::default();
         let content = flow_content_snapshot_from_working(&fixture.widgets, &fixture.synapses, &fixture.layout);

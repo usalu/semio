@@ -43,7 +43,7 @@ mod tests {
         snapshot.document.scenes = state.scenes.clone();
         snapshot
     }
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn delete_scene_shared_vector_executes_all_laws() {
         let contract: Contract = serde_json::from_str(include_str!("🔣️component.json")).expect("canonical vector decodes");
         let vector = &contract.vectors[0];

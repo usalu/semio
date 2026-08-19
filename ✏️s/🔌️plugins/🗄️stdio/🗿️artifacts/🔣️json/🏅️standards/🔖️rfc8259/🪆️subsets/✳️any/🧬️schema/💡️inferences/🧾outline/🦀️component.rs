@@ -71,7 +71,7 @@ mod tests {
     use super::*;
     use crate::artifacts::json::schema::snapshot::JsonMember;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn counts_nodes_and_depth_over_nested_structure() {
         let snapshot = JsonSnapshot {
             schema: "stdio.json".into(),
@@ -84,7 +84,7 @@ mod tests {
         assert_eq!(outline.root_kind, "object");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn scalar_root_has_depth_one() {
         let snapshot = JsonSnapshot { schema: "stdio.json".into(), value: JsonValue::Null };
         let outline = JsonOutline::compute(&snapshot);
@@ -93,7 +93,7 @@ mod tests {
         assert_eq!(outline.root_kind, "null");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn outline_is_deterministic() {
         let snapshot = JsonSnapshot::default();
         assert_eq!(JsonOutline::compute(&snapshot), JsonOutline::compute(&snapshot));

@@ -128,7 +128,7 @@ mod tests {
     /// `semio.mutation-plan` through two real `step_job` slices to `Done`, proving `job_mutation_plan`
     /// really reaches `crate::plugin_runtime::wire_artifact_mutation_plan` and runs the registered
     /// `Planner`, not just `job.unknown-kind`.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn a_two_slice_mutation_plan_job_decodes_then_dispatches_to_the_registered_kind() {
         let mutation_id = commit_job_test_contribution("s.jobtest.mutation-echo", "jobtest.mutation-echo.document", "jobtest-contributor-a");
         let payload = crate::app::encode_contributed_wire(&JobTestMutationKind { delta: 5 });
@@ -167,7 +167,7 @@ mod tests {
 
     /// 📸️ Interrupts after slice 1 (decode only), checkpoints, cancels, restores, and confirms the
     /// resumed run reaches the SAME `Done` output as an uninterrupted run.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mutation_plan_job_checkpoint_restore_matches_an_uninterrupted_run() {
         let mutation_id = commit_job_test_contribution("s.jobtest.mutation-checkpoint", "jobtest.mutation-checkpoint.document", "jobtest-contributor-b");
         let payload = crate::app::encode_contributed_wire(&JobTestMutationKind { delta: 3 });
@@ -196,7 +196,7 @@ mod tests {
         assert_eq!(restored_final, baseline, "checkpoint/restore must produce the identical final output");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mutation_plan_job_reports_a_named_decode_fault_on_garbage_input() {
         start_job(303, JOB_KIND_MUTATION_PLAN, b"not a wire value");
         match step_job(303, JobBudget::default()) {

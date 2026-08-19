@@ -207,7 +207,7 @@ mod tests {
         forward
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn change_annex_round_trips() {
         let base = En1993Snapshot::default();
         let mutation = En1993Mutation::ChangeAnnex(change_annex::mutation::ChangeAnnex { new_annex: crate::document::AnnexChoice::En });
@@ -215,7 +215,7 @@ mod tests {
         assert_eq!(after.annex, crate::document::AnnexChoice::En, "annex must take the new value after change-annex");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn update_member_properties_round_trips() {
         let base = En1993Snapshot::default();
         let mutation = En1993Mutation::UpdateMemberProperties(update_member_properties::mutation::UpdateMemberProperties {
@@ -245,7 +245,7 @@ mod tests {
         assert_eq!(after.tension_n_ed_kn, 999.0, "tension_n_ed_kn must take the new value after update-member-properties");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn update_fire_inputs_round_trips() {
         let base = En1993Snapshot::default();
         let mutation = En1993Mutation::UpdateFireInputs(update_fire_inputs::mutation::UpdateFireInputs {
@@ -263,7 +263,7 @@ mod tests {
         assert_eq!(after.fire_design_temperature_c, 999.0, "fire_design_temperature_c must take the new value after update-fire-inputs");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn update_cold_formed_inputs_round_trips() {
         let base = En1993Snapshot::default();
         let mutation = En1993Mutation::UpdateColdFormedInputs(update_cold_formed_inputs::mutation::UpdateColdFormedInputs {
@@ -283,7 +283,7 @@ mod tests {
         assert_eq!(after.cf_gross_resistance_kn, 999.0, "cf_gross_resistance_kn must take the new value after update-cold-formed-inputs");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn update_stainless_inputs_round_trips() {
         let base = En1993Snapshot::default();
         let mutation = En1993Mutation::UpdateStainlessInputs(update_stainless_inputs::mutation::UpdateStainlessInputs { new_stainless_m_ed_knm: 999.0, new_stainless_w_pl_mm3: 999.0, new_stainless_f_y_mpa: 999.0 });
@@ -293,7 +293,7 @@ mod tests {
         assert_eq!(after.stainless_f_y_mpa, 999.0, "stainless_f_y_mpa must take the new value after update-stainless-inputs");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn update_plated_inputs_round_trips() {
         let base = En1993Snapshot::default();
         let mutation = En1993Mutation::UpdatePlatedInputs(update_plated_inputs::mutation::UpdatePlatedInputs { new_plated_lambda_p: 999.0, new_plated_sigma_ed_mpa: 999.0 });
@@ -302,7 +302,7 @@ mod tests {
         assert_eq!(after.plated_sigma_ed_mpa, 999.0, "plated_sigma_ed_mpa must take the new value after update-plated-inputs");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn update_silo_shell_inputs_round_trips() {
         let base = En1993Snapshot::default();
         let mutation = En1993Mutation::UpdateSiloShellInputs(update_silo_shell_inputs::mutation::UpdateSiloShellInputs {
@@ -322,7 +322,7 @@ mod tests {
         assert_eq!(after.silo_depth_m, 999.0, "silo_depth_m must take the new value after update-silo-shell-inputs");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn update_bolt_inputs_round_trips() {
         let base = En1993Snapshot::default();
         let mutation = En1993Mutation::UpdateBoltInputs(update_bolt_inputs::mutation::UpdateBoltInputs {
@@ -350,7 +350,7 @@ mod tests {
         assert_eq!(after.bolt_f_ub_mpa, 999.0, "bolt_f_ub_mpa must take the new value after update-bolt-inputs");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn update_weld_inputs_round_trips() {
         let base = En1993Snapshot::default();
         let mutation = En1993Mutation::UpdateWeldInputs(update_weld_inputs::mutation::UpdateWeldInputs { new_weld_a_mm: 999.0, new_weld_l_mm: 999.0, new_weld_f_u_mpa: 999.0, new_weld_steel_grade: "changed".to_string(), new_weld_f_ed_kn: 999.0 });
@@ -362,7 +362,7 @@ mod tests {
         assert_eq!(after.weld_f_ed_kn, 999.0, "weld_f_ed_kn must take the new value after update-weld-inputs");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn update_fatigue_inputs_round_trips() {
         let base = En1993Snapshot::default();
         let mutation = En1993Mutation::UpdateFatigueInputs(update_fatigue_inputs::mutation::UpdateFatigueInputs { new_delta_sigma_mpa: 999.0, new_fatigue_category: 9, new_fatigue_method: "changed".to_string() });
@@ -372,7 +372,7 @@ mod tests {
         assert_eq!(after.fatigue_method, "changed".to_string(), "fatigue_method must take the new value after update-fatigue-inputs");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn update_through_thickness_inputs_round_trips() {
         let base = En1993Snapshot::default();
         let mutation = En1993Mutation::UpdateThroughThicknessInputs(update_through_thickness_inputs::mutation::UpdateThroughThicknessInputs { new_t10_steel_subgrade: "changed".to_string(), new_t10_actual_thickness_mm: 999.0, new_t10_t_ed_c: 999.0 });
@@ -382,7 +382,7 @@ mod tests {
         assert_eq!(after.t10_t_ed_c, 999.0, "t10_t_ed_c must take the new value after update-through-thickness-inputs");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn update_tension_component_inputs_round_trips() {
         let base = En1993Snapshot::default();
         let mutation =
@@ -393,7 +393,7 @@ mod tests {
         assert_eq!(after.tension_component_n_ed_kn, 999.0, "tension_component_n_ed_kn must take the new value after update-tension-component-inputs");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn update_hss_inputs_round_trips() {
         let base = En1993Snapshot::default();
         let mutation = En1993Mutation::UpdateHssInputs(update_hss_inputs::mutation::UpdateHssInputs { new_hss_w_el_mm3: 999.0, new_hss_f_y_mpa: 999.0, new_hss_section_class: 9, new_hss_m_ed_knm: 999.0 });
@@ -404,7 +404,7 @@ mod tests {
         assert_eq!(after.hss_m_ed_knm, 999.0, "hss_m_ed_knm must take the new value after update-hss-inputs");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn update_bridge_inputs_round_trips() {
         let base = En1993Snapshot::default();
         let mutation = En1993Mutation::UpdateBridgeInputs(update_bridge_inputs::mutation::UpdateBridgeInputs { new_bridge_lambda: 999.0, new_bridge_phi_2: 999.0, new_bridge_delta_sigma_p_mpa: 999.0 });
@@ -414,7 +414,7 @@ mod tests {
         assert_eq!(after.bridge_delta_sigma_p_mpa, 999.0, "bridge_delta_sigma_p_mpa must take the new value after update-bridge-inputs");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn update_tower_inputs_round_trips() {
         let base = En1993Snapshot::default();
         let mutation = En1993Mutation::UpdateTowerInputs(update_tower_inputs::mutation::UpdateTowerInputs { new_tower_wind_factor: 999.0, new_tower_n_ed_kn: 999.0 });
@@ -423,7 +423,7 @@ mod tests {
         assert_eq!(after.tower_n_ed_kn, 999.0, "tower_n_ed_kn must take the new value after update-tower-inputs");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn update_pile_inputs_round_trips() {
         let base = En1993Snapshot::default();
         let mutation = En1993Mutation::UpdatePileInputs(update_pile_inputs::mutation::UpdatePileInputs { new_pile_sigma_mpa: 999.0, new_pile_k_red: 999.0, new_pile_n_ed_kn: 999.0 });
@@ -433,7 +433,7 @@ mod tests {
         assert_eq!(after.pile_n_ed_kn, 999.0, "pile_n_ed_kn must take the new value after update-pile-inputs");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn update_crane_inputs_round_trips() {
         let base = En1993Snapshot::default();
         let mutation = En1993Mutation::UpdateCraneInputs(update_crane_inputs::mutation::UpdateCraneInputs { new_crane_f_z_ed_kn: 999.0, new_crane_wheel_contact_length_mm: 999.0, new_crane_dispersion_mm: 999.0, new_crane_t_w_mm: 999.0 });
@@ -444,7 +444,7 @@ mod tests {
         assert_eq!(after.crane_t_w_mm, 999.0, "crane_t_w_mm must take the new value after update-crane-inputs");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn change_annex_diff_is_sparse() {
         let base = En1993Snapshot::default();
         let mutation = En1993Mutation::ChangeAnnex(change_annex::mutation::ChangeAnnex { new_annex: crate::document::AnnexChoice::En });
@@ -456,7 +456,7 @@ mod tests {
         assert_eq!(diff.weld_steel_grade, None, "change-annex must not touch unrelated fields");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn semantic_kinds_cover_every_variant() {
         assert_eq!(En1993Mutation::kinds().len(), 17);
         let mutation = En1993Mutation::ChangeAnnex(change_annex::mutation::ChangeAnnex { new_annex: crate::document::AnnexChoice::En });

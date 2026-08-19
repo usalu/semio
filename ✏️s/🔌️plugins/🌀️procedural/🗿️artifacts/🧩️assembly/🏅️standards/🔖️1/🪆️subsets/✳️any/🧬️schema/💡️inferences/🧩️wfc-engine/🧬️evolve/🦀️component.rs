@@ -28,7 +28,7 @@ pub struct EvolveConfig {
 }
 
 impl Default for EvolveConfig {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { population_size: 8, generations: 5, elite_count: 2 }
     }
 }
@@ -54,7 +54,10 @@ async fn derive_seed(seed: u64, salt: u64) -> u64 {
 /// cancelled attempt is simply excluded from selection, not treated as an error). Higher
 /// `scorer.score(...)` is always better here (unlike `best_of_n`, which lets the caller pick a
 /// direction) — a caller wanting to minimize a quantity should negate it in their scorer.
-pub async fn evolve(base_seed: u64, config: EvolveConfig, scorer: &dyn SoftConstraint, mut solve_one: impl FnMut(u64) -> Option<Vec<PatternId>>) -> EvolveResult {
+///
+/// 🚦️ De-dyn (O1/R11 open-set case): same reasoning as [`crate::wfc_engine::soft::best_of_n`] — the
+/// scorer is caller-supplied and open, so `&dyn SoftConstraint` becomes `&S`, not an enum.
+pub async fn evolve<S: SoftConstraint>(base_seed: u64, config: EvolveConfig, scorer: &S, mut solve_one: impl FnMut(u64) -> Option<Vec<PatternId>>) -> EvolveResult {
     let population_size = config.population_size.max(1);
     let elite_count = config.elite_count.clamp(1, population_size);
     let mut population: Vec<u64> = (0..population_size as u64).map(|i| derive_seed(base_seed, i)).collect();
@@ -117,14 +120,14 @@ mod tests {
         (model, tb.build().unwrap())
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn derive_seed_is_deterministic_and_varies_by_salt() {
         assert_eq!(derive_seed(1, 2), derive_seed(1, 2));
         assert_ne!(derive_seed(1, 2), derive_seed(1, 3));
         assert_ne!(derive_seed(1, 2), derive_seed(4, 2));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn evolve_finds_a_solution_and_tracks_evaluated_count() {
         let (model, topo) = checkerboard(6);
         let config = SearchConfig::default();
@@ -141,7 +144,7 @@ mod tests {
         assert!(best.score >= 0.0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn evolve_prefers_higher_scores_across_generations() {
         // A scorer with a clear maximum (3 black nodes is the best achievable on this 5-node
         // path — see the identical checkerboard fixture in 🦀️search.rs's own tests) lets us assert
@@ -161,7 +164,7 @@ mod tests {
         assert_eq!(best.score, 3.0, "3 black nodes is the maximum achievable on this 5-node path");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn evolve_reports_no_best_when_every_attempt_fails() {
         let scorer = ScoreFn { name: "zero", f: |_: &[PatternId]| 0.0 };
         let evolve_config = EvolveConfig { population_size: 3, generations: 2, elite_count: 1 };

@@ -31,7 +31,7 @@ impl protocol::MutationKind<GltfSnapshot, GltfMutation> for BindPrimitiveMateria
 }
 
 impl GltfSemanticMutation for BindPrimitiveMaterial {
-    async fn apply(&self, snapshot: &mut GltfSnapshot) -> Result<(), GltfMutationRejection> {
+    fn apply(&self, snapshot: &mut GltfSnapshot) -> Result<(), GltfMutationRejection> {
         check_index("document/meshes", self.mesh, snapshot.document.meshes.len())?;
         check_index(format!("document/meshes/{}/primitives", self.mesh), self.primitive, snapshot.document.meshes[self.mesh].primitives.len())?;
         if let Some(material) = self.material {

@@ -490,7 +490,7 @@ mod tests {
 
     /// 🌱️ Relocated verbatim from `⚙️engine`'s own test module (rule 4: `raster_io`/`raster_composite_media`
     /// now live in this file's own `🔖️Io` region).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn raster_io_declares_image_in_and_image_out() {
         let io = raster_io();
         assert_eq!(io.document_schema, RASTER_DOCUMENT_SCHEMA);
@@ -500,7 +500,7 @@ mod tests {
         assert_eq!(out_port.kind_id.as_deref(), Some("2d.image"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn raster_composite_media_exports_structured_2d_image_payload() {
         let document = crate::artifacts::raster::schema::empty_raster_document();
         let media = raster_composite_media(&document).expect("export image:out");
@@ -509,7 +509,7 @@ mod tests {
         assert!(!json.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn window_measures_expose_brush_and_eraser_option_groups() {
         let mut app = app();
         let measures = main_window_measures(&mut app);
@@ -517,14 +517,14 @@ mod tests {
         assert!(measures.iter().any(|m| matches!(m, WindowMeasure::Group { id, .. } if id == "raster-utility-options-paintBrush")));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn renders_raster_scene() {
         let mut app = app();
         let json = render(&mut app, composite::RASTER_PLAY_BODY_COMPOSITE);
         assert!(json.contains("raster"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn renders_navigator_scene() {
         let mut app = app();
         let json = render(&mut app, navigator::RASTER_PLAY_BODY_NAVIGATOR);
@@ -532,13 +532,13 @@ mod tests {
         assert!(json.contains("\"viewMode\":\"navigator\""));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn parses_semio_example_document() {
         let document = crate::artifacts::raster::schema::semio_example_document();
         assert!(!document.layers.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn empty_document_background_layer_has_identity_scale() {
         let document = empty_raster_document();
         let json = document_sync_json(&document);
@@ -547,7 +547,7 @@ mod tests {
         assert!(!json.contains(r#""scaleX":0.0"#), "layer must not collapse to zero size");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn renders_layers_tree() {
         let mut app = semio_app();
         let json = render(&mut app, document::RASTER_PLAY_BODY_LAYERS);
@@ -555,7 +555,7 @@ mod tests {
         assert!(json.contains("Backdrop"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn raster_labels_resolve_native_english_by_default() {
         let mut app = app();
         let layers_json = render(&mut app, document::RASTER_PLAY_BODY_LAYERS);
@@ -570,7 +570,7 @@ mod tests {
         assert!(properties_json.contains("Schema:"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn raster_labels_resolve_german_locale() {
         let mut app = app();
         dispatch(&mut app, RasterCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }));
@@ -584,7 +584,7 @@ mod tests {
         assert!(catalogue_json.contains("Ebenenarten"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn composite_scene_syncs_document_and_assets() {
         let mut app = semio_app();
         let json = render(&mut app, composite::RASTER_PLAY_BODY_COMPOSITE);
@@ -601,7 +601,7 @@ mod tests {
         assert!(document.assets.contains_key("semio-emblem"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn semio_example_preserves_adjustment_params() {
         let document = crate::artifacts::raster::schema::semio_fixture_snapshot();
         let RasterLayerNode::Adjustment { params, adjustment_kind, .. } = document.layers.iter().find(|layer| matches!(layer, RasterLayerNode::Adjustment { id, .. } if id == "brighten")).expect("brighten adjustment") else {
@@ -616,14 +616,14 @@ mod tests {
     /// through the framework-injected `interactionHover`/`interactionSelect` verbs against the
     /// `"layers"` domain now (`semio-framework-plugin`'s own suite covers that generic machinery);
     /// this app's contribution is declaring the domain and binding the tree to it.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn document_tree_binds_the_layers_interaction_domain() {
         let mut app = semio_app();
         let json = render(&mut app, document::RASTER_PLAY_BODY_LAYERS);
         assert!(json.contains("\"interactionDomain\":\"layers\""), "layer tree must bind the framework-owned layers domain: {json}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_composite_viewport_feeds_navigator_scene() {
         let mut app = app();
         dispatch(&mut app, RasterCommand::SetCompositeViewport(set_composite_viewport::SetCompositeViewport { width: 640.0, height: 480.0 }));
@@ -633,7 +633,7 @@ mod tests {
         assert!(json.contains(r#"\"height\":480.0"#));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_camera_mutates_runtime_and_emits_no_operations() {
         let mut app = app();
         let before = app.snapshot().expect("snapshot");
@@ -645,7 +645,7 @@ mod tests {
         assert!(json.contains(r#"\"x\":4.0"#), "composite scene camera reflects runtime state: {json}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_camera_zoom_updates_zoom_and_keeps_pan_via_runtime() {
         let mut app = app();
         dispatch(&mut app, RasterCommand::SetCamera(set_camera::SetCamera { camera: crate::artifacts::raster::RasterCamera { x: 4.0, y: 5.0, zoom: 1.0 } }));
@@ -656,7 +656,7 @@ mod tests {
         assert!(json.contains(r#"\"x\":4.0"#), "pan preserved across zoom-only update: {json}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_layer_action_appends_and_undo_removes() {
         let mut app = app();
         let before = app.snapshot().expect("snapshot").layers.len();
@@ -668,7 +668,7 @@ mod tests {
         assert_eq!(app.snapshot().expect("snapshot").layers.len(), before);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn patch_layer_renames_and_toggles_visibility_round_trip() {
         let mut app = app();
         let layer_id = crate::artifacts::raster::schema::layer_node_id(&app.snapshot().expect("snapshot").layers[0]).to_string();
@@ -680,7 +680,7 @@ mod tests {
         assert!(layer_visible(&app.snapshot().expect("snapshot").layers[0]));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn move_layer_into_group() {
         let mut app = app();
         dispatch(&mut app, RasterCommand::AddLayer(add_layer::AddLayer { kind: "group".into() }));
@@ -702,7 +702,7 @@ mod tests {
 
     /// 🧪️ The definitional merge proof: A adds a layer while B renames the background layer — disjoint
     /// tree edits on one backbone that must both survive on both instances.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn two_instances_converge_disjoint_layer_edits_via_backbone() {
         let mut instance_a = app();
         let mut instance_b = app();
@@ -744,12 +744,12 @@ mod tests {
         assert_eq!(layer_name(&projection_b.layers[0]), "Renamed By B", "B keeps its rename");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn ingest_operations_is_idempotent() {
         testkit::assert_ingest_idempotent::<RasterPlayApp, usize>(RasterCommand::AddLayer(add_layer::AddLayer { kind: "pixel".into() }), |app| app.snapshot().unwrap().layers.len());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_active_utility_switch_emits_no_ops_and_persists_in_config() {
         let mut app = app_with_registry();
         let before = app.snapshot().expect("snapshot");
@@ -762,7 +762,7 @@ mod tests {
         assert!(json.contains("\"activeUtility\":\"paintBrush\""), "scene reflects host-owned active utility: {json}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn utility_registry_declares_utilities_scoped_to_the_composite_window() {
         let definition = create_raster_app();
         let utility_ids: Vec<&str> = definition.utilities.iter().map(|utility| utility.id.as_str()).collect();
@@ -777,7 +777,7 @@ mod tests {
         assert!(!definition.window_kinds.iter().flat_map(|window| window.actions.iter()).any(|action| action.id == "setActiveUtility" && !matches!(action.kind, ActionKind::View)));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn raster_io_declares_image_in_out_and_export_media_covers_all_ports() {
         let projection = empty_raster_document();
         let history = semio_framework_plugin::HistoryView::empty();
@@ -791,7 +791,7 @@ mod tests {
         assert!(matches!(semio_framework_plugin::resolve_ready(RasterPlayApp::export_media("unknown:out", &doc)), Err(MediaError::NotImplemented)));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn raster_import_media_appends_layer_from_incoming_image() {
         let mut app = app();
         let before = app.snapshot().expect("snapshot").layers.len();
@@ -825,7 +825,7 @@ mod tests {
     }
 
     /// ⚖️ LAW: text and binary are two projections of the same command, for every single row.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn every_command_round_trips_through_text_and_binary() {
         for command in every_command() {
             store::os_store::test_support::assert_op_text_binary_equivalence(&command);
@@ -834,7 +834,7 @@ mod tests {
 
     /// 🎫️ Every `app_commands!` row's wire keyword must be distinct — the cross-cutting invariant the
     /// macro exists to hold.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn command_wire_keywords_are_unique_across_every_row() {
         let commands = every_command();
         assert_eq!(commands.len(), 16, "every RasterCommand row must be covered by every_command()");
@@ -847,7 +847,7 @@ mod tests {
     /// ⚖️ LAW: the leading token of every printed op line is the row's `dsl` wire keyword — what a
     /// missing `#[dsl(keyword = ..)]` on a payload struct silently breaks (the record prints with no
     /// keyword at all and no longer parses).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn every_printed_op_line_starts_with_the_rows_declared_wire_keyword() {
         let expectations: Vec<(&str, RasterCommand)> = every_command()
             .into_iter()
@@ -890,7 +890,7 @@ mod tests {
     /// `set-layer-visible`'s ordinal is unaffected (it sits before the deleted rows). Greenfield repo,
     /// no persisted wire data to migrate. Any FURTHER drift here is a real format break, not a
     /// fixture mismatch.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn optional_field_rows_keep_their_declared_wire_bytes() {
         let cases: [(RasterCommand, &str, &str); 1] = [
             (RasterCommand::SetLayerVisible(set_layer_visible::SetLayerVisible { layer_id: "l1".into(), visible: None }), "set-layer-visible set-layer-visible layer-id=l1", "010201026c3101000600"),
@@ -902,7 +902,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn command_ids_are_unique_across_every_row() {
         let mut seen = std::collections::HashSet::new();
         for command in every_command() {

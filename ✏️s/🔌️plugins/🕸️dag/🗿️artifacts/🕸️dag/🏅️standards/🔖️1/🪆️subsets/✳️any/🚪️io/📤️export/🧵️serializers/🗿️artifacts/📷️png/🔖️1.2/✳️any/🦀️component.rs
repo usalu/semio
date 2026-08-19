@@ -21,7 +21,7 @@ pub struct DagIntoPng;
 impl Serializer<DagSnapshot> for DagIntoPng {
     const INTO: Dialect = PNG_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    async fn serialize(from: &DagSnapshot) -> IoResult<IoPayload> {
+    fn serialize(from: &DagSnapshot) -> IoResult<IoPayload> {
         let png = serialize(from).map_err(|error| IoError { message: format!("DagIntoPng: {error}"), diagnostics: Vec::new() })?;
         Ok(IoOutcome::clean(IoPayload::Binary(<PngSnapshot as store::ArtifactPack>::encode_pack(&png))))
     }

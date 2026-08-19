@@ -21,7 +21,7 @@ pub struct ImperativeTopology {
 }
 
 impl Default for ImperativeTopology {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { topo_order: Vec::new(), depth: BTreeMap::new(), cycle_free: true, node_count: 0 }
     }
 }
@@ -59,7 +59,7 @@ mod tests {
         Step { id: id.into(), kind: "noop".into(), params: Default::default(), bodies }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn a_flat_path_orders_steps_at_depth_zero() {
         let path = Path { steps: vec![step("a", StdBTreeMap::new()), step("b", StdBTreeMap::new())] };
         let topology = compute_imperative_topology(&path);
@@ -70,7 +70,7 @@ mod tests {
         assert!(topology.cycle_free);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn a_nested_body_step_sits_one_depth_deeper_and_still_counts() {
         let inner = Path { steps: vec![step("inner", StdBTreeMap::new())] };
         let mut bodies = StdBTreeMap::new();
@@ -83,7 +83,7 @@ mod tests {
         assert_eq!(topology.node_count, 2);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn an_empty_path_is_the_zero_topology() {
         assert_eq!(compute_imperative_topology(&Path::new()), ImperativeTopology::default());
     }

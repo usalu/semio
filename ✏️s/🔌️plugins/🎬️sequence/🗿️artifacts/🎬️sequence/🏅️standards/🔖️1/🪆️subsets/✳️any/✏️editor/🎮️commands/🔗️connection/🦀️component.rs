@@ -54,7 +54,7 @@ mod tests {
     use super::connect_steps::ConnectSteps;
     use super::disconnect_steps::DisconnectSteps;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn disconnect_then_reconnect_round_trips_the_edge() {
         let mut app = new_app();
         dispatch(&mut app, SequenceCommand::DisconnectSteps(DisconnectSteps { from_id: "step-1".into(), to_id: "step-2".into() }));

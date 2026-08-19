@@ -26,7 +26,7 @@ mod tests {
     use crate::editor::space_index::{testkit, SpaceIndexCommand};
     
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_visibility_relays_the_directory_command() {
         let mut app = testkit::new_app();
         let result = app.dispatch_typed(SpaceIndexCommand::SetVisibility(SetVisibility { visibility: "public".into() }), &semio_framework_plugin::testkit::meta("local")).expect("set visibility");

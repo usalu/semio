@@ -211,14 +211,14 @@ mod tests {
     use super::delete_selection::DeleteSelection;
     use super::remove_step::RemoveStep;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_step_command_appends_step() {
         let mut app = new_app();
         dispatch(&mut app, SequenceCommand::AddStep(AddStep { kind: "log.print".into(), x: 0.0, y: 0.0 }));
         assert!(app.snapshot().expect("projection").to_fixture().steps.len() > 2);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn remove_step_command_deletes_step() {
         let mut app = new_app();
         let step_id = app.snapshot().expect("projection").to_fixture().steps[0].id.clone();
@@ -231,7 +231,7 @@ mod tests {
     /// framework's real `interactionSelect` action (`select_steps`, the only way a downstream crate
     /// can populate a genuine `InteractionView`), then confirms `deleteSelection` removes exactly
     /// that step.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn delete_selection_removes_the_live_selected_step() {
         let mut app = new_app_with_registry_wired();
         select_steps(&mut app, &["step-1"]);

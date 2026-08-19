@@ -27,7 +27,7 @@ mod tests {
     use semio_framework_plugin::PluginApp;
     use crate::editor::playbook::commands::update_playbook::UpdatePlaybook;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_step_action_appends_step() {
         let mut app = playbook_app();
         let before = app.snapshot().expect("projection").steps().len();
@@ -35,7 +35,7 @@ mod tests {
         assert_eq!(app.snapshot().expect("projection").steps().len(), before + 1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn remove_and_move_step_actions() {
         let mut app = playbook_app();
         dispatch(&mut app, PlaybookCommand::AddStep(AddStep {}));
@@ -46,7 +46,7 @@ mod tests {
         assert!(app.snapshot().expect("projection").steps().iter().all(|step| step.id != last_step_id));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn remove_step_with_empty_id_is_a_no_op() {
         let mut app = playbook_app();
         let before = app.snapshot().expect("projection").steps().len();
@@ -54,7 +54,7 @@ mod tests {
         assert_eq!(app.snapshot().expect("projection").steps().len(), before);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn update_playbook_title_coalesces_into_one_undo_step() {
         let mut app = playbook_app();
         for title in ["R", "Re", "Recipe"] {

@@ -545,7 +545,7 @@ mod tests {
 
     /// 🎫️ Permanent wire guard (TEMPLATE.md §7): every `TrinityJackCommand` variant round-trips
     /// through both its binary (`OpBinary`, via `#[derive(dsl::DslOps)]`) and text (`OpText`) codecs.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn trinity_jack_command_text_and_binary_round_trip() {
         let commands = vec![
             TrinityJackCommand::SetFixtureJson { json: "{}".into() },
@@ -591,14 +591,14 @@ mod tests {
         app.handle_action("interactionSelect", Some(&args), &meta("local")).expect("interactionSelect");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn renders_node_graph_scene() {
         let mut app = new_app();
         let node = app.render(TRINITY_JACK_PLAY_BODY_GRAPH, None, &ViewModel::default()).expect("render");
         assert!(serde_json::to_string(&node).unwrap().contains("node-graph"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn renders_jack_editor() {
         let mut app = new_app();
         let node = app.render(TRINITY_JACK_PLAY_BODY_EDITOR, None, &ViewModel::default()).expect("render");
@@ -607,7 +607,7 @@ mod tests {
         assert!(json.contains(TRINITY_JACK_DEFAULT_QUERY));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn run_query_populates_results_and_a_set_query_mutates_projection() {
         let mut app = new_app();
         app.render(TRINITY_JACK_PLAY_BODY_RESULTS, None, &ViewModel::default()).expect("render");
@@ -621,7 +621,7 @@ mod tests {
         assert!(projection.nodes().iter().any(|node| node.properties.get("label") == Some(&crate::artifacts::jack::PropertyValue::String("ran-label".into()))));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn node_graph_select_updates_selection_and_document_tree() {
         let mut app = new_app();
         let node_id = node_id_at(&app, 0);
@@ -632,12 +632,12 @@ mod tests {
         assert!(json.contains("\"selected\":true"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn nakagin_fixture_has_nodes() {
         assert!(!default_fixture().nodes().is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn editor_scene_has_tokens_and_diagnostics() {
         let mut app = new_app();
         let node = app.render(TRINITY_JACK_PLAY_BODY_EDITOR, None, &ViewModel::default()).expect("render");
@@ -647,7 +647,7 @@ mod tests {
         assert!(json.contains("completionsJson"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn text_edit_updates_query_without_operations() {
         let mut app = new_app();
         let result = app.dispatch_typed(TrinityJackCommand::TextEdit { text: "MATCH (a:Piece) RETURN a.name".into() }, &meta("local")).expect("edit");
@@ -656,7 +656,7 @@ mod tests {
         assert!(serde_json::to_string(&node).unwrap().contains("MATCH (a:Piece) RETURN a.name"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn graph_scene_has_lod_json() {
         let mut app = new_app();
         let node = app.render(TRINITY_JACK_PLAY_BODY_GRAPH, None, &ViewModel::default()).expect("render");
@@ -665,7 +665,7 @@ mod tests {
         assert!(json.contains("automatic"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_lod_mode_reflects_in_window_measures() {
         let mut app = new_app();
         app.dispatch_typed(TrinityJackCommand::SetLodMode { window_id: TRINITY_JACK_PLAY_WINDOW_GRAPH.into(), value: "compact".into() }, &meta("local")).expect("lod");
@@ -673,14 +673,14 @@ mod tests {
         assert!(measures[TRINITY_JACK_PLAY_WINDOW_GRAPH].iter().any(|measure| matches!(measure, WindowMeasure::Select { value, .. } if value == "compact")));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn catalogue_tree_renders() {
         let mut app = new_app();
         let node = app.render(TRINITY_JACK_PLAY_BODY_CATALOGUE, None, &ViewModel::default()).expect("render");
         assert!(serde_json::to_string(&node).unwrap().contains("trinity-jack-catalogue"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inspection_panel_renders_the_selection_prompt() {
         let mut app = new_app();
         let node_id = node_id_at(&app, 0);
@@ -691,7 +691,7 @@ mod tests {
         assert!(serde_json::to_string(&node).unwrap().contains("trinity-inspector.empty"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn document_tree_de_locale_translates_labels() {
         let mut app = new_app();
         app.dispatch_typed(TrinityJackCommand::SetLocale { value: "de-DE".into() }, &meta("local")).expect("set locale");
@@ -699,7 +699,7 @@ mod tests {
         assert!(serde_json::to_string(&node).unwrap().contains("Stücke"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_active_example_swaps_fixture_and_seeds_query() {
         let mut app = new_app();
         let result = app.dispatch_typed(TrinityJackCommand::SetActiveExample { example_id: "branch-chain".into() }, &meta("local")).expect("set active example");
@@ -714,7 +714,7 @@ mod tests {
         assert!(serde_json::to_string(&node).unwrap().contains("RETURN a, r, b"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn delete_selection_removes_selected_node() {
         let mut app = new_app();
         let node_id = node_id_at(&app, 0);
@@ -725,7 +725,7 @@ mod tests {
         assert!(!projection.nodes().iter().any(|node| node.id == node_id));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn context_menu_stays_within_row_budget_and_ends_with_delete_selection() {
         let mut app = testkit::new_app_with_registry::<EditorApp<TrinityJackPlayApp>>(trinity_jack_manifest_for_testkit);
         let node_id = node_id_at(&app, 0);
@@ -749,7 +749,7 @@ mod tests {
         assert!(last_is_destructive_leaf || last_is_group_ending_in_destructive, "known destructive deleteSelection must be last: {menu:?}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn export_media_graph_out_matches_document_pack() {
         use semio_framework_plugin::PluginApp as _;
         let mut app = new_app();
@@ -758,7 +758,7 @@ mod tests {
         assert_eq!(document_out.payload, graph_out.payload);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn jack_io_declares_graph_out_fan_out_port() {
         let io = jack_io();
         assert_eq!(io.document_schema, TRINITY_GRAPH_SCHEMA);

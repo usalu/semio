@@ -417,7 +417,7 @@ pub async fn ensure_stdio_semio_drawing_registered() {
 mod media_import_export_tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dwg_import_frames_page_to_rectangular_polyline() {
         let mut drawing = DwgDrawing::default();
         drawing.entities.push(DwgEntity {
@@ -432,7 +432,7 @@ mod media_import_export_tests {
         assert_eq!(document.pages[0].height, 50.0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dwg_import_without_rectangles_falls_back_to_extents() {
         let mut drawing = DwgDrawing::default();
         drawing.entities.push(DwgEntity { layer: 0, color: DwgColor::ByLayer, geometry: DwgGeometry::Line { start: [0.0, 0.0, 0.0], end: [200.0, 150.0, 0.0] } });
@@ -449,7 +449,7 @@ mod media_import_export_tests {
     /// `background_drawing` composed child from the FULL decoded drawing (not just page-boundary
     /// rects) instead of discarding it — this asserts the mint, the handle shape, and that the
     /// content actually landed in the working-scene scratch cache the mint call populates.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dwg_import_mints_and_caches_a_real_background_drawing_child() {
         let mut drawing = DwgDrawing::default();
         drawing.entities.push(DwgEntity {
@@ -468,7 +468,7 @@ mod media_import_export_tests {
     /// 🌉️ The real consumer of the working-scene cache: SVG export merges the cached background
     /// content's layers in behind the document's own page layers, so an imported trace an author
     /// draws pages on top of survives export instead of only ever informing import-time framing.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn svg_export_merges_cached_background_drawing_behind_pages() {
         ensure_stdio_semio_drawing_registered();
         let mut drawing = DwgDrawing::default();
@@ -489,7 +489,7 @@ mod media_import_export_tests {
     /// `s.stdio.semio/v1/drawing`→svg bridge (`io_dispatch`) rather than hand-rolling SVG text — the
     /// two demo pages (400x500 each, 24px gap) lay out canvas-wide, and the resulting markup uses
     /// `<path>` (the drawing subset's SVG vocabulary has no `<rect>` element).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn svg_export_composes_through_semio_drawing_bridge() {
         ensure_stdio_semio_drawing_registered();
         let doc = crate::artifacts::layout::schema::default_document();
@@ -502,7 +502,7 @@ mod media_import_export_tests {
         assert_eq!(height, 500);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn svg_export_rejects_invalid_document_json() {
         let value = serde_json::json!({ "not": "a layout document" });
         assert!(layout_document_json_to_svg(&value).is_err());

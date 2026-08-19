@@ -1,4 +1,4 @@
-#[test]
+#[semio_framework_async_macros::async_test]
 async fn primary_asset_is_nonempty() {
     let text = include_str!("../🖼️assets/🗣️example.dsl.semio");
     assert!(text.len() > 8);
@@ -9,13 +9,13 @@ use crate::artifacts::program::standards::v1::subsets::any::schema::inferences::
 use crate::artifacts::program::ProgramSnapshot;
 use protocol::Inference;
 
-#[test]
+#[semio_framework_async_macros::async_test]
 async fn inference_determinism_law() {
     let snapshot = ProgramSnapshot::default();
     assert_eq!(ProgramInference::infer(&snapshot), ProgramInference::infer(&snapshot));
 }
 
-#[test]
+#[semio_framework_async_macros::async_test]
 async fn inference_default_law() {
     assert_eq!(ProgramInference::infer(&ProgramSnapshot::default()), ProgramInference::default());
 }

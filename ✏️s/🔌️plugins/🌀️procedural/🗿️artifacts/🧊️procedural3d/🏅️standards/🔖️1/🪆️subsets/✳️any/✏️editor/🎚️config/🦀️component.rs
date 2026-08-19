@@ -23,7 +23,7 @@ pub struct Procedural3dPreviewCamera {
     pub fov: f64}
 
 impl Default for Procedural3dPreviewCamera {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { position: default_preview_cam_pos(), target: default_preview_cam_target(), fov: default_preview_fov() }
     }
 }
@@ -151,7 +151,7 @@ impl store::ArtifactPack for Procedural3dConfig {
 
 
 impl Default for Procedural3dConfig {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self {
             lod_mode: String::new(),
             show_mode: default_show_mode(),
@@ -311,7 +311,7 @@ impl Mutation<Procedural3dConfig> for Procedural3dConfigMutation {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn procedural3d_config_default_matches_the_former_runtime_defaults() {
         let config = Procedural3dConfig::default();
         assert_eq!(config.show_mode, "shaded");
@@ -331,7 +331,7 @@ mod tests {
         forward
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn config_set_camera_and_preview_camera_round_trip() {
         let base = Procedural3dConfig::default();
         let next = config_round_trip(&base, &Procedural3dConfigMutation::SetCamera { camera: CameraJson { x: 1.0, y: 2.0, zoom: 3.0 } });
@@ -341,14 +341,14 @@ mod tests {
         assert_eq!(next2.preview_camera, camera);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn config_set_sun_round_trip_as_raw_json() {
         let base = Procedural3dConfig::default();
         let next = config_round_trip(&base, &Procedural3dConfigMutation::SetSun { json: "{\"enabled\":true}".into() });
         assert_eq!(next.sun_json, "{\"enabled\":true}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn config_set_generation_round_trips() {
         let base = Procedural3dConfig::default();
         let next = config_round_trip(&base, &Procedural3dConfigMutation::SetGeneration { selected_generation_id: Some("generation-1".into()), generation_preview_text: Some("42".into()) });
@@ -356,7 +356,7 @@ mod tests {
         assert_eq!(next.generation_preview_text, Some("42".to_string()));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn config_set_active_utility_and_locale_round_trip() {
         let base = Procedural3dConfig::default();
         let next = config_round_trip(&base, &Procedural3dConfigMutation::SetActiveUtility { utility_id: "rotate".into() });
@@ -365,7 +365,7 @@ mod tests {
         assert_eq!(next2.locale, "de-DE");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn config_op_text_round_trips_every_variant() {
         semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Procedural3dConfigMutation::SetLodMode { value: "coarse".into() });
         semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Procedural3dConfigMutation::SetShowMode { value: "wireframe".into() });

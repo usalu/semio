@@ -80,14 +80,14 @@ pub async fn render(document: &SequenceSnapshot) -> UiNode {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn definition_declares_the_node_graph_surface_and_body_key() {
         let definition = definition();
         assert_eq!(definition.body_key, SEQUENCE_VIEW_BODY_MAIN);
         assert!(matches!(definition.surface_kind, SurfaceKind::NodeGraph));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn render_produces_a_read_only_scene_for_the_default_document() {
         let document = crate::artifacts::sequence::default_snapshot();
         let node = render(&document);

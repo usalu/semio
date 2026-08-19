@@ -95,19 +95,19 @@ pub async fn create_pptx_transitional_viewer() -> semio_framework_plugin::AppDef
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_pptx_transitional_viewer_builds_a_definition_for_the_viewer_role() {
         let def = create_pptx_transitional_viewer();
         assert_eq!(def.role, semio_framework_plugin::AppRole::Viewer);
         assert_eq!(def.dialect, PPTX_TRANSITIONAL_VIEWER_DIALECT.into());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn viewer_dialect_matches_the_artifact_coordinate() {
         assert_eq!(<PptxTransitionalViewer as ArtifactViewer>::DIALECT, PPTX_TRANSITIONAL_VIEWER_DIALECT);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn viewer_declares_the_document_window() {
         let def = create_pptx_transitional_viewer();
         assert!(def.window_kinds.iter().any(|window| window.id == main::WINDOW_KIND_ID));

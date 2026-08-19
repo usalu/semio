@@ -16,7 +16,7 @@ pub struct PdfIntoPresent;
 impl Deserializer<PresentSnapshot> for PdfIntoPresent {
     const FROM: Dialect = PDF_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    async fn deserialize(payload: &IoPayload) -> IoResult<PresentSnapshot> {
+    fn deserialize(payload: &IoPayload) -> IoResult<PresentSnapshot> {
         let IoPayload::Binary(bytes) = payload else {
             return Err(IoError { message: "PdfIntoPresent: expected a binary pdf payload".to_string(), diagnostics: Vec::new() });
         };

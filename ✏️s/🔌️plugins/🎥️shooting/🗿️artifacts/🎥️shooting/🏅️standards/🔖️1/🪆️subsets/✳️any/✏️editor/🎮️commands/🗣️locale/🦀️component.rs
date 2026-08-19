@@ -30,7 +30,7 @@ mod tests {
     use crate::editor::shooting::testkit::{dispatch, shooting_app};
     use crate::editor::shooting::ShootingCommand;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_locale_switches_the_resolved_label_locale() {
         use crate::editor::shooting::testkit::render;
         use crate::editor::shooting::SHOOTING_PLAY_BODY_DOCUMENT;

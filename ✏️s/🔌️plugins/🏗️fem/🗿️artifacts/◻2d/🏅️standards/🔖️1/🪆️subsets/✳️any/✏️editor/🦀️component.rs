@@ -500,7 +500,7 @@ mod tests {
     /// 🏷️ Every declared manifest action id must be reachable as exactly one command row, and every
     /// row's wire keyword must be distinct — the cross-cutting invariant `app_commands!` is there to
     /// hold.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn command_ids_are_unique_and_match_the_declared_manifest_actions() {
         let commands = every_command();
         let ids: Vec<&str> = commands.iter().map(|command| command.command_id()).collect();
@@ -519,7 +519,7 @@ mod tests {
     }
 
     /// ⚖️ LAW: text and binary are two projections of the same command, for every single row.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn every_command_round_trips_through_text_and_binary() {
         for command in every_command() {
             semio_framework_os_kernel::os_store::test_support::assert_op_text_binary_equivalence(&command);
@@ -532,7 +532,7 @@ mod tests {
     /// `26/08/05/FEM-PLUGIN-MIGRATION-TO-CRATE-AND-TAXONOMY-CONSOLIDATION`,
     /// `🧪️wire-baseline-before-2d.txt`). Row order is the binary variant ordinal, so a reordering — which
     /// no round-trip law can catch — shows up here as a leading-byte mismatch.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn every_command_keeps_its_pre_migration_bytes() {
         use protocol::OpBinary;
         let rows: Vec<(&str, Fem2dCommand)> = vec![
@@ -574,7 +574,7 @@ mod tests {
     //#endregion 🔖️CommandSurface
 
     //#region 🔖️ManifestSanity
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn the_manifest_stitches_every_taxonomy_node() {
         let json = serde_json::to_string(&create_fem2d_app()).expect("app definition json");
         for id in [model_window::WINDOW_KIND_ID, results_window::WINDOW_KIND_ID] {
@@ -584,12 +584,12 @@ mod tests {
         assert!(json.contains("computation.fem2d"), "artifact kind missing from the manifest");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn config_spec_declares_no_fields() {
         assert!(Fem2dPlayApp::config_spec().fields.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn manifest_declares_config_io_and_computation_artifact_kind() {
         let definition = create_fem2d_app();
         assert!(definition.config.fields.is_empty());
@@ -599,7 +599,7 @@ mod tests {
         assert_eq!(computation_kind.media_type.form, MediaForm::Value);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn app_io_forwards_the_engine_declared_ports() {
         let io = Fem2dPlayApp::io().expect("io declared");
         assert!(io.ports.iter().any(|port| port.id == "geometry:in"));
@@ -609,7 +609,7 @@ mod tests {
     /// 🔌️ Wave-1's `required: true` unwired-input enforcement (`validate_edge_kinds`) lives in the run
     /// crate, not here — this test only proves the port DECLARATION is correct; the cross-crate
     /// enforcement is exercised at the run-crate level.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fem2d_io_declares_geometry_in_and_results_out_ports() {
         let io = fem2d_io();
         assert_eq!(io.document_schema, crate::artifacts::fem2d::FEM_2D_SCHEMA);
@@ -635,7 +635,7 @@ mod tests {
 
     /// 🗣️ B1: the manifest itself (not a runtime `cfg.locale`-driven overlay) now carries every
     /// locale's translation via `LocalizedLabel`.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn manifest_labels_resolve_german_locale_2d() {
         use semio_framework_plugin::{Locale, Terminology};
         let definition = create_fem2d_app();
@@ -652,20 +652,20 @@ mod tests {
     //#endregion 🔖️ManifestSanity
 
     //#region 🔖️CrossCutting
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn undo_restores_document_after_add_node() {
         let mut app = fem2d_app();
         let before = app.snapshot().expect("snapshot").nodes.len();
         semio_framework_plugin::testkit::assert_undo_redo_round_trip(&mut app, Fem2dCommand::AddNode(add_node::AddNode { x: 1.0, y: 1.0 }), |app| app.snapshot().expect("snapshot").nodes.len(), before, before + 1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
         let mut app = fem2d_app();
         assert!(render(&mut app, "fem2d.play.nope").contains("Unknown body"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn two_instances_converge_on_disjoint_edits() {
         let (mut instance_a, mut instance_b) = semio_framework_plugin::testkit::paired_apps::<EditorApp<Fem2dPlayApp>>("mem://fem2d-convergence");
 
@@ -695,7 +695,7 @@ mod tests {
     /// see `📓️taxonomy.md`'s forbidden vocabulary), so `import_media("document:in")` now surfaces as a
     /// `Effect::LoadDocument` carrying the replacement document's pack bytes, not an
     /// `artifact_mutations` entry — asserted directly on `Emit` rather than through `app.snapshot()`.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn export_media_document_out_round_trips_via_import_media_document_in() {
         let _app = Fem2dPlayApp;
         let snapshot: Fem2dSnapshot = Fem2dSnapshot::parse_dsl(FEM2D_EXAMPLE_DSL).unwrap();
@@ -716,7 +716,7 @@ mod tests {
         assert_eq!(loaded, snapshot);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn export_media_results_out_returns_json_with_every_case_and_combination() {
         let _app = Fem2dPlayApp;
         let snapshot: Fem2dSnapshot = Fem2dSnapshot::parse_dsl(FEM2D_EXAMPLE_DSL).unwrap();
@@ -740,7 +740,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn export_media_results_out_errors_when_no_load_cases_are_defined() {
         let _app = Fem2dPlayApp;
         let snapshot = crate::artifacts::fem2d::schema::empty_fem2d_snapshot();
@@ -753,7 +753,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn export_media_unknown_port_is_not_implemented() {
         let _app = Fem2dPlayApp;
         let snapshot = crate::artifacts::fem2d::schema::empty_fem2d_snapshot();
@@ -762,7 +762,7 @@ mod tests {
         assert!(matches!(semio_framework_plugin::resolve_ready(Fem2dPlayApp::export_media("bogus:out", &doc)), Err(MediaError::NotImplemented)));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn import_media_geometry_in_builds_a_new_region_from_the_first_material() {
         let _app = Fem2dPlayApp;
         let mut snapshot = crate::artifacts::fem2d::schema::empty_fem2d_snapshot();
@@ -783,7 +783,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn import_media_geometry_in_falls_back_to_unassigned_material_when_none_exists() {
         let _app = Fem2dPlayApp;
         let snapshot = crate::artifacts::fem2d::schema::empty_fem2d_snapshot();

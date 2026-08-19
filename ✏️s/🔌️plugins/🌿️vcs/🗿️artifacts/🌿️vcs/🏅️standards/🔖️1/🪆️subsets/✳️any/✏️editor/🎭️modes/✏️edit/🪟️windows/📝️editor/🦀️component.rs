@@ -65,7 +65,7 @@ mod tests {
     use super::*;
     use crate::editor::vcs::testkit::{app, render as render_body};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn renders_editor_scene() {
         let mut instance = app();
         let json = render_body(&mut instance, VCS_PLAY_BODY_EDITOR);
@@ -76,7 +76,7 @@ mod tests {
         assert!(json.contains(" · Counter "), "missing title/counter summary: {json}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn vcs_labels_resolve_native_english_by_default() {
         let mut instance = app();
         let json = render_body(&mut instance, VCS_PLAY_BODY_EDITOR);

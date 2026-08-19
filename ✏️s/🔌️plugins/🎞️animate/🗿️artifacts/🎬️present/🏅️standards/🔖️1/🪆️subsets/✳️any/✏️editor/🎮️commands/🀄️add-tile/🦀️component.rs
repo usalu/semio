@@ -39,7 +39,7 @@ mod tests {
         dispatch(app, PresentCommand::SeedGrid(crate::editor::animate::commands::seed_grid::SeedGrid { rows: 2, columns: 2 }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_delete_and_rename_tile_round_trip_through_operations() {
         let mut app = present_app();
         app.dispatch_typed(PresentCommand::AddTile(AddTile { crop: None }), &meta("local")).expect("add tile");
@@ -50,7 +50,7 @@ mod tests {
         assert!(crate::artifacts::present::present_working_scene(&app.snapshot().expect("projection")).1.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn patch_tile_crop_clamps_and_is_reversible() {
         use semio_framework_plugin::PluginApp;
         let mut app = present_app();
@@ -66,7 +66,7 @@ mod tests {
     /// MECHANISM); selects the live tile through the real `interactionSelect` action (the only way a
     /// downstream crate can populate a genuine `InteractionView`, see
     /// `🎮️commands/🀄️delete-selection`'s own tests for the equivalent single-tile case).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn delete_selection_removes_only_the_selected_tile() {
         use semio_framework_plugin::{InteractionTarget, PluginApp, INTERACTION_SELECT_ACTION_ID};
         use crate::editor::animate::{PRESENT_INTERACTION_DOMAIN, PRESENT_INTERACTION_GRANULARITY};
@@ -79,7 +79,7 @@ mod tests {
         assert_eq!(crate::artifacts::present::present_working_scene(&app.snapshot().expect("projection")).1.len(), 3, "only the selected tile is removed");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn delete_tile_with_unknown_id_is_a_no_op() {
         let mut app = present_app();
         seed_2x2(&mut app);
@@ -87,7 +87,7 @@ mod tests {
         assert_eq!(crate::artifacts::present::present_working_scene(&app.snapshot().expect("projection")).1.len(), 4, "unknown ids are filtered out before dispatch");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn rename_tiles_with_blank_value_leaves_name_unchanged() {
         let mut app = present_app();
         app.dispatch_typed(PresentCommand::AddTile(AddTile { crop: None }), &meta("local")).expect("add tile");
@@ -97,7 +97,7 @@ mod tests {
         assert_eq!(crate::artifacts::present::present_working_scene(&app.snapshot().expect("projection")).1[0].name, before, "whitespace-only rename is rejected");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn rename_tiles_with_unknown_ids_is_a_no_op() {
         let mut app = present_app();
         app.dispatch_typed(PresentCommand::AddTile(AddTile { crop: None }), &meta("local")).expect("add tile");
@@ -105,7 +105,7 @@ mod tests {
         assert_ne!(crate::artifacts::present::present_working_scene(&app.snapshot().expect("projection")).1[0].name, "Hero");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn patch_tile_crops_covers_all_fields_across_multiple_tiles() {
         let mut app = present_app();
         seed_2x2(&mut app);
@@ -119,14 +119,14 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn patch_tile_crops_targeting_no_existing_tile_is_a_no_op() {
         let mut app = present_app();
         app.dispatch_typed(PresentCommand::PatchTileCrops(patch_tile_crops::PatchTileCrops { ids: vec!["ghost".into()], field: "width".into(), value: 0.4 }), &meta("local")).expect("patch ghost");
         assert!(crate::artifacts::present::present_working_scene(&app.snapshot().expect("projection")).1.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn app_manifest_declares_expected_operations() {
         use semio_framework_plugin::ActionKind;
         let definition = crate::editor::animate::create_animate_present_app();

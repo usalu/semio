@@ -19,7 +19,7 @@ pub struct TxtIntoVcs;
 impl Deserializer<VcsSnapshot> for TxtIntoVcs {
     const FROM: Dialect = TXT_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    async fn deserialize(_payload: &IoPayload) -> IoResult<VcsSnapshot> {
+    fn deserialize(_payload: &IoPayload) -> IoResult<VcsSnapshot> {
         Err(IoError { message: "txt import not yet implemented".to_string(), diagnostics: Vec::new() })
     }
 }

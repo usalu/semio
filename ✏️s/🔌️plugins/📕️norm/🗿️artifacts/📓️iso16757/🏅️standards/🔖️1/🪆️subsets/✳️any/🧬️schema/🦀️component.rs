@@ -628,7 +628,9 @@ pub mod part_5 {
         }
     }
 
-    pub async fn calculate_part_number(rule: &PartNumberRule, inputs: &BTreeMap<String, CatalogueValue>, runtime: &dyn ScriptRuntime) -> Result<String, NormError> {
+    // 🔀️ O1 de-dyn: `ScriptRuntime` has exactly one impl (`DefaultScriptRuntime`) — the trait object is
+    // deleted in favor of the concrete type (an enum of one is worse than none, R11).
+    pub async fn calculate_part_number(rule: &PartNumberRule, inputs: &BTreeMap<String, CatalogueValue>, runtime: &DefaultScriptRuntime) -> Result<String, NormError> {
         match rule {
             PartNumberRule::Literal { value } => Ok(value.clone()),
             PartNumberRule::Table { rows, output_column } => {
@@ -731,7 +733,7 @@ mod compliance_helpers_tests {
     use crate::artifacts::iso16757::Iso16757Snapshot;
     use std::collections::BTreeMap;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn reference_fixture_selects_one_product() {
         let doc = Iso16757Snapshot::default();
         let selection = part_1::select_products(&doc.catalogue, &doc.selection);
@@ -739,7 +741,7 @@ mod compliance_helpers_tests {
         assert!(!selection.ambiguity);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn geometry_bbox_volume_for_box_primitive() {
         let doc = Iso16757Snapshot::default();
         let geom = doc.geometry.objects.get("geom.valve.50").expect("geometry");
@@ -747,7 +749,7 @@ mod compliance_helpers_tests {
         assert!((bbox.volume_m3() - 0.003).abs() < 1e-6);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dictionary_controlled_values_filter_by_subject() {
         let doc = Iso16757Snapshot::default();
         let list = doc.dictionary.controlled_lists.first().expect("list");
@@ -755,7 +757,7 @@ mod compliance_helpers_tests {
         assert_eq!(allowed, vec!["50", "80", "100"]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn part_number_script_is_deterministic() {
         let runtime = part_5::DefaultScriptRuntime;
         let rule = crate::artifacts::iso16757::part_5::PartNumberRule::Script { function_id: "partno".into(), source: "dn * 10 + 50".into() };
@@ -764,7 +766,7 @@ mod compliance_helpers_tests {
         assert_eq!(part_no, "550");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn ifc_step_export_contains_data_section() {
         let doc = Iso16757Snapshot::default();
         let ifc = part_5::build_ifc_catalogue(&doc.catalogue);
@@ -773,7 +775,7 @@ mod compliance_helpers_tests {
         assert!(step.contains("IFCPRODUCT") || step.contains("IfcProduct"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn composition_cycle_detected() {
         let mut doc = Iso16757Snapshot::default();
         doc.catalogue.compositions.insert("product.a".into(), vec![crate::artifacts::iso16757::part_1::CompositionRelationship { component_product_id: "product.b".into(), quantity: 1 }]);
@@ -781,14 +783,14 @@ mod compliance_helpers_tests {
         assert!(part_1::detect_composition_cycle(&doc.catalogue, "product.a"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn script_rejects_forbidden_import() {
         let runtime = part_5::DefaultScriptRuntime;
         let err = runtime.execute("import fs", &HashMap::new(), crate::artifacts::iso16757::part_5::ScriptLimits::default()).unwrap_err();
         assert!(matches!(err, crate::artifacts::iso16757::part_5::ScriptError::InvalidExpression(_)));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn evaluate_constraint_operators() {
         let dec = |v: f64| CatalogueValue::Decimal { value: v };
         let mk = |op, value| crate::artifacts::iso16757::part_1::SelectionConstraint { property_id: "p".into(), operator: op, value };
@@ -803,13 +805,13 @@ mod compliance_helpers_tests {
         assert!(!part_1::evaluate_constraint(&dec(50.0), &mk(crate::artifacts::iso16757::part_1::ConstraintOperator::InRange, range)));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn evaluate_constraint_type_mismatch_returns_false() {
         let constraint = crate::artifacts::iso16757::part_1::SelectionConstraint { property_id: "p".into(), operator: crate::artifacts::iso16757::part_1::ConstraintOperator::LessThan, value: CatalogueValue::Text { value: "x".into() } };
         assert!(!part_1::evaluate_constraint(&CatalogueValue::Decimal { value: 1.0 }, &constraint));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn select_products_filters_by_series_id() {
         let mut doc = Iso16757Snapshot::default();
         let other_series =
@@ -836,7 +838,7 @@ mod compliance_helpers_tests {
         assert_eq!(selection.matches[0].id, "index.cv50");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn select_products_records_missing_property_and_constraint_failures() {
         let mut doc = Iso16757Snapshot::default();
         doc.selection.constraints.push(crate::artifacts::iso16757::part_1::SelectionConstraint {
@@ -859,7 +861,7 @@ mod compliance_helpers_tests {
         assert!(selection.explanations.iter().any(|e| e.contains("constraint failed")));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn select_products_flags_ambiguity_with_multiple_matches() {
         let mut doc = Iso16757Snapshot::default();
         doc.catalogue.product_indexes.push(crate::artifacts::iso16757::part_1::ProductIndex { id: "index.cv50.dup".into(), product_id: "product.cv".into(), variant_id: Some("variant.50".into()), search_tags: Vec::new() });
@@ -868,7 +870,7 @@ mod compliance_helpers_tests {
         assert!(selection.ambiguity);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn resolve_bim_embedding_error_paths() {
         let doc = Iso16757Snapshot::default();
         let unknown_index = part_1::resolve_bim_embedding(&doc.catalogue, "index.unknown", HashMap::new());
@@ -888,7 +890,7 @@ mod compliance_helpers_tests {
         assert!(matches!(out_of_domain, Err(NormError::InvalidValue { field, .. }) if field == "dn"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn resolve_bim_embedding_falls_back_to_series_geometry() {
         let mut doc = Iso16757Snapshot::default();
         doc.catalogue.products[0].variants[0].geometry_id = None;
@@ -896,7 +898,7 @@ mod compliance_helpers_tests {
         assert_eq!(embedding.resolved_geometry_id, doc.catalogue.product_series[0].geometry_id);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn validate_catalogue_structure_flags_issues() {
         let mut doc = Iso16757Snapshot::default();
         doc.catalogue.products.clear();
@@ -918,7 +920,7 @@ mod compliance_helpers_tests {
         assert!(issues.iter().any(|i| i.contains("composition cycle")));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn substitute_parameters_recurses_through_node_kinds() {
         let primitive = crate::artifacts::iso16757::part_2::GeometryNode::Primitive { kind: "box".into(), parameters: BTreeMap::from([("width".into(), 1.0)]) };
         let transform = crate::artifacts::iso16757::part_2::GeometryNode::Transform { translation: [1.0, 0.0, 0.0], rotation_deg: [0.0, 0.0, 0.0], child: Box::new(primitive.clone()) };
@@ -947,7 +949,7 @@ mod compliance_helpers_tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn evaluate_bounding_box_error_paths() {
         let catalogue = crate::artifacts::iso16757::part_2::GeometryCatalogue::default();
         let missing_width = crate::artifacts::iso16757::part_2::GeometryNode::Primitive { kind: "box".into(), parameters: BTreeMap::new() };
@@ -963,7 +965,7 @@ mod compliance_helpers_tests {
         assert!(matches!(part_2::evaluate_bounding_box(&unresolved_ref, &catalogue), Err(NormError::InvalidValue { field, .. }) if field == "geometry_id"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn evaluate_bounding_box_cylinder_sphere_boolean_transform() {
         let catalogue = crate::artifacts::iso16757::part_2::GeometryCatalogue::default();
         let cylinder = crate::artifacts::iso16757::part_2::GeometryNode::Primitive { kind: "cylinder".into(), parameters: BTreeMap::from([("radius".into(), 1.0), ("height".into(), 2.0)]) };
@@ -1004,7 +1006,7 @@ mod compliance_helpers_tests {
         assert_eq!(bbox.max, [1.0, 1.0, 1.0]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn validate_geometry_graph_self_reference_and_cycle() {
         let mut objects = BTreeMap::new();
         let self_ref = crate::artifacts::iso16757::part_2::GeometryObject {
@@ -1050,7 +1052,7 @@ mod compliance_helpers_tests {
         assert!(issues.iter().any(|i| i.contains("cycle in geometry reference")));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn validate_geometry_graph_empty_parameter_binding() {
         let object = crate::artifacts::iso16757::part_2::GeometryObject {
             id: "geom.bind".into(),
@@ -1067,7 +1069,7 @@ mod compliance_helpers_tests {
         assert!(issues.iter().any(|i| i.contains("empty parameter binding")));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn subtype_closure_is_transitive() {
         let dictionary = crate::artifacts::iso16757::part_4::Dictionary {
             reference: crate::artifacts::iso16757::DictionaryRef { id: "d".into(), version: "1".into() },
@@ -1096,7 +1098,7 @@ mod compliance_helpers_tests {
         assert!(closure.contains("a") && closure.contains("b") && closure.contains("c"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn detect_subtype_cycle_true() {
         let subject = |id: &str| crate::artifacts::iso16757::part_4::Subject {
             id: id.into(),
@@ -1131,14 +1133,14 @@ mod compliance_helpers_tests {
         assert!(part_4::detect_subtype_cycle(&dictionary));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn resolve_property_found_and_missing() {
         let doc = Iso16757Snapshot::default();
         assert!(part_4::resolve_property(&doc.dictionary, "prop.dn").is_some());
         assert!(part_4::resolve_property(&doc.dictionary, "prop.unknown").is_none());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn validate_dictionary_flags_dangling_and_cardinality_review() {
         let mut doc = Iso16757Snapshot::default();
         doc.dictionary.relationships.push(crate::artifacts::iso16757::part_4::Relationship {
@@ -1160,7 +1162,7 @@ mod compliance_helpers_tests {
         assert!(issues.iter().any(|i| i.contains("cardinality review")));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn filter_controlled_values_context_rules() {
         let doc = Iso16757Snapshot::default();
         let mut empty_context_list = doc.dictionary.controlled_lists[0].clone();
@@ -1172,7 +1174,7 @@ mod compliance_helpers_tests {
         assert!(part_4::filter_controlled_values(&unrelated_list, "subject.valve", &doc.dictionary).is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn to_iso12006_mappings_basic() {
         let doc = Iso16757Snapshot::default();
         let mappings = part_4::to_iso12006_mappings(&doc.dictionary);
@@ -1181,7 +1183,7 @@ mod compliance_helpers_tests {
         assert_eq!(mappings[0].object_kind, "ProductClass");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn calculate_part_number_table_rule_paths() {
         let runtime = part_5::DefaultScriptRuntime;
         let rows = vec![BTreeMap::from([("dn".to_string(), "50".to_string()), ("code".to_string(), "CV50".to_string())])];
@@ -1201,7 +1203,7 @@ mod compliance_helpers_tests {
         assert_eq!(part_5::calculate_part_number(&literal_rule, &inputs, &runtime).expect("literal"), "LIT-1");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn script_runtime_timeout() {
         let runtime = part_5::DefaultScriptRuntime;
         let limits = crate::artifacts::iso16757::part_5::ScriptLimits { max_steps: 100, max_recursion: 10, timeout_ms: 0 };
@@ -1209,7 +1211,7 @@ mod compliance_helpers_tests {
         assert!(matches!(err, crate::artifacts::iso16757::part_5::ScriptError::Timeout(0)));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn script_runtime_limit_errors() {
         let runtime = part_5::DefaultScriptRuntime;
         let recursion_limits = crate::artifacts::iso16757::part_5::ScriptLimits { max_steps: 1000, max_recursion: 2, timeout_ms: 5_000 };
@@ -1224,7 +1226,7 @@ mod compliance_helpers_tests {
         assert!(matches!(err, crate::artifacts::iso16757::part_5::ScriptError::InvalidExpression(ref e) if e == "unknownVar"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn script_runtime_arithmetic_operators() {
         let runtime = part_5::DefaultScriptRuntime;
         let inputs = HashMap::new();

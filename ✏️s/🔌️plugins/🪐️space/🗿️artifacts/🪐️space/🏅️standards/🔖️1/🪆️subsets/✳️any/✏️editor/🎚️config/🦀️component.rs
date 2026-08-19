@@ -60,7 +60,7 @@ pub struct SpaceIndexConfig {
 }
 
 impl Default for SpaceIndexConfig {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { visibility: "private".into(), members: Vec::new(), presence: Vec::new() }
     }
 }
@@ -200,7 +200,7 @@ impl protocol::OpBinary for SpaceIndexConfigMutation {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn default_config_is_private_with_no_members_or_presence() {
         let config = SpaceIndexConfig::default();
         assert_eq!(config.visibility, "private");
@@ -208,14 +208,14 @@ mod tests {
         assert!(config.presence.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn presence_for_splits_the_csv() {
         let config = SpaceIndexConfig { presence: vec![SpaceIndexArtifactPresence { artifact_id: "artifact-1".into(), actors_csv: "user:1,user:2".into() }], ..Default::default() };
         assert_eq!(config.presence_for("artifact-1"), vec!["user:1", "user:2"]);
         assert!(config.presence_for("ghost").is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn config_dsl_round_trips() {
         let config = SpaceIndexConfig {
             visibility: "public".into(),
@@ -225,7 +225,7 @@ mod tests {
         store::os_store::test_support::assert_dsl_round_trip(&config);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn config_mutation_snapshot_replaces_wholesale_and_inverse_restores() {
         let base = SpaceIndexConfig::default();
         let next = SpaceIndexConfig { visibility: "public".into(), ..Default::default() };
@@ -238,7 +238,7 @@ mod tests {
         assert_eq!(restored, base);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn config_mutation_op_text_round_trips() {
         store::os_store::test_support::assert_op_line_round_trip(&SpaceIndexConfigMutation::Snapshot { config: SpaceIndexConfig::default() });
     }

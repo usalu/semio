@@ -218,7 +218,7 @@ mod tests {
     use crate::editor::remodel::testkit::{app, dispatch};
     use crate::editor::remodel::RemodelCommand;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn import_frame_payload_creates_a_stream_and_asset() {
         let mut app = app();
         testkit_import_checker_stream(&mut app, 3);
@@ -230,7 +230,7 @@ mod tests {
 
     /// 🎞️ In-process video import (the `ImportVideoBytesPayload` fallback path): a tiny synthesized
     /// MJPEG mp4 must decode into a new video stream whose frame count matches what was muxed in.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn import_video_bytes_payload_extracts_frames_in_process() {
         let mut app = app();
         // 🎯️ `IngestParams::default().frame_sample_stride == 5`; force stride 1 so all 5 synthesized
@@ -246,7 +246,7 @@ mod tests {
 
     /// 🎞️ Host-decoded video import path: `ImportVideoFramePayload` ticks followed by `ImportVideoDone`
     /// must accumulate into one stream and write `VideoSource` provenance, all under one coalesce key.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn import_video_frame_payload_then_done_writes_one_stream_with_video_source() {
         let mut app = app();
         for index in 0..4u32 {
@@ -263,7 +263,7 @@ mod tests {
         assert_eq!(scene.streams[0].source.as_ref().expect("video source").frame_count, 4);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_remove_and_sync_streams_edit_the_stream_list() {
         let mut app = app();
         dispatch(&mut app, RemodelCommand::AddStream(add_stream::AddStream { name: "Front".into(), kind: "video".into(), camera_id: "cam-0".into() }));

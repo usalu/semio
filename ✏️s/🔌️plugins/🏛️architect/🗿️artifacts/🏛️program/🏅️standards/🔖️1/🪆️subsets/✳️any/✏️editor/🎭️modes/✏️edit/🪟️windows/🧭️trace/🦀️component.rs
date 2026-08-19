@@ -57,14 +57,14 @@ mod tests {
     use crate::artifacts::program::sample_plugin;
     use crate::artifacts::program::EntityId;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn definition_declares_the_text_editor_surface_and_body_key() {
         let definition = definition();
         assert_eq!(definition.body_key, ARCHITECT_BODY_TRACE);
         assert!(matches!(definition.surface_kind, SurfaceKind::TextEditor));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn no_events_renders_the_empty_placeholder_row() {
         let json = serde_json::to_string(&render(&sample_plugin())).expect("json");
         assert!(json.contains("architect-trace.audit"));
@@ -74,7 +74,7 @@ mod tests {
     /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the audit feed is document-wide
     /// now (no `InteractionView` in `render` to scope it to a selected entity) — every event shows,
     /// not just ones touching one subject.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn renders_every_document_wide_audit_event() {
         let mut program = sample_plugin();
         program.audit_events.push(AuditEvent {

@@ -38,7 +38,7 @@ impl protocol::Inference<SemioSnapshot> for SemioInference {
 /// to `SemioSubsetSnapshot::Brep(..)` (the enum's first-declared variant, not a zero/unit value a
 /// naive derive could reconstruct), so `Default` MUST be tied to `infer`, never derived.
 impl Default for SemioInference {
-    async fn default() -> Self {
+    fn default() -> Self {
         <Self as protocol::Inference<SemioSnapshot>>::infer(&SemioSnapshot::default())
     }
 }
@@ -89,13 +89,13 @@ mod tests {
     use super::*;
     use protocol::Inference;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = SemioSnapshot::default();
         assert_eq!(SemioInference::infer(&snapshot), SemioInference::infer(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(SemioInference::infer(&SemioSnapshot::default()), SemioInference::default());
     }

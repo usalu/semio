@@ -77,13 +77,13 @@ mod tests {
     use protocol::Inference;
 
     //#region 🧪️InferenceLaws
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = crate::artifacts::lowpoly::snapshot_from_mesh_json("{}", "o1", "Object 1");
         assert_eq!(LowpolyInference::infer(&snapshot), LowpolyInference::infer(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(LowpolyInference::infer(&LowpolySnapshot::default()), LowpolyInference::default());
     }

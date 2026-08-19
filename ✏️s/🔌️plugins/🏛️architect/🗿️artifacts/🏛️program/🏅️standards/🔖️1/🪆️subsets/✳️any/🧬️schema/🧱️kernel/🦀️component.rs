@@ -27,19 +27,19 @@ impl EntityId {
 }
 
 impl fmt::Display for EntityId {
-    async fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str(&self.0)
     }
 }
 
 impl Ord for EntityId {
-    async fn cmp(&self, other: &Self) -> Ordering {
+    fn cmp(&self, other: &Self) -> Ordering {
         self.0.cmp(&other.0)
     }
 }
 
 impl PartialOrd for EntityId {
-    async fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         Some(self.cmp(other))
     }
 }
@@ -152,7 +152,7 @@ pub struct TimestampMeta {
 }
 
 impl Default for TimestampMeta {
-    async fn default() -> Self {
+    fn default() -> Self {
         let stamp: String = "1970-01-01T00:00:00Z".into();
         Self { created: stamp.clone(), updated: stamp, created_by: None, updated_by: None }
     }
@@ -315,14 +315,14 @@ pub enum PluginError {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn entity_id_orders_lexicographically() {
         let a = EntityId("element-2".into());
         let b = EntityId("element-10".into());
         assert!(a > b);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn entity_id_serial_increments() {
         let first = EntityId::new_serial("test", "test");
         let second = EntityId::new_serial("test", "test");

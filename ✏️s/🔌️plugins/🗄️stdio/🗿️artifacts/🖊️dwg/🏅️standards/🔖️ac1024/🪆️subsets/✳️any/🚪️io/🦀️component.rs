@@ -1016,7 +1016,7 @@ pub struct DwgLayer {
 }
 
 impl Default for DwgLayer {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { name: "0".to_string(), color: 7 }
     }
 }
@@ -11197,13 +11197,13 @@ mod tests {
     use crate::artifacts::dwg::DwgSnapshot;
     use crate::artifacts::dwg::STDIO_DWG_DOCUMENT_SCHEMA;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn empty_snapshot_matches_schema() {
         let snapshot = crate::artifacts::dwg::standards::v_ac1024::engine::empty_dwg_snapshot();
         assert_eq!(snapshot.schema, STDIO_DWG_DOCUMENT_SCHEMA);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn codec_round_trip() {
         let bytes = dwg_to_bytes(&DwgDrawing::default()).expect("encode empty drawing");
         let snap = crate::artifacts::dwg::schema::snapshot::decode_dwg(&bytes).expect("decode structural drawing");
@@ -11222,7 +11222,7 @@ mod tests {
     /// `DwgStructuralCodec` above (the file's other 20 tests exercised `semio_framework_mesh_engine`
     /// itself, orphaned in that file since its own mesh content dissolved into that crate; those
     /// moved to `semio-framework-mesh-engine`'s own package glue, not here).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dwg_bit_primitives_round_trip_at_unaligned_offsets() {
         let mut writer = DwgBitWriter::new();
         writer.write_bit(true);
@@ -11262,13 +11262,13 @@ mod tests {
         assert_eq!(reader.read_t().unwrap(), "héllo");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dwg_crc16_matches_seed_on_empty_input() {
         assert_eq!(dwg_crc16(0xC0C1, &[]), 0xC0C1);
         assert_ne!(dwg_crc16(0xC0C1, &[1, 2, 3]), 0xC0C1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dwg_writer_produces_a_structurally_valid_container() {
         let bytes = dwg_to_bytes(&DwgDrawing::default()).expect("encode empty drawing");
         assert_eq!(&bytes[0..6], b"AC1015");
@@ -11277,7 +11277,7 @@ mod tests {
         assert_eq!(&bytes[DWG_FILE_HEADER_LEN - 16..DWG_FILE_HEADER_LEN], &DWG_SENTINEL_FILE_HEADER_END);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dwg_full_entity_set_round_trips() {
         let mut drawing = DwgDrawing::default();
         let layer_a = drawing.ensure_layer("outline");
@@ -11310,7 +11310,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dwg_mesh_bridge_round_trips_triangle_count_and_positions() {
         let mesh = semio_framework_mesh_engine::mesh_box(2.0, 2.0, 2.0);
         let drawing = mesh_to_dwg_drawing(&mesh);
@@ -11321,7 +11321,7 @@ mod tests {
         assert_eq!(decoded_mesh.vertex_count(), mesh.vertex_count());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dwg_path_bridge_round_trips_cubic_control_points_exactly() {
         let paths = vec![vec![DwgPathSegment::Move { to: [0.0, 0.0] }, DwgPathSegment::Line { to: [5.0, 0.0] }, DwgPathSegment::Cubic { ctrl1: [6.0, 1.0], ctrl2: [7.0, 3.0], to: [5.0, 4.0] }, DwgPathSegment::Close]];
         let drawing = paths_to_dwg_drawing(&paths);
@@ -11339,7 +11339,7 @@ mod tests {
         assert!(line_found, "expected the polyline segment to survive the dwg round trip");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dwg_rejects_unsupported_version() {
         let mut bytes = dwg_to_bytes(&DwgDrawing::default()).expect("encode");
         bytes[0..6].copy_from_slice(b"AC1018");
@@ -11347,7 +11347,7 @@ mod tests {
         assert!(err.contains("AC1018"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dwg_reader_skips_unknown_object_types_without_failing() {
         let mut drawing = DwgDrawing::default();
         let layer = drawing.ensure_layer("0");
@@ -11379,7 +11379,7 @@ mod tests {
         assert_eq!(decoded.entities.len(), 1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dwg_ensure_layer_reuses_existing_index_and_appends_new_ones() {
         let mut drawing = DwgDrawing::default();
         let outline = drawing.ensure_layer("outline");
@@ -11392,7 +11392,7 @@ mod tests {
     //#endregion 🔖️RelocatedDwgCodecUnit
 
     //#region 🔖️Lz77VariantUnit
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn lcg_decrypt_is_its_own_inverse() {
         let plain: Vec<u8> = (0..R2004_HEADER_LEN as u8).collect();
         let enc = decrypt_r2004_header(&plain);
@@ -11400,7 +11400,7 @@ mod tests {
         assert_eq!(dec, plain);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn lz_round_trip_literal_only_stream() {
         // opcode low-nibble 3 -> literal run length 3+3=6, followed by 6 literal bytes, then the
         // 0x11 terminator (read as the "next opcode" by `copy_bytes`'s trailing byte read).
@@ -11411,7 +11411,7 @@ mod tests {
         assert_eq!(&out, b"abcdef");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn lz_writer_roundtrips_every_literal_length_boundary() {
         for length in [4usize, 18, 19, 20, 272, 273, 274, 527, 528, 4096] {
             let input: Vec<u8> = (0..length).map(|index| index as u8).collect();
@@ -11421,14 +11421,14 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn page_checksum_supports_seeded_stages() {
         assert_eq!(r2004_page_checksum(0, b""), 0);
         let header = r2004_page_checksum(0, b"header");
         assert_eq!(r2004_page_checksum(header, b"payload"), 0x250a0553);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn lz_rejects_out_of_bounds_backref() {
         // opcode 0x40 (short-match branch, comp_bytes=(0x40>>4)-1=3) with a huge encoded offset
         // and nothing decoded yet -- must error, never panic or fabricate bytes.
@@ -11444,7 +11444,7 @@ mod tests {
     /// 🧪️ D1: file header decrypts cleanly and every section+page is located by name, on the
     /// real ~145KB AC1024 fixture -- the actual regression test for "sentinel + passthrough"
     /// (the pre-ticket behavior, which never found a single real section on this file).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn real_fixture_d1_locates_every_named_section() {
         let sections = locate_r2004_sections(ARCHITECTURAL_FIXTURE).expect("D1 section location");
         let expected_names =
@@ -11467,7 +11467,7 @@ mod tests {
     /// sections, copies) into nonzero real bytes -- the genuine "not just located but decoded"
     /// bar. `AcDb:Header`/`AcDb:Classes`/`AcDb:Handles` are asserted individually since they're
     /// the sections D4/D5 (stretch) would need to interpret further.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn real_fixture_d2_decompresses_every_section() {
         let sections = decode_r2004_sections(ARCHITECTURAL_FIXTURE).expect("D2 section decode");
         let mut any_errors = Vec::new();
@@ -11489,7 +11489,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn real_fixture_r2010_object_frames_are_logically_identified() {
         let sections = decode_r2004_sections(ARCHITECTURAL_FIXTURE).expect("D2 section decode");
         let inventory = r2010_object_inventory(&sections).expect("R2010 object framing");
@@ -11501,7 +11501,7 @@ mod tests {
         assert!(counts.contains_key(&DWG_TYPE_LAYER), "real fixture must contain layer records");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn real_fixture_classes_roundtrip_as_logical_records() {
         let sections = decode_r2004_sections(ARCHITECTURAL_FIXTURE).expect("D2 section decode");
         let section = sections.iter().find(|section| section.name == "AcDb:Classes").expect("classes section");
@@ -11512,7 +11512,7 @@ mod tests {
         assert_eq!(reconstructed, classes);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn real_fixture_named_sections_roundtrip_as_logical_records() {
         let sections = decode_r2004_sections(ARCHITECTURAL_FIXTURE).expect("D2 section decode");
         let document = decode_r2004_document_sections(ARCHITECTURAL_FIXTURE).expect("typed document sections");
@@ -11527,7 +11527,7 @@ mod tests {
     /// match the file header's own `last_section_address` field (decrypted from a completely
     /// different byte range) -- if the LZ decompressor or page-directory parser silently
     /// produced wrong-but-plausible-looking output, this arithmetic identity would not hold.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn real_fixture_page_directory_matches_header_cross_check() {
         let enc = &ARCHITECTURAL_FIXTURE[0x80..0x80 + R2004_HEADER_LEN];
         let hdr = parse_r2004_file_header(&decrypt_r2004_header(enc)).expect("header decrypt");
@@ -11558,7 +11558,7 @@ mod tests {
     }
 
     /// 🔁 Exact imported bytes survive every persisted snapshot/diff/mutation/raw-I/O route.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn well_known_fixture_lossless_system_roundtrip() {
         use crate::artifacts::binary::{BinarySnapshot, STDIO_BINARY_DOCUMENT_SCHEMA};
         use crate::artifacts::dwg::schema::diff::DwgDiff;
@@ -11651,7 +11651,7 @@ mod tests {
 
         /// ✅️ "committed files parse": all 6 handcrafted `.grammar.semio`/`.protocol.semio` files
         /// parse under the real dialect.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn committed_facet_files_parse() {
             for (label, text) in [
                 ("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO),
@@ -11672,7 +11672,7 @@ mod tests {
             }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn schema_facets_contain_no_container_shadow_state() {
             let descriptor = crate::artifacts::dwg::schema::dwg_artifact_schema_descriptor();
             let inference_descriptor = inferences::dwg_artifact_inference_descriptor();
@@ -11732,7 +11732,7 @@ mod tests {
         /// ✅️ `grammar_conformance_law`: the snapshot grammar recognizes real `print_dsl` output
         /// for the ac1024 demo snapshot AND the real, ~145KB `architectural.dwg` fixture (a
         /// second, genuinely non-trivial real-fixture recognition, beyond the minimal demo stub).
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn grammar_conformance_law() {
             let grammar = dsl::parse_grammar(snapshot::text::COMPONENT_GRAMMAR_SEMIO).expect("parse snapshot grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
@@ -11750,7 +11750,7 @@ mod tests {
 
         /// ✅️ `ops_grammar_conformance_law`: the mutations grammar recognizes real `print_op`
         /// output for every `mutations::demo_mutation_cases()` variant.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn ops_grammar_conformance_law() {
             let grammar = dsl::parse_grammar(mutations::text::COMPONENT_GRAMMAR_SEMIO).expect("parse mutations grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
@@ -11763,7 +11763,7 @@ mod tests {
         /// ✅️ `diff_grammar_conformance_law`: the diff grammar recognizes real `print_diff` output
         /// for every `diff::demo_diff_cases()`, incl. the empty (all-`None`) diff and a rich
         /// `sections` triple case.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn diff_grammar_conformance_law() {
             let grammar = dsl::parse_grammar(diff::text::COMPONENT_GRAMMAR_SEMIO).expect("parse diff grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
@@ -11777,7 +11777,7 @@ mod tests {
         /// snapshot pack (`encode_pack`, envelope-unwrapped first, both the demo AND the real
         /// architectural.dwg fixture), every demo mutation's `encode_op`, and every demo diff's
         /// `encode_diff` — asserting `consumed == bytes.len()`.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn protocol_walk_law() {
             let pack_spec = dsl::parse_protocol(snapshot::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
             let packed = store::ArtifactPack::encode_pack(&crate::artifacts::dwg::standards::v_ac1024::engine::demo_dwg_snapshot());
@@ -11808,7 +11808,7 @@ mod tests {
 
         /// ✅️ `fixture_honesty_law`: the shipped `.dsl.semio`/`.pack.semio` fixtures are GENUINE
         /// `print_dsl`/`encode_pack` output of `demo_dwg_snapshot()`.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn fixture_honesty_law() {
             const FIXTURE_DSL: &str = include_str!("../../../../🔖️ac1018/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
             const FIXTURE_PACK: &[u8] = include_bytes!("../../../../🔖️ac1018/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🎒️example.pack.semio");
@@ -11844,7 +11844,7 @@ pub mod io_registry {
     }
 }
 //#endregion 🚪️DerivedIoRegistry
-#[test]
+#[semio_framework_async_macros::async_test]
 async fn schema_facets_reject_imported_byte_shadow_state() {
     let facets = [
         include_str!("../🧬️schema/📸️snapshot/🦀️component.rs"),

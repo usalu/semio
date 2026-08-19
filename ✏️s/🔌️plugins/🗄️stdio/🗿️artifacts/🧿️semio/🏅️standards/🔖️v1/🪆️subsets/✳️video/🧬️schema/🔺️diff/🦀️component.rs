@@ -797,7 +797,7 @@ mod handcrafted_diff_codec_tests {
     /// AND, within the same modified stream, nested `samples.removed`/`.modified` (reverse
     /// direction additionally exercises nested `samples.added`), a `SemioVideoStreamKind` enum
     /// change, and every stream-level scalar field.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn diff_codec_text_binary_roundtrip_law() {
         let a = snapshot_a();
         let b = snapshot_b();

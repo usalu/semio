@@ -38,28 +38,28 @@ mod tests {
     use protocol::testkit::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
     use protocol::{Mutation, MutationDiff, MutationKind, SemanticMutation};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn vcs_demo_mutation_round_trips_store() {
         let mut store = store::ArtifactStore::<VcsSnapshot, VcsDemoMutation>::new(store::create_document_envelope("vcs.document", "vcs", empty_vcs_snapshot(), None)).expect("valid artifact store fixture");
         store.dispatch(store::ArtifactCommand::Apply { mutations: vec![change_counter(3)], description: None }).expect("apply");
         assert_eq!(store.snapshot().expect("snapshot").counter, 3);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn rename_vcs_inverse_law_holds() {
         let base = empty_vcs_snapshot();
         let mutation = rename_vcs("Renamed".into());
         assert_mutation_inverse_law(&base, &mutation);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn change_counter_inverse_law_holds() {
         let base = empty_vcs_snapshot();
         let mutation = change_counter(42);
         assert_mutation_inverse_law(&base, &mutation);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_tag_then_remove_tag_inverse_laws_hold() {
         let base = empty_vcs_snapshot();
         assert_mutation_inverse_law(&base, &add_tag("wip".into()));
@@ -68,7 +68,7 @@ mod tests {
         assert_mutation_inverse_law(&with_tag, &remove_tag("wip".into()));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn change_notes_diff_absorb_law_holds() {
         let base = empty_vcs_snapshot();
         let d1 = change_notes("first".into()).diff(&base).into_parts().0;
@@ -77,7 +77,7 @@ mod tests {
         assert_mutation_diff_absorb_law(&base, d1, d2);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_tag_is_a_noop_when_base_already_has_the_tag() {
         let mut base = empty_vcs_snapshot();
         base.tags.push("wip".into());
@@ -94,14 +94,14 @@ mod tests {
     /// mapping and reasoning). `assert_fatal_never_applies` has no meaningful call site: this facet
     /// introduces no Fatal path (no `duplicate-id`/`invariant` verb in its vocabulary).
     /// `assert_outcome_policy_matrix` is not landed under that name — only `assert_policy_matrix`.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn remove_tag_missing_target_is_error() {
         let base = empty_vcs_snapshot();
         let mutation = VcsDemoMutation::RemoveTag(RemoveTag { tag: "gone".into() });
         protocol::testkit::assert_missing_target_is_error(&base, &mutation);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dispatch_registers_semantic_descriptors() {
         register_vcs_demo_mutation_descriptors();
         for kind in VcsDemoMutation::kinds() {

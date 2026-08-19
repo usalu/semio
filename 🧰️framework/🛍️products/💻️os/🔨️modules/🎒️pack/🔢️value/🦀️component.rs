@@ -47,7 +47,7 @@ const TAG_EXPR: u8 = 0x17;
 //#region 🔖️Canonical
 /// @emoji ✂️ Extracts a `List`/`Tuple` field's element `Shape`, if `shape` is one of those two
 /// variants — the seam shared by encode and decode so both walk exactly the same element type.
-fn elem_shape_of(shape: Option<&Shape>) -> Option<&Shape> {
+async fn elem_shape_of(shape: Option<&Shape>) -> Option<&Shape> {
     match shape {
         Some(Shape::Tuple(elem, _)) | Some(Shape::List(elem)) => Some(elem),
         _ => None,
@@ -55,7 +55,7 @@ fn elem_shape_of(shape: Option<&Shape>) -> Option<&Shape> {
 }
 
 /// @emoji 📊️ Extracts a `Table` field's lazy element-spec constructor, if `shape` is `Table`.
-fn table_spec_of(shape: Option<&Shape>) -> Option<fn() -> RecordSpec> {
+async fn table_spec_of(shape: Option<&Shape>) -> Option<fn() -> RecordSpec> {
     match shape {
         Some(Shape::Table(spec_fn)) => Some(*spec_fn),
         _ => None,
@@ -63,28 +63,28 @@ fn table_spec_of(shape: Option<&Shape>) -> Option<fn() -> RecordSpec> {
 }
 
 /// @emoji 🧾️ Resolves a `Record` field's nested spec, if `shape` is `Record`.
-fn record_spec_of(shape: Option<&Shape>) -> Option<RecordSpec> {
+async fn record_spec_of(shape: Option<&Shape>) -> Option<RecordSpec> {
     match shape {
         Some(Shape::Record(spec_fn)) => Some(spec_fn()),
         _ => None,
     }
 }
 
-fn block_inner_shape(shape: Option<&Shape>) -> Option<&Shape> {
+async fn block_inner_shape(shape: Option<&Shape>) -> Option<&Shape> {
     match shape {
         Some(Shape::Block(inner)) => Some(inner),
         _ => None,
     }
 }
 
-fn statements_variants(shape: Option<&Shape>) -> Option<&Vec<(String, fn() -> RecordSpec)>> {
+async fn statements_variants(shape: Option<&Shape>) -> Option<&Vec<(String, fn() -> RecordSpec)>> {
     match shape {
         Some(Shape::Statements(variants)) => Some(variants),
         _ => None,
     }
 }
 
-fn map_inner_shape(shape: Option<&Shape>) -> Option<&Shape> {
+async fn map_inner_shape(shape: Option<&Shape>) -> Option<&Shape> {
     match shape {
         Some(Shape::Map(inner)) => Some(inner),
         _ => None,
@@ -97,12 +97,12 @@ fn map_inner_shape(shape: Option<&Shape>) -> Option<&Shape> {
 /// the ONLY signal decode has left to reconstruct the right `FieldValue` variant. Every shape here
 /// is a fixed-arity number tuple by construction (`Coord`/`Dir`/`Dim`/`Range`'s own parsers in
 /// `dsl_schema` never produce anything else), so this can never rebuild the wrong shape.
-fn is_tuple_shape(shape: Option<&Shape>) -> bool {
+async fn is_tuple_shape(shape: Option<&Shape>) -> bool {
     matches!(shape, Some(Shape::Tuple(_, _)) | Some(Shape::Coord(_)) | Some(Shape::Dir) | Some(Shape::Dim(_)) | Some(Shape::Range))
 }
 
 /// @emoji 🛡️ Depth-limit check shared by every recursive encode/decode entry point.
-fn check_depth(max_depth: u16, depth: u16) -> Result<(), PackError> {
+async fn check_depth(max_depth: u16, depth: u16) -> Result<(), PackError> {
     if depth > max_depth {
         return Err(PackError::LimitExceeded("max_depth exceeded"));
     }
@@ -111,7 +111,7 @@ fn check_depth(max_depth: u16, depth: u16) -> Result<(), PackError> {
 
 /// @emoji 🔢️ Canonical `f64` normalization preserves signed zero and maps any `NaN` to the
 /// single quiet-NaN bit pattern `0x7ff8_0000_0000_0000`.
-fn normalize_f64(value: f64) -> f64 {
+async fn normalize_f64(value: f64) -> f64 {
     if value.is_nan() {
         f64::from_bits(0x7ff8_0000_0000_0000)
     } else {
@@ -129,7 +129,7 @@ enum NumKind {
 /// variant (`Float`, `Int`, `Enum`) or every element is `UInt` and fits in `i64` (so the zigzag
 /// round trip through `PackedVarint` is lossless). Empty sequences are never eligible — there is
 /// no element to infer a kind from, so they fall through to the plain `0x0B`/`0x0C` forms.
-fn homogeneous_numeric_kind(items: &[FieldValue]) -> Option<NumKind> {
+async fn homogeneous_numeric_kind(items: &[FieldValue]) -> Option<NumKind> {
     if items.is_empty() {
         return None;
     }
@@ -159,7 +159,7 @@ struct EncCtx<'a> {
 
 /// @emoji 📖️ Encodes a string using the precomputed interning decision: `TAG_STR` + symref if
 /// `s` made it into the symbol table, else `TAG_STR_INLINE` + length-prefixed UTF-8 bytes.
-fn encode_string(ctx: &mut EncCtx<'_>, s: &str, out: &mut Vec<u8>) {
+async fn encode_string(ctx: &mut EncCtx<'_>, s: &str, out: &mut Vec<u8>) {
     if let Some(&idx) = ctx.symbol_index.get(s) {
         out.push(TAG_STR);
         write_varint_u64(out, idx);
@@ -170,7 +170,7 @@ fn encode_string(ctx: &mut EncCtx<'_>, s: &str, out: &mut Vec<u8>) {
 
 /// @emoji 📌️ Forces `TAG_STR_INLINE` regardless of the interning decision — the wire rule for
 /// `Value`/`DslValue::Object` keys, which are never symrefs.
-fn encode_string_inline(s: &str, out: &mut Vec<u8>) {
+async fn encode_string_inline(s: &str, out: &mut Vec<u8>) {
     out.push(TAG_STR_INLINE);
     write_varint_u64(out, s.len() as u64);
     out.extend_from_slice(s.as_bytes());
@@ -178,7 +178,7 @@ fn encode_string_inline(s: &str, out: &mut Vec<u8>) {
 
 /// @emoji 🔗️ Writes a bare symref varint with NO leading tag — the wire rule for `Statements`
 /// keywords and `TableSoA` `Str` columns, both of which are unconditionally interned.
-fn write_symref_forced(ctx: &mut EncCtx<'_>, s: &str, out: &mut Vec<u8>) -> Result<(), PackError> {
+async fn write_symref_forced(ctx: &mut EncCtx<'_>, s: &str, out: &mut Vec<u8>) -> Result<(), PackError> {
     let idx = *ctx.symbol_index.get(s).ok_or_else(|| PackError::Schema(format!("symbol {s:?} missing from precomputed table")))?;
     write_varint_u64(out, idx);
     Ok(())
@@ -190,10 +190,10 @@ fn write_symref_forced(ctx: &mut EncCtx<'_>, s: &str, out: &mut Vec<u8>) -> Resu
 /// table — a `len <= 128 || count >= 2` string, or any forced one, is interned; everything else
 /// stays inline. Sorting (rather than first-occurrence order) is what keeps this a pure function
 /// of `(spec, record)` regardless of `HashMap` iteration order.
-fn build_symbols(spec: &RecordSpec, record: &RecordValue) -> Vec<String> {
+async fn build_symbols(spec: &RecordSpec, record: &RecordValue) -> Vec<String> {
     let mut counts: HashMap<String, u64> = HashMap::new();
     let mut forced: HashSet<String> = HashSet::new();
-    walk_record_for_symbols(&mut counts, &mut forced, Some(spec), record);
+    walk_record_for_symbols(&mut counts, &mut forced, Some(spec), record).await;
     let mut set: HashSet<String> = forced;
     for (s, count) in &counts {
         if s.len() <= 128 || *count >= 2 {
@@ -205,16 +205,19 @@ fn build_symbols(spec: &RecordSpec, record: &RecordValue) -> Vec<String> {
     symbols
 }
 
-fn note_symbol(counts: &mut HashMap<String, u64>, s: &str) {
+async fn note_symbol(counts: &mut HashMap<String, u64>, s: &str) {
     *counts.entry(s.to_string()).or_insert(0) += 1;
 }
 
-fn force_symbol(counts: &mut HashMap<String, u64>, forced: &mut HashSet<String>, s: &str) {
+async fn force_symbol(counts: &mut HashMap<String, u64>, forced: &mut HashSet<String>, s: &str) {
     forced.insert(s.to_string());
-    note_symbol(counts, s);
+    note_symbol(counts, s).await;
 }
 
-fn walk_record_for_symbols(counts: &mut HashMap<String, u64>, forced: &mut HashSet<String>, spec: Option<&RecordSpec>, record: &RecordValue) {
+/// 🔁️ Mutually recursive with `walk_value_for_symbols` — every edge in that cycle is boxed
+/// (`Box::pin(...).await`) because an `async fn`'s own opaque `Future` type cannot embed itself or
+/// a cycle-partner's opaque type at an unboxed, unbounded size (R10 residue shape 3).
+async fn walk_record_for_symbols(counts: &mut HashMap<String, u64>, forced: &mut HashSet<String>, spec: Option<&RecordSpec>, record: &RecordValue) {
     let mut ids: Vec<u16> = record.fields.keys().copied().collect();
     ids.sort_unstable();
     for id in ids {
@@ -223,21 +226,21 @@ fn walk_record_for_symbols(counts: &mut HashMap<String, u64>, forced: &mut HashS
             continue;
         }
         let shape = spec.and_then(|s| s.fields.iter().find(|f| f.id == id)).map(|f| &f.shape);
-        walk_value_for_symbols(counts, forced, shape, value);
+        Box::pin(walk_value_for_symbols(counts, forced, shape, value)).await;
     }
 }
 
-fn walk_value_for_symbols(counts: &mut HashMap<String, u64>, forced: &mut HashSet<String>, shape: Option<&Shape>, value: &FieldValue) {
+async fn walk_value_for_symbols(counts: &mut HashMap<String, u64>, forced: &mut HashSet<String>, shape: Option<&Shape>, value: &FieldValue) {
     match value {
-        FieldValue::Text(s) => note_symbol(counts, s),
+        FieldValue::Text(s) => note_symbol(counts, s).await,
         FieldValue::Tuple(items) => {
-            let elem = elem_shape_of(shape);
+            let elem = elem_shape_of(shape).await;
             for it in items {
-                walk_value_for_symbols(counts, forced, elem, it);
+                Box::pin(walk_value_for_symbols(counts, forced, elem, it)).await;
             }
         }
         FieldValue::List(items) => {
-            if let Some(spec_fn) = table_spec_of(shape) {
+            if let Some(spec_fn) = table_spec_of(shape).await {
                 // Walk each row's `TableSoA` columns, forcing `Text`-typed columns (they're
                 // always symrefs on the wire) and recursing generically into every other column
                 // shape for nested strings.
@@ -251,77 +254,78 @@ fn walk_value_for_symbols(counts: &mut HashMap<String, u64>, forced: &mut HashSe
                         }
                         if matches!(field.shape, Shape::Text) {
                             if let FieldValue::Text(s) = v {
-                                force_symbol(counts, forced, s);
+                                force_symbol(counts, forced, s).await;
                             }
                         } else {
-                            walk_value_for_symbols(counts, forced, Some(&field.shape), v);
+                            Box::pin(walk_value_for_symbols(counts, forced, Some(&field.shape), v)).await;
                         }
                     }
                 }
             } else {
-                let elem = elem_shape_of(shape);
+                let elem = elem_shape_of(shape).await;
                 for it in items {
-                    walk_value_for_symbols(counts, forced, elem, it);
+                    Box::pin(walk_value_for_symbols(counts, forced, elem, it)).await;
                 }
             }
         }
         FieldValue::Record(r) => {
-            let spec = record_spec_of(shape);
-            walk_record_for_symbols(counts, forced, spec.as_ref(), r);
+            let spec = record_spec_of(shape).await;
+            Box::pin(walk_record_for_symbols(counts, forced, spec.as_ref(), r)).await;
         }
-        FieldValue::Block(inner) => walk_value_for_symbols(counts, forced, block_inner_shape(shape), inner),
+        FieldValue::Block(inner) => Box::pin(walk_value_for_symbols(counts, forced, block_inner_shape(shape).await, inner)).await,
         FieldValue::Statements(items) => {
-            let variants = statements_variants(shape);
+            let variants = statements_variants(shape).await;
             for (keyword, record) in items {
-                force_symbol(counts, forced, keyword);
+                force_symbol(counts, forced, keyword).await;
                 let spec = variants.and_then(|vs| vs.iter().find(|(k, _)| k == keyword)).map(|(_, f)| f());
-                walk_record_for_symbols(counts, forced, spec.as_ref(), record);
+                Box::pin(walk_record_for_symbols(counts, forced, spec.as_ref(), record)).await;
             }
         }
         FieldValue::Map(entries) => {
-            let inner = map_inner_shape(shape);
+            let inner = map_inner_shape(shape).await;
             for (k, v) in entries {
-                note_symbol(counts, k);
-                walk_value_for_symbols(counts, forced, inner, v);
+                note_symbol(counts, k).await;
+                Box::pin(walk_value_for_symbols(counts, forced, inner, v)).await;
             }
         }
-        FieldValue::Value(v) => walk_dsl_value_for_symbols(counts, v),
+        FieldValue::Value(v) => walk_dsl_value_for_symbols(counts, v).await,
         FieldValue::Wire(w) => {
-            note_symbol(counts, &w.from.id);
+            note_symbol(counts, &w.from.id).await;
             if let Some(k) = &w.from.kind {
-                note_symbol(counts, k);
+                note_symbol(counts, k).await;
             }
             if let Some(p) = &w.from.port {
-                note_symbol(counts, p);
+                note_symbol(counts, p).await;
             }
             if let Some((_, to)) = &w.edge {
-                note_symbol(counts, &to.id);
+                note_symbol(counts, &to.id).await;
                 if let Some(k) = &to.kind {
-                    note_symbol(counts, k);
+                    note_symbol(counts, k).await;
                 }
                 if let Some(p) = &to.port {
-                    note_symbol(counts, p);
+                    note_symbol(counts, p).await;
                 }
             }
-            walk_dsl_value_for_symbols(counts, &w.properties);
+            walk_dsl_value_for_symbols(counts, &w.properties).await;
         }
         _ => {}
     }
 }
 
 /// @emoji 🌱️ `DslValue::Object` keys are always inline (never interned) per the wire contract, so
-/// only `String` leaves and array/object values are walked here.
-fn walk_dsl_value_for_symbols(counts: &mut HashMap<String, u64>, v: &DslValue) {
+/// only `String` leaves and array/object values are walked here. Self-recursive (Array/Object
+/// arms), so its own recursive calls are boxed for the same reason as `walk_record_for_symbols`.
+async fn walk_dsl_value_for_symbols(counts: &mut HashMap<String, u64>, v: &DslValue) {
     match v {
-        DslValue::String(s) => note_symbol(counts, s),
+        DslValue::String(s) => note_symbol(counts, s).await,
         DslValue::Array(items) => {
             for it in items {
-                walk_dsl_value_for_symbols(counts, it);
+                Box::pin(walk_dsl_value_for_symbols(counts, it)).await;
             }
         }
         DslValue::Object(entries) => {
             for (_, v) in entries {
-                walk_dsl_value_for_symbols(counts, v);
+                Box::pin(walk_dsl_value_for_symbols(counts, v)).await;
             }
         }
         _ => {}
@@ -337,8 +341,8 @@ fn walk_dsl_value_for_symbols(counts: &mut HashMap<String, u64>, v: &DslValue) {
 /// genuinely schema-less context (an unrecognized `Statements` variant, a shape/value mismatch);
 /// fields are then encoded generically. `options.preserve_unknown == false` drops fields whose id
 /// isn't found in `spec` instead of encoding them.
-fn encode_record_fields(ctx: &mut EncCtx<'_>, spec: Option<&RecordSpec>, record: &RecordValue, depth: u16) -> Result<Vec<u8>, PackError> {
-    check_depth(ctx.options.limits.max_depth, depth)?;
+async fn encode_record_fields(ctx: &mut EncCtx<'_>, spec: Option<&RecordSpec>, record: &RecordValue, depth: u16) -> Result<Vec<u8>, PackError> {
+    check_depth(ctx.options.limits.max_depth, depth).await?;
     let preserve_unknown = ctx.options.preserve_unknown;
     let mut ids: Vec<u16> = record.fields.iter().filter(|(_, v)| !matches!(v, FieldValue::Absent)).filter(|(id, _)| preserve_unknown || spec.is_some_and(|s| s.fields.iter().any(|f| f.id == **id))).map(|(id, _)| *id).collect();
     ids.sort_unstable();
@@ -348,7 +352,7 @@ fn encode_record_fields(ctx: &mut EncCtx<'_>, spec: Option<&RecordSpec>, record:
         let value = record.fields.get(&id).expect("id came from this map's own keys");
         write_varint_u64(&mut buf, id as u64);
         let field_shape = spec.and_then(|s| s.fields.iter().find(|f| f.id == id)).map(|f| &f.shape);
-        encode_value(ctx, field_shape, value, depth + 1, &mut buf)?;
+        Box::pin(encode_value(ctx, field_shape, value, depth + 1, &mut buf)).await?;
     }
     Ok(buf)
 }
@@ -359,8 +363,12 @@ fn encode_record_fields(ctx: &mut EncCtx<'_>, spec: Option<&RecordSpec>, record:
 /// encodes the value generically from its runtime `FieldValue` variant alone — the path used for
 /// field ids absent from the caller's `RecordSpec`, which is what makes unknown-field
 /// preservation possible without ever having seen their original schema.
-fn encode_value(ctx: &mut EncCtx<'_>, shape: Option<&Shape>, value: &FieldValue, depth: u16, out: &mut Vec<u8>) -> Result<(), PackError> {
-    check_depth(ctx.options.limits.max_depth, depth)?;
+// 🔁️ Mutually recursive with `encode_record_fields`/`encode_seq`/`encode_map` (and directly
+// self-recursive for `Block`) — every edge in that cycle is `Box::pin(...).await` (R10 residue
+// shape 3): an `async fn`'s own opaque `Future` type cannot embed itself or a cycle-partner's
+// opaque type at an unboxed, unbounded size.
+async fn encode_value(ctx: &mut EncCtx<'_>, shape: Option<&Shape>, value: &FieldValue, depth: u16, out: &mut Vec<u8>) -> Result<(), PackError> {
+    check_depth(ctx.options.limits.max_depth, depth).await?;
     match value {
         FieldValue::Absent => out.push(TAG_ABSENT),
         FieldValue::Bool(b) => out.push(if *b { TAG_TRUE } else { TAG_FALSE }),
@@ -374,48 +382,48 @@ fn encode_value(ctx: &mut EncCtx<'_>, shape: Option<&Shape>, value: &FieldValue,
         }
         FieldValue::Float(f) => {
             out.push(TAG_F64);
-            out.extend_from_slice(&normalize_f64(*f).to_le_bytes());
+            out.extend_from_slice(&normalize_f64(*f).await.to_le_bytes());
         }
-        FieldValue::Text(s) => encode_string(ctx, s, out),
-        FieldValue::Bytes64(bytes) => encode_bytes(ctx, bytes, out)?,
+        FieldValue::Text(s) => encode_string(ctx, s, out).await,
+        FieldValue::Bytes64(bytes) => encode_bytes(ctx, bytes, out).await?,
         FieldValue::Enum(ordinal) => {
             out.push(TAG_ENUM);
             write_varint_u64(out, *ordinal as u64);
         }
-        FieldValue::Tuple(items) => encode_seq(ctx, items, elem_shape_of(shape), true, depth, out)?,
+        FieldValue::Tuple(items) => encode_seq(ctx, items, elem_shape_of(shape).await, true, depth, out).await?,
         FieldValue::List(items) => {
-            if let Some(spec_fn) = table_spec_of(shape) {
-                encode_table(ctx, spec_fn, items, depth, out)?;
+            if let Some(spec_fn) = table_spec_of(shape).await {
+                encode_table(ctx, spec_fn, items, depth, out).await?;
             } else {
-                encode_seq(ctx, items, elem_shape_of(shape), false, depth, out)?;
+                encode_seq(ctx, items, elem_shape_of(shape).await, false, depth, out).await?;
             }
         }
         FieldValue::Record(record) => {
             let nested_spec = record_spec_of(shape);
             out.push(TAG_RECORD);
-            let fields = encode_record_fields(ctx, nested_spec.as_ref(), record, depth + 1)?;
+            let fields = encode_record_fields(ctx, nested_spec.await.as_ref(), record, depth + 1).await?;
             out.extend_from_slice(&fields);
         }
         FieldValue::Block(inner) => {
             out.push(TAG_BLOCK);
-            encode_value(ctx, block_inner_shape(shape), inner, depth + 1, out)?;
+            Box::pin(encode_value(ctx, block_inner_shape(shape).await, inner, depth + 1, out)).await?;
         }
-        FieldValue::Statements(items) => encode_statements(ctx, statements_variants(shape), items, depth, out)?,
-        FieldValue::Map(entries) => encode_map(ctx, entries, map_inner_shape(shape), depth, out)?,
+        FieldValue::Statements(items) => encode_statements(ctx, statements_variants(shape).await, items, depth, out).await?,
+        FieldValue::Map(entries) => encode_map(ctx, entries, map_inner_shape(shape).await, depth, out).await?,
         FieldValue::Value(v) => {
             out.push(TAG_VALUE);
-            encode_dsl_value(ctx, v, depth + 1, out)?;
+            encode_dsl_value(ctx, v, depth + 1, out).await?;
         }
         FieldValue::Wire(w) => {
             out.push(TAG_WIRE);
-            encode_wire(ctx, w, depth + 1, out)?;
+            encode_wire(ctx, w, depth + 1, out).await?;
         }
         // Canonical `print_expr` text under the string codec — deterministic (the printer is
         // canonical), so `decode = parse_expr_text ∘ decode_string` inverts it exactly, and
         // pack ≡ dsl holds by construction rather than needing a bespoke binary AST encoding.
         FieldValue::Expr(expr) => {
             out.push(TAG_EXPR);
-            encode_string(ctx, &crate::os_dsl::schema::print_expr(expr), out);
+            encode_string(ctx, &crate::os_dsl::schema::print_expr(expr), out).await;
         }
     }
     Ok(())
@@ -424,12 +432,12 @@ fn encode_value(ctx: &mut EncCtx<'_>, shape: Option<&Shape>, value: &FieldValue,
 /// @emoji 🧱️ Encodes a `Bytes64` payload direct (`TAG_BYTES`) or, once it reaches
 /// `options.chunk_threshold`, split into `options.chunk_size`-sized chunks written through the
 /// live `PackWriter` (`TAG_BYTES_CHUNKED` + the resulting `ChunkId`s).
-fn encode_bytes(ctx: &mut EncCtx<'_>, bytes: &[u8], out: &mut Vec<u8>) -> Result<(), PackError> {
+async fn encode_bytes(ctx: &mut EncCtx<'_>, bytes: &[u8], out: &mut Vec<u8>) -> Result<(), PackError> {
     if (bytes.len() as u64) >= ctx.options.chunk_threshold {
         let chunk_size = ctx.options.chunk_size.max(1) as usize;
         let mut ids = Vec::new();
         for piece in bytes.chunks(chunk_size) {
-            ids.push(ctx.writer.write_chunk(piece)?);
+            ids.push(ctx.writer.write_chunk(piece).await?);
         }
         out.push(TAG_BYTES_CHUNKED);
         write_varint_u64(out, ids.len() as u64);
@@ -446,15 +454,15 @@ fn encode_bytes(ctx: &mut EncCtx<'_>, bytes: &[u8], out: &mut Vec<u8>) -> Result
 
 /// @emoji 📚️ Encodes a `Tuple`/`List` sequence: the mandatory packed `0x15`/`0x16` form when
 /// every element is the same numeric kind, else the plain self-describing `0x0B`/`0x0C` form.
-fn encode_seq(ctx: &mut EncCtx<'_>, items: &[FieldValue], elem_shape: Option<&Shape>, is_tuple: bool, depth: u16, out: &mut Vec<u8>) -> Result<(), PackError> {
-    if let Some(kind) = homogeneous_numeric_kind(items) {
+async fn encode_seq(ctx: &mut EncCtx<'_>, items: &[FieldValue], elem_shape: Option<&Shape>, is_tuple: bool, depth: u16, out: &mut Vec<u8>) -> Result<(), PackError> {
+    if let Some(kind) = homogeneous_numeric_kind(items).await {
         match kind {
             NumKind::F64 => {
                 out.push(TAG_PACKED_F64);
                 write_varint_u64(out, items.len() as u64);
                 for it in items {
                     if let FieldValue::Float(f) = it {
-                        out.extend_from_slice(&normalize_f64(*f).to_le_bytes());
+                        out.extend_from_slice(&normalize_f64(*f).await.to_le_bytes());
                     }
                 }
             }
@@ -477,36 +485,36 @@ fn encode_seq(ctx: &mut EncCtx<'_>, items: &[FieldValue], elem_shape: Option<&Sh
     out.push(if is_tuple { TAG_TUPLE } else { TAG_LIST });
     write_varint_u64(out, items.len() as u64);
     for it in items {
-        encode_value(ctx, elem_shape, it, depth + 1, out)?;
+        Box::pin(encode_value(ctx, elem_shape, it, depth + 1, out)).await?;
     }
     Ok(())
 }
 
 /// @emoji 🗺️ Encodes `Map`/object entries sorted by key bytes (canonical, always — not just when
 /// `options.canonical`, per the purity LAW), each key using the conditional interning rule.
-fn encode_map(ctx: &mut EncCtx<'_>, entries: &[(String, FieldValue)], inner_shape: Option<&Shape>, depth: u16, out: &mut Vec<u8>) -> Result<(), PackError> {
-    check_depth(ctx.options.limits.max_depth, depth)?;
+async fn encode_map(ctx: &mut EncCtx<'_>, entries: &[(String, FieldValue)], inner_shape: Option<&Shape>, depth: u16, out: &mut Vec<u8>) -> Result<(), PackError> {
+    check_depth(ctx.options.limits.max_depth, depth).await?;
     out.push(TAG_MAP);
     let mut sorted: Vec<&(String, FieldValue)> = entries.iter().filter(|(_, v)| !matches!(v, FieldValue::Absent)).collect();
     sorted.sort_by(|a, b| a.0.as_bytes().cmp(b.0.as_bytes()));
     write_varint_u64(out, sorted.len() as u64);
     for (k, v) in sorted {
-        encode_string(ctx, k, out);
-        encode_value(ctx, inner_shape, v, depth + 1, out)?;
+        encode_string(ctx, k, out).await;
+        Box::pin(encode_value(ctx, inner_shape, v, depth + 1, out)).await?;
     }
     Ok(())
 }
 
 /// @emoji 📜️ Encodes `Statements`: `count, (keyword symref, Record-payload)*`. The keyword is
 /// always a bare forced symref (never a self-describing string tag) per the wire contract.
-fn encode_statements(ctx: &mut EncCtx<'_>, variants: Option<&Vec<(String, fn() -> RecordSpec)>>, items: &[(String, RecordValue)], depth: u16, out: &mut Vec<u8>) -> Result<(), PackError> {
-    check_depth(ctx.options.limits.max_depth, depth)?;
+async fn encode_statements(ctx: &mut EncCtx<'_>, variants: Option<&Vec<(String, fn() -> RecordSpec)>>, items: &[(String, RecordValue)], depth: u16, out: &mut Vec<u8>) -> Result<(), PackError> {
+    check_depth(ctx.options.limits.max_depth, depth).await?;
     out.push(TAG_STATEMENTS);
     write_varint_u64(out, items.len() as u64);
     for (keyword, record) in items {
-        write_symref_forced(ctx, keyword, out)?;
+        write_symref_forced(ctx, keyword, out).await?;
         let spec = variants.and_then(|vs| vs.iter().find(|(k, _)| k == keyword)).map(|(_, f)| f());
-        let fields = encode_record_fields(ctx, spec.as_ref(), record, depth + 1)?;
+        let fields = encode_record_fields(ctx, spec.as_ref(), record, depth + 1).await?;
         out.extend_from_slice(&fields);
     }
     Ok(())
@@ -515,21 +523,21 @@ fn encode_statements(ctx: &mut EncCtx<'_>, variants: Option<&Vec<(String, fn() -
 /// @emoji 🌱️ Encodes a `DslValue` using the same self-describing tag set recursively; object
 /// entries sorted by key bytes with keys FORCED inline (`encode_string_inline`, never a symref) —
 /// the one deliberate carve-out from the general conditional-interning rule.
-fn encode_dsl_value(ctx: &mut EncCtx<'_>, v: &DslValue, depth: u16, out: &mut Vec<u8>) -> Result<(), PackError> {
-    check_depth(ctx.options.limits.max_depth, depth)?;
+async fn encode_dsl_value(ctx: &mut EncCtx<'_>, v: &DslValue, depth: u16, out: &mut Vec<u8>) -> Result<(), PackError> {
+    check_depth(ctx.options.limits.max_depth, depth).await?;
     match v {
         DslValue::Null => out.push(TAG_NULL),
         DslValue::Bool(b) => out.push(if *b { TAG_TRUE } else { TAG_FALSE }),
         DslValue::Number(n) => {
             out.push(TAG_F64);
-            out.extend_from_slice(&normalize_f64(*n).to_le_bytes());
+            out.extend_from_slice(&normalize_f64(*n).await.to_le_bytes());
         }
-        DslValue::String(s) => encode_string(ctx, s, out),
+        DslValue::String(s) => encode_string(ctx, s, out).await,
         DslValue::Array(items) => {
             out.push(TAG_LIST);
             write_varint_u64(out, items.len() as u64);
             for it in items {
-                encode_dsl_value(ctx, it, depth + 1, out)?;
+                Box::pin(encode_dsl_value(ctx, it, depth + 1, out)).await?;
             }
         }
         DslValue::Object(entries) => {
@@ -539,7 +547,7 @@ fn encode_dsl_value(ctx: &mut EncCtx<'_>, v: &DslValue, depth: u16, out: &mut Ve
             write_varint_u64(out, sorted.len() as u64);
             for (k, val) in sorted {
                 encode_string_inline(k, out);
-                encode_dsl_value(ctx, val, depth + 1, out)?;
+                Box::pin(encode_dsl_value(ctx, val, depth + 1, out)).await?;
             }
         }
     }
@@ -549,9 +557,9 @@ fn encode_dsl_value(ctx: &mut EncCtx<'_>, v: &DslValue, depth: u16, out: &mut Ve
 /// @emoji 🕸️ Encodes a `Wire` literal. Wire sub-format (presence bitmask + node layout) is this
 /// crate's own choice — the contract pins only the outer `0x13` tag and the constituent parts
 /// (`from`, optional `to`, `props`); everything here just needs to round-trip, which it does.
-fn encode_wire(ctx: &mut EncCtx<'_>, w: &WireValue, depth: u16, out: &mut Vec<u8>) -> Result<(), PackError> {
-    check_depth(ctx.options.limits.max_depth, depth)?;
-    let has_label = !w.edge_label.is_empty();
+async fn encode_wire(ctx: &mut EncCtx<'_>, w: &WireValue, depth: u16, out: &mut Vec<u8>) -> Result<(), PackError> {
+    check_depth(ctx.options.limits.max_depth, depth).await?;
+    let has_label = !w.edge_label.is_empty().await;
     let mut presence = 0u8;
     if w.edge.is_some() {
         presence |= 0b01;
@@ -565,9 +573,9 @@ fn encode_wire(ctx: &mut EncCtx<'_>, w: &WireValue, depth: u16, out: &mut Vec<u8
         presence |= 0b100;
     }
     out.push(presence);
-    encode_wire_node(ctx, &w.from, out);
+    encode_wire_node(ctx, &w.from, out).await;
     if let Some((_, to)) = &w.edge {
-        encode_wire_node(ctx, to, out);
+        encode_wire_node(ctx, to, out).await;
     }
     if has_label {
         let mut lp = 0u8;
@@ -579,17 +587,17 @@ fn encode_wire(ctx: &mut EncCtx<'_>, w: &WireValue, depth: u16, out: &mut Vec<u8
         }
         out.push(lp);
         if let Some(id) = &w.edge_label.id {
-            encode_string(ctx, id, out);
+            encode_string(ctx, id, out).await;
         }
         if let Some(kind) = &w.edge_label.kind {
-            encode_string(ctx, kind, out);
+            encode_string(ctx, kind, out).await;
         }
     }
-    encode_dsl_value(ctx, &w.properties, depth + 1, out)?;
+    encode_dsl_value(ctx, &w.properties, depth + 1, out).await?;
     Ok(())
 }
 
-fn encode_wire_node(ctx: &mut EncCtx<'_>, node: &WireNode, out: &mut Vec<u8>) {
+async fn encode_wire_node(ctx: &mut EncCtx<'_>, node: &WireNode, out: &mut Vec<u8>) {
     let mut presence = 0u8;
     if node.kind.is_some() {
         presence |= 0b01;
@@ -598,12 +606,12 @@ fn encode_wire_node(ctx: &mut EncCtx<'_>, node: &WireNode, out: &mut Vec<u8>) {
         presence |= 0b10;
     }
     out.push(presence);
-    encode_string(ctx, &node.id, out);
+    encode_string(ctx, &node.id, out).await;
     if let Some(k) = &node.kind {
-        encode_string(ctx, k, out);
+        encode_string(ctx, k, out).await;
     }
     if let Some(p) = &node.port {
-        encode_string(ctx, p, out);
+        encode_string(ctx, p, out).await;
     }
 }
 //#endregion 🔖️Encode
@@ -629,7 +637,7 @@ struct DecCtx<'a> {
 }
 
 impl DecCtx<'_> {
-    fn check_items(&self, n: u64) -> Result<(), PackError> {
+    async fn check_items(&self, n: u64) -> Result<(), PackError> {
         if n > self.limits.max_items {
             return Err(PackError::LimitExceeded("item count exceeds max_items"));
         }
@@ -637,7 +645,7 @@ impl DecCtx<'_> {
     }
 }
 
-fn resolve_symref(ctx: &DecCtx<'_>, symref: u64) -> Result<String, PackError> {
+async fn resolve_symref(ctx: &DecCtx<'_>, symref: u64) -> Result<String, PackError> {
     match &ctx.source {
         DecSource::File(pack_file) => pack_file.symbol(symref).map(str::to_string),
         DecSource::Inline { symbols } => symbols.get(symref as usize).cloned().ok_or_else(|| PackError::Malformed { what: "symref", offset: 0, detail: format!("symref {symref} out of range for inline table of {}", symbols.len()) }),
@@ -646,38 +654,41 @@ fn resolve_symref(ctx: &DecCtx<'_>, symref: u64) -> Result<String, PackError> {
 
 /// @emoji 📏️ Reads a `varint` length then that many raw bytes, rejecting an oversized length
 /// against `limits.max_segment_len` BEFORE allocating/slicing.
-fn read_len_prefixed_bytes<'b>(reader: &mut ByteReader<'b>, limits: &PackLimits) -> Result<&'b [u8], PackError> {
-    let len = reader.read_varint_u64()?;
+async fn read_len_prefixed_bytes<'b>(reader: &mut ByteReader<'b>, limits: &PackLimits) -> Result<&'b [u8], PackError> {
+    let len = reader.read_varint_u64().await?;
     if len > limits.max_segment_len {
         return Err(PackError::LimitExceeded("inline blob length exceeds max_segment_len"));
     }
-    reader.read_bytes(len as usize)
+    reader.read_bytes(len as usize).await
 }
 
-fn read_inline_string(reader: &mut ByteReader<'_>, ctx: &DecCtx<'_>) -> Result<String, PackError> {
-    let bytes = read_len_prefixed_bytes(reader, &ctx.limits)?;
-    std::str::from_utf8(bytes).map(str::to_string).map_err(|_| PackError::Malformed { what: "text", offset: reader.position() as u64, detail: "invalid utf8".to_string() })
+async fn read_inline_string(reader: &mut ByteReader<'_>, ctx: &DecCtx<'_>) -> Result<String, PackError> {
+    let bytes = read_len_prefixed_bytes(reader, &ctx.limits).await?;
+    // 🔁️ `reader.position()` is async now; `map_err`'s closure is sync (R10 residue shape 1), so
+    // the position is read up front rather than awaited inside the closure.
+    let offset = reader.position().await as u64;
+    std::str::from_utf8(bytes).map(str::to_string).map_err(|_| PackError::Malformed { what: "text", offset, detail: "invalid utf8".to_string() })
 }
 
-fn read_inline_bytes(reader: &mut ByteReader<'_>, ctx: &DecCtx<'_>) -> Result<Vec<u8>, PackError> {
-    Ok(read_len_prefixed_bytes(reader, &ctx.limits)?.to_vec())
+async fn read_inline_bytes(reader: &mut ByteReader<'_>, ctx: &DecCtx<'_>) -> Result<Vec<u8>, PackError> {
+    Ok(read_len_prefixed_bytes(reader, &ctx.limits).await?.to_vec())
 }
 
 /// @emoji 🧱️ Reads `count` chunk ids and concatenates their decoded (and, per `verification`,
 /// integrity-checked) content via the open `PackFile`'s chunk table.
-fn read_chunked_bytes(reader: &mut ByteReader<'_>, ctx: &DecCtx<'_>) -> Result<Vec<u8>, PackError> {
-    let count = reader.read_varint_u64()?;
-    ctx.check_items(count)?;
+async fn read_chunked_bytes(reader: &mut ByteReader<'_>, ctx: &DecCtx<'_>) -> Result<Vec<u8>, PackError> {
+    let count = reader.read_varint_u64().await?;
+    ctx.check_items(count).await?;
     let mut out = Vec::new();
     for _ in 0..count {
-        let id = reader.read_varint_u64()?;
+        let id = reader.read_varint_u64().await?;
         if id > u32::MAX as u64 {
-            return Err(PackError::Malformed { what: "chunk_id", offset: reader.position() as u64, detail: "chunk id exceeds u32".to_string() });
+            return Err(PackError::Malformed { what: "chunk_id", offset: reader.position().await as u64, detail: "chunk id exceeds u32".to_string() });
         }
         let piece = match &ctx.source {
-            DecSource::File(pack_file) => pack_file.read_chunk(ChunkId(id as u32), ctx.verification)?,
+            DecSource::File(pack_file) => pack_file.read_chunk(ChunkId(id as u32), ctx.verification).await?,
             DecSource::Inline { .. } => {
-                return Err(PackError::Malformed { what: "chunk_id", offset: reader.position() as u64, detail: "chunked bytes are not representable in a container-less record body".to_string() });
+                return Err(PackError::Malformed { what: "chunk_id", offset: reader.position().await as u64, detail: "chunked bytes are not representable in a container-less record body".to_string() });
             }
         };
         out.extend_from_slice(&piece);
@@ -688,15 +699,15 @@ fn read_chunked_bytes(reader: &mut ByteReader<'_>, ctx: &DecCtx<'_>) -> Result<V
 /// @emoji 📖️ Reads one self-describing string value (`TAG_STR` or `TAG_STR_INLINE`) — used for
 /// `Map`/object keys and `DslValue::String`, where the tag itself (not any external shape) is
 /// what disambiguates interned vs inline.
-fn decode_string(reader: &mut ByteReader<'_>, ctx: &DecCtx<'_>) -> Result<String, PackError> {
-    let tag = reader.read_u8()?;
+async fn decode_string(reader: &mut ByteReader<'_>, ctx: &DecCtx<'_>) -> Result<String, PackError> {
+    let tag = reader.read_u8().await?;
     match tag {
         TAG_STR => {
-            let idx = reader.read_varint_u64()?;
-            resolve_symref(ctx, idx)
+            let idx = reader.read_varint_u64().await?;
+            resolve_symref(ctx, idx).await
         }
-        TAG_STR_INLINE => read_inline_string(reader, ctx),
-        other => Err(PackError::Malformed { what: "string", offset: reader.position() as u64, detail: format!("expected a string tag, found {other:#04x}") }),
+        TAG_STR_INLINE => read_inline_string(reader, ctx).await,
+        other => Err(PackError::Malformed { what: "string", offset: reader.position().await as u64, detail: format!("expected a string tag, found {other:#04x}") }),
     }
 }
 
@@ -705,19 +716,19 @@ fn decode_string(reader: &mut ByteReader<'_>, ctx: &DecCtx<'_>) -> Result<String
 /// `ctx.unknown_field_ids`; when `ctx.preserve_unknown` is `false` it is still consumed (to stay
 /// byte-aligned) but dropped from the returned `RecordValue`. Every `spec` field not seen on the
 /// wire is inserted as `Absent` — the decode-side half of canonical mode's "omit `Absent`" rule.
-fn decode_record_fields(reader: &mut ByteReader<'_>, spec: Option<&RecordSpec>, ctx: &mut DecCtx<'_>, depth: u16) -> Result<RecordValue, PackError> {
-    check_depth(ctx.limits.max_depth, depth)?;
-    let count = reader.read_varint_u64()?;
-    ctx.check_items(count)?;
+async fn decode_record_fields(reader: &mut ByteReader<'_>, spec: Option<&RecordSpec>, ctx: &mut DecCtx<'_>, depth: u16) -> Result<RecordValue, PackError> {
+    check_depth(ctx.limits.max_depth, depth).await?;
+    let count = reader.read_varint_u64().await?;
+    ctx.check_items(count).await?;
     let mut record = RecordValue::default();
     for _ in 0..count {
-        let id_raw = reader.read_varint_u64()?;
+        let id_raw = reader.read_varint_u64().await?;
         if id_raw > u16::MAX as u64 {
-            return Err(PackError::Malformed { what: "field_id", offset: reader.position() as u64, detail: "field id exceeds u16".to_string() });
+            return Err(PackError::Malformed { what: "field_id", offset: reader.position().await as u64, detail: "field id exceeds u16".to_string() });
         }
         let id = id_raw as u16;
         let field_shape = spec.and_then(|s| s.fields.iter().find(|f| f.id == id)).map(|f| &f.shape);
-        let value = decode_value(reader, field_shape, ctx, depth + 1)?;
+        let value = Box::pin(decode_value(reader, field_shape, ctx, depth + 1)).await?;
         if field_shape.is_none() {
             ctx.unknown_field_ids.push(id);
             if ctx.preserve_unknown {
@@ -740,72 +751,77 @@ fn decode_record_fields(reader: &mut ByteReader<'_>, spec: Option<&RecordSpec>, 
 /// `PackedVarint` payloads as `UInt`/`Enum` where the shape says so; `None` decodes generically
 /// straight from the wire tag — every tag is self-describing enough for this to always succeed,
 /// which is what makes unknown-field decode possible without the original schema.
-fn decode_value(reader: &mut ByteReader<'_>, shape: Option<&Shape>, ctx: &mut DecCtx<'_>, depth: u16) -> Result<FieldValue, PackError> {
-    check_depth(ctx.limits.max_depth, depth)?;
-    let tag = reader.read_u8()?;
+// 🔁️ Mutually recursive with `decode_record_fields`/`decode_seq_body`/`decode_map` (and directly
+// self-recursive for `TAG_BLOCK`) — same `Box::pin(...).await` requirement as `encode_value`.
+async fn decode_value(reader: &mut ByteReader<'_>, shape: Option<&Shape>, ctx: &mut DecCtx<'_>, depth: u16) -> Result<FieldValue, PackError> {
+    check_depth(ctx.limits.max_depth, depth).await?;
+    let tag = reader.read_u8().await?;
     match tag {
         TAG_ABSENT => Ok(FieldValue::Absent),
         TAG_FALSE => Ok(FieldValue::Bool(false)),
         TAG_TRUE => Ok(FieldValue::Bool(true)),
-        TAG_INT => Ok(FieldValue::Int(reader.read_varint_i64()?)),
-        TAG_UINT => Ok(FieldValue::UInt(reader.read_varint_u64()?)),
-        TAG_F64 => Ok(FieldValue::Float(reader.read_f64_le()?)),
+        TAG_INT => Ok(FieldValue::Int(reader.read_varint_i64().await?)),
+        TAG_UINT => Ok(FieldValue::UInt(reader.read_varint_u64().await?)),
+        TAG_F64 => Ok(FieldValue::Float(reader.read_f64_le().await?)),
         TAG_STR => {
-            let idx = reader.read_varint_u64()?;
-            Ok(FieldValue::Text(resolve_symref(ctx, idx)?))
+            let idx = reader.read_varint_u64().await?;
+            Ok(FieldValue::Text(resolve_symref(ctx, idx).await?))
         }
-        TAG_STR_INLINE => Ok(FieldValue::Text(read_inline_string(reader, ctx)?)),
-        TAG_BYTES => Ok(FieldValue::Bytes64(read_inline_bytes(reader, ctx)?)),
-        TAG_BYTES_CHUNKED => Ok(FieldValue::Bytes64(read_chunked_bytes(reader, ctx)?)),
-        TAG_ENUM => Ok(FieldValue::Enum(reader.read_varint_u64()? as u32)),
-        TAG_TUPLE => decode_seq_body(reader, elem_shape_of(shape), true, ctx, depth),
+        TAG_STR_INLINE => Ok(FieldValue::Text(read_inline_string(reader, ctx).await?)),
+        TAG_BYTES => Ok(FieldValue::Bytes64(read_inline_bytes(reader, ctx).await?)),
+        TAG_BYTES_CHUNKED => Ok(FieldValue::Bytes64(read_chunked_bytes(reader, ctx).await?)),
+        TAG_ENUM => Ok(FieldValue::Enum(reader.read_varint_u64().await? as u32)),
+        TAG_TUPLE => decode_seq_body(reader, elem_shape_of(shape).await, true, ctx, depth).await,
         TAG_LIST => {
-            if let Some(spec_fn) = table_spec_of(shape) {
+            if let Some(spec_fn) = table_spec_of(shape).await {
                 // Defensive: a verbose AoS list under a `Table` field. `Shape::Record(spec_fn)`
                 // built inline lets us reuse `decode_seq_body` unchanged.
                 let record_shape = Shape::Record(spec_fn);
-                decode_seq_body(reader, Some(&record_shape), false, ctx, depth)
+                decode_seq_body(reader, Some(&record_shape), false, ctx, depth).await
             } else {
-                decode_seq_body(reader, elem_shape_of(shape), false, ctx, depth)
+                decode_seq_body(reader, elem_shape_of(shape).await, false, ctx, depth).await
             }
         }
         TAG_RECORD => {
             let nested_spec = record_spec_of(shape);
-            Ok(FieldValue::Record(decode_record_fields(reader, nested_spec.as_ref(), ctx, depth + 1)?))
+            Ok(FieldValue::Record(decode_record_fields(reader, nested_spec.await.as_ref(), ctx, depth + 1).await?))
         }
-        TAG_BLOCK => Ok(FieldValue::Block(Box::new(decode_value(reader, block_inner_shape(shape), ctx, depth + 1)?))),
-        TAG_STATEMENTS => decode_statements(reader, statements_variants(shape), ctx, depth),
-        TAG_MAP => decode_map(reader, map_inner_shape(shape), ctx, depth),
-        TAG_VALUE => Ok(FieldValue::Value(decode_dsl_value(reader, ctx, depth + 1)?)),
-        TAG_WIRE => Ok(FieldValue::Wire(decode_wire(reader, ctx, depth + 1)?)),
+        TAG_BLOCK => Ok(FieldValue::Block(Box::new(Box::pin(decode_value(reader, block_inner_shape(shape).await, ctx, depth + 1)).await?))),
+        TAG_STATEMENTS => decode_statements(reader, statements_variants(shape).await, ctx, depth).await,
+        TAG_MAP => decode_map(reader, map_inner_shape(shape).await, ctx, depth).await,
+        TAG_VALUE => Ok(FieldValue::Value(decode_dsl_value(reader, ctx, depth + 1).await?)),
+        TAG_WIRE => Ok(FieldValue::Wire(decode_wire(reader, ctx, depth + 1).await?)),
         TAG_EXPR => {
-            let text = decode_string(reader, ctx)?;
-            crate::os_dsl::schema::parse_expr_text(&text).map(FieldValue::Expr).map_err(|e| PackError::Malformed { what: "expr", offset: reader.position() as u64, detail: e.message })
+            let text = decode_string(reader, ctx).await?;
+            // 🔁️ Same closure constraint as `read_inline_string`: read the position before the
+            // sync `map_err` closure, don't `.await` inside it.
+            let offset = reader.position().await as u64;
+            crate::os_dsl::schema::parse_expr_text(&text).await.map(FieldValue::Expr).map_err(|e| PackError::Malformed { what: "expr", offset, detail: e.message })
         }
-        TAG_TABLE_SOA => Ok(FieldValue::List(decode_table_soa(reader, table_spec_of(shape), ctx, depth)?)),
-        TAG_PACKED_F64 => decode_packed_f64_body(reader, is_tuple_shape(shape)),
-        TAG_PACKED_VARINT => decode_packed_varint_body(reader, elem_shape_of(shape).or(shape.filter(|s| !matches!(s, Shape::Tuple(_, _)))), is_tuple_shape(shape)),
-        TAG_NULL => Err(PackError::Malformed { what: "wire_tag", offset: reader.position() as u64, detail: "TAG_NULL is only valid inside a DslValue".to_string() }),
-        other => Err(PackError::Malformed { what: "wire_tag", offset: reader.position() as u64, detail: format!("unrecognized tag {other:#04x}") }),
+        TAG_TABLE_SOA => Ok(FieldValue::List(decode_table_soa(reader, table_spec_of(shape).await, ctx, depth).await?)),
+        TAG_PACKED_F64 => decode_packed_f64_body(reader, is_tuple_shape(shape).await).await,
+        TAG_PACKED_VARINT => decode_packed_varint_body(reader, elem_shape_of(shape).await.or(shape.filter(|s| !matches!(s, Shape::Tuple(_, _)))), is_tuple_shape(shape).await).await,
+        TAG_NULL => Err(PackError::Malformed { what: "wire_tag", offset: reader.position().await as u64, detail: "TAG_NULL is only valid inside a DslValue".to_string() }),
+        other => Err(PackError::Malformed { what: "wire_tag", offset: reader.position().await as u64, detail: format!("unrecognized tag {other:#04x}") }),
     }
 }
 
 /// @emoji 📚️ Decodes a plain (non-packed) `Tuple`/`List` body: `count, values*`.
-fn decode_seq_body(reader: &mut ByteReader<'_>, elem_shape: Option<&Shape>, is_tuple: bool, ctx: &mut DecCtx<'_>, depth: u16) -> Result<FieldValue, PackError> {
-    let count = reader.read_varint_u64()?;
-    ctx.check_items(count)?;
+async fn decode_seq_body(reader: &mut ByteReader<'_>, elem_shape: Option<&Shape>, is_tuple: bool, ctx: &mut DecCtx<'_>, depth: u16) -> Result<FieldValue, PackError> {
+    let count = reader.read_varint_u64().await?;
+    ctx.check_items(count).await?;
     let mut items = Vec::with_capacity(count.min(4096) as usize);
     for _ in 0..count {
-        items.push(decode_value(reader, elem_shape, ctx, depth + 1)?);
+        items.push(Box::pin(decode_value(reader, elem_shape, ctx, depth + 1)).await?);
     }
     Ok(if is_tuple { FieldValue::Tuple(items) } else { FieldValue::List(items) })
 }
 
-fn decode_packed_f64_body(reader: &mut ByteReader<'_>, is_tuple: bool) -> Result<FieldValue, PackError> {
-    let count = reader.read_varint_u64()?;
+async fn decode_packed_f64_body(reader: &mut ByteReader<'_>, is_tuple: bool) -> Result<FieldValue, PackError> {
+    let count = reader.read_varint_u64().await?;
     let mut items = Vec::with_capacity(count.min(4096) as usize);
     for _ in 0..count {
-        items.push(FieldValue::Float(reader.read_f64_le()?));
+        items.push(FieldValue::Float(reader.read_f64_le().await?));
     }
     Ok(if is_tuple { FieldValue::Tuple(items) } else { FieldValue::List(items) })
 }
@@ -814,21 +830,21 @@ fn decode_packed_f64_body(reader: &mut ByteReader<'_>, is_tuple: bool) -> Result
 /// `Tuple(..)` element shape, when known) picks the reconstruction type; unknown context always
 /// defaults to `Int`, which is also what makes an unknown field's homogeneous-`Int` list
 /// re-encode to the exact same bytes (round-trip preserved even without the original schema).
-fn decode_packed_varint_body(reader: &mut ByteReader<'_>, elem_shape: Option<&Shape>, is_tuple: bool) -> Result<FieldValue, PackError> {
-    let count = reader.read_varint_u64()?;
+async fn decode_packed_varint_body(reader: &mut ByteReader<'_>, elem_shape: Option<&Shape>, is_tuple: bool) -> Result<FieldValue, PackError> {
+    let count = reader.read_varint_u64().await?;
     let mut items = Vec::with_capacity(count.min(4096) as usize);
     for _ in 0..count {
-        let v = reader.read_varint_i64()?;
+        let v = reader.read_varint_i64().await?;
         let fv = match elem_shape {
             Some(Shape::UInt) => {
                 if v < 0 {
-                    return Err(PackError::Malformed { what: "packed_varint", offset: reader.position() as u64, detail: "negative value under UInt shape".to_string() });
+                    return Err(PackError::Malformed { what: "packed_varint", offset: reader.position().await as u64, detail: "negative value under UInt shape".to_string() });
                 }
                 FieldValue::UInt(v as u64)
             }
             Some(Shape::Enum(_)) => {
                 if v < 0 {
-                    return Err(PackError::Malformed { what: "packed_varint", offset: reader.position() as u64, detail: "negative value under Enum shape".to_string() });
+                    return Err(PackError::Malformed { what: "packed_varint", offset: reader.position().await as u64, detail: "negative value under Enum shape".to_string() });
                 }
                 FieldValue::Enum(v as u32)
             }
@@ -839,98 +855,99 @@ fn decode_packed_varint_body(reader: &mut ByteReader<'_>, elem_shape: Option<&Sh
     Ok(if is_tuple { FieldValue::Tuple(items) } else { FieldValue::List(items) })
 }
 
-fn decode_map(reader: &mut ByteReader<'_>, inner_shape: Option<&Shape>, ctx: &mut DecCtx<'_>, depth: u16) -> Result<FieldValue, PackError> {
-    check_depth(ctx.limits.max_depth, depth)?;
-    let count = reader.read_varint_u64()?;
-    ctx.check_items(count)?;
+async fn decode_map(reader: &mut ByteReader<'_>, inner_shape: Option<&Shape>, ctx: &mut DecCtx<'_>, depth: u16) -> Result<FieldValue, PackError> {
+    check_depth(ctx.limits.max_depth, depth).await?;
+    let count = reader.read_varint_u64().await?;
+    ctx.check_items(count).await?;
     let mut entries = Vec::with_capacity(count.min(4096) as usize);
     for _ in 0..count {
-        let key = decode_string(reader, ctx)?;
-        let value = decode_value(reader, inner_shape, ctx, depth + 1)?;
+        let key = decode_string(reader, ctx).await?;
+        let value = Box::pin(decode_value(reader, inner_shape, ctx, depth + 1)).await?;
         entries.push((key, value));
     }
     Ok(FieldValue::Map(entries))
 }
 
-fn decode_statements(reader: &mut ByteReader<'_>, variants: Option<&Vec<(String, fn() -> RecordSpec)>>, ctx: &mut DecCtx<'_>, depth: u16) -> Result<FieldValue, PackError> {
-    check_depth(ctx.limits.max_depth, depth)?;
-    let count = reader.read_varint_u64()?;
-    ctx.check_items(count)?;
+async fn decode_statements(reader: &mut ByteReader<'_>, variants: Option<&Vec<(String, fn() -> RecordSpec)>>, ctx: &mut DecCtx<'_>, depth: u16) -> Result<FieldValue, PackError> {
+    check_depth(ctx.limits.max_depth, depth).await?;
+    let count = reader.read_varint_u64().await?;
+    ctx.check_items(count).await?;
     let mut items = Vec::with_capacity(count.min(4096) as usize);
     for _ in 0..count {
-        let symref = reader.read_varint_u64()?;
-        let keyword = resolve_symref(ctx, symref)?;
+        let symref = reader.read_varint_u64().await?;
+        let keyword = resolve_symref(ctx, symref).await?;
         let spec = variants.and_then(|vs| vs.iter().find(|(k, _)| *k == keyword)).map(|(_, f)| f());
-        let record = decode_record_fields(reader, spec.as_ref(), ctx, depth + 1)?;
+        let record = decode_record_fields(reader, spec.as_ref(), ctx, depth + 1).await?;
         items.push((keyword, record));
     }
     Ok(FieldValue::Statements(items))
 }
 
-fn decode_dsl_value(reader: &mut ByteReader<'_>, ctx: &mut DecCtx<'_>, depth: u16) -> Result<DslValue, PackError> {
-    check_depth(ctx.limits.max_depth, depth)?;
-    let tag = reader.read_u8()?;
+// 🔁️ Self-recursive (`TAG_LIST`/`TAG_MAP` arms) — boxed for the same reason as `decode_value`.
+async fn decode_dsl_value(reader: &mut ByteReader<'_>, ctx: &mut DecCtx<'_>, depth: u16) -> Result<DslValue, PackError> {
+    check_depth(ctx.limits.max_depth, depth).await?;
+    let tag = reader.read_u8().await?;
     match tag {
         TAG_NULL => Ok(DslValue::Null),
         TAG_FALSE => Ok(DslValue::Bool(false)),
         TAG_TRUE => Ok(DslValue::Bool(true)),
-        TAG_F64 => Ok(DslValue::Number(reader.read_f64_le()?)),
+        TAG_F64 => Ok(DslValue::Number(reader.read_f64_le().await?)),
         TAG_STR => {
-            let idx = reader.read_varint_u64()?;
-            Ok(DslValue::String(resolve_symref(ctx, idx)?))
+            let idx = reader.read_varint_u64().await?;
+            Ok(DslValue::String(resolve_symref(ctx, idx).await?))
         }
-        TAG_STR_INLINE => Ok(DslValue::String(read_inline_string(reader, ctx)?)),
+        TAG_STR_INLINE => Ok(DslValue::String(read_inline_string(reader, ctx).await?)),
         TAG_LIST => {
-            let count = reader.read_varint_u64()?;
-            ctx.check_items(count)?;
+            let count = reader.read_varint_u64().await?;
+            ctx.check_items(count).await?;
             let mut items = Vec::with_capacity(count.min(4096) as usize);
             for _ in 0..count {
-                items.push(decode_dsl_value(reader, ctx, depth + 1)?);
+                items.push(Box::pin(decode_dsl_value(reader, ctx, depth + 1)).await?);
             }
             Ok(DslValue::Array(items))
         }
         TAG_MAP => {
-            let count = reader.read_varint_u64()?;
-            ctx.check_items(count)?;
+            let count = reader.read_varint_u64().await?;
+            ctx.check_items(count).await?;
             let mut entries = Vec::with_capacity(count.min(4096) as usize);
             for _ in 0..count {
-                let key = decode_string(reader, ctx)?;
-                let value = decode_dsl_value(reader, ctx, depth + 1)?;
+                let key = decode_string(reader, ctx).await?;
+                let value = Box::pin(decode_dsl_value(reader, ctx, depth + 1)).await?;
                 entries.push((key, value));
             }
             Ok(DslValue::Object(entries))
         }
-        other => Err(PackError::Malformed { what: "dsl_value", offset: reader.position() as u64, detail: format!("unexpected tag {other:#04x}") }),
+        other => Err(PackError::Malformed { what: "dsl_value", offset: reader.position().await as u64, detail: format!("unexpected tag {other:#04x}") }),
     }
 }
 
-fn decode_wire(reader: &mut ByteReader<'_>, ctx: &mut DecCtx<'_>, depth: u16) -> Result<WireValue, PackError> {
-    let presence = reader.read_u8()?;
-    let from = decode_wire_node(reader, ctx)?;
+async fn decode_wire(reader: &mut ByteReader<'_>, ctx: &mut DecCtx<'_>, depth: u16) -> Result<WireValue, PackError> {
+    let presence = reader.read_u8().await?;
+    let from = decode_wire_node(reader, ctx).await?;
     let edge = if presence & 0b01 != 0 {
         let directed = presence & 0b10 != 0;
-        let to = decode_wire_node(reader, ctx)?;
+        let to = decode_wire_node(reader, ctx).await?;
         Some((directed, to))
     } else {
         None
     };
     let edge_label = if presence & 0b100 != 0 {
-        let lp = reader.read_u8()?;
-        let id = if lp & 0b01 != 0 { Some(decode_string(reader, ctx)?) } else { None };
-        let kind = if lp & 0b10 != 0 { Some(decode_string(reader, ctx)?) } else { None };
+        let lp = reader.read_u8().await?;
+        let id = if lp & 0b01 != 0 { Some(decode_string(reader, ctx).await?) } else { None };
+        let kind = if lp & 0b10 != 0 { Some(decode_string(reader, ctx).await?) } else { None };
         WireEdgeLabel { id, kind }
     } else {
         WireEdgeLabel::default()
     };
-    let properties = decode_dsl_value(reader, ctx, depth + 1)?;
+    let properties = decode_dsl_value(reader, ctx, depth + 1).await?;
     Ok(WireValue { from, edge, edge_label, properties })
 }
 
-fn decode_wire_node(reader: &mut ByteReader<'_>, ctx: &mut DecCtx<'_>) -> Result<WireNode, PackError> {
-    let presence = reader.read_u8()?;
-    let id = decode_string(reader, ctx)?;
-    let kind = if presence & 0b01 != 0 { Some(decode_string(reader, ctx)?) } else { None };
-    let port = if presence & 0b10 != 0 { Some(decode_string(reader, ctx)?) } else { None };
+async fn decode_wire_node(reader: &mut ByteReader<'_>, ctx: &mut DecCtx<'_>) -> Result<WireNode, PackError> {
+    let presence = reader.read_u8().await?;
+    let id = decode_string(reader, ctx).await?;
+    let kind = if presence & 0b01 != 0 { Some(decode_string(reader, ctx).await?) } else { None };
+    let port = if presence & 0b10 != 0 { Some(decode_string(reader, ctx).await?) } else { None };
     Ok(WireNode { id, kind, port })
 }
 //#endregion 🔖️Decode
@@ -946,7 +963,7 @@ const ELEM_F64: u8 = 4;
 const ELEM_STR: u8 = 5;
 const ELEM_ENUM: u8 = 6;
 
-fn elem_tag_for_shape(shape: &Shape) -> u8 {
+async fn elem_tag_for_shape(shape: &Shape) -> u8 {
     match shape {
         Shape::Float | Shape::Quantity(_) | Shape::Angle(_) => ELEM_F64,
         Shape::Int => ELEM_INT,
@@ -965,8 +982,8 @@ fn elem_tag_for_shape(shape: &Shape) -> u8 {
 /// bitmap unconditionally (simpler than compacting individual bits). `Text` columns are always
 /// interned (forced symrefs, matching `build_symbols`'s pre-pass); every other shape falls back to
 /// self-describing per-present-row values.
-fn encode_table(ctx: &mut EncCtx<'_>, spec_fn: fn() -> RecordSpec, items: &[FieldValue], depth: u16, out: &mut Vec<u8>) -> Result<(), PackError> {
-    check_depth(ctx.options.limits.max_depth, depth)?;
+async fn encode_table(ctx: &mut EncCtx<'_>, spec_fn: fn() -> RecordSpec, items: &[FieldValue], depth: u16, out: &mut Vec<u8>) -> Result<(), PackError> {
+    check_depth(ctx.options.limits.max_depth, depth).await?;
     let element_spec = spec_fn();
     let mut columns: Vec<&FieldSpec> = element_spec.fields.iter().collect();
     columns.sort_by_key(|f| f.id);
@@ -988,7 +1005,7 @@ fn encode_table(ctx: &mut EncCtx<'_>, spec_fn: fn() -> RecordSpec, items: &[Fiel
             }
             out.extend_from_slice(&bitmap);
         }
-        let elem_tag = elem_tag_for_shape(&field.shape);
+        let elem_tag = elem_tag_for_shape(&field.shape).await;
         out.push(elem_tag);
         match elem_tag {
             ELEM_F64 => {
@@ -998,7 +1015,7 @@ fn encode_table(ctx: &mut EncCtx<'_>, spec_fn: fn() -> RecordSpec, items: &[Fiel
                     }
                     if let FieldValue::Record(r) = row {
                         if let Some(FieldValue::Float(f)) = r.fields.get(&field.id) {
-                            out.extend_from_slice(&normalize_f64(*f).to_le_bytes());
+                            out.extend_from_slice(&normalize_f64(*f).await.to_le_bytes());
                         }
                     }
                 }
@@ -1059,7 +1076,7 @@ fn encode_table(ctx: &mut EncCtx<'_>, spec_fn: fn() -> RecordSpec, items: &[Fiel
                     }
                     if let FieldValue::Record(r) = row {
                         if let Some(FieldValue::Text(s)) = r.fields.get(&field.id) {
-                            write_symref_forced(ctx, s, out)?;
+                            write_symref_forced(ctx, s, out).await?;
                         }
                     }
                 }
@@ -1071,7 +1088,7 @@ fn encode_table(ctx: &mut EncCtx<'_>, spec_fn: fn() -> RecordSpec, items: &[Fiel
                     }
                     if let FieldValue::Record(r) = row {
                         if let Some(v) = r.fields.get(&field.id) {
-                            encode_value(ctx, Some(&field.shape), v, depth + 1, out)?;
+                            Box::pin(encode_value(ctx, Some(&field.shape), v, depth + 1, out)).await?;
                         }
                     }
                 }
@@ -1087,31 +1104,31 @@ fn encode_table(ctx: &mut EncCtx<'_>, spec_fn: fn() -> RecordSpec, items: &[Fiel
 /// know the table's element `RecordSpec` (`spec_fn` is `Some`), it is threaded into the
 /// fallback (non-primitive) column branch so a nested `Record` column's own `Absent` sub-fields
 /// get backfilled correctly instead of merely reflecting what was present on the wire.
-fn decode_table_soa(reader: &mut ByteReader<'_>, spec_fn: Option<fn() -> RecordSpec>, ctx: &mut DecCtx<'_>, depth: u16) -> Result<Vec<FieldValue>, PackError> {
-    check_depth(ctx.limits.max_depth, depth)?;
+async fn decode_table_soa(reader: &mut ByteReader<'_>, spec_fn: Option<fn() -> RecordSpec>, ctx: &mut DecCtx<'_>, depth: u16) -> Result<Vec<FieldValue>, PackError> {
+    check_depth(ctx.limits.max_depth, depth).await?;
     let element_spec = spec_fn.map(|f| f());
-    let row_count_raw = reader.read_varint_u64()?;
-    ctx.check_items(row_count_raw)?;
-    let col_count = reader.read_varint_u64()?;
-    ctx.check_items(col_count)?;
+    let row_count_raw = reader.read_varint_u64().await?;
+    ctx.check_items(row_count_raw).await?;
+    let col_count = reader.read_varint_u64().await?;
+    ctx.check_items(col_count).await?;
     let row_count = row_count_raw as usize;
     let mut rows: Vec<RecordValue> = (0..row_count).map(|_| RecordValue::default()).collect();
     for _ in 0..col_count {
-        let field_id = reader.read_varint_u64()? as u16;
-        let presence = reader.read_u8()?;
+        let field_id = reader.read_varint_u64().await? as u16;
+        let presence = reader.read_u8().await?;
         let dense = presence == 0;
         let present: Vec<bool> = if dense {
             vec![true; row_count]
         } else {
-            let bitmap = reader.read_bytes(row_count.div_ceil(8))?.to_vec();
+            let bitmap = reader.read_bytes(row_count.div_ceil(8)).await?.to_vec();
             (0..row_count).map(|i| bitmap[i / 8] & (1 << (i % 8)) != 0).collect()
         };
-        let elem_tag = reader.read_u8()?;
+        let elem_tag = reader.read_u8().await?;
         match elem_tag {
             ELEM_F64 => {
                 for (i, p) in present.iter().enumerate() {
                     if *p {
-                        let f = reader.read_f64_le()?;
+                        let f = reader.read_f64_le().await?;
                         rows[i].fields.insert(field_id, FieldValue::Float(f));
                     }
                 }
@@ -1119,7 +1136,7 @@ fn decode_table_soa(reader: &mut ByteReader<'_>, spec_fn: Option<fn() -> RecordS
             ELEM_INT => {
                 for (i, p) in present.iter().enumerate() {
                     if *p {
-                        let v = reader.read_varint_i64()?;
+                        let v = reader.read_varint_i64().await?;
                         rows[i].fields.insert(field_id, FieldValue::Int(v));
                     }
                 }
@@ -1127,7 +1144,7 @@ fn decode_table_soa(reader: &mut ByteReader<'_>, spec_fn: Option<fn() -> RecordS
             ELEM_UINT => {
                 for (i, p) in present.iter().enumerate() {
                     if *p {
-                        let v = reader.read_varint_u64()?;
+                        let v = reader.read_varint_u64().await?;
                         rows[i].fields.insert(field_id, FieldValue::UInt(v));
                     }
                 }
@@ -1135,13 +1152,13 @@ fn decode_table_soa(reader: &mut ByteReader<'_>, spec_fn: Option<fn() -> RecordS
             ELEM_ENUM => {
                 for (i, p) in present.iter().enumerate() {
                     if *p {
-                        let v = reader.read_varint_u64()?;
+                        let v = reader.read_varint_u64().await?;
                         rows[i].fields.insert(field_id, FieldValue::Enum(v as u32));
                     }
                 }
             }
             ELEM_BOOL => {
-                let bitmap = reader.read_bytes(row_count.div_ceil(8))?.to_vec();
+                let bitmap = reader.read_bytes(row_count.div_ceil(8)).await?.to_vec();
                 for (i, p) in present.iter().enumerate() {
                     if *p {
                         let b = bitmap[i / 8] & (1 << (i % 8)) != 0;
@@ -1152,8 +1169,8 @@ fn decode_table_soa(reader: &mut ByteReader<'_>, spec_fn: Option<fn() -> RecordS
             ELEM_STR => {
                 for (i, p) in present.iter().enumerate() {
                     if *p {
-                        let symref = reader.read_varint_u64()?;
-                        let s = resolve_symref(ctx, symref)?;
+                        let symref = reader.read_varint_u64().await?;
+                        let s = resolve_symref(ctx, symref).await?;
                         rows[i].fields.insert(field_id, FieldValue::Text(s));
                     }
                 }
@@ -1162,7 +1179,7 @@ fn decode_table_soa(reader: &mut ByteReader<'_>, spec_fn: Option<fn() -> RecordS
                 let field_shape = element_spec.as_ref().and_then(|s| s.fields.iter().find(|f| f.id == field_id)).map(|f| &f.shape);
                 for (i, p) in present.iter().enumerate() {
                     if *p {
-                        let v = decode_value(reader, field_shape, ctx, depth + 1)?;
+                        let v = Box::pin(decode_value(reader, field_shape, ctx, depth + 1)).await?;
                         rows[i].fields.insert(field_id, v);
                     }
                 }
@@ -1181,7 +1198,7 @@ fn decode_table_soa(reader: &mut ByteReader<'_>, spec_fn: Option<fn() -> RecordS
 //#region 🔖️SchemaHash
 /// @emoji 🏷️ A fixed numeric tag per `Shape` variant, used only by [`schema_hash`]'s canonical
 /// serialization — an internal id, not a wire tag.
-fn shape_tag(shape: &Shape) -> u8 {
+async fn shape_tag(shape: &Shape) -> u8 {
     match shape {
         Shape::Bool => 1,
         Shape::Int => 2,
@@ -1217,7 +1234,7 @@ fn shape_tag(shape: &Shape) -> u8 {
 /// tuples, sorted by id — stable regardless of `spec.fields`' declaration order, and independent
 /// of any nested lazy `fn() -> RecordSpec` payload (only the shape's discriminant is hashed, not
 /// its recursive contents, which is what keeps self-referential specs hashable at all).
-pub fn schema_hash(spec: &RecordSpec) -> [u8; 32] {
+pub async fn schema_hash(spec: &RecordSpec) -> [u8; 32] {
     let mut fields: Vec<&FieldSpec> = spec.fields.iter().collect();
     fields.sort_by_key(|f| f.id);
     let mut buf = Vec::new();
@@ -1225,7 +1242,7 @@ pub fn schema_hash(spec: &RecordSpec) -> [u8; 32] {
         write_varint_u64(&mut buf, f.id as u64);
         write_varint_u64(&mut buf, f.key.len() as u64);
         buf.extend_from_slice(f.key.as_bytes());
-        buf.push(shape_tag(&f.shape));
+        buf.push(shape_tag(&f.shape).await);
     }
     *blake3::hash(&buf).as_bytes()
 }
@@ -1283,37 +1300,37 @@ pub struct DecodeReport {
 /// `RecordValue` through. Pre-pass computes the deterministic symbol table, then writes
 /// `Symbols`, one-or-more `Document` frames (split at `options.frame_size`), any `Bytes64` chunks
 /// produced along the way, and finally the `Manifest`/`End`/`Footer` via `PackWriter::finish`.
-pub fn encode_document(spec: &RecordSpec, record: &RecordValue, options: &EncodeOptions) -> Result<Vec<u8>, PackError> {
-    let symbols = build_symbols(spec, record);
+pub async fn encode_document(spec: &RecordSpec, record: &RecordValue, options: &EncodeOptions) -> Result<Vec<u8>, PackError> {
+    let symbols = build_symbols(spec, record).await;
     let mut symbol_index = HashMap::with_capacity(symbols.len());
     for (i, s) in symbols.iter().enumerate() {
         symbol_index.insert(s.clone(), i as u64);
     }
 
     let write_options = crate::os_pack::format::WriteOptions { required_flags: 0, optional_flags: if options.canonical { crate::os_pack::format::OPTIONAL_CANONICAL } else { 0 }, codec: options.codec };
-    let mut writer = crate::os_pack::format::PackWriter::begin(Vec::new(), &write_options)?;
+    let mut writer = crate::os_pack::format::PackWriter::begin(Vec::new(), &write_options).await?;
 
-    let symbols_payload = crate::os_pack::format::encode_symbols(&symbols);
-    writer.write_segment(crate::KIND_SYMBOLS, &symbols_payload)?;
+    let symbols_payload = crate::os_pack::format::encode_symbols(&symbols).await;
+    writer.write_segment(crate::KIND_SYMBOLS, &symbols_payload).await?;
 
     let field_count = record.fields.values().filter(|v| !matches!(v, FieldValue::Absent)).count() as u64;
     let doc_payload = {
         let mut enc_ctx = EncCtx { symbol_index, writer: &mut writer, options };
-        encode_record_fields(&mut enc_ctx, Some(spec), record, 0)?
+        encode_record_fields(&mut enc_ctx, Some(spec), record, 0).await?
     };
 
     let frame_size = options.frame_size.max(1) as usize;
-    let doc_start = writer.position();
+    let doc_start = writer.position().await;
     let mut frame_count: u64 = 0;
     for frame in doc_payload.chunks(frame_size) {
-        writer.write_segment(crate::KIND_DOCUMENT, frame)?;
+        writer.write_segment(crate::KIND_DOCUMENT, frame).await?;
         frame_count += 1;
     }
-    let doc_end = writer.position();
+    let doc_end = writer.position().await;
 
     let manifest = crate::os_pack::format::Manifest {
         schema_name: String::new(),
-        schema_hash: schema_hash(spec),
+        schema_hash: schema_hash(spec).await,
         doc_span: crate::os_pack::ByteRange { offset: doc_start, len: doc_end - doc_start },
         doc_frame_count: frame_count,
         symbols_span: crate::os_pack::ByteRange { offset: 0, len: 0 },
@@ -1324,7 +1341,7 @@ pub fn encode_document(spec: &RecordSpec, record: &RecordValue, options: &Encode
         chunk_count: 0,
         symbol_count: symbols.len() as u64,
     };
-    writer.finish(&manifest)
+    writer.finish(&manifest).await
 }
 
 /// @emoji 🚪️ The single entry point every other `pack_*`/`vcs`/`dsl_derive` crate decodes a
@@ -1332,15 +1349,15 @@ pub fn encode_document(spec: &RecordSpec, record: &RecordValue, options: &Encode
 /// `Document` frame(s), then decodes the top-level record body against `spec` — self-describing
 /// enough that any field id `spec` doesn't recognize still decodes and is preserved (subject to
 /// `options.preserve_unknown`) and reported.
-pub fn decode_document(bytes: &[u8], spec: &RecordSpec, options: &DecodeOptions) -> Result<(RecordValue, DecodeReport), PackError> {
-    let pack_file = crate::os_pack::format::PackFile::open_manifest(bytes, &options.limits, options.verification)?;
+pub async fn decode_document(bytes: &[u8], spec: &RecordSpec, options: &DecodeOptions) -> Result<(RecordValue, DecodeReport), PackError> {
+    let pack_file = crate::os_pack::format::PackFile::open_manifest(bytes, &options.limits, options.verification).await?;
     let manifest = pack_file.manifest().ok_or_else(|| PackError::Schema("manifest not loaded".to_string()))?;
-    let schema_drift = manifest.schema_hash != schema_hash(spec);
-    let body = pack_file.body_bytes(options.verification)?;
+    let schema_drift = manifest.schema_hash != schema_hash(spec).await;
+    let body = pack_file.body_bytes(options.verification).await?;
 
-    let mut reader = ByteReader::new(&body);
+    let mut reader = ByteReader::new(&body).await;
     let mut dec_ctx = DecCtx { source: DecSource::File(&pack_file), limits: options.limits.clone(), verification: options.verification, preserve_unknown: options.preserve_unknown, unknown_field_ids: Vec::new() };
-    let record = decode_record_fields(&mut reader, Some(spec), &mut dec_ctx, 0)?;
+    let record = decode_record_fields(&mut reader, Some(spec), &mut dec_ctx, 0).await?;
 
     let report = DecodeReport { unknown_field_ids: dec_ctx.unknown_field_ids, unknown_segments: Vec::new(), schema_drift, verified: options.verification };
     Ok((record, report))
@@ -1351,8 +1368,8 @@ pub fn decode_document(bytes: &[u8], spec: &RecordSpec, options: &DecodeOptions)
 /// manifest, or footer, and never any `Bytes64` chunking (oversized bytes stay inline via
 /// `TAG_BYTES`). Deterministic by the same purity rules as the document path: byte-identical
 /// output for equal `(spec, record)` regardless of map iteration order.
-pub fn encode_record_body(spec: &RecordSpec, record: &RecordValue, options: &EncodeOptions) -> Result<Vec<u8>, PackError> {
-    let symbols = build_symbols(spec, record);
+pub async fn encode_record_body(spec: &RecordSpec, record: &RecordValue, options: &EncodeOptions) -> Result<Vec<u8>, PackError> {
+    let symbols = build_symbols(spec, record).await;
     let mut symbol_index = HashMap::with_capacity(symbols.len());
     for (i, s) in symbols.iter().enumerate() {
         symbol_index.insert(s.clone(), i as u64);
@@ -1366,10 +1383,10 @@ pub fn encode_record_body(spec: &RecordSpec, record: &RecordValue, options: &Enc
     let mut body_options = options.clone();
     body_options.chunk_threshold = u64::MAX;
     let write_options = crate::os_pack::format::WriteOptions { required_flags: 0, optional_flags: 0, codec: CodecId(0) };
-    let mut writer = crate::os_pack::format::PackWriter::begin(Vec::new(), &write_options)?;
+    let mut writer = crate::os_pack::format::PackWriter::begin(Vec::new(), &write_options).await?;
     let fields = {
         let mut enc_ctx = EncCtx { symbol_index, writer: &mut writer, options: &body_options };
-        encode_record_fields(&mut enc_ctx, Some(spec), record, 0)?
+        encode_record_fields(&mut enc_ctx, Some(spec), record, 0).await?
     };
     out.extend_from_slice(&fields);
     Ok(out)
@@ -1378,24 +1395,25 @@ pub fn encode_record_body(spec: &RecordSpec, record: &RecordValue, options: &Enc
 /// @emoji 🎯️ Decodes an [`encode_record_body`] payload against `spec`. Unknown fields decode,
 /// are preserved (subject to `options.preserve_unknown`), and are reported exactly like the
 /// document path; a `TAG_BYTES_CHUNKED` value is malformed here by construction.
-pub fn decode_record_body(bytes: &[u8], spec: &RecordSpec, options: &DecodeOptions) -> Result<(RecordValue, DecodeReport), PackError> {
-    let mut reader = ByteReader::new(bytes);
-    let symbol_count = reader.read_varint_u64()?;
+pub async fn decode_record_body(bytes: &[u8], spec: &RecordSpec, options: &DecodeOptions) -> Result<(RecordValue, DecodeReport), PackError> {
+    let mut reader = ByteReader::new(bytes).await;
+    let symbol_count = reader.read_varint_u64().await?;
     if symbol_count > u64::from(options.limits.max_symbols) {
         return Err(PackError::LimitExceeded("record-body symbol count exceeds max_symbols"));
     }
     let mut symbols = Vec::with_capacity(symbol_count as usize);
     for _ in 0..symbol_count {
-        let len = reader.read_varint_u64()?;
+        let len = reader.read_varint_u64().await?;
         if len > options.limits.max_segment_len {
             return Err(PackError::LimitExceeded("record-body symbol length exceeds max_segment_len"));
         }
-        let raw = reader.read_bytes(len as usize)?;
-        let s = std::str::from_utf8(raw).map_err(|_| PackError::Malformed { what: "symbol", offset: reader.position() as u64, detail: "invalid utf8".to_string() })?;
+        let raw = reader.read_bytes(len as usize).await?;
+        let symbol_offset = reader.position().await as u64;
+        let s = std::str::from_utf8(raw).map_err(|_| PackError::Malformed { what: "symbol", offset: symbol_offset, detail: "invalid utf8".to_string() })?;
         symbols.push(s.to_string());
     }
     let mut dec_ctx = DecCtx { source: DecSource::Inline { symbols }, limits: options.limits.clone(), verification: options.verification, preserve_unknown: options.preserve_unknown, unknown_field_ids: Vec::new() };
-    let record = decode_record_fields(&mut reader, Some(spec), &mut dec_ctx, 0)?;
+    let record = decode_record_fields(&mut reader, Some(spec), &mut dec_ctx, 0).await?;
     let report = DecodeReport { unknown_field_ids: dec_ctx.unknown_field_ids, unknown_segments: Vec::new(), schema_drift: false, verified: options.verification };
     Ok((record, report))
 }
@@ -1409,36 +1427,36 @@ mod tests {
     use crate::os_dsl::schema::{FieldSpec, RecordLayout};
 
     //#region 🔖️Fixtures
-    fn nested_spec() -> RecordSpec {
+    async fn nested_spec() -> RecordSpec {
         RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(1, "a", Shape::Int), FieldSpec::new(2, "b", Shape::Text).optional()])
     }
 
-    fn table_row_spec() -> RecordSpec {
+    async fn table_row_spec() -> RecordSpec {
         RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(1, "id", Shape::UInt), FieldSpec::new(2, "name", Shape::Text), FieldSpec::new(3, "score", Shape::Float), FieldSpec::new(4, "active", Shape::Bool)])
     }
 
-    fn header_spec() -> RecordSpec {
+    async fn header_spec() -> RecordSpec {
         RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(1, "name", Shape::Text), FieldSpec::new(2, "description", Shape::Text).optional()])
     }
 
-    fn table_row_with_nested_record_spec() -> RecordSpec {
+    async fn table_row_with_nested_record_spec() -> RecordSpec {
         RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(1, "id", Shape::UInt), FieldSpec::new(2, "header", Shape::Record(header_spec))])
     }
 
-    fn table_row_with_tuple_spec() -> RecordSpec {
+    async fn table_row_with_tuple_spec() -> RecordSpec {
         RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(1, "id", Shape::UInt), FieldSpec::new(2, "distortion", Shape::Tuple(Box::new(Shape::Float), Some(5)))])
     }
 
-    fn stmt_foo_spec() -> RecordSpec {
+    async fn stmt_foo_spec() -> RecordSpec {
         RecordSpec::new(Some("foo"), RecordLayout::Lines, vec![FieldSpec::new(1, "x", Shape::Int)])
     }
 
-    fn stmt_bar_spec() -> RecordSpec {
+    async fn stmt_bar_spec() -> RecordSpec {
         RecordSpec::new(Some("bar"), RecordLayout::Lines, vec![FieldSpec::new(1, "y", Shape::Text)])
     }
 
     /// @emoji 🧬️ One field of every `Shape` variant, exercising every wire tag in a single spec.
-    fn full_spec() -> RecordSpec {
+    async fn full_spec() -> RecordSpec {
         RecordSpec::new(
             None,
             RecordLayout::Lines,
@@ -1473,7 +1491,7 @@ mod tests {
         )
     }
 
-    fn full_record() -> RecordValue {
+    async fn full_record() -> RecordValue {
         let mut fields = HashMap::new();
         fields.insert(1, FieldValue::Bool(true));
         fields.insert(2, FieldValue::Int(-42));
@@ -1542,7 +1560,7 @@ mod tests {
 
     //#region 🔖️RoundTrip
     #[test]
-    fn round_trips_every_shape_variant_in_one_document() {
+    async fn round_trips_every_shape_variant_in_one_document() {
         let spec = full_spec();
         let record = full_record();
         let bytes = encode_document(&spec, &record, &EncodeOptions::default()).expect("encode");
@@ -1553,7 +1571,7 @@ mod tests {
     }
 
     #[test]
-    fn round_trips_scalar_edge_cases() {
+    async fn round_trips_scalar_edge_cases() {
         let spec = RecordSpec::new(
             None,
             RecordLayout::Inline,
@@ -1600,7 +1618,7 @@ mod tests {
     }
 
     #[test]
-    fn packed_numeric_list_and_tuple_round_trip_and_use_packed_tags() {
+    async fn packed_numeric_list_and_tuple_round_trip_and_use_packed_tags() {
         let spec = RecordSpec::new(
             None,
             RecordLayout::Inline,
@@ -1627,7 +1645,7 @@ mod tests {
     }
 
     #[test]
-    fn table_soa_round_trips_with_sparse_columns() {
+    async fn table_soa_round_trips_with_sparse_columns() {
         let spec = RecordSpec::new(None, RecordLayout::Lines, vec![FieldSpec::new(1, "rows", Shape::Table(table_row_spec))]);
         let mut row0 = HashMap::new();
         row0.insert(1, FieldValue::UInt(10));
@@ -1660,7 +1678,7 @@ mod tests {
     /// must thread the known column shape through so `decode_record_fields` still backfills that
     /// sub-field as `Absent` instead of leaving it missing from the decoded `RecordValue` map.
     #[test]
-    fn table_soa_nested_record_column_backfills_absent_option_subfield() {
+    async fn table_soa_nested_record_column_backfills_absent_option_subfield() {
         let spec = RecordSpec::new(None, RecordLayout::Lines, vec![FieldSpec::new(1, "rows", Shape::Table(table_row_with_nested_record_spec))]);
         let mut header_fields = HashMap::new();
         header_fields.insert(1, FieldValue::Text("Stakeholder A".to_string()));
@@ -1689,7 +1707,7 @@ mod tests {
     /// known column `Shape::Tuple` through so `decode_value` reconstructs a `FieldValue::Tuple`,
     /// not a `FieldValue::List` — a `List` fails `[T; N]`'s `DslField::from_value` downstream.
     #[test]
-    fn table_soa_tuple_column_round_trips_as_tuple_not_list() {
+    async fn table_soa_tuple_column_round_trips_as_tuple_not_list() {
         let spec = RecordSpec::new(None, RecordLayout::Lines, vec![FieldSpec::new(1, "rows", Shape::Table(table_row_with_tuple_spec))]);
         let mut row = HashMap::new();
         row.insert(1, FieldValue::UInt(1));
@@ -1710,7 +1728,7 @@ mod tests {
     }
 
     #[test]
-    fn wire_literal_round_trips_bare_node_and_undirected_edge() {
+    async fn wire_literal_round_trips_bare_node_and_undirected_edge() {
         let spec = RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(1, "w", Shape::Wire)]);
         let mut fields = HashMap::new();
         fields.insert(1, FieldValue::Wire(WireValue { from: WireNode { id: "solo".to_string(), kind: None, port: None }, edge: None, edge_label: WireEdgeLabel::default(), properties: DslValue::Object(vec![]) }));
@@ -1723,7 +1741,7 @@ mod tests {
 
     //#region 🔖️Canonical
     #[test]
-    fn canonical_encoding_is_byte_stable_across_shuffled_insertion_order() {
+    async fn canonical_encoding_is_byte_stable_across_shuffled_insertion_order() {
         let spec = full_spec();
         let record_a = full_record();
         // Rebuild an equal `RecordValue` by inserting fields in a deliberately different order —
@@ -1747,7 +1765,7 @@ mod tests {
     }
 
     #[test]
-    fn schema_hash_is_order_independent_and_content_sensitive() {
+    async fn schema_hash_is_order_independent_and_content_sensitive() {
         let spec_a = RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(2, "b", Shape::Text), FieldSpec::new(1, "a", Shape::Int)]);
         let spec_b = RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(1, "a", Shape::Int), FieldSpec::new(2, "b", Shape::Text)]);
         assert_eq!(schema_hash(&spec_a), schema_hash(&spec_b));
@@ -1759,7 +1777,7 @@ mod tests {
 
     //#region 🔖️Unknown
     #[test]
-    fn unknown_field_round_trips_through_decode_then_reencode() {
+    async fn unknown_field_round_trips_through_decode_then_reencode() {
         let full = full_spec();
         let mut record = full_record();
         // Add a field id absent from `narrow_spec` below but present in `full` for the initial
@@ -1794,7 +1812,7 @@ mod tests {
     }
 
     #[test]
-    fn preserve_unknown_false_drops_unknown_fields_from_decoded_value_but_still_reports_them() {
+    async fn preserve_unknown_false_drops_unknown_fields_from_decoded_value_but_still_reports_them() {
         let narrow = RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(1, "a", Shape::Int)]);
         let wide = RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(1, "a", Shape::Int), FieldSpec::new(2, "b", Shape::Text)]);
         let mut fields = HashMap::new();
@@ -1814,7 +1832,7 @@ mod tests {
 
     //#region 🔖️Chunking
     #[test]
-    fn large_bytes_field_is_chunked_and_round_trips() {
+    async fn large_bytes_field_is_chunked_and_round_trips() {
         let spec = RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(1, "blob", Shape::Bytes64)]);
         let payload: Vec<u8> = (0..600_000u32).map(|i| (i % 256) as u8).collect();
         let mut fields = HashMap::new();
@@ -1830,7 +1848,7 @@ mod tests {
     }
 
     #[test]
-    fn document_body_splits_across_multiple_frames_when_frame_size_is_small() {
+    async fn document_body_splits_across_multiple_frames_when_frame_size_is_small() {
         let spec = RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(1, "text", Shape::Text)]);
         let mut fields = HashMap::new();
         fields.insert(1, FieldValue::Text("x".repeat(5000)));
@@ -1846,7 +1864,7 @@ mod tests {
 
     //#region 🔖️RecordBody
     #[test]
-    fn record_body_round_trips_every_shape() {
+    async fn record_body_round_trips_every_shape() {
         let spec = full_spec();
         let record = full_record();
         let bytes = encode_record_body(&spec, &record, &EncodeOptions::default()).expect("encode");
@@ -1856,7 +1874,7 @@ mod tests {
     }
 
     #[test]
-    fn record_body_is_deterministic_for_equal_inputs() {
+    async fn record_body_is_deterministic_for_equal_inputs() {
         let spec = full_spec();
         let a = encode_record_body(&spec, &full_record(), &EncodeOptions::default()).expect("encode a");
         let b = encode_record_body(&spec, &full_record(), &EncodeOptions::default()).expect("encode b");
@@ -1864,7 +1882,7 @@ mod tests {
     }
 
     #[test]
-    fn record_body_keeps_oversized_bytes_inline_instead_of_chunking() {
+    async fn record_body_keeps_oversized_bytes_inline_instead_of_chunking() {
         let spec = RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(1, "blob", Shape::Bytes64)]);
         let payload: Vec<u8> = (0..600_000u32).map(|i| (i % 256) as u8).collect();
         let mut fields = HashMap::new();
@@ -1879,7 +1897,7 @@ mod tests {
     }
 
     #[test]
-    fn record_body_preserves_and_reports_unknown_fields() {
+    async fn record_body_preserves_and_reports_unknown_fields() {
         let wide = RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(1, "a", Shape::Int), FieldSpec::new(9, "extra", Shape::Text)]);
         let narrow = RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(1, "a", Shape::Int)]);
         let mut fields = HashMap::new();

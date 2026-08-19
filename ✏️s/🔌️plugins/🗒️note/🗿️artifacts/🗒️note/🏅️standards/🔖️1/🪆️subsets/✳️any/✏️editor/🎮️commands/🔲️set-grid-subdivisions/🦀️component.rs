@@ -24,7 +24,7 @@ mod tests {
     use crate::editor::note::testkit::{dispatch, note_app};
     use crate::editor::note::NoteCommand;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_grid_subdivisions_and_opacity_clamp() {
         let mut app = note_app();
         dispatch(&mut app, NoteCommand::SetGridSubdivisions(SetGridSubdivisions { value: 40.0 }));

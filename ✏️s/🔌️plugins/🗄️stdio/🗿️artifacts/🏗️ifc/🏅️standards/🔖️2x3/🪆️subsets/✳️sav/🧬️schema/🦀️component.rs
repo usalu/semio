@@ -54,7 +54,7 @@ pub mod derived_construction {
     }
 
     impl Default for Ifc2x3SavBuilderConstruction {
-        async fn default() -> Self {
+        fn default() -> Self {
             Self::new()
         }
     }
@@ -100,13 +100,13 @@ pub mod derived_construction {
     mod tests {
         use super::*;
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn new_builds_clean() {
             let snapshot = Ifc2x3SavBuilderConstruction::new().add_load_group(2).build().expect("conforming construction must build");
             assert_eq!(snapshot.document.instances.len(), 2);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn removing_the_analysis_model_via_raw_mutate_still_fails_build() {
             let snapshot = Ifc2x3SavBuilderConstruction::new().build().unwrap();
             let (mutated, _diff) = Ifc2x3SavBuilderConstruction::from_snapshot(snapshot).mutate(Ifc2x3Mutation::RemoveInstance { id: 1 });
@@ -221,13 +221,13 @@ pub mod derived_analysis {
             Ifc2x3Snapshot { schema: "stdio.ifc.2x3".into(), document: Part21Document { header: header("StructuralAnalysisView"), instances: vec![model, group, loads] }, edm_preamble: None }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn conforming_snapshot_has_no_hard_diagnostics() {
             let diagnostics = check_sav_conformance(&conforming_snapshot());
             assert!(diagnostics.iter().all(|d| d.severity != Severity::Error), "got {diagnostics:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn missing_analysis_model_is_hard() {
             let mut snap = conforming_snapshot();
             snap.document.instances.retain(|i| !i.is_type("IFCSTRUCTURALANALYSISMODEL"));
@@ -235,7 +235,7 @@ pub mod derived_analysis {
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_NO_ANALYSIS_MODEL && d.severity == Severity::Error), "got {diagnostics:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn wrong_view_definition_is_hard() {
             let mut snap = conforming_snapshot();
             snap.document.header = header("CoordinationView");
@@ -243,7 +243,7 @@ pub mod derived_analysis {
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_VIEW_DEFINITION && d.severity == Severity::Error), "got {diagnostics:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn missing_loads_and_group_assignment_are_soft() {
             let mut snap = conforming_snapshot();
             snap.document.instances.retain(|i| !i.is_type("IFCRELASSIGNSTOGROUP") && !i.is_type("IFCSTRUCTURALLOADGROUP"));

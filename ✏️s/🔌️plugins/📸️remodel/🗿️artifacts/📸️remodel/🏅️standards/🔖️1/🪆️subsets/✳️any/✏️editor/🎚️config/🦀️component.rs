@@ -22,7 +22,7 @@ pub struct RemodelWorldCamera {
 }
 
 impl Default for RemodelWorldCamera {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { position: [4.0, -4.0, 3.0], target: [0.0, 0.0, 0.0], fov: 45.0 }
     }
 }
@@ -39,7 +39,7 @@ pub struct RemodelLayerVisibility {
 }
 
 impl Default for RemodelLayerVisibility {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { mesh: true, dense: true, sparse: true, cameras: true, gcps: true }
     }
 }
@@ -143,7 +143,7 @@ impl store::ArtifactPack for RemodelConfig {
 
 
 impl Default for RemodelConfig {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self {
             camera: RemodelWorldCamera::default(),
             layers: RemodelLayerVisibility::default(),
@@ -306,7 +306,7 @@ impl Mutation<RemodelConfig> for RemodelConfigMutation {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn remodel_config_default_matches_the_former_runtime_defaults() {
         let config = RemodelConfig::default();
         assert_eq!(config.camera, RemodelWorldCamera { position: [4.0, -4.0, 3.0], target: [0.0, 0.0, 0.0], fov: 45.0 });
@@ -317,7 +317,7 @@ mod tests {
         assert_eq!(config.locale, "en-US");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn remodel_config_operation_diff_is_whole_record_replace() {
         let base = RemodelConfig::default();
         let mut next = base.clone();
@@ -329,7 +329,7 @@ mod tests {
         );
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn config_mutations_apply_and_backwards_restore_the_pre_edit_snapshot() {
         let base = RemodelConfig::default();
 
@@ -360,7 +360,7 @@ mod tests {
         assert_eq!(op.diff(&base).diff().locale, "de-DE");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn config_mutations_roundtrip_through_op_text() {
         let config = RemodelConfig::default();
         store::os_store::test_support::assert_op_line_round_trip(&RemodelConfigMutation::Snapshot { config });

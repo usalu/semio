@@ -75,7 +75,7 @@ pub struct XmlDoctype {
 }
 
 impl From<&str> for XmlDoctype {
-    async fn from(value: &str) -> Self {
+    fn from(value: &str) -> Self {
         parse_doctype(value).expect("valid XML document type literal")
     }
 }
@@ -124,7 +124,7 @@ pub struct XmlSnapshot {
 }
 
 impl Default for XmlSnapshot {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { schema: STDIO_XML_DOCUMENT_SCHEMA.into(), doc: XmlDocument::default() }
     }
 }

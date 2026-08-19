@@ -131,7 +131,7 @@ mod tests {
     use super::*;
     use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn closest_point_on_plane_matches_orthogonal_projection() {
         let frame = Frame3::WORLD;
         let s = Surface::Plane { frame };
@@ -142,7 +142,7 @@ mod tests {
         assert!((d - 5.0).abs() < 1e-9);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn closest_point_on_sphere_matches_radial_projection() {
         let frame = Frame3::from_normal(Pnt3::new(1.0, 1.0, 1.0), Vec3::Z).unwrap();
         let s = Surface::Sphere { frame, radius: 3.0 };
@@ -151,7 +151,7 @@ mod tests {
         assert!((d - 17.0).abs() < 1e-6);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn closest_point_on_cylinder_matches_expected_geometry() {
         let frame = Frame3::from_normal(Pnt3::new(0.0, 0.0, 0.0), Vec3::Z).unwrap();
         let s = Surface::Cylinder { frame, radius: 2.0 };
@@ -162,7 +162,7 @@ mod tests {
         assert!(p.distance(Pnt3::new(2.0, 0.0, 5.0)) < 1e-5);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn coons_patch_reproduces_boundary_curves_exactly() {
         let c0 = |u: f64| Pnt3::new(u, 0.0, 0.0);
         let c1 = |u: f64| Pnt3::new(u, 1.0, u * u);
@@ -177,7 +177,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn coons_patch_of_planar_boundaries_is_the_bilinear_plane() {
         let c0 = |u: f64| Pnt3::new(u, 0.0, 0.0);
         let c1 = |u: f64| Pnt3::new(u, 1.0, 0.0);
@@ -190,7 +190,7 @@ mod tests {
     mod quick {
         use super::*;
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn closest_point_on_cylinder_matches_brute_force_grid_oracle() {
             let mut rng = semio_framework_geometry::random::Rng::from_seed(71);
             for _ in 0..50 {

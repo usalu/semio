@@ -111,7 +111,7 @@ pub async fn render(view: LowpolyView<'_>, loaded: Option<&LowpolyDocument>, tex
 mod tests {
     use crate::editor::lowpoly::testkit::{app, render};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn renders_uv_canvas() {
         let mut a = app();
         assert!(render(&mut a, super::LOWPOLY_PLAY_BODY_UV).contains("canvas-2d"));

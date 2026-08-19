@@ -594,7 +594,7 @@ mod tests {
     //#region 🔖️CommandSurface
     /// 🏷️ Every declared manifest action id must be reachable as exactly one command row, and every row's
     /// wire keyword must be distinct — the cross-cutting invariant `app_commands!` is there to hold.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn command_ids_are_unique() {
         let commands = every_command();
         let ids: Vec<&str> = commands.iter().map(|command| command.command_id()).collect();
@@ -606,7 +606,7 @@ mod tests {
     }
 
     /// ⚖️ LAW: text and binary are two projections of the same command, for every single row.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn every_command_round_trips_through_text_and_binary() {
         for command in every_command() {
             store::os_store::test_support::assert_op_text_binary_equivalence(&command);
@@ -619,7 +619,7 @@ mod tests {
     /// `setLocale`/`setContributions`, and the shortened `try-value`/`try-values`/
     /// `spec-json`/`active-example` keys — preserving these exactly is what makes the wire format
     /// byte-identical across the migration; see TEMPLATE.md §5.1).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
         for command in every_command() {
             let id = command.command_id();
@@ -672,7 +672,7 @@ mod tests {
     //#endregion 🔖️CommandSurface
 
     //#region 🔖️ManifestSanity
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn the_manifest_stitches_every_taxonomy_node() {
         let json = serde_json::to_string(&create_forms_app()).expect("app definition json");
         for id in [builder::FORMS_PLAY_WINDOW_BLUEPRINT, try_window::FORMS_PLAY_WINDOW_TRY] {
@@ -685,7 +685,7 @@ mod tests {
         assert!(json.contains("form.dictionary"), "artifact kind missing from the manifest");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn app_has_blueprint_and_try_windows_only() {
         let definition = create_forms_app();
         assert_eq!(definition.window_kinds.len(), 2);
@@ -698,7 +698,7 @@ mod tests {
     //#region 🔖️Interaction
     /// 🕹️ The `fields` domain is declared `HierarchyProvider::Topology`, transitive on both hover and
     /// selection, and scoped to the blueprint (builder) window kind.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fields_interaction_domain_is_declared_topology_and_transitive_on_the_blueprint_window() {
         let definition = create_forms_app();
         let fields = definition.interactions.iter().find(|interaction| interaction.id == FORMS_INTERACTION_FIELDS).expect("fields interaction domain declared");
@@ -711,7 +711,7 @@ mod tests {
 
     /// 🌳️ `interaction_topology` walks the document's own step/question nesting into `TopologyNode.parent`
     /// links — a step has no parent, every question's parent is its owning step's row id.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn interaction_topology_walks_step_nesting_into_parent_links() {
         let document = crate::artifacts::forms::schema::building_component_spec();
         let config = FormsConfig::default();
@@ -728,7 +728,7 @@ mod tests {
 
     /// 🌱️ A document with a step but no questions still contributes its (parent-less) section node —
     /// only the field-granularity nodes are absent.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn interaction_topology_has_a_section_node_and_no_field_nodes_for_a_document_with_no_questions() {
         let document = crate::artifacts::forms::schema::empty_forms_snapshot();
         let config = FormsConfig::default();
@@ -743,7 +743,7 @@ mod tests {
     //#endregion 🔖️Interaction
 
     //#region 🔖️CrossCutting
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_question_materializes_kind_default() {
         let mut app = forms_app_with_registry();
         let steps_before = forms_steps(&app.snapshot().expect("projection")).len();
@@ -753,7 +753,7 @@ mod tests {
         assert!(crate::artifacts::forms::schema::flatten_questions(&spec).iter().any(|(_, question)| question.kind == "text"), "kind default materialized from the registry");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn initial_document_seeds_building_component_fixture() {
         let app = forms_app();
         let spec = app.snapshot().expect("projection");
@@ -761,14 +761,14 @@ mod tests {
         assert!(crate::artifacts::forms::schema::flatten_questions(&spec).iter().any(|(_, question)| question.kind == "buildingComponent"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn extension_question_falls_back_without_contribution() {
         let node = render_extension_question(&building_component_question(), &Map::new(), &[], "try", true);
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("Extension unavailable"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn extension_question_emits_external_slot_when_contribution_registered() {
         let node = render_extension_question(&building_component_question(), &Map::new(), &building_component_contributions(), "try", true);
         let json = serde_json::to_string(&node).unwrap();
@@ -777,7 +777,7 @@ mod tests {
     }
 
     /// 🗂️ The open `forms.questionKind` topic shape must resolve the extension question.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn extension_question_emits_external_slot_when_topic_contribution_registered() {
         let topic_only = vec![ProgramContributionEntry {
             plugin_id: "forms-module-procedural".into(),
@@ -800,7 +800,7 @@ mod tests {
     }
 
     /// 🗂️ `catalogue_kinds` must surface topic-contributed kinds.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn catalogue_kinds_includes_topic_contributed_kinds() {
         let contributions = vec![ProgramContributionEntry {
             plugin_id: "forms-module-procedural".into(),
@@ -821,14 +821,14 @@ mod tests {
         assert!(kinds.iter().any(|(kind, label, _)| kind == "buildingComponent" && label == "Building Component"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
         use crate::editor::forms::testkit::render;
         let mut app = forms_app();
         assert!(render(&mut app, "forms.play.nope").contains("Unknown body"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn two_instances_converge_disjoint_edits() {
         semio_framework_plugin::testkit::assert_two_instances_converge::<semio_framework_plugin::EditorApp<FormsPlayApp>, (usize, usize)>("mem://forms-convergence", FormsCommand::AddQuestion(add_question::AddQuestion { kind: "text".into(), step_id: None }), FormsCommand::AddStep(add_step::AddStep {}), |app| {
             let projection = app.snapshot().expect("materialize projection");
@@ -839,7 +839,7 @@ mod tests {
     //#endregion 🔖️CrossCutting
 
     //#region 🔖️MediaPorts
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn export_media_dictionary_out_returns_default_values() {
         let app = forms_app();
         let document = app.snapshot().expect("projection");
@@ -853,7 +853,7 @@ mod tests {
         assert!(parsed.is_object());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn export_media_document_out_round_trips_through_pack() {
         let app = forms_app();
         let document = app.snapshot().expect("projection");
@@ -867,7 +867,7 @@ mod tests {
         assert_eq!(decoded, document);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn forms_io_exposes_dictionary_out_port() {
         let io = FormsPlayApp::io().expect("forms declares io");
         assert!(io.ports.iter().any(|port| port.id == "dictionary:out"));
@@ -876,7 +876,7 @@ mod tests {
     /// 🔌️ Relocated from the deleted artifact `⚙️engine`'s own `forms_io()` unit test (ticket
     /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — asserts the full port shape, not just
     /// presence, alongside `forms_io_exposes_dictionary_out_port` above.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn forms_io_declares_dictionary_out_port() {
         let io = forms_io();
         assert_eq!(io.document_schema, FORMS_DOCUMENT_SCHEMA);

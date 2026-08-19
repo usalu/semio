@@ -64,7 +64,7 @@ mod tests {
         CsvField { value: s.into(), quoted: false }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn header_rows_become_a_list_of_keyed_maps() {
         let snapshot = CsvSnapshot {
             schema: crate::artifacts::csv::STDIO_CSV_DOCUMENT_SCHEMA.into(),
@@ -81,7 +81,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn ragged_short_record_omits_missing_trailing_keys() {
         let snapshot = CsvSnapshot { schema: crate::artifacts::csv::STDIO_CSV_DOCUMENT_SCHEMA.into(), has_header: true, records: vec![CsvRecord { fields: vec![field("a"), field("b"), field("c")] }, CsvRecord { fields: vec![field("1")] }] };
         let value = semio_value_from_csv(&snapshot);
@@ -94,7 +94,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn headerless_csv_becomes_a_list_of_lists() {
         let snapshot = CsvSnapshot { schema: crate::artifacts::csv::STDIO_CSV_DOCUMENT_SCHEMA.into(), has_header: false, records: vec![CsvRecord { fields: vec![field("x"), field("y")] }] };
         let value = semio_value_from_csv(&snapshot);

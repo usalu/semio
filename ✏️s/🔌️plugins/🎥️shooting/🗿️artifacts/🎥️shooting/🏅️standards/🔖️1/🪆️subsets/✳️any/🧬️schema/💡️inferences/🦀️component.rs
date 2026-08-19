@@ -33,7 +33,7 @@ impl protocol::Inference<ShootingSnapshot> for ShootingInference {
 /// 🌱 Defined in terms of `infer` (not derived) so this stays correct regardless of what
 /// `ShootingSnapshot::default()` happens to contain.
 impl Default for ShootingInference {
-    async fn default() -> Self {
+    fn default() -> Self {
         <Self as protocol::Inference<ShootingSnapshot>>::infer(&ShootingSnapshot::default())
     }
 }
@@ -93,13 +93,13 @@ mod tests {
     //#endregion 🧸️Fixtures
 
     //#region 🧪️InferenceLaws
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = sample_snapshot();
         assert_eq!(ShootingInference::infer(&snapshot), ShootingInference::infer(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(ShootingInference::infer(&ShootingSnapshot::default()), ShootingInference::default());
     }

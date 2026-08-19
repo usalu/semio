@@ -44,22 +44,22 @@ pub async fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyEr
 mod surface_tests {
     use semio_framework_plugin::testkit::{assert_editor_and_viewer_share_dialect, assert_viewer_never_mutates};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fem2d_viewer_never_mutates() {
         assert_viewer_never_mutates::<crate::viewer::fem2d::Fem2dViewer>();
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fem2d_editor_and_viewer_share_dialect() {
         assert_editor_and_viewer_share_dialect::<crate::editor::fem2d::Fem2dPlayApp, crate::viewer::fem2d::Fem2dViewer>();
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fem3d_viewer_never_mutates() {
         assert_viewer_never_mutates::<crate::viewer::fem3d::Fem3dViewer>();
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fem3d_editor_and_viewer_share_dialect() {
         assert_editor_and_viewer_share_dialect::<crate::editor::fem3d::Fem3dPlayApp, crate::viewer::fem3d::Fem3dViewer>();
     }

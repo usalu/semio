@@ -116,13 +116,13 @@ pub mod derived_construction {
     mod tests {
         use super::*;
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn new_stamps_strict_and_builds_clean() {
             let snapshot = XlsxStrictBuilderConstruction::new(XlsxWorkbook::default()).build().expect("conforming construction must build");
             assert!(check_strict_conformance(&snapshot).iter().all(|d| d.severity != Severity::Error), "got {:?}", check_strict_conformance(&snapshot));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn hard_violation_injected_via_raw_mutate_still_fails_build() {
             let mut snapshot = XlsxStrictBuilderConstruction::new(XlsxWorkbook::default()).build().unwrap();
             // Directly corrupt the stamped namespace, bypassing every typed constructor -- mirrors the
@@ -289,14 +289,14 @@ pub mod derived_analysis {
             XlsxSnapshot::from_parts(opc, Default::default())
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn conforming_strict_workbook_has_no_hard_diagnostics() {
             let snapshot = snapshot_with_workbook(STRICT_SML_NS, STRICT_R_NS, Some("strict"));
             let diagnostics = check_strict_conformance(&snapshot);
             assert!(diagnostics.iter().all(|d| d.severity != Severity::Error), "got {diagnostics:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn transitional_namespace_is_hard() {
             let snapshot = snapshot_with_workbook("http://schemas.openxmlformats.org/spreadsheetml/2006/main", "http://schemas.openxmlformats.org/officeDocument/2006/relationships", Some("strict"));
             let diagnostics = check_strict_conformance(&snapshot);
@@ -304,14 +304,14 @@ pub mod derived_analysis {
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_RELATIONSHIPS_NAMESPACE_MISMATCH && d.severity == Severity::Error), "got {diagnostics:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn missing_conformance_attribute_is_hard() {
             let snapshot = snapshot_with_workbook(STRICT_SML_NS, STRICT_R_NS, None);
             let diagnostics = check_strict_conformance(&snapshot);
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_CONFORMANCE_ATTRIBUTE && d.severity == Severity::Error), "got {diagnostics:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn vml_part_is_hard() {
             let mut snapshot = snapshot_with_workbook(STRICT_SML_NS, STRICT_R_NS, Some("strict"));
             snapshot.opc.set_part("xl/drawings/vmlDrawing1.vml", VML_CONTENT_TYPE, b"<xml/>".to_vec());
@@ -319,7 +319,7 @@ pub mod derived_analysis {
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_VML_FORBIDDEN && d.severity == Severity::Error), "got {diagnostics:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn worksheet_wrong_content_type_is_soft() {
             let mut snapshot = snapshot_with_workbook(STRICT_SML_NS, STRICT_R_NS, Some("strict"));
             snapshot.opc.set_part("xl/worksheets/sheet1.xml", "application/xml", b"<worksheet/>".to_vec());

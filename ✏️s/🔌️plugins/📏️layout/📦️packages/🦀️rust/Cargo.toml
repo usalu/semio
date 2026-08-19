@@ -48,3 +48,6 @@ serde-wasm-bindgen = "0.6.5"
 wasm-bindgen = "0.2.106"
 wasm-bindgen-futures = "0.4.71"
 web-sys = { version = "0.3.98", features = ["HtmlCanvasElement"] }
+
+[dev-dependencies]
+semio-framework-async-macros = { path = "../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }

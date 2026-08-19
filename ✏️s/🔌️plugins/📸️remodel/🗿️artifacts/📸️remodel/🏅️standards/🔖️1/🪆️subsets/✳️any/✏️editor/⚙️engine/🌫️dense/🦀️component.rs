@@ -287,7 +287,7 @@ pub struct PatchMatchConfig {
 }
 
 impl Default for PatchMatchConfig {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { window_radius: 3, iterations: 4, depth_min: 0.1, depth_max: 100.0, seed: 0x5EED_1234_ABCD_EF01, best_k: 3 }
     }
 }
@@ -604,7 +604,7 @@ pub struct FusionConfig {
 }
 
 impl Default for FusionConfig {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { max_relative_depth_diff: 0.01, max_normal_angle_deg: 30.0, min_consistent_views: 2 }
     }
 }
@@ -1500,7 +1500,7 @@ mod tests {
     }
 
     // #region 🔖️PatchMatchTests
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn patchmatch_mvs_recovers_known_plane_depth() {
         let (width, height) = (48u32, 48u32);
         let intr = intrinsics_for(width, height);
@@ -1530,7 +1530,7 @@ mod tests {
         assert!(median_err < 0.01 * range, "median depth error {median_err} vs 1% of range {range} ({}..{})", cfg.depth_min, cfg.depth_max);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn patchmatch_mvs_recovers_known_sphere_depth() {
         let (width, height) = (48u32, 48u32);
         let intr = intrinsics_for(width, height);
@@ -1567,7 +1567,7 @@ mod tests {
     // #endregion 🔖️PatchMatchTests
 
     // #region 🔖️PlaneSweepTests
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn plane_sweep_depth_recovers_known_plane_depth() {
         let (width, height) = (32u32, 32u32);
         let intr = intrinsics_for(width, height);
@@ -1598,7 +1598,7 @@ mod tests {
     // #endregion 🔖️PlaneSweepTests
 
     // #region 🔖️DepthFilterTests
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn left_right_check_invalidates_planted_inconsistency() {
         let (width, height) = (20u32, 20u32);
         let intr = intrinsics_for(width, height);
@@ -1626,7 +1626,7 @@ mod tests {
         assert!((filtered.get(9, 9).unwrap() - true_depth).abs() < 1e-4);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn speckle_filter_removes_small_isolated_components() {
         let (width, height) = (10u32, 10u32);
         let mut dm = DepthMap::new(width, height);
@@ -1649,7 +1649,7 @@ mod tests {
         assert!(filtered.get(7, 5).is_some());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn median_fill_fills_missing_pixels_from_valid_neighbors() {
         let (width, height) = (5u32, 5u32);
         let mut dm = DepthMap::new(width, height);
@@ -1666,7 +1666,7 @@ mod tests {
         assert!(filled_empty.get(1, 1).is_none());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn margin_confidence_rewards_well_textured_high_margin() {
         let (width, height) = (24u32, 24u32);
         let intr = intrinsics_for(width, height);
@@ -1713,7 +1713,7 @@ mod tests {
     // #endregion 🔖️DepthFilterTests
 
     // #region 🔖️FusionTests
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fuse_depth_maps_recovers_plane_points() {
         let (width, height) = (16u32, 16u32);
         let intr = intrinsics_for(width, height);
@@ -1731,7 +1731,7 @@ mod tests {
     // #endregion 🔖️FusionTests
 
     // #region 🔖️TsdfTests
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn tsdf_integrate_zero_crossing_near_true_surface() {
         let (width, height) = (24u32, 24u32);
         let intr = intrinsics_for(width, height);
@@ -1762,7 +1762,7 @@ mod tests {
         assert!((cz - plane_z).abs() < 0.1, "crossing at {cz} vs true {plane_z}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn tsdf_sphere_multi_view_zero_crossing_within_one_voxel() {
         let (width, height) = (48u32, 48u32);
         let intr = intrinsics_for(width, height);
@@ -1796,7 +1796,7 @@ mod tests {
         assert!((cr - radius).abs() < voxel_size, "crossing radius {cr} vs true {radius}, voxel {voxel_size}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn tsdf_sample_agrees_across_block_boundaries_regardless_of_integration_order() {
         // Deliberately low-resolution/low-truncation: a running weighted average is exactly
         // order-independent only until `TSDF_MAX_WEIGHT` clamps a voxel's accumulated weight, at
@@ -1856,7 +1856,7 @@ mod tests {
     // #endregion 🔖️TsdfTests
 
     // #region 🔖️CloudOpsTests
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn estimate_normals_recovers_plane_normal() {
         let mut state = 123u64;
         let mut positions = Vec::new();
@@ -1885,7 +1885,7 @@ mod tests {
         assert!(ok as f64 / total as f64 > 0.9, "expected most interior normals to face +z, got {ok}/{total}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn voxel_downsample_averages_grid_cells_correctly() {
         let positions = vec![[0.1, 0.1, 0.1], [0.4, 0.4, 0.4], [1.6, 1.6, 1.6], [1.9, 1.9, 1.9]];
         let cloud = PointCloud::from_positions(positions);
@@ -1898,7 +1898,7 @@ mod tests {
         assert!((sorted[1][0] - 1.75).abs() < 1e-9);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn statistical_outlier_removal_keeps_cluster_and_drops_far_outliers() {
         let mut state = 55u64;
         let mut positions = Vec::new();
@@ -1916,7 +1916,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn radius_outlier_removal_drops_isolated_points() {
         let mut state = 91u64;
         let mut positions = Vec::new();
@@ -1933,7 +1933,7 @@ mod tests {
     // #endregion 🔖️CloudOpsTests
 
     // #region 🔖️ClassifyTests
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn classify_ground_pmf_achieves_high_ground_recall_with_buildings_and_vegetation() {
         let mut positions = Vec::new();
         for iy in 0..20 {
@@ -1971,7 +1971,7 @@ mod tests {
         assert!(f64::from(non_ground_kept as u32) / non_ground_total as f64 <= 0.1, "too many non-ground points kept as ground: {non_ground_kept}/{non_ground_total}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn classify_building_vegetation_splits_planar_from_scattered() {
         // A flat planar patch (roof-like) vs a scattered noisy patch (canopy-like), both elevated
         // above the ground and pre-labeled Unclassified as classify_ground_pmf would leave them.
@@ -2008,7 +2008,7 @@ mod tests {
         assert!(f64::from(scattered_vegetation as u32) / scattered_count as f64 > 0.6, "expected most of the scattered patch classified Vegetation, got {scattered_vegetation}/{scattered_count}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn region_grow_planes_groups_planar_patch() {
         let mut positions = Vec::new();
         for iy in 0..10 {
@@ -2027,7 +2027,7 @@ mod tests {
     // #endregion 🔖️ClassifyTests
 
     // #region 🔖️ChangeTests
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn cloud_distance_and_m3c2_measure_planted_offset() {
         let mut positions_a = Vec::new();
         for iy in 0..15 {

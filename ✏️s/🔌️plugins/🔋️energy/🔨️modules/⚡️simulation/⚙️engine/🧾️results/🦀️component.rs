@@ -80,7 +80,7 @@ pub struct RunMetadata {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn summary_tables_accumulate() {
         let mut s = SummaryTables::default();
         s.add_annual("Electricity", 1000.0, "kWh");

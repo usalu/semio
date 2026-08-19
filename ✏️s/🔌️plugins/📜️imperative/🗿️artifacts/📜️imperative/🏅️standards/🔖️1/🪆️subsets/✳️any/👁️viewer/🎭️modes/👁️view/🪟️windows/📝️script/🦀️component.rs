@@ -34,14 +34,14 @@ pub async fn render(document: &ImperativeSnapshot) -> UiNode {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn definition_declares_a_text_window() {
         let def = definition();
         assert_eq!(def.id, WINDOW_KIND_ID);
         assert_eq!(def.body_key, BODY_KEY);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn render_compiles_the_default_document_into_read_only_text() {
         let document = crate::artifacts::imperative::schema::default_snapshot();
         let UiNode::ComponentScene(node) = render(&document) else { panic!("expected ComponentScene") };

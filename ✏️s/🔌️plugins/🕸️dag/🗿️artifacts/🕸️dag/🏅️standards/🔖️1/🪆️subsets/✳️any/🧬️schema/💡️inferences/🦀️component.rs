@@ -34,7 +34,7 @@ impl protocol::Inference<DagSnapshot> for DagInference {
 /// (non-empty), the same "match `infer` of the real default, don't derive structurally" trick as
 /// `AddInference`'s hand-written `Default` in `📡️spr/🎮️command/🦀️component.rs`.
 impl Default for DagInference {
-    async fn default() -> Self {
+    fn default() -> Self {
         <Self as protocol::Inference<DagSnapshot>>::infer(&DagSnapshot::default())
     }
 }
@@ -99,18 +99,18 @@ mod tests {
         DagSnapshot { schema: "dag.dag".into(), content }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = chain_snapshot();
         assert_eq!(DagInference::infer(&snapshot), DagInference::infer(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(DagInference::infer(&DagSnapshot::default()), DagInference::default());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn topology_counts_every_node_exactly_once() {
         let snapshot = chain_snapshot();
         let inferred = DagInference::infer(&snapshot);

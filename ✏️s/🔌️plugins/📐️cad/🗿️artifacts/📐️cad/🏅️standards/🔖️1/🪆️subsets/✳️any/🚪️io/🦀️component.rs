@@ -296,7 +296,7 @@ use semio_s_plugin_stdio::artifacts::obj::standards::v3_0::engine::encode_obj;
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint3;
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::io::export::serializers::artifacts::step::v_ap214::any::SemioBrepToStep;
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::io::import::deserializers::artifacts::step::v_ap214::any::SemioBrepFromStep;
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::{block_on, BrepKernel, GeometryHandle};
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::{block_on, Brep, BrepKernel, GeometryHandle};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
 #[cfg(test)]
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::mesh::io::export::serializers::artifacts::gltf::v2_0::any::SemioMeshToGltf;
@@ -350,7 +350,7 @@ async fn cad_solid_export_mime_type(dialect_id: &str) -> Option<&'static str> {
 /// left empty (the kernel's `MeshTransfer` carries neither). Solids that fail to tessellate or
 /// tessellate to zero triangles are skipped (never a fabricated triangle); `None` only when NOT A
 /// SINGLE solid produced real geometry.
-async fn semio_mesh_snapshot_from_solids(kernel: &mut dyn BrepKernel, solids: &[GeometryHandle], deflection: f64) -> Option<SemioMeshSnapshot> {
+async fn semio_mesh_snapshot_from_solids(kernel: &mut Brep, solids: &[GeometryHandle], deflection: f64) -> Option<SemioMeshSnapshot> {
     let mut meshes = Vec::new();
     for (index, handle) in solids.iter().enumerate() {
         let Ok(transfer) = block_on(kernel.tessellate(handle, deflection)) else { continue };
@@ -435,7 +435,7 @@ async fn step_text_from_semio_brep_snapshot(brep: &SemioBrepSnapshot) -> Option<
 /// which both validates the kernel's output against stdio's AP214 entity-graph walk and produces
 /// the export from the SAME codec stdio/semio uses everywhere else. STL is base64-wrapped since it
 /// is a binary format, OBJ/STEP stay UTF-8 text.
-pub async fn export_solids_as(kernel: &mut dyn BrepKernel, solids: &[GeometryHandle], format: &str, stem: &str) -> Option<CadSolidExport> {
+pub async fn export_solids_as(kernel: &mut Brep, solids: &[GeometryHandle], format: &str, stem: &str) -> Option<CadSolidExport> {
     let extension = cad_solid_export_extension(format)?;
     let filename = format!("{stem}.{extension}");
     let mime_type = cad_solid_export_mime_type(format)?.to_string();
@@ -725,7 +725,7 @@ mod tests {
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::Brep;
 
     //#region 🔖️SemioMeshBridge
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn export_solids_as_obj_uses_real_stdio_mesh_codec_not_hand_rolled_bytes() {
         let mut kernel = Brep::new();
         let solid = block_on(kernel.box_prim(1.0, 1.0, 1.0)).expect("box");
@@ -739,7 +739,7 @@ mod tests {
         assert!(export.encoding.is_none());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn export_solids_as_stl_uses_real_stdio_mesh_codec() {
         let mut kernel = Brep::new();
         let solid = block_on(kernel.box_prim(1.0, 1.0, 1.0)).expect("box");
@@ -753,7 +753,7 @@ mod tests {
         assert_eq!(bytes.len(), 84 + (triangle_count as usize) * 50);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn export_solids_as_obj_none_for_a_solid_that_fails_to_tessellate() {
         let mut kernel = Brep::new();
         let solid = block_on(kernel.box_prim(1.0, 1.0, 1.0)).expect("box");
@@ -763,7 +763,7 @@ mod tests {
     //#endregion 🔖️SemioMeshBridge
 
     //#region 🔖️SemioBrepBridge
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn export_solids_as_step_round_trips_through_real_semio_brep_bridge() {
         let mut kernel = Brep::new();
         let solid = block_on(kernel.box_prim(2.0, 3.0, 4.0)).expect("box");
@@ -825,7 +825,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn semio_brep_snapshot_from_step_text_carries_real_topology() {
         let mut kernel = Brep::new();
         let solid = block_on(kernel.box_prim(1.0, 1.0, 1.0)).expect("box");
@@ -838,7 +838,7 @@ mod tests {
         assert!(round_tripped.starts_with("ISO-10303-21;"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn repair_step_trailing_comma_before_close_paren_is_quote_aware() {
         assert_eq!(repair_step_trailing_comma_before_close_paren("(#1,)"), "(#1)");
         assert_eq!(repair_step_trailing_comma_before_close_paren("(#1, #2,)"), "(#1, #2)");

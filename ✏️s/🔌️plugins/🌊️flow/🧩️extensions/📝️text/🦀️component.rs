@@ -80,7 +80,7 @@ mod tests {
     use super::*;
     use flow_extension_sdk::{build_manifest_json, evaluate_json, FlowExtensionCommand};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn concat_joins_text() {
         let mut reg = Registry::new();
         register(&mut reg);
@@ -91,14 +91,14 @@ mod tests {
         assert_eq!(text.get("value").and_then(|v| v.as_atom()).and_then(|a| a.as_str()), Some("hi!"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn manifest_lists_text_operators() {
         let json = build_manifest_json("text", "Text", "0.1.0", &module_registry(), vec!["onStartup".into()], vec![], vec![FlowExtensionCommand { id: "text.showHelp".into(), title: "Text: Show Help".into() }], vec![]);
         assert!(json.contains("text.concat"));
         assert!(json.contains("\"operators\""));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn evaluate_json_uppercases_text() {
         let input = Dictionary::new().insert("text", Value::Dictionary(text_dictionary("hi".into())));
         let out_json = evaluate_json(&module_registry(), "text.upper", &serde_json::to_string(&input).unwrap());

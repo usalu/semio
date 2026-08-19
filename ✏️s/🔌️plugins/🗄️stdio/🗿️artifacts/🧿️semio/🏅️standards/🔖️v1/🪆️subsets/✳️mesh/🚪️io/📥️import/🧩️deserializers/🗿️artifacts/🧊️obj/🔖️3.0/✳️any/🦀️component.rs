@@ -138,7 +138,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn deserialize_fan_triangulates_the_quad_into_two_triangles() {
         let semio = semio_framework_plugin::resolve_ready(SemioMeshFromObj::deserialize(&sample_obj())).expect("deserialize");
         assert_eq!(semio.meshes.len(), 1);
@@ -153,7 +153,7 @@ mod tests {
         assert_eq!(prim.positions[2], SemioPoint3 { x: 1.0, y: 1.0, z: 0.0 });
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn objects_partition_into_separate_semio_meshes() {
         let mut obj = sample_obj();
         obj.faces.push(ObjFace { vertices: vec![ObjFaceVertex { vertex: 0, texcoord: Some(0), normal: Some(0) }, ObjFaceVertex { vertex: 1, texcoord: Some(1), normal: Some(0) }, ObjFaceVertex { vertex: 2, texcoord: Some(2), normal: Some(0) }] });
@@ -165,7 +165,7 @@ mod tests {
         assert_eq!(semio.meshes[1].primitives[0].positions.len(), 3);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn out_of_range_vertex_reference_is_a_hard_error() {
         let mut obj = sample_obj();
         obj.faces[0].vertices[0].vertex = 999;

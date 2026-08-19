@@ -70,7 +70,7 @@ mod tests {
     use super::*;
     use crate::editor::gis2d::terminology::gis2d_labels;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn weight_entries_default_to_one_and_honour_explicit_overrides() {
         let mut config = Gis2dConfig::default();
         let labels = gis2d_labels(&config);
@@ -82,7 +82,7 @@ mod tests {
         assert_eq!(overridden.iter().find(|(id, _, _)| id == &first_id).map(|(_, _, value)| *value), Some(2.0));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn the_group_is_collapsed_by_default_and_mirrors_the_entry_list() {
         let config = Gis2dConfig::default();
         let labels = gis2d_labels(&config);

@@ -32,7 +32,7 @@ mod tests {
     use super::*;
     use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::{PdfInfo, PdfPage};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn counts_pages_and_words_and_carries_title() {
         let snapshot = PdfSnapshot {
             schema: "stdio.pdf.1.7".into(),
@@ -52,7 +52,7 @@ mod tests {
         assert_eq!(outline.title, Some("My Document".to_string()));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn outline_is_deterministic() {
         let snapshot = PdfSnapshot::default();
         assert_eq!(Pdf17Outline::compute(&snapshot), Pdf17Outline::compute(&snapshot));

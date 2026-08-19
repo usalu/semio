@@ -310,7 +310,7 @@ pub struct CsvOptions {
 }
 
 impl Default for CsvOptions {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { delimiter: ',', has_header: true }
     }
 }
@@ -463,20 +463,20 @@ mod tests {
     }
 
     // #region 🔖️CategoricalTests
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn categorical_from_labels_assigns_first_seen_order() {
         let col = CategoricalColumn::from_labels(&["b", "a", "b", "", "c"]);
         assert_eq!(col.levels(), &["b".to_string(), "a".to_string(), "c".to_string()]);
         assert_eq!(col.codes(), &[0, 1, 0, MISSING_CODE, 2]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn categorical_counts_exclude_missing() {
         let col = CategoricalColumn::from_labels(&["a", "b", "a", ""]);
         assert_eq!(col.counts(), vec![2, 1]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn categorical_one_hot_matches_hand_matrix() {
         let col = CategoricalColumn::from_labels(&["a", "b", "c", ""]);
         let full = col.one_hot(false);
@@ -492,14 +492,14 @@ mod tests {
         assert!(dropped[3].iter().all(|v| v.is_nan()));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn categorical_from_parts_rejects_out_of_range_code() {
         assert!(CategoricalColumn::from_parts(vec!["a".to_string()], vec![5]).is_err());
     }
     // #endregion 🔖️CategoricalTests
 
     // #region 🔖️TableTests
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn push_column_length_mismatch_errors() {
         let mut table = Table::new();
         table.push_continuous("x", vec![1.0, 2.0, 3.0]).unwrap();
@@ -507,20 +507,20 @@ mod tests {
         assert!(matches!(err, TabularError::LengthMismatch { expected: 3, found: 2 }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn push_column_duplicate_name_errors() {
         let mut table = Table::new();
         table.push_continuous("x", vec![1.0]).unwrap();
         assert!(matches!(table.push_continuous("x", vec![2.0]), Err(TabularError::DuplicateName(_))));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn column_index_unknown_errors() {
         let table = Table::new();
         assert!(matches!(table.column_index("missing"), Err(TabularError::UnknownColumn(_))));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn continuous_and_categorical_type_errors() {
         let mut table = Table::new();
         table.push_continuous("x", vec![1.0]).unwrap();
@@ -529,7 +529,7 @@ mod tests {
         assert!(matches!(table.continuous(1), Err(TabularError::NotContinuous(_))));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn complete_rows_and_drop_missing() {
         let mut table = Table::new();
         table.push_continuous("x", vec![1.0, f64::NAN, 3.0, 4.0, f64::NAN]).unwrap();
@@ -541,7 +541,7 @@ mod tests {
         assert!(nan_aware_eq(dropped.continuous(0).unwrap(), &[1.0, 4.0]));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn select_rows_allows_repetition_for_bootstrap() {
         let mut table = Table::new();
         table.push_continuous("x", vec![10.0, 20.0, 30.0]).unwrap();
@@ -549,7 +549,7 @@ mod tests {
         assert!(nan_aware_eq(resampled.continuous(0).unwrap(), &[30.0, 30.0, 10.0]));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn select_columns_projects_subset() {
         let mut table = Table::new();
         table.push_continuous("x", vec![1.0, 2.0]).unwrap();
@@ -561,7 +561,7 @@ mod tests {
     // #endregion 🔖️TableTests
 
     // #region 🔖️CsvTests
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn csv_round_trip_with_missing_values() {
         let mut table = Table::new();
         table.push_continuous("x", vec![1.5, f64::NAN, 3.0]).unwrap();
@@ -573,7 +573,7 @@ mod tests {
         assert_eq!(parsed.categorical(1).unwrap().codes(), table.categorical(1).unwrap().codes());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn csv_parses_quoted_field_with_embedded_delimiter_and_escaped_quote() {
         let text = "name,note\na,\"x, \"\"y\"\"\"\n";
         let table = Table::parse_csv(text, CsvOptions::default()).unwrap();
@@ -581,7 +581,7 @@ mod tests {
         assert_eq!(note.level(note.codes()[0]).unwrap(), "x, \"y\"");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn csv_type_inference_continuous_with_blank_is_nan() {
         let text = "x\n1\n2\n\n4\n";
         let table = Table::parse_csv(text, CsvOptions::default()).unwrap();
@@ -589,14 +589,14 @@ mod tests {
         assert!(nan_aware_eq(values, &[1.0, 2.0, f64::NAN, 4.0]));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn csv_type_inference_any_nonnumeric_is_categorical() {
         let text = "x\n1\nfoo\n3\n";
         let table = Table::parse_csv(text, CsvOptions::default()).unwrap();
         assert!(table.categorical(0).is_ok());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn csv_headerless_synthesizes_names() {
         let text = "1,a\n2,b\n";
         let table = Table::parse_csv(text, CsvOptions { has_header: false, ..Default::default() }).unwrap();
@@ -605,7 +605,7 @@ mod tests {
     // #endregion 🔖️CsvTests
 
     // #region 🔖️SerdeTests
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn table_json_round_trip() {
         // No NaN in the continuous column here: serde_json has no JSON representation for NaN
         // (it serializes to `null`, which `f64`'s Deserialize then rejects), so JSON round-tripping

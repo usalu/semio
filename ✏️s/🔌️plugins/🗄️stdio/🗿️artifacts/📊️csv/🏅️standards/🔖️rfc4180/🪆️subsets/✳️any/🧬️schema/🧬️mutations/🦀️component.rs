@@ -335,7 +335,7 @@ mod tests {
     //#endregion 🔖️FieldSweepFixtures
 
     //#region 🔖️MutationDiffLaw
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mutation_diff_law() {
         let base = base_snapshot();
         let variants = vec![
@@ -360,7 +360,7 @@ mod tests {
     //#endregion 🔖️MutationDiffLaw
 
     //#region 🔖️InverseLaw
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inverse_law() {
         let base = base_snapshot();
         let variants = vec![
@@ -390,7 +390,7 @@ mod tests {
     //#endregion 🔖️InverseLaw
 
     //#region 🔖️AbsorbLaw
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_law() {
         let base = base_snapshot();
 
@@ -457,7 +457,7 @@ mod tests {
     //#endregion 🔖️AbsorbLaw
 
     //#region 🔖️BetweenRoundtripLaw
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn between_roundtrip_law() {
         let a = base_snapshot();
         let b = sweep_b();
@@ -475,7 +475,7 @@ mod tests {
     //#endregion 🔖️BetweenRoundtripLaw
 
     //#region 🔖️FieldSweep
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn field_sweep_every_mutable_field_changes() {
         let a = sweep_a();
         let b = sweep_b();
@@ -508,7 +508,7 @@ mod tests {
     /// exercises every variant, incl. a `SetSnapshot` payload whose record fields contain the
     /// grammar's own reserved separator characters (`,`/`[`/`]`/space) to prove hex-encoding
     /// sidesteps escaping entirely.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_text_binary_roundtrip_law() {
         let mutations = vec![
             CsvMutation::NoMutation,
@@ -538,7 +538,7 @@ mod tests {
     /// 🧪️ P2-P1 item 6: `dsl::parse_grammar` + `dsl::Recognizer` recognize REAL `print_op`
     /// output for several real mutations (not just one trivial case), incl. `SetSnapshot`'s own
     /// nested positional-tuple `snapshot-value` production.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn ops_grammar_conformance_law() {
         let grammar_text = crate::artifacts::csv::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO;
         let grammar = dsl::parse_grammar(grammar_text).expect("parse mutations grammar");

@@ -150,7 +150,7 @@ mod tests {
         SlideFrame { origin: SemioPoint2 { x: 0.0, y: 0.0 }, width: 10.0, height: 10.0 }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn collects_headings_and_counts_across_masters_layouts_slides_and_notes() {
         let snapshot = SemioPresentationSnapshot {
             schema: STDIO_SEMIOPRESENTATION_DOCUMENT_SCHEMA.into(),
@@ -174,13 +174,13 @@ mod tests {
         assert_eq!(outline.word_count, 11); // "Title Master"(2) + "Slide Heading"(2) + "one two three"(3) + "cell text"(2) + "speaker notes"(2)
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = SemioPresentationSnapshot::default();
         assert_eq!(compute_semio_presentation_outline(&snapshot), compute_semio_presentation_outline(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(compute_semio_presentation_outline(&SemioPresentationSnapshot::default()), SemioPresentationOutline::default());
     }

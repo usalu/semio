@@ -82,7 +82,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn maps_nodes_and_edges_to_json() {
         let json = semio_framework_plugin::resolve_ready(SemioFlowToJson::serialize(&sample_semio())).expect("serialize");
         let root = match &json.value {
@@ -99,7 +99,7 @@ mod tests {
     /// 🔁️ Full round trip through THIS pair alone: serialize then encode/decode through the real
     /// `JsonSnapshot::ArtifactPack` byte codec and re-parse — proves the JSON shape this leaf emits
     /// is not just structurally right but genuinely re-parseable RFC8259 text.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn serialized_json_round_trips_through_the_real_json_text_codec() {
         let json1 = semio_framework_plugin::resolve_ready(SemioFlowToJson::serialize(&sample_semio())).expect("serialize");
         let text = crate::artifacts::json::schema::snapshot::write_json_text(&json1.value);

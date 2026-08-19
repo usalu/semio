@@ -54,7 +54,7 @@ mod tests {
 
     /// 🕹️ `handle`'s macro-only path treats the selection as empty (no `InteractionView` reachable) —
     /// nothing gets deleted.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn handle_alone_deletes_nothing_without_a_live_selection() {
         let mut app = new_app();
         dispatch(&mut app, WiresCommand::AddNode(add_node::AddNode { kind: "identity".into() }));
@@ -66,7 +66,7 @@ mod tests {
     /// spawns a node, selects it via the framework's real `interactionSelect` action (the only way a
     /// downstream crate can populate a genuine `InteractionView`), then confirms `deleteSelection`
     /// removes exactly that node.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn delete_selection_removes_the_live_selected_node() {
         let mut app = app_with_registry();
         dispatch(&mut app, WiresCommand::AddNode(add_node::AddNode { kind: "identity".into() }));

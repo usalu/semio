@@ -21,7 +21,7 @@ pub struct MdArtifact {
 
 //#region 🔖️Conversions
 impl Default for MdArtifact {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self::from_snapshot(MdSnapshot::default())
     }
 }
@@ -230,18 +230,18 @@ pub mod derived_analysis {
     mod tests {
         use super::*;
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn sniff_real_markdown_structure_is_high() {
             let text = "# Title\n\n- one\n- two\n";
             assert_eq!(MdAnalyzerAnalysis::sniff(&AnalyzeSource::Text(text)), IoConfidence::High);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn sniff_plain_paragraph_text_is_medium() {
             assert_eq!(MdAnalyzerAnalysis::sniff(&AnalyzeSource::Text("just a plain sentence.")), IoConfidence::Medium);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn sniff_empty_is_low() {
             assert_eq!(MdAnalyzerAnalysis::sniff(&AnalyzeSource::Text("")), IoConfidence::Low);
         }
@@ -333,13 +333,13 @@ mod tests {
     use protocol::command::DiffAlgebra;
     use protocol::{Mutation, MutationDiff};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn empty_snapshot_matches_schema() {
         let snapshot = empty_md_snapshot();
         assert_eq!(snapshot.schema, STDIO_MD_DOCUMENT_SCHEMA);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn codec_round_trip() {
         let snap = empty_md_snapshot();
         let text = store::ArtifactDsl::print_dsl(&snap);
@@ -350,7 +350,7 @@ mod tests {
         assert_eq!(decoded, snap);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn demo_snapshot_round_trip() {
         let snap = demo_md_snapshot();
         let text = store::ArtifactDsl::print_dsl(&snap);
@@ -377,7 +377,7 @@ mod tests {
         /// ✅️ "committed files parse": all 6 handcrafted `.grammar.semio`/`.protocol.semio` files
         /// parse under the real dialect — independent of, and cheaper than, the two `recognize`/
         /// `walk_protocol` laws below (a parse failure here fails fast with a clearer message).
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn committed_facet_files_parse() {
             for (label, text) in [("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO)] {
                 let grammar = dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
@@ -392,7 +392,7 @@ mod tests {
         /// for the demo (genuinely block-quote-recursive) snapshot — same preamble-stripped body
         /// reconstruction `m5_handcrafted_grammar_conformance`'s own `dsl_body_from_fixture` uses,
         /// so this is a direct proof this artifact will pass that harness once graduated.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn grammar_conformance_law() {
             let grammar = dsl::parse_grammar(snapshot::text::COMPONENT_GRAMMAR_SEMIO).expect("parse snapshot grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
@@ -405,7 +405,7 @@ mod tests {
         /// ✅️ `ops_grammar_conformance_law`: the mutations grammar recognizes real `print_op`
         /// output for every `MdMutation` variant (`mutations::demo_mutation_cases()`), incl. the
         /// `List`-block `MdBlock` payload and both `MdPathStep` variants.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn ops_grammar_conformance_law() {
             let grammar = dsl::parse_grammar(mutations::text::COMPONENT_GRAMMAR_SEMIO).expect("parse mutations grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
@@ -418,7 +418,7 @@ mod tests {
         /// ✅️ `diff_grammar_conformance_law`: the diff grammar recognizes real `print_diff` output
         /// for every representative `MdDiff` (`diff::demo_diff_cases()`), incl. both tri-states and
         /// the `Replace` kind-change fallback.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn diff_grammar_conformance_law() {
             let grammar = dsl::parse_grammar(diff::text::COMPONENT_GRAMMAR_SEMIO).expect("parse diff grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
@@ -433,7 +433,7 @@ mod tests {
         /// `m5_handcrafted_protocol_conformance` itself feeds `walk_protocol`), every demo
         /// mutation's `encode_op`, and every demo diff's `encode_diff` — asserting
         /// `consumed == bytes.len()`.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn protocol_walk_law() {
             let pack_spec = dsl::parse_protocol(snapshot::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
             let packed = store::ArtifactPack::encode_pack(&demo_md_snapshot());
@@ -460,7 +460,7 @@ mod tests {
         /// `print_dsl`/`encode_pack` output of `demo_md_snapshot()` — `parse_dsl(fixture) ==
         /// demo()`, `print_dsl(demo()) == fixture` (byte-for-byte), and the pack twin — so the
         /// fixtures can never silently drift back to a fake again.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn fixture_honesty_law() {
             const FIXTURE_DSL: &str = include_str!("../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
             const FIXTURE_PACK: &[u8] = include_bytes!("../📚️examples/🎬️demo/🖼️assets/🎒️example.pack.semio");
@@ -479,7 +479,7 @@ mod tests {
     //#endregion 🔖️ConformanceLaws
 
     //#region 🔖️ParserUnitTests
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn headings_all_levels() {
         let blocks = parse_markdown_blocks("# H1\n## H2\n###### H6\n");
         assert_eq!(blocks.len(), 3);
@@ -488,7 +488,7 @@ mod tests {
         assert!(matches!(&blocks[2], MdBlock::Heading { level: 6, .. }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn paragraph_and_fenced_code_block_with_info_string() {
         let text = "A paragraph of text.\n\n```rust\nfn main() {}\n```\n";
         let blocks = parse_markdown_blocks(text);
@@ -503,7 +503,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn indented_code_block() {
         let text = "    let x = 1;\n    let y = 2;\n";
         let blocks = parse_markdown_blocks(text);
@@ -514,7 +514,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn thematic_break_variants() {
         for text in ["---\n", "***\n", "___\n", "- - -\n"] {
             let blocks = parse_markdown_blocks(text);
@@ -523,7 +523,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn block_quote_recursive() {
         let text = "> # Quoted heading\n> a paragraph\n";
         let blocks = parse_markdown_blocks(text);
@@ -538,7 +538,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn html_block_raw_retention() {
         let text = "<div class=\"note\">\nplain content\n</div>\n";
         let blocks = parse_markdown_blocks(text);
@@ -549,7 +549,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn unordered_and_ordered_lists() {
         let unordered = parse_markdown_blocks("- one\n- two\n- three\n");
         assert_eq!(unordered.len(), 1);
@@ -573,7 +573,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn nested_list_and_loose_list() {
         let nested = parse_markdown_blocks("- outer\n  - inner a\n  - inner b\n- outer two\n");
         match &nested[0] {
@@ -592,7 +592,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn emphasis_strong_links_images_and_html_in_inline() {
         let inline = parse_inline("plain **strong** and *em* and [a link](https://example.com \"title\") and ![alt](img.png) and <br/>");
         assert!(inline.iter().any(|n| matches!(n, MdInline::Strong { inlines } if inlines == &vec![MdInline::Text { text: "strong".into() }])));
@@ -618,13 +618,13 @@ mod tests {
         assert!(inline.iter().any(|n| matches!(n, MdInline::HtmlInline { raw } if raw == "<br/>")));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inline_code_span_is_not_emphasis() {
         let inline = parse_inline("use `*not emphasis*` here");
         assert!(inline.iter().any(|n| matches!(n, MdInline::Code { literal } if literal == "*not emphasis*")));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn soft_and_hard_breaks_in_paragraph() {
         let blocks = parse_markdown_blocks("line one  \nline two\\\nline three\nline four\n");
         match &blocks[0] {
@@ -638,7 +638,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn unrecognized_delimiter_degrades_to_plain_text() {
         // 🕳️ Exactly ONE `*` in the whole input -- genuinely unpairable (not to be confused with
         // an input containing a valid pair elsewhere, which correctly parses as emphasis).
@@ -701,7 +701,7 @@ mod tests {
         ]
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mutation_diff_law() {
         for mutation in sample_mutations() {
             let base = sample_snapshot();
@@ -718,7 +718,7 @@ mod tests {
     //#endregion 🔖️MutationDiffLaw
 
     //#region 🔖️InverseLaw
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inverse_law() {
         for mutation in sample_mutations() {
             let base = sample_snapshot();
@@ -756,7 +756,7 @@ mod tests {
         diff.blocks.as_ref().expect("blocks diff present")
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_law() {
         // Canonical: Insert(2)+Remove(0) -> {removed:[0], added:[(1,f)]}.
         {
@@ -855,7 +855,7 @@ mod tests {
     //#endregion 🔖️AbsorbLaw
 
     //#region 🔖️BetweenRoundtripLaw
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn between_roundtrip_law() {
         let a = sweep_a();
         let b = sweep_b();
@@ -878,7 +878,7 @@ mod tests {
     //#endregion 🔖️BetweenRoundtripLaw
 
     //#region 🔖️CodecRetentionLaw
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn codec_retention_law() {
         // Documented normal form (see `render_markdown_blocks`'s doc comment): semantic fixed
         // point at the SNAPSHOT level, not byte-identical text. Fixture is written to already be
@@ -900,7 +900,7 @@ mod tests {
     //#region 🔖️FieldSweep
     /// 🎯️ THE acceptance criterion: `sweep_a`/`sweep_b` differ in every mutable field (see the
     /// fixtures' doc comment for exactly how each collection flavor is exercised).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn field_sweep_covers_every_mutable_field() {
         let a = sweep_a();
         let b = sweep_b();

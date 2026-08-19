@@ -34,7 +34,7 @@ pub struct DxfArtifact {
 
 //#region 🔖️Conversions
 impl Default for DxfArtifact {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self::from_snapshot(DxfSnapshot::default())
     }
 }
@@ -279,13 +279,13 @@ pub async fn demo_dxf_snapshot() -> DxfSnapshot {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn empty_snapshot_matches_schema() {
         let snapshot = empty_dxf_snapshot();
         assert_eq!(snapshot.schema, STDIO_DXF_DOCUMENT_SCHEMA);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn codec_round_trip() {
         let snap = empty_dxf_snapshot();
         let text = store::ArtifactDsl::print_dsl(&snap);
@@ -299,7 +299,7 @@ mod tests {
     //#region 🔖️CodecRetentionLaw
     /// 🔁️ decode→encode retains every field across every section — documented NORMAL FORM: from
     /// the SECOND generation onward decode/encode is a true fixed point.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn codec_retention_law() {
         use crate::artifacts::dxf::schema::snapshot::{parse_dxf_document, print_dxf_document, DxfEntity, DxfHeaderVar, DxfLayer, DxfLinetype, DxfOtherTable, DxfStyle, DxfTables, DxfTag, DxfValue};
         let snap1 = DxfSnapshot {
@@ -344,7 +344,7 @@ mod tests {
         use crate::artifacts::dxf::schema::{diff, mutations, snapshot};
         use protocol::{DiffCodec, OpBinary, OpText};
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn committed_facet_files_parse() {
             for (label, text) in [("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO)] {
                 let grammar = dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
@@ -355,7 +355,7 @@ mod tests {
             }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn grammar_conformance_law() {
             let grammar = dsl::parse_grammar(snapshot::text::COMPONENT_GRAMMAR_SEMIO).expect("parse snapshot grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
@@ -365,7 +365,7 @@ mod tests {
             assert!(recognizer.recognize(&reconstructed).expect("recognize"), "grammar did not recognize demo dsl body:\n{reconstructed}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn ops_grammar_conformance_law() {
             let grammar = dsl::parse_grammar(mutations::text::COMPONENT_GRAMMAR_SEMIO).expect("parse mutations grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
@@ -375,7 +375,7 @@ mod tests {
             }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn diff_grammar_conformance_law() {
             let grammar = dsl::parse_grammar(diff::text::COMPONENT_GRAMMAR_SEMIO).expect("parse diff grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
@@ -385,7 +385,7 @@ mod tests {
             }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn protocol_walk_law() {
             let pack_spec = dsl::parse_protocol(snapshot::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
             let packed = store::ArtifactPack::encode_pack(&demo_dxf_snapshot());
@@ -408,7 +408,7 @@ mod tests {
             }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn fixture_honesty_law() {
             const FIXTURE_DSL: &str = include_str!("../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
             const FIXTURE_PACK: &[u8] = include_bytes!("../📚️examples/🎬️demo/🖼️assets/🎒️example.pack.semio");

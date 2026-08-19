@@ -56,7 +56,7 @@ pub(crate) enum PortDirectionDsl {
 }
 
 impl From<PortDirection> for PortDirectionDsl {
-    async fn from(value: PortDirection) -> Self {
+    fn from(value: PortDirection) -> Self {
         match value {
             PortDirection::In => PortDirectionDsl::In,
             PortDirection::Out => PortDirectionDsl::Out,
@@ -65,7 +65,7 @@ impl From<PortDirection> for PortDirectionDsl {
 }
 
 impl From<PortDirectionDsl> for PortDirection {
-    async fn from(value: PortDirectionDsl) -> Self {
+    fn from(value: PortDirectionDsl) -> Self {
         match value {
             PortDirectionDsl::In => PortDirection::In,
             PortDirectionDsl::Out => PortDirection::Out,
@@ -315,24 +315,24 @@ mod tests {
     use super::*;
     use crate::artifacts::jack::empty_trinity_graph_fixture;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn nakagin_example_dsl_round_trips() {
         let document = parse_dsl(NAKAGIN_EXAMPLE_TEXT).expect("parse nakagin example");
         ::store::os_store::test_support::assert_dsl_round_trip(&document);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn empty_document_dsl_round_trips() {
         ::store::os_store::test_support::assert_dsl_round_trip(&empty_trinity_graph_fixture());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn parse_dsl_rejects_unknown_keyword() {
         let err = JackSnapshot::parse_dsl("bogus line").expect_err("unknown keyword");
         assert!(err.message.contains("jack snapshot"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dsl_round_trip_mini_and_bundled_fixtures() {
         let nakagin = parse_dsl(NAKAGIN_EXAMPLE_TEXT).unwrap();
         ::store::os_store::test_support::assert_dsl_round_trip(&nakagin);
@@ -342,7 +342,7 @@ mod tests {
     /// 🧩️ A hand-built fixture (not one of the bundled `.trinity` examples) with a nested `Object`-shaped
     /// node property (`position: {x,y,z}`) and `Number`-shaped edge properties (`u`/`v`) — exercises the
     /// JSON-blob content codec round trip on non-trivial `PropertyBag`'s `Object`/`Number` variants.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dsl_round_trip_mini_fixture() {
         use crate::artifacts::jack::{Camera, Edge, JackSnapshot, Manifest, Node, Port, PortDirection, PropertyBag, PropertyValue};
         use std::collections::BTreeMap;

@@ -63,7 +63,7 @@ mod tests {
     use crate::editor::puzzle2d::engine::board_host::puzzle_board_host;
 
     /// 🛠️ Fill's count slider is a tool measure keyed by the fill tool id, not a window utility-options group.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fill_count_slider_is_a_tool_measure() {
         let labels = puzzle2d_labels(&Puzzle2dConfig::default());
         let host = puzzle_board_host();

@@ -57,7 +57,7 @@ mod tests {
         PdfSnapshot { pages: vec![p1, p2], ..Default::default() }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn each_page_becomes_a_paragraph_separated_by_pagebreak() {
         let semio = semio_framework_plugin::resolve_ready(SemioDocumentFromPdf::deserialize(&sample_pdf())).expect("deserialize");
         assert_eq!(semio.blocks.len(), 3);
@@ -66,7 +66,7 @@ mod tests {
         assert!(matches!(&semio.blocks[2], DocBlock::Paragraph { runs, .. } if runs[0].text == "Page two text."));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn zero_pages_yields_zero_blocks() {
         let semio = semio_framework_plugin::resolve_ready(SemioDocumentFromPdf::deserialize(&PdfSnapshot::default())).expect("deserialize");
         assert!(semio.blocks.is_empty());

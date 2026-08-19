@@ -36,7 +36,7 @@ impl protocol::Inference<DeflateSnapshot> for DeflateInference {
 /// normal form (`compression_method: 8`, `window_bits: 7`), not a zeroed struct, so a derived
 /// all-zero `Default` would disagree with the honest compute and break the law.
 impl Default for DeflateInference {
-    async fn default() -> Self {
+    fn default() -> Self {
         <Self as protocol::Inference<DeflateSnapshot>>::infer(&DeflateSnapshot::default())
     }
 }
@@ -89,13 +89,13 @@ mod tests {
     use crate::artifacts::deflate::standards::v_rfc1950::subsets::any::schema::demo_deflate_snapshot;
     use protocol::Inference;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = DeflateSnapshot::default();
         assert_eq!(DeflateInference::infer(&snapshot), DeflateInference::infer(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(DeflateInference::infer(&DeflateSnapshot::default()), DeflateInference::default());
     }
@@ -114,7 +114,7 @@ mod tests {
         /// ✅️ "committed files parse": all 6 handcrafted `.grammar.semio`/`.protocol.semio` files
         /// parse under the real dialect — independent of, and cheaper than, the two
         /// `recognize`/`walk_protocol` laws below.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn committed_facet_files_parse() {
             for (label, text) in [("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO)] {
                 let grammar = dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
@@ -127,7 +127,7 @@ mod tests {
 
         /// ✅️ `grammar_conformance_law`: the snapshot grammar recognizes real `print_dsl` output
         /// for the demo snapshot (a non-empty payload + a real preset-dictionary id).
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn grammar_conformance_law() {
             let grammar = dsl::parse_grammar(snapshot::text::COMPONENT_GRAMMAR_SEMIO).expect("parse snapshot grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
@@ -139,7 +139,7 @@ mod tests {
 
         /// ✅️ `ops_grammar_conformance_law`: the mutations grammar recognizes real `print_op`
         /// output for every `DeflateMutation` demo case (`mutations::demo_mutation_cases()`).
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn ops_grammar_conformance_law() {
             let grammar = dsl::parse_grammar(mutations::text::COMPONENT_GRAMMAR_SEMIO).expect("parse mutations grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
@@ -152,7 +152,7 @@ mod tests {
         /// ✅️ `diff_grammar_conformance_law`: the diff grammar recognizes real `print_diff`
         /// output for every representative `DeflateDiff` (`diff::demo_diff_cases()`), incl. the
         /// empty-line diff and both `dict_id` tri-state directions.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn diff_grammar_conformance_law() {
             let grammar = dsl::parse_grammar(diff::text::COMPONENT_GRAMMAR_SEMIO).expect("parse diff grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
@@ -166,7 +166,7 @@ mod tests {
         /// snapshot pack (`encode_pack`, envelope-unwrapped first), every demo mutation's
         /// `encode_op`, and every demo diff's `encode_diff` — asserting `consumed ==
         /// bytes.len()`.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn protocol_walk_law() {
             let pack_spec = dsl::parse_protocol(snapshot::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
             let packed = store::ArtifactPack::encode_pack(&demo_deflate_snapshot());
@@ -192,7 +192,7 @@ mod tests {
         /// ✅️ `fixture_honesty_law`: the shipped `.dsl.semio`/`.pack.semio` fixtures are GENUINE
         /// `print_dsl`/`encode_pack` output of `demo_deflate_snapshot()` — `parse_dsl(fixture) ==
         /// demo()`, `print_dsl(demo()) == fixture` (byte-for-byte), and the pack twin.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn fixture_honesty_law() {
             const FIXTURE_DSL: &str = include_str!("../../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
             const FIXTURE_PACK: &[u8] = include_bytes!("../../📚️examples/🎬️demo/🖼️assets/🎒️example.pack.semio");
@@ -212,7 +212,7 @@ mod tests {
         /// snapshot schema id through `dsl::registry::full_resolver()` once called (real
         /// `DeflateSnapshot::__dsl_spec`, not fabricated — see that fn's own doc comment for why
         /// the diff id is deliberately NOT registered).
-        #[test]
+        #[semio_framework_async_macros::async_test]
         #[cfg(not(target_arch = "wasm32"))]
         async fn schema_spec_registration_resolves() {
             use dsl::os_pack::cli::SchemaResolver;

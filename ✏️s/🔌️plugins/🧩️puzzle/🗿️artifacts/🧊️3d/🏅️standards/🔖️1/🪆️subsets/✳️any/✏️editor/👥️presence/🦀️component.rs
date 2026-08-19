@@ -19,7 +19,7 @@ pub struct Puzzle3dPresence {
 }
 
 impl Default for Puzzle3dPresence {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self {
             camera_position: [0.0, 0.0, 0.0],
             camera_target: [0.0, 0.0, 0.0],

@@ -86,7 +86,7 @@ mod tests {
         ]
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_text_binary_roundtrip_law() {
         for mutation in demo_mutation_cases() {
             let printed = mutation.print_op();
@@ -100,7 +100,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_text_parse_rejects_garbage() {
         let result = <LowpolyMutation as protocol::OpText>::parse_op("not json at all");
         assert!(result.is_err());

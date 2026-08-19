@@ -749,7 +749,7 @@ mod tests {
         DocBlockPath { segments: vec![DocPathSegment::TableCell { block_index, row, cell }], index }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn insert_then_remove_block_apply_and_inverse() {
         let base = fixture();
         let insert = SemioDocumentMutation::InsertBlock { path: DocBlockPath::top(1), block: DocBlock::paragraph("inserted") };
@@ -766,7 +766,7 @@ mod tests {
         assert_eq!(restored, base);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn nested_quote_and_list_path_addressing_apply_and_inverse() {
         let mut base = fixture();
         base.blocks.push(DocBlock::Quote { blocks: vec![DocBlock::paragraph("quoted")] });
@@ -797,7 +797,7 @@ mod tests {
         assert_eq!(after2, base);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn table_path_addressing_sets_nested_cell_content() {
         let mut base = fixture();
         base.blocks.push(DocBlock::Table { rows: vec![DocTableRow { cells: vec![DocTableCell { blocks: vec![DocBlock::paragraph("cell")] }] }] });
@@ -813,7 +813,7 @@ mod tests {
         assert_eq!(after, base);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn style_and_image_mutations_apply_and_inverse() {
         let base = fixture();
         let insert = SemioDocumentMutation::InsertStyle { style: DocStyle { id: "Heading1".into(), name: "heading 1".into(), based_on: Some("Normal".into()) } };
@@ -897,7 +897,7 @@ mod tests {
         MutationDiff::apply(diff, base).expect("valid Semio document diff fixture")
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mutation_diff_law() {
         for mutation in sample_mutations() {
             let base = fixture();
@@ -914,7 +914,7 @@ mod tests {
     //#endregion 🔖️MutationDiffLaw
 
     //#region 🔖️InverseLaw
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inverse_law() {
         for mutation in sample_mutations() {
             let base = fixture();
@@ -948,7 +948,7 @@ mod tests {
         diff.blocks.as_ref().expect("blocks diff present")
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_law() {
         // Canonical: Insert(2)+Remove(0) -> {removed:[0], added:[(1,f)]}.
         {
@@ -1028,7 +1028,7 @@ mod tests {
     //#endregion 🔖️AbsorbLaw
 
     //#region 🔖️BetweenRoundtripLaw
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn between_roundtrip_law() {
         let a = sweep_a();
         let b = sweep_b();
@@ -1047,7 +1047,7 @@ mod tests {
     //#endregion 🔖️BetweenRoundtripLaw
 
     //#region 🔖️CodecRetentionLaw
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn codec_retention_law() {
         let snap = sweep_b();
         let bytes = store::ArtifactPack::encode_pack(&snap);
@@ -1060,7 +1060,7 @@ mod tests {
     /// 🎯️ THE acceptance criterion: `sweep_a`/`sweep_b` differ in every mutable field (see the
     /// fixtures' doc comment for exactly how each collection flavor -- removed/modified/added --
     /// is exercised).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn field_sweep() {
         let a = sweep_a();
         let b = sweep_b();
@@ -1113,7 +1113,7 @@ mod tests {
     /// grammar -- exercises every variant, incl. `InsertBlock`'s bare `DocBlock` payload (a
     /// `Table` carrying nested rows/cells/blocks), `SetSnapshot`'s whole snapshot, and every
     /// `Option`/tri-state field.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_text_binary_roundtrip_law() {
         let table_block = DocBlock::Table { rows: vec![DocTableRow { cells: vec![DocTableCell { blocks: vec![DocBlock::paragraph("cell")] }] }] };
         let mutations = vec![

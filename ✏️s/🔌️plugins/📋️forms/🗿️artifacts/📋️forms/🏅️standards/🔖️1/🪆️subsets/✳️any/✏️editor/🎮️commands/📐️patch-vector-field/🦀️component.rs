@@ -59,7 +59,7 @@ mod tests {
         crate::artifacts::forms::schema::flatten_questions(&app.snapshot().expect("projection")).into_iter().map(|(_, question)| question).find(|question| question.kind == "vector").expect("vector question").id
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn patch_vector_field_updates_the_named_component() {
         let mut app = forms_app();
         let question_id = vector_question_id(&mut app);
@@ -70,7 +70,7 @@ mod tests {
         assert_eq!(x.value, Some(5.0));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_and_remove_vector_field_round_trip() {
         let mut app = forms_app();
         let question_id = vector_question_id(&mut app);

@@ -35,7 +35,7 @@ pub struct PlaybookSnapshot {
 }
 
 impl Default for PlaybookSnapshot {
-    async fn default() -> Self {
+    fn default() -> Self {
         let kernel = crate::playbook::empty_playbook_snapshot();
         Self::from_kernel(crate::playbook::PlaybookSpec { schema: kernel.schema, id: kernel.id, version: kernel.version, title: kernel.title, steps: kernel.steps })
     }

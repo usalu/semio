@@ -36,7 +36,7 @@ pub type Puzzle5dStore = ArtifactStore<Puzzle5dSnapshot, Puzzle5dMutation>;
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn puzzle5d_document_vcs_replays_granular_operations() {
         use crate::artifacts::puzzle5d::standards::v1::subsets::any::schema::empty_puzzle5d_snapshot;
         use crate::artifacts::puzzle5d::mutations::create_part;
@@ -84,7 +84,7 @@ mod wire_format_guard {
     }
 
     /// ⚖️ Every operation still prints, parses, encodes, and decodes back to an equal value.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn operations_round_trip_text_and_binary() {
         let operations = ops();
         assert!(!operations.is_empty());

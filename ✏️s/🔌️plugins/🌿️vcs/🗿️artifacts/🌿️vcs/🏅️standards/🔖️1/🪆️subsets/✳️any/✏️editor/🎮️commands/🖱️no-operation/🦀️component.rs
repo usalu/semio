@@ -20,7 +20,7 @@ mod tests {
     use crate::editor::vcs::commands::{canvas_pointer_down, canvas_pointer_move, canvas_pointer_up, canvas_wheel};
     use crate::editor::vcs::VcsCommand;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn vcs_demo_command_op_text_round_trips() {
         store::os_store::test_support::assert_op_line_round_trip(&VcsCommand::NoMutation(NoMutation {}));
         store::os_store::test_support::assert_op_line_round_trip(&VcsCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown {}));

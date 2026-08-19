@@ -100,7 +100,7 @@ mod tests {
         forward
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_delete_node_round_trip() {
         let snapshot = empty_wires_snapshot();
         let with_node = round_trip(&snapshot, &create_node(node("node-1", "Alpha")));
@@ -109,7 +109,7 @@ mod tests {
         assert!(crate::artifacts::wires::wires_working_board(&removed).get("nodes").and_then(|value| value.as_array()).is_some_and(|items| items.is_empty()));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn move_node_round_trip() {
         let snapshot = round_trip(&empty_wires_snapshot(), &create_node(node("node-1", "Alpha")));
         let moved = round_trip(&snapshot, &move_node("node-1".into(), 40.0, 30.0));
@@ -118,42 +118,42 @@ mod tests {
         assert_eq!(found.get("y").and_then(|value| value.as_f64()), Some(30.0));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn resize_node_round_trip() {
         let snapshot = round_trip(&empty_wires_snapshot(), &create_node(node("node-1", "Alpha")));
         let resized = round_trip(&snapshot, &resize_node("node-1".into(), Some(48.0), None, None));
         assert_eq!(find_board_node(&resized, "node-1").and_then(|node| node.get("radius").and_then(|value| value.as_f64())), Some(48.0));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn change_node_kind_round_trip() {
         let snapshot = round_trip(&empty_wires_snapshot(), &create_node(node("node-1", "Alpha")));
         let changed = round_trip(&snapshot, &change_node_kind("node-1".into(), "topic".into()));
         assert_eq!(find_board_node(&changed, "node-1").and_then(|node| node.get("nodeKind").and_then(|value| value.as_str()).map(str::to_string)), Some("topic".to_string()));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn change_node_shape_round_trip() {
         let snapshot = round_trip(&empty_wires_snapshot(), &create_node(node("node-1", "Alpha")));
         let changed = round_trip(&snapshot, &change_node_shape("node-1".into(), "rectangle".into()));
         assert_eq!(find_board_node(&changed, "node-1").and_then(|node| node.get("shape").and_then(|value| value.as_str()).map(str::to_string)), Some("rectangle".to_string()));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn edit_node_text_round_trip() {
         let snapshot = round_trip(&empty_wires_snapshot(), &create_node(node("node-1", "Alpha")));
         let edited = round_trip(&snapshot, &edit_node_text("node-1".into(), "Renamed".into()));
         assert_eq!(find_board_node(&edited, "node-1").and_then(|node| node.get("text").cloned()), Some(DslValue::String("Renamed".into())));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_node_root_round_trip() {
         let snapshot = round_trip(&empty_wires_snapshot(), &create_node(node("node-1", "Alpha")));
         let set = round_trip(&snapshot, &set_node_root("node-1".into(), true));
         assert_eq!(find_board_node(&set, "node-1").and_then(|node| node.get("root").and_then(|value| value.as_bool())), Some(true));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn connect_disconnect_nodes_round_trip() {
         let mut snapshot = empty_wires_snapshot();
         snapshot = apply_mutation(&snapshot, &create_node(node("node-1", "A")))
@@ -172,12 +172,12 @@ mod tests {
         assert!(removed.wires_fixture.get("relationships").and_then(|value| value.as_array()).is_some_and(|items| items.is_empty()));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_text_round_trip_create_node() {
         assert_op_line_round_trip(&create_node(node("node-1", "Alpha")));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_text_round_trip_move_node() {
         assert_op_line_round_trip(&move_node("node-1".into(), 1.0, 2.0));
     }
@@ -187,7 +187,7 @@ mod tests {
     /// (reachable here as `protocol::testkit`), exercised against the two most structurally distinct
     /// kinds: an id-keyed create/delete pair (`create-node`) and a single-field addressed setter
     /// (`move-node`).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_node_satisfies_the_inverse_and_absorb_laws() {
         let base = empty_wires_snapshot();
         let mutation = create_node(node("node-1", "Alpha"));
@@ -197,7 +197,7 @@ mod tests {
         protocol::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn move_node_satisfies_the_inverse_law() {
         let base = round_trip(&empty_wires_snapshot(), &create_node(node("node-1", "Alpha")));
         let mutation = move_node("node-1".into(), 40.0, 30.0);
@@ -208,25 +208,25 @@ mod tests {
     //#region 🧪️OutcomeLaws
     /// ⚖️ `📋️contract-freeze.md` §C2 laws, per verb family (`assert_outcome_policy_matrix` is not yet
     /// landed in `📡️spr/🧪️testkit` — TODO(1-D testkit laws pending) once it lands).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn delete_missing_node_is_a_target_missing_error() {
         let base = empty_wires_snapshot();
         protocol::testkit::assert_missing_target_is_error(&base, &delete_node("does-not-exist".into()));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn move_missing_node_is_a_target_missing_error() {
         let base = empty_wires_snapshot();
         protocol::testkit::assert_missing_target_is_error(&base, &move_node("does-not-exist".into(), 1.0, 2.0));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn disconnect_missing_edge_is_a_target_missing_error() {
         let base = empty_wires_snapshot();
         protocol::testkit::assert_missing_target_is_error(&base, &disconnect_nodes("does-not-exist".into()));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_node_duplicate_id_never_applies() {
         let base = round_trip(&empty_wires_snapshot(), &create_node(node("node-1", "Alpha")));
         let duplicate = create_node(node("node-1", "Alpha Again"));
@@ -234,7 +234,7 @@ mod tests {
     }
     //#endregion 🧪️OutcomeLaws
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dispatch_registers_semantic_descriptors() {
         register_wires_mutation_descriptors();
         assert_eq!(WiresMutation::kinds().len(), 10);

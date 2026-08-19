@@ -22,7 +22,7 @@ pub struct CadDislocateOptions {
 }
 
 impl Default for CadDislocateOptions {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { move_enabled: true, rotate_enabled: true }
     }
 }
@@ -41,7 +41,7 @@ pub struct CadSunConfig {
 }
 
 impl Default for CadSunConfig {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { enabled: false, azimuth: 45.0, elevation: 35.0, intensity: 0.85, color: "#ffffff".into() }
     }
 }
@@ -198,7 +198,7 @@ async fn default_contributions_json() -> String {
 }
 
 impl Default for CadConfig {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self {
             selected_node_ids: Vec::new(),
             hovered_reference_id: None,
@@ -361,7 +361,7 @@ impl Mutation<CadConfig> for CadConfigMutation {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn cad_config_default_matches_the_existing_runtime_defaults() {
         let config = CadConfig::default();
         assert_eq!(config.engagement_step, "Idle");
@@ -371,7 +371,7 @@ mod tests {
         assert!(config.dislocate_shape.rotate_enabled);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn cad_config_dsl_round_trips_a_populated_record() {
         let config = CadConfig {
             selected_node_ids: vec!["node-1".into(), "node-2".into()],
@@ -387,7 +387,7 @@ mod tests {
         assert_eq!(parsed, config);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn cad_config_pack_round_trips() {
         let mut config = CadConfig { selected_node_ids: vec!["node-1".into()], ..CadConfig::default() };
         config.dislocate_building.rotate_enabled = false;
@@ -396,7 +396,7 @@ mod tests {
         assert_eq!(decoded, config);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn cad_sun_config_round_trips_through_world_sun_config() {
         let world = semio_framework_plugin::WorldSunConfig { enabled: true, azimuth: 12.0, elevation: 34.0, intensity: 0.5, color: "#112233".into() };
         let cad_sun = cad_sun_config_from_world(&world);
@@ -404,7 +404,7 @@ mod tests {
         assert_eq!(back, world);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn cad_config_operation_snapshot_round_trips_and_restores_exactly() {
         let base = CadConfig { active_utility_id: "move".into(), ..CadConfig::default() };
         let next = CadConfig { active_utility_id: "rotate".into(), selected_node_ids: vec!["node-1".into()], ..CadConfig::default() };
@@ -418,7 +418,7 @@ mod tests {
         store::os_store::test_support::assert_op_line_round_trip(&operation);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn cad_config_set_contributions_round_trips() {
         let base = CadConfig::default();
         let json = r#"[{"pluginId":"cad-extension-spatial-shape","contribution":{"kind":"cadComputer","appId":"cad-play","moduleId":"spatial-shape","label":"Spatial Shape","iconId":"box","computersJson":"{}"}}]"#;

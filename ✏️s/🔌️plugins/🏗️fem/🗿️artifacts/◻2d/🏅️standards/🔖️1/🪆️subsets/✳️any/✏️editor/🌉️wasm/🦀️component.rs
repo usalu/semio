@@ -62,7 +62,7 @@ mod tests {
     /// `fem2d_document_text_round_trips_through_the_store` — the `wasm_bridge` module above only builds
     /// under `target_arch = "wasm32"`, so this file's non-wasm32 half has nothing native-testable of its
     /// own beyond that shared coverage.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fem2d_store_type_alias_constructs_from_an_empty_envelope() {
         let store = crate::artifacts::fem2d::mutations::Fem2dStore::new(store::create_document_envelope(crate::artifacts::fem2d::FEM_2D_SCHEMA, "fem2d", crate::artifacts::fem2d::schema::empty_fem2d_snapshot(), None)).expect("valid store");
         assert!(store.snapshot().expect("snapshot").nodes.is_empty());

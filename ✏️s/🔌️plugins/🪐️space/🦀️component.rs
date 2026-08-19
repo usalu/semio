@@ -29,7 +29,7 @@ use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRe
 use semio_framework_plugin::{app_labels, ExecutionMode, Plugin};
 use std::collections::{HashMap, HashSet};
 use std::sync::{Arc, LazyLock, Mutex, OnceLock};
-use store::LocalStorageBackbonePort;
+use store::{BackbonePorts, LocalStorageBackbonePort};
 
 //#region 🔖️Constants
 pub const DEMO_STUDIO_ID: &str = "demo-studio";
@@ -79,18 +79,21 @@ pub async fn demo_space_projection() -> WorkflowSnapshot {
 //#endregion 🔖️Fixtures
 
 //#region 🔖️DocumentHelpers
-/// 🧬️ Kept as its own concrete-typed static (not just `Arc<dyn OsBackbonePort>`) so this module can
-/// mint TWO different trait-object views of the SAME underlying allocation: `Arc<dyn OsBackbonePort>`
-/// (os-core's byte-via-base64 bridge, used by every existing catalog call) and `Arc<dyn
-/// SpaceBackbonePort>` (`draft_backbone_port` below, used by the real `DraftCatalog` wiring) — both
-/// blanket-impl'd over the SAME `store::BackbonePort`, and unsizing coercion never reallocates, so
-/// `Arc::as_ptr`-keyed registries (`draft_catalog_for`'s port identity key) still line up correctly
-/// across both views.
-async fn catalog_port_concrete() -> Arc<LocalStorageBackbonePort> {
+/// 🧬️ O1 — enum dispatch, not a trait object: `store::BackbonePorts` (the enum `store-dedyn` already
+/// built for `store::BackbonePort`) is used DIRECTLY as the concrete return type, no `dyn` anywhere.
+/// It satisfies `OsBackbonePort` for free through the framework's blanket `impl<T: store::BackbonePort>
+/// OsBackbonePort for T` — passing a `Arc<BackbonePorts>` into any of os-core's `Arc<dyn
+/// OsBackbonePort>`-typed BY-VALUE parameters (`list_os_space_catalog_entries`,
+/// `seed_os_space_catalog_if_empty`, `load_os_space_document`) unsizes automatically at the call site,
+/// with no separate trait-object "view" variable needed the way the pre-O1 code kept one.
+async fn catalog_port_concrete() -> Arc<BackbonePorts> {
     ensure_space_fixtures_registered();
-    let port = Arc::new(LocalStorageBackbonePort::new());
-    let os_port: Arc<dyn OsBackbonePort> = port.clone();
-    if list_os_space_catalog_entries(os_port.clone()).map_or(true, |entries| entries.is_empty()) {
+    // 🧬️ `::default()`, not `::new()`: `LocalStorageBackbonePort::new()` is `async fn` but defined to
+    // equal `Default::default()` exactly (store's own impl just forwards); using the sync constructor
+    // here avoids a pointless suspension point and keeps this line symmetric with
+    // `temp_catalog_port_concrete()` below, whose `OnceLock::get_or_init` closure cannot be async at all.
+    let port = Arc::new(BackbonePorts::LocalStorage(LocalStorageBackbonePort::default()));
+    if list_os_space_catalog_entries(port.clone()).map_or(true, |entries| entries.is_empty()) {
         // 🧬️ `parse_demo_space_document` yields a `WorkflowSnapshot` (the dissolved `OsProjection`'s
         // workflow-graph half) — the space CATALOG this boot seed populates needs a `SpaceSnapshot`
         // manifest instead. `demo_name` still comes from the bundled fixture's own name; the manifest
@@ -107,19 +110,31 @@ async fn catalog_port_concrete() -> Arc<LocalStorageBackbonePort> {
         // would misattribute ownership of a system-seeded demo space.
         projection.users.push(SpaceUser { id: "local".into(), name: demo_name.clone(), avatar: None, role: SpaceRole::Author });
         let seed: OsSpaceDocument = create_backbone_document(S_SPACE_SCHEMA, OS_BOOT_STUDIO_ID, &demo_name, projection);
-        let _ = seed_os_space_catalog_if_empty(seed, os_port);
+        let _ = seed_os_space_catalog_if_empty(seed, port.clone());
     }
     port
 }
 
 /// 🧬️ Session-local, ephemeral (in-memory only) counterpart to `catalog_port_concrete()` — every draft
 /// space a user creates from Home lives here at `draft_uri(id)` until it's promoted (bound to a file or
-/// a real catalog), matching the "never persisted" semantics of a pure ephemeral registry.
-async fn temp_catalog_port_concrete() -> Arc<MemoryBackbonePort> {
-    static PORT: OnceLock<Arc<MemoryBackbonePort>> = OnceLock::new();
-    PORT.get_or_init(|| Arc::new(MemoryBackbonePort::new())).clone()
+/// a real catalog), matching the "never persisted" semantics of a pure ephemeral registry. Same
+/// `store::BackbonePorts` enum type as `catalog_port_concrete()` — `OnceLock::get_or_init`'s closure is
+/// plain `FnOnce`, not async, which is the other reason `::default()` (sync) is used over `::new()`.
+async fn temp_catalog_port_concrete() -> Arc<BackbonePorts> {
+    static PORT: OnceLock<Arc<BackbonePorts>> = OnceLock::new();
+    PORT.get_or_init(|| Arc::new(BackbonePorts::Memory(MemoryBackbonePort::default()))).clone()
 }
 
+/// ⚠️️ `dyn OsBackbonePort` — NOT converted, deliberately. `register_studio_port`'s two real callers
+/// (`create_folder_studio`/`bind_studio_file` in the Home editor's `create-studio`/`bind-space-file`
+/// commands) source `port` from `semio_framework_os::open_folder_space_backbone`/
+/// `open_file_space_backbone` — both declared in `🖥️host/🦀️component.rs` (out of this packet's owned
+/// path) as returning `Arc<dyn OsBackbonePort>` directly, already type-erased before this file ever
+/// sees the value; there is no concrete type left to recover into a closed enum variant, and no `Any`
+/// bound on `OsBackbonePort` to downcast through even if there were. This registry is consequently a
+/// genuinely heterogeneous, open-set collection from this file's perspective — see
+/// `📓️terra-dedyn-fleet-space-report.md` §Residue for the lease-request that would close it (making
+/// those two host functions return a concrete/enum type instead of erasing at their own boundary).
 async fn shared_studio_ports() -> Arc<Mutex<HashMap<String, Arc<dyn OsBackbonePort>>>> {
     static REGISTRY: OnceLock<Arc<Mutex<HashMap<String, Arc<dyn OsBackbonePort>>>>> = OnceLock::new();
     REGISTRY.get_or_init(|| Arc::new(Mutex::new(HashMap::new()))).clone()
@@ -127,16 +142,26 @@ async fn shared_studio_ports() -> Arc<Mutex<HashMap<String, Arc<dyn OsBackbonePo
 
 /// 🌉️ The Home editor's `🎮️commands/*`, the Home viewer's read-only render, and the sibling `🪐️space`
 /// studio app's own commands all resolve studios through this same catalog port.
-pub async fn catalog_port() -> Arc<dyn OsBackbonePort> {
+pub async fn catalog_port() -> Arc<BackbonePorts> {
     catalog_port_concrete().clone()
 }
 
-pub(crate) async fn temp_catalog_port() -> Arc<dyn OsBackbonePort> {
+pub(crate) async fn temp_catalog_port() -> Arc<BackbonePorts> {
     temp_catalog_port_concrete().clone()
 }
 
-/// 🔌️ `SpaceBackbonePort` view over the SAME ephemeral port `temp_catalog_port` uses — the port every
-/// draft studio's real envelope bytes are relocated through by `DraftCatalog`.
+/// ⚠️️ `dyn SpaceBackbonePort` — NOT converted, deliberately (unlike `catalog_port`/`temp_catalog_port`
+/// above). Every real consumer of this return value — `draft_catalog_for`, `DraftCatalog::
+/// list_drafts_sweeping_expired`, `DraftCatalog::discard_draft`, all declared in
+/// `🧰️framework/🔨️modules/🪐️space/🦀️component.rs` (out of this packet's owned path) — takes it as
+/// `&Arc<dyn SpaceBackbonePort>` BY REFERENCE, not by value. Unsizing coercion (`Arc<Concrete> ->
+/// Arc<dyn Trait>`) only fires at a VALUE coercion site (return position, a `let` with an explicit
+/// target type, a by-value fn argument); verified against real rustc in the ticket scratchpad
+/// (`coerce-probe/`) that `&Arc<Concrete>` does NOT coerce to `&Arc<dyn Trait>` — E0308, "expected
+/// `&Arc<dyn Port>`, found `&Arc<Concrete>`". So this function's return type is pinned to the dyn shape
+/// by its by-reference framework consumers regardless of what it returns internally. See the same
+/// lease-request as `shared_studio_ports` above for the fix (genericize those three `DraftCatalog`/
+/// `draft_catalog_for` signatures, or take the Arc by value).
 pub(crate) async fn draft_backbone_port() -> Arc<dyn SpaceBackbonePort> {
     temp_catalog_port_concrete().clone()
 }
@@ -239,7 +264,10 @@ async fn resolve_backbone_bytes(uri: &str) -> Option<Vec<u8>> {
         }
     }
     for port in [temp_catalog_port(), catalog_port()] {
-        if let Ok(payload) = port.read(uri) {
+        // 🧬️ UFCS: `port` is now the concrete `store::BackbonePorts` enum, which satisfies both
+        // `OsBackbonePort` and `SpaceBackbonePort` (both `use`d in this file) via their respective
+        // blanket impls — a plain `.read(uri)` is ambiguous (E0034).
+        if let Ok(payload) = OsBackbonePort::read(&port, uri) {
             if !payload.is_empty() {
                 return Some(payload);
             }
@@ -342,10 +370,14 @@ pub async fn register_studio_port_for_test(space_id: &str, port: Arc<dyn OsBackb
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-pub(crate) async fn sync_os_space_document_helper(document: &OsSpaceDocument, backbone_uri: &str, port: &Arc<dyn OsBackbonePort>) -> Result<(), VcsError> {
+pub(crate) async fn sync_os_space_document_helper(document: &OsSpaceDocument, backbone_uri: &str, port: &Arc<BackbonePorts>) -> Result<(), VcsError> {
     let mut synced = document.clone();
     synced.backbone = Some(document_backbone_ref(backbone_uri));
-    port.write(backbone_uri, &encode_backbone_payload(&synced)?)
+    // 🧬️ UFCS, not `.write(..)`: `BackbonePorts` satisfies BOTH `OsBackbonePort` and `SpaceBackbonePort`
+    // via their respective blanket impls over `store::BackbonePort` — both traits are `use`d in this
+    // file, so a plain method call is ambiguous (E0034). Disambiguate to the same trait this fn's
+    // pre-O1 signature used (`OsBackbonePort`).
+    OsBackbonePort::write(port.as_ref(), backbone_uri, &encode_backbone_payload(&synced)?)
 }
 
 /// 🎯️ The TTL-sweep call site — `list_drafts_sweeping_expired` clears any stale draft bookkeeping (and
@@ -537,22 +569,22 @@ mod surface_tests {
     //! new_viewer}` (closed by w0-f, gap 2), used directly rather than local stand-ins.
     use semio_framework_plugin::testkit::{assert_editor_and_viewer_share_dialect, assert_viewer_never_mutates};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn home_viewer_never_mutates() {
         assert_viewer_never_mutates::<crate::viewer::home::HomeViewer>();
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn home_editor_and_viewer_share_dialect() {
         assert_editor_and_viewer_share_dialect::<crate::editor::home::HomeApp, crate::viewer::home::HomeViewer>();
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn space_index_viewer_never_mutates() {
         assert_viewer_never_mutates::<crate::viewer::space_index::SpaceIndexViewer>();
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn space_index_editor_and_viewer_share_dialect() {
         assert_editor_and_viewer_share_dialect::<crate::editor::space_index::SpaceIndexEditor, crate::viewer::space_index::SpaceIndexViewer>();
     }
@@ -565,7 +597,7 @@ mod space_index_projection_tests {
     use super::*;
     use crate::artifacts::space::standards::v1::subsets::any::schema::snapshot::{empty_space_index_snapshot, SpaceArtifactDialect, SpaceArtifactRow};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn projects_every_row_into_a_root_level_collection_entry() {
         let mut index = empty_space_index_snapshot("space-1");
         index.artifacts.push(SpaceArtifactRow {

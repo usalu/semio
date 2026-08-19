@@ -46,7 +46,7 @@ pub struct IndexedTripleDiff<D, T> {
 }
 
 impl<D, T> Default for IndexedTripleDiff<D, T> {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { removed: Vec::new(), modified: Vec::new(), added: Vec::new() }
     }
 }
@@ -79,7 +79,7 @@ pub struct NamedTripleDiff<K, D, T> {
 }
 
 impl<K, D, T> Default for NamedTripleDiff<K, D, T> {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { removed: Vec::new(), modified: Vec::new(), added: Vec::new() }
     }
 }
@@ -1676,7 +1676,7 @@ mod handcrafted_diff_codec_tests {
     /// tri-state (`Some(None)` AND `Some(Some(_))`), nested `IndexedTripleDiff` collections
     /// (slides/shapes/paragraphs/runs) AND `NamedTripleDiff` collections (content types/parts/
     /// relationships, incl. the doubly-nested relationships-by-owner triple).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn diff_codec_text_binary_roundtrip_law() {
         let a = elem_snapshot(vec![PptxSlide {
             shapes: vec![
@@ -1710,7 +1710,7 @@ mod handcrafted_diff_codec_tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn logical_xml_parts_diff_apply_inverse_absorb_between_and_codecs() {
         let base = elem_snapshot(Vec::new());
         let mut sourced = base.clone();
@@ -1739,7 +1739,7 @@ mod handcrafted_diff_codec_tests {
 mod result_apply_tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn rejects_missing_slide_target_without_mutating_base() {
         let base = PptxSnapshot::default();
         let diff =

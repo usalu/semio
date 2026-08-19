@@ -28,7 +28,7 @@ pub async fn handle(_payload: &PresenceHeartbeat, _doc: &ArtifactView<'_, SHomeS
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn heartbeat_is_dispatchable_and_emits_nothing() {
         let history = semio_framework_plugin::HistoryView::empty();
         let doc_snapshot = SHomeSnapshot::default();

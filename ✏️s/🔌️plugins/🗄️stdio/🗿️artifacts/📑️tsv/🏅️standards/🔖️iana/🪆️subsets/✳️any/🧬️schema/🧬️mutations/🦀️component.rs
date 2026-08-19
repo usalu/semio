@@ -205,7 +205,7 @@ mod tests {
     //#endregion 🔖️FieldSweepFixtures
 
     //#region 🔖️MutationDiffLaw
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mutation_diff_law() {
         let base = base_snapshot();
         let variants = vec![
@@ -231,7 +231,7 @@ mod tests {
     //#endregion 🔖️MutationDiffLaw
 
     //#region 🔖️InverseLaw
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inverse_law() {
         let base = base_snapshot();
         let variants = vec![
@@ -259,7 +259,7 @@ mod tests {
     //#endregion 🔖️InverseLaw
 
     //#region 🔖️AbsorbLaw
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_law() {
         let base = base_snapshot();
 
@@ -321,7 +321,7 @@ mod tests {
     //#endregion 🔖️AbsorbLaw
 
     //#region 🔖️BetweenRoundtripLaw
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn between_roundtrip_law() {
         let a = base_snapshot();
         let b = sweep_b();
@@ -338,7 +338,7 @@ mod tests {
     //#endregion 🔖️BetweenRoundtripLaw
 
     //#region 🔖️FieldSweep
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn field_sweep_every_mutable_field_changes() {
         let a = sweep_a();
         let b = sweep_b();
@@ -387,7 +387,7 @@ mod tests {
     //#endregion 🔖️FieldSweep
 
     //#region 🔖️OpTextBinaryRoundtripLaw
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_text_binary_roundtrip_law() {
         let mutations = vec![
             TsvMutation::NoMutation,

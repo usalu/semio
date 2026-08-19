@@ -17,7 +17,7 @@ pub struct SemioVideoArtifact {
 }
 
 impl Default for SemioVideoArtifact {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self::from_snapshot(SemioVideoSnapshot::default())
     }
 }

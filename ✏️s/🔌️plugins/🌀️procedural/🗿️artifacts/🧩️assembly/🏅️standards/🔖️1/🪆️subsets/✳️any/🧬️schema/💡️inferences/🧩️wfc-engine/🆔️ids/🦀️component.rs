@@ -31,7 +31,7 @@ macro_rules! id_newtype {
         }
 
         impl core::fmt::Display for $name {
-            async fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
                 write!(f, "{}", self.0)
             }
         }
@@ -80,7 +80,7 @@ id_newtype!(
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn id_index_roundtrip() {
         let p = PatternId::from_index(7);
         assert_eq!(p.index(), 7);
@@ -88,7 +88,7 @@ mod tests {
         assert_eq!(format!("{p}"), "7");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn id_ordering_and_equality() {
         let a = NodeId(1);
         let b = NodeId(2);
@@ -97,7 +97,7 @@ mod tests {
         assert_ne!(a, b);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn id_serde_roundtrip() {
         let r = RelationId(42);
         let json = serde_json::to_string(&r).unwrap();

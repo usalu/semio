@@ -105,13 +105,13 @@ impl PdfDecimal {
 }
 
 impl From<f64> for PdfDecimal {
-    async fn from(value: f64) -> Self {
+    fn from(value: f64) -> Self {
         Self::from_f64(value)
     }
 }
 
 impl fmt::Display for PdfDecimal {
-    async fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         if self.negative {
             formatter.write_str("-")?;
         }
@@ -148,7 +148,7 @@ pub enum PdfObject {
 }
 
 impl Default for PdfObject {
-    async fn default() -> Self {
+    fn default() -> Self {
         PdfObject::Null
     }
 }
@@ -225,7 +225,7 @@ pub struct PdfPage {
 }
 
 impl Default for PdfPage {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { media_box: [0.0, 0.0, 612.0, 792.0], crop_box: None, rotate: 0, text: String::new() }
     }
 }
@@ -285,7 +285,7 @@ pub struct PdfSnapshot {
 }
 
 impl Default for PdfSnapshot {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { schema: STDIO_PDF17_DOCUMENT_SCHEMA.into(), declared_version: "1.7".into(), pages: Vec::new(), info: PdfInfo::default(), objects: Vec::new(), trailer: Vec::new() }
     }
 }

@@ -43,7 +43,7 @@ mod tests {
     use semio_framework_plugin::{testkit, PluginApp, INTERACTION_SELECT_ACTION_ID};
     use semio_framework::kernel::Effect;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn pointer_drag_translates_node_by_screen_delta() {
         let mut app = new_app();
         dispatch(&mut app, WiresCommand::AddNode(add_node::AddNode { kind: "identity".into() }));
@@ -61,7 +61,7 @@ mod tests {
 
     /// 🕹️ A hit requests `interactionSelect` for the "graph" domain's "node" granularity instead of
     /// mutating config directly.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn pointer_down_requests_a_select_effect_for_the_hit_node() {
         let mut app = new_app();
         dispatch(&mut app, WiresCommand::AddNode(add_node::AddNode { kind: "identity".into() }));
@@ -74,7 +74,7 @@ mod tests {
         assert!(args["targets"].as_str().expect("targets json").contains("node-1"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn pointer_down_on_empty_space_requests_no_select_effect() {
         let mut app = new_app();
         let result = dispatch(&mut app, WiresCommand::CanvasPointerDown(CanvasPointerDown { id: None, x: 0.0, y: 0.0 }));

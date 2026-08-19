@@ -32,7 +32,7 @@ impl protocol::Inference<SemioAudioSnapshot> for SemioAudioInference {
 /// 🌱 Defined in terms of `infer` (not derived) — keeps the law correct regardless of whether
 /// `SemioAudioSnapshot::default()`'s `channels`/`sampleRate` ever stop being empty/zero.
 impl Default for SemioAudioInference {
-    async fn default() -> Self {
+    fn default() -> Self {
         <Self as protocol::Inference<SemioAudioSnapshot>>::infer(&SemioAudioSnapshot::default())
     }
 }
@@ -84,13 +84,13 @@ mod tests {
     use super::*;
     use protocol::Inference;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = SemioAudioSnapshot::default();
         assert_eq!(SemioAudioInference::infer(&snapshot), SemioAudioInference::infer(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(SemioAudioInference::infer(&SemioAudioSnapshot::default()), SemioAudioInference::default());
     }

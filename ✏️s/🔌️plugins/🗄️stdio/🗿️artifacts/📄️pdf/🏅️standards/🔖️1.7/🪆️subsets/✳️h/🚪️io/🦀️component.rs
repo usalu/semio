@@ -83,7 +83,7 @@ pub mod derived_composition {
         use semio_framework_plugin::AnalyzeSource;
         use semio_framework_plugin::ArtifactBuilder as _;
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn compose_always_succeeds_even_with_zero_setup() {
             let snapshot = PdfSnapshot::default();
             let bytes = <PdfSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
@@ -92,7 +92,7 @@ pub mod derived_composition {
             assert!(composed.diagnostics.iter().any(|d| d.code.0 == crate::artifacts::pdf::standards::v1_7::subsets::h::schema::CODE_INFO_TITLE_OR_AUTHOR));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn conforming_builder_snapshot_composes_with_fewer_advisories() {
             let snapshot = PdfHBuilder::new()
                 .add_page(crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::PdfPage::new(100.0, 100.0))

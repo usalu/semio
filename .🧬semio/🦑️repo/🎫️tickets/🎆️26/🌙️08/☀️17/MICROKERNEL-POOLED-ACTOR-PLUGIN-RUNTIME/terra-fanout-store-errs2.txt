@@ -1,0 +1,162 @@
+1538:140: error[E0106]: missing lifetime specifier: expected named lifetime parameter
+1543:133: error[E0106]: missing lifetime specifier: expected named lifetime parameter
+1552:153: error[E0106]: missing lifetime specifier: expected named lifetime parameter
+1566:167: error[E0106]: missing lifetime specifier: expected named lifetime parameter
+1580:161: error[E0106]: missing lifetime specifier: expected named lifetime parameter
+1592:190: error[E0106]: missing lifetime specifier: expected named lifetime parameter
+629:40: error[E0277]: `std::option::Option<&os_dsl::schema::FieldValue>` is not a future: `std::option::Option<&os_dsl::schema::FieldValue>` is not a future
+633:38: error[E0277]: `std::option::Option<&os_dsl::schema::FieldValue>` is not a future: `std::option::Option<&os_dsl::schema::FieldValue>` is not a future
+634:90: error[E0308]: mismatched types: expected `&str`, found `String`
+642:38: error[E0308]: mismatched types: expected fn pointer, found fn item
+672:38: error[E0277]: `std::option::Option<&os_dsl::schema::FieldValue>` is not a future: `std::option::Option<&os_dsl::schema::FieldValue>` is not a future
+673:90: error[E0308]: mismatched types: expected `&str`, found `String`
+676:36: error[E0277]: `std::option::Option<&os_dsl::schema::FieldValue>` is not a future: `std::option::Option<&os_dsl::schema::FieldValue>` is not a future
+680:40: error[E0277]: `std::option::Option<&os_dsl::schema::FieldValue>` is not a future: `std::option::Option<&os_dsl::schema::FieldValue>` is not a future
+689:38: error[E0308]: mismatched types: expected fn pointer, found fn item
+737:39: error[E0277]: `std::option::Option<&os_dsl::schema::FieldValue>` is not a future: `std::option::Option<&os_dsl::schema::FieldValue>` is not a future
+738:53: error[E0614]: type `u32` cannot be dereferenced: can't be dereferenced
+744:42: error[E0277]: `std::option::Option<&os_dsl::schema::FieldValue>` is not a future: `std::option::Option<&os_dsl::schema::FieldValue>` is not a future
+751:44: error[E0277]: `std::option::Option<&os_dsl::schema::FieldValue>` is not a future: `std::option::Option<&os_dsl::schema::FieldValue>` is not a future
+755:44: error[E0277]: `std::option::Option<&os_dsl::schema::FieldValue>` is not a future: `std::option::Option<&os_dsl::schema::FieldValue>` is not a future
+756:61: error[E0614]: type `u64` cannot be dereferenced: can't be dereferenced
+759:50: error[E0277]: `std::option::Option<&os_dsl::schema::FieldValue>` is not a future: `std::option::Option<&os_dsl::schema::FieldValue>` is not a future
+771:38: error[E0308]: mismatched types: expected fn pointer, found fn item
+788:161: error[E0308]: mismatched types: expected fn pointer, found fn item
+801:38: error[E0277]: `std::option::Option<&os_dsl::schema::FieldValue>` is not a future: `std::option::Option<&os_dsl::schema::FieldValue>` is not a future
+802:90: error[E0308]: mismatched types: expected `&str`, found `String`
+805:35: error[E0277]: `std::option::Option<&os_dsl::schema::FieldValue>` is not a future: `std::option::Option<&os_dsl::schema::FieldValue>` is not a future
+806:81: error[E0308]: mismatched types: expected `&RecordValue`, found `RecordValue`
+809:36: error[E0277]: `std::option::Option<&os_dsl::schema::FieldValue>` is not a future: `std::option::Option<&os_dsl::schema::FieldValue>` is not a future
+818:38: error[E0308]: mismatched types: expected fn pointer, found fn item
+1025:64: error[E0599]: no method named `apply` found for opaque type `impl Future<Output = &<Mutation as protocol::Mutation<P>>::Diff>` in the current scope: method not found in `impl Future<Output = &<Mutation as protocol::Mutation<P>>::Diff>`
+1099:64: error[E0599]: no method named `apply` found for opaque type `impl Future<Output = &<Mutation as protocol::Mutation<P>>::Diff>` in the current scope: method not found in `impl Future<Output = &<Mutation as protocol::Mutation<P>>::Diff>`
+1170:64: error[E0599]: no method named `apply` found for opaque type `impl Future<Output = &<Mutation as protocol::Mutation<S>>::Diff>` in the current scope: method not found in `impl Future<Output = &<Mutation as protocol::Mutation<S>>::Diff>`
+1288:49: error[E0277]: `std::option::Option<&os_dsl::schema::FieldValue>` is not a future: `std::option::Option<&os_dsl::schema::FieldValue>` is not a future
+1305:49: error[E0277]: `std::option::Option<&os_dsl::schema::FieldValue>` is not a future: `std::option::Option<&os_dsl::schema::FieldValue>` is not a future
+1644:111: error[E0308]: mismatched types: expected future, found `[u8; 32]`
+1644:31: error[E0308]: mismatched types: expected `[u8; 32]`, found future
+2111:19: error[E0277]: `impl Future<Output = u64>` doesn't implement `std::fmt::Display`: `impl Future<Output = u64>` cannot be formatted with the default formatter
+2221:35: error[E0308]: mismatched types: expected `Shape`, found future, arguments to this function are incorrect
+2221:35: error[E0599]: no method named `positional` found for opaque type `impl Future<Output = os_dsl::schema::FieldSpec>` in the current scope: method not found in `impl Future<Output = os_dsl::schema::FieldSpec>`
+2221:35: error[E0308]: mismatched types: expected `RecordSpec`, found future
+2221:35: error[E0308]: mismatched types: expected `FieldValue`, found future, arguments to this method are incorrect
+2221:35: error[E0599]: no method named `map_err` found for opaque type `impl Future<Output = Result<std::string::String, std::string::String>>` in the current scope: method not found in `impl Future<Output = Result<std::string::String, std::string::String>>`
+2221:35: error[E0308]: mismatched types: expected fn pointer, found fn item, arguments to this enum variant are incorrect
+2221:35: error[E0308]: mismatched types: expected `RecordValue`, found future, arguments to this enum variant are incorrect
+2221:35: error[E0599]: no method named `map_err` found for opaque type `impl Future<Output = Result<OpsAuthor, protocol::TextError>>` in the current scope: method not found in `impl Future<Output = Result<OpsAuthor, protocol::TextError>>`
+2250:35: error[E0308]: mismatched types: expected `Shape`, found future, arguments to this function are incorrect
+2250:35: error[E0599]: no method named `positional` found for opaque type `impl Future<Output = os_dsl::schema::FieldSpec>` in the current scope: method not found in `impl Future<Output = os_dsl::schema::FieldSpec>`
+2250:35: error[E0308]: mismatched types: expected `RecordSpec`, found future
+2250:35: error[E0599]: no method named `optional` found for opaque type `impl Future<Output = os_dsl::schema::FieldSpec>` in the current scope: method not found in `impl Future<Output = os_dsl::schema::FieldSpec>`
+2250:35: error[E0308]: mismatched types: expected `FieldSpec`, found future
+2250:35: error[E0308]: mismatched types: expected `FieldValue`, found future, arguments to this method are incorrect
+2250:35: error[E0308]: mismatched types: expected `FieldValue`, found future
+2250:35: error[E0277]: a value of type `Vec<os_dsl::schema::FieldValue>` cannot be built from an iterator over elements of type `impl Future<Output = os_dsl::schema::FieldValue>`: value of type `Vec<os_dsl::schema::FieldValue>` cannot be built from `std::iter::Iterator<Item=impl Future<Output = os_dsl::schema::FieldValue>>`
+2250:35: error[E0599]: no method named `map_err` found for opaque type `impl Future<Output = Result<std::string::String, std::string::String>>` in the current scope: method not found in `impl Future<Output = Result<std::string::String, std::string::String>>`
+2250:35: error[E0599]: no method named `map_err` found for opaque type `impl Future<Output = Result<i32, std::string::String>>` in the current scope: method not found in `impl Future<Output = Result<i32, std::string::String>>`
+2250:35: error[E0277]: a value of type `Result<Vec<_>, std::string::String>` cannot be built from an iterator over elements of type `impl Future<Output = Result<std::string::String, std::string::String>>`: value of type `Result<Vec<_>, std::string::String>` cannot be built from `std::iter::Iterator<Item=impl Future<Output = Result<std::string::String, std::string::String>>>`
+2250:35: error[E0277]: a value of type `Result<Vec<_>, std::string::String>` cannot be built from an iterator over elements of type `impl Future<Output = Result<OpsAuthor, std::string::String>>`: value of type `Result<Vec<_>, std::string::String>` cannot be built from `std::iter::Iterator<Item=impl Future<Output = Result<OpsAuthor, std::string::String>>>`
+2250:35: error[E0599]: no method named `map_err` found for opaque type `impl Future<Output = Result<u32, std::string::String>>` in the current scope: method not found in `impl Future<Output = Result<u32, std::string::String>>`
+2318:90: error[E0277]: `protocol::TextError` is not a future: `protocol::TextError` is not a future
+2538:99: error[E0277]: a value of type `Result<Vec<_>, _>` cannot be built from an iterator over elements of type `impl Future<Output = Result<protocol::MutationMessage, std::string::String>>`: value of type `Result<Vec<_>, _>` cannot be built from `std::iter::Iterator<Item=impl Future<Output = Result<protocol::MutationMessage, std::string::String>>>`
+2627:123: error[E0277]: can't compare `Vec<protocol::ActorId>` with `impl Future<Output = Vec<protocol::ActorId>>`: no implementation for `Vec<protocol::ActorId> == impl Future<Output = Vec<protocol::ActorId>>`
+2641:36: error[E0277]: can't compare `Vec<protocol::ActorId>` with `impl Future<Output = Vec<protocol::ActorId>>`: no implementation for `Vec<protocol::ActorId> == impl Future<Output = Vec<protocol::ActorId>>`
+2685:36: error[E0277]: can't compare `Vec<protocol::ActorId>` with `impl Future<Output = Vec<protocol::ActorId>>`: no implementation for `Vec<protocol::ActorId> == impl Future<Output = Vec<protocol::ActorId>>`
+2767:30: error[E0277]: can't compare `std::string::String` with `impl Future<Output = std::string::String>`: no implementation for `std::string::String == impl Future<Output = std::string::String>`
+2768:136: error[E0277]: `impl Future<Output = std::string::String>` doesn't implement `std::fmt::Display`: `impl Future<Output = std::string::String>` cannot be formatted with the default formatter
+2865:118: error[E0271]: expected `history_message_from_mutation_message` to return `HistoryMessage`, but it returns `impl Future<Output = HistoryMessage>`: expected `HistoryMessage`, found future
+2865:241: error[E0277]: a value of type `Vec<history::HistoryOpMeta>` cannot be built from an iterator over elements of type `impl Future<Output = history::HistoryOpMeta>`: value of type `Vec<history::HistoryOpMeta>` cannot be built from `std::iter::Iterator<Item=impl Future<Output = history::HistoryOpMeta>>`
+2897:87: error[E0277]: a value of type `Vec<HistoryMessage>` cannot be built from an iterator over elements of type `impl Future<Output = HistoryMessage>`: value of type `Vec<HistoryMessage>` cannot be built from `std::iter::Iterator<Item=impl Future<Output = HistoryMessage>>`
+2928:102: error[E0277]: a value of type `Result<Vec<_>, _>` cannot be built from an iterator over elements of type `impl Future<Output = Result<protocol::MutationMessage, std::string::String>>`: value of type `Result<Vec<_>, _>` cannot be built from `std::iter::Iterator<Item=impl Future<Output = Result<protocol::MutationMessage, std::string::String>>>`
+3061:82: error[E0277]: a value of type `Vec<HistoryConflict>` cannot be built from an iterator over elements of type `impl Future<Output = HistoryConflict>`: value of type `Vec<HistoryConflict>` cannot be built from `std::iter::Iterator<Item=impl Future<Output = HistoryConflict>>`
+3111:40: error[E0277]: the `?` operator can only be applied to values that implement `Try`: the `?` operator cannot be applied to type `impl Future<Output = Result<(MutationMeta, Vec<...>), ...>>`
+3183:92: error[E0277]: a value of type `Result<Vec<_>, _>` cannot be built from an iterator over elements of type `impl Future<Output = Result<protocol::Conflict, std::string::String>>`: value of type `Result<Vec<_>, _>` cannot be built from `std::iter::Iterator<Item=impl Future<Output = Result<protocol::Conflict, std::string::String>>>`
+3463:35: error[E0308]: mismatched types: expected `Shape`, found future, arguments to this function are incorrect
+3463:35: error[E0599]: no method named `optional` found for opaque type `impl Future<Output = os_dsl::schema::FieldSpec>` in the current scope: method not found in `impl Future<Output = os_dsl::schema::FieldSpec>`
+3463:35: error[E0308]: mismatched types: expected `RecordSpec`, found future
+3463:35: error[E0308]: mismatched types: expected `FieldSpec`, found future
+3463:35: error[E0599]: no method named `positional` found for opaque type `impl Future<Output = os_dsl::schema::FieldSpec>` in the current scope: method not found in `impl Future<Output = os_dsl::schema::FieldSpec>`
+3463:35: error[E0308]: mismatched types: expected `FieldValue`, found future
+3463:35: error[E0277]: a value of type `Vec<os_dsl::schema::FieldValue>` cannot be built from an iterator over elements of type `impl Future<Output = os_dsl::schema::FieldValue>`: value of type `Vec<os_dsl::schema::FieldValue>` cannot be built from `std::iter::Iterator<Item=impl Future<Output = os_dsl::schema::FieldValue>>`
+3463:35: error[E0308]: mismatched types: expected `FieldValue`, found future, arguments to this method are incorrect
+3463:35: error[E0599]: no method named `map_err` found for opaque type `impl Future<Output = Result<std::string::String, std::string::String>>` in the current scope: method not found in `impl Future<Output = Result<std::string::String, std::string::String>>`
+3463:35: error[E0277]: a value of type `Result<Vec<_>, std::string::String>` cannot be built from an iterator over elements of type `impl Future<Output = Result<OpsAuthor, std::string::String>>`: value of type `Result<Vec<_>, std::string::String>` cannot be built from `std::iter::Iterator<Item=impl Future<Output = Result<OpsAuthor, std::string::String>>>`
+3533:90: error[E0277]: `protocol::TextError` is not a future: `protocol::TextError` is not a future
+3592:103: error[E0277]: `protocol::TextError` is not a future: `protocol::TextError` is not a future
+3628:104: error[E0277]: `protocol::TextError` is not a future: `protocol::TextError` is not a future
+3663:104: error[E0277]: `protocol::TextError` is not a future: `protocol::TextError` is not a future
+3680:111: error[E0277]: `protocol::TextError` is not a future: `protocol::TextError` is not a future
+3722:119: error[E0277]: `protocol::TextError` is not a future: `protocol::TextError` is not a future
+3736:131: error[E0277]: `protocol::TextError` is not a future: `protocol::TextError` is not a future
+3858:107: error[E0277]: `protocol::TextError` is not a future: `protocol::TextError` is not a future
+3881:107: error[E0277]: `protocol::TextError` is not a future: `protocol::TextError` is not a future
+3889:115: error[E0277]: `protocol::TextError` is not a future: `protocol::TextError` is not a future
+3896:115: error[E0277]: `protocol::TextError` is not a future: `protocol::TextError` is not a future
+4428:95: error[E0308]: mismatched types: expected `ArtifactProjectionStamp`, found future
+4590:20: error[E0369]: binary operation `!=` cannot be applied to type `impl Future<Output = std::string::String>`
+4590:148: error[E0277]: can't compare `std::string::String` with `impl Future<Output = std::string::String>`: no implementation for `std::string::String == impl Future<Output = std::string::String>`
+4591:90: error[E0277]: `impl Future<Output = std::string::String>` doesn't implement `std::fmt::Display`: `impl Future<Output = std::string::String>` cannot be formatted with the default formatter
+4593:62: error[E0599]: no method named `clone` found for opaque type `impl Future<Output = std::string::String>` in the current scope: method not found in `impl Future<Output = std::string::String>`
+4597:35: error[E0599]: no method named `clone` found for opaque type `impl Future<Output = std::string::String>` in the current scope: method not found in `impl Future<Output = std::string::String>`
+4603:53: error[E0599]: no method named `clone` found for opaque type `impl Future<Output = std::string::String>` in the current scope: method not found in `impl Future<Output = std::string::String>`
+4659:32: error[E0277]: `impl Future<Output = Vec<Mutation>>` is not an iterator: `impl Future<Output = Vec<Mutation>>` is not an iterator
+4826:29: error[E0505]: cannot move out of `command` because it is borrowed: move out of `command` occurs here
+4948:78: error[E0599]: no method named `clone` found for opaque type `impl Future<Output = std::string::String>` in the current scope: method not found in `impl Future<Output = std::string::String>`
+5095:12: error[E0600]: cannot apply unary operator `!` to type `impl Future<Output = bool>`: cannot apply unary operator `!`
+5148:16: error[E0600]: cannot apply unary operator `!` to type `impl Future<Output = bool>`: cannot apply unary operator `!`
+5152:50: error[E0277]: `std::string::String` is not a future: `std::string::String` is not a future
+5169:75: error[E0599]: the method `max` exists for opaque type `impl Future<Output = std::option::Option<protocol::Severity>>`, but its trait bounds were not satisfied: method cannot be called due to unsatisfied trait bounds
+5216:93: error[E0308]: mismatched types: expected `String`, found future
+5373:120: error[E0308]: mismatched types: expected `HybridLogicalTimestamp`, found future
+5448:143: error[E0308]: mismatched types: expected `Option<_>`, found future
+5579:82: error[E0308]: mismatched types: expected `bool`, found future
+5607:85: error[E0308]: mismatched types: expected `bool`, found future
+5686:17: error[E0382]: use of moved value: `candidate`: value used here after move
+5687:17: error[E0382]: use of moved value: `candidate`: value used here after move
+5688:43: error[E0382]: use of moved value: `candidate`: value used here after move
+5690:49: error[E0382]: use of moved value: `candidate`: value used here after move
+5691:49: error[E0382]: use of moved value: `candidate`: value used here after move
+5819:124: error[E0308]: mismatched types: expected `HybridLogicalTimestamp`, found future
+5825:116: error[E0308]: mismatched types: expected `HybridLogicalTimestamp`, found future
+5944:120: error[E0308]: mismatched types: expected `HybridLogicalTimestamp`, found future
+6304:35: error[E0308]: mismatched types: expected `FieldSpec`, found future
+6304:35: error[E0308]: mismatched types: expected `RecordSpec`, found future
+6304:35: error[E0308]: mismatched types: expected `Shape`, found future, arguments to this function are incorrect
+6304:35: error[E0277]: a value of type `Vec<os_dsl::schema::FieldValue>` cannot be built from an iterator over elements of type `impl Future<Output = os_dsl::schema::FieldValue>`: value of type `Vec<os_dsl::schema::FieldValue>` cannot be built from `std::iter::Iterator<Item=impl Future<Output = os_dsl::schema::FieldValue>>`
+6304:35: error[E0277]: a value of type `Result<Vec<_>, std::string::String>` cannot be built from an iterator over elements of type `impl Future<Output = Result<std::string::String, std::string::String>>`: value of type `Result<Vec<_>, std::string::String>` cannot be built from `std::iter::Iterator<Item=impl Future<Output = Result<std::string::String, std::string::String>>>`
+6333:90: error[E0277]: `protocol::TextError` is not a future: `protocol::TextError` is not a future
+7587:63: error[E0277]: `protocol::DslValue` is not a future: `protocol::DslValue` is not a future
+7687:62: error[E0599]: no method named `clone` found for opaque type `impl Future<Output = std::string::String>` in the current scope: method not found in `impl Future<Output = std::string::String>`
+7709:65: error[E0599]: no method named `clone` found for opaque type `impl Future<Output = std::string::String>` in the current scope: method not found in `impl Future<Output = std::string::String>`
+7987:22: error[E0277]: `impl Future<Output = Vec<ChildRef>>` is not an iterator: `impl Future<Output = Vec<ChildRef>>` is not an iterator
+7991:21: error[E0277]: `impl Future<Output = Vec<ArtifactLink>>` is not an iterator: `impl Future<Output = Vec<ArtifactLink>>` is not an iterator
+8108:8: error[E0600]: cannot apply unary operator `!` to type `impl Future<Output = bool>`: cannot apply unary operator `!`
+8309:33: error[E0277]: `impl Future<Output = Vec<protocol::MutationMessage>>` is not an iterator: `impl Future<Output = Vec<protocol::MutationMessage>>` is not an iterator
+8324:37: error[E0277]: `impl Future<Output = Vec<protocol::MutationMessage>>` is not an iterator: `impl Future<Output = Vec<protocol::MutationMessage>>` is not an iterator
+8330:79: error[E0308]: mismatched types: expected `&[u8]`, found `&impl Future<Output = Vec<u8>>`
+8331:69: error[E0308]: mismatched types: expected `&str`, found `&impl Future<Output = String>`
+8332:79: error[E0277]: `impl Future<Output = std::string::String>` doesn't implement `std::fmt::Display`: `impl Future<Output = std::string::String>` cannot be formatted with the default formatter
+8341:171: error[E0277]: a value of type `Vec<(std::string::String, Vec<u8>)>` cannot be built from an iterator over elements of type `(std::string::String, impl Future<Output = Vec<u8>>)`: value of type `Vec<(std::string::String, Vec<u8>)>` cannot be built from `std::iter::Iterator<Item=(std::string::String, impl Future<Output = Vec<u8>>)>`
+8342:73: error[E0308]: mismatched types: expected `&[u8]`, found `&impl Future<Output = Vec<u8>>`
+8365:77: error[E0308]: mismatched types: expected `&[u8]`, found `&impl Future<Output = Vec<u8>>`
+8374:71: error[E0308]: mismatched types: expected `&str`, found `&impl Future<Output = String>`
+8395:66: error[E0308]: mismatched types: expected `&[u8]`, found `&impl Future<Output = Vec<u8>>`
+8403:60: error[E0308]: mismatched types: expected `&str`, found `&impl Future<Output = String>`
+8514:35: error[E0308]: mismatched types: expected `&str`, found `&impl Future<Output = String>`
+8515:76: error[E0277]: `impl Future<Output = std::string::String>` doesn't implement `std::fmt::Display`: `impl Future<Output = std::string::String>` cannot be formatted with the default formatter
+8553:35: error[E0308]: mismatched types: expected `&str`, found `&impl Future<Output = String>`
+8553:116: error[E0277]: `impl Future<Output = std::string::String>` doesn't implement `std::fmt::Display`: `impl Future<Output = std::string::String>` cannot be formatted with the default formatter
+8555:85: error[E0277]: `impl Future<Output = std::string::String>` doesn't implement `std::fmt::Display`: `impl Future<Output = std::string::String>` cannot be formatted with the default formatter
+8558:25: error[E0369]: binary operation `!=` cannot be applied to type `impl Future<Output = std::string::String>`
+8559:73: error[E0277]: `impl Future<Output = std::string::String>` doesn't implement `std::fmt::Display`: `impl Future<Output = std::string::String>` cannot be formatted with the default formatter
+8571:38: error[E0308]: mismatched types: expected `&[u8]`, found `&impl Future<Output = Vec<u8>>`
+8582:39: error[E0308]: mismatched types: expected `&[u8]`, found `&impl Future<Output = Vec<u8>>`
+8583:36: error[E0308]: mismatched types: expected `&str`, found `&impl Future<Output = String>`
+8648:53: error[E0599]: no method named `clone` found for opaque type `impl Future<Output = &ArtifactEnvelope<P, Mutation>>` in the current scope: method not found in `impl Future<Output = &ArtifactEnvelope<P, Mutation>>`
+8804:26: error[E0609]: no field `artifact_kind` on type `impl Future<Output = ArtifactDialect>`: unknown field
+8805:26: error[E0609]: no field `standard` on type `impl Future<Output = ArtifactDialect>`: unknown field
+8806:26: error[E0609]: no field `subset` on type `impl Future<Output = ArtifactDialect>`: unknown field
+8819:25: error[E0277]: `&impl Future<Output = Vec<<S as SubsetRoundtripSpec>::Mutation>>` is not an iterator: `&impl Future<Output = Vec<<S as SubsetRoundtripSpec>::Mutation>>` is not an iterator
+8825:9: error[E0277]: can't compare `impl Future<Output = <S as SubsetRoundtripSpec>::Inference>` with `impl Future<Output = <S as SubsetRoundtripSpec>::Inference>`: no implementation for `impl Future<Output = <S as SubsetRoundtripSpec>::Inference> == impl Future<Output = <S as SubsetRoundtripSpec>::Inference>`
+8825:9: error[E0277]: `impl Future<Output = <S as SubsetRoundtripSpec>::Inference>` doesn't implement `Debug`: the trait `Debug` is not implemented for `impl Future<Output = <S as SubsetRoundtripSpec>::Inference>`
+3452:58: error[E0599]: no method named `map_err` found for opaque type `impl Future<Output = Result<protocol::MutationEnvelope, protocol::ProtocolError>>` in the current scope: method not found in `impl Future<Output = Result<protocol::MutationEnvelope, protocol::ProtocolError>>`

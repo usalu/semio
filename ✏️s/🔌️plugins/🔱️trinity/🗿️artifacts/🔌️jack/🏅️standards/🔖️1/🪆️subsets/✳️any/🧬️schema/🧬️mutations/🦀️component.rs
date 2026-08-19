@@ -333,7 +333,7 @@ mod tests {
         Node { id: id.into(), kind: "Piece".into(), name: id.into(), x, y, width: 80.0, height: 40.0, properties: PropertyBag::new(), ports }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn graph_op_rejects_port_kind_not_declared_on_operation() {
         let mut fixture = mini_fixture();
         fixture.manifest = Manifest {
@@ -349,7 +349,7 @@ mod tests {
         assert!(matches!(err, crate::artifacts::jack::TrinityRamError::PortKindNotDeclaredOnMutation { .. }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn graph_op_create_edge_rejects_invalid_port_keys() {
         let fixture = mini_fixture();
         let bad_source = create_edge(Edge { id: "e2".into(), kind: "Connection".into(), source: "noAt".into(), target: crate::artifacts::jack::port_key("child", "in-a"), properties: PropertyBag::new() });
@@ -358,7 +358,7 @@ mod tests {
         assert!(matches!(validate_trinity_graph_operation(&bad_target, &fixture), Err(crate::artifacts::jack::TrinityRamError::InvalidTargetPortKey(_))));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn graph_op_create_edge_rejects_missing_source_and_target_nodes() {
         let fixture = mini_fixture();
         let missing_source = create_edge(Edge { id: "e2".into(), kind: "Connection".into(), source: crate::artifacts::jack::port_key("ghost", "out"), target: crate::artifacts::jack::port_key("child", "in-a"), properties: PropertyBag::new() });
@@ -367,7 +367,7 @@ mod tests {
         assert!(matches!(validate_trinity_graph_operation(&missing_target, &fixture), Err(crate::artifacts::jack::TrinityRamError::TargetNodeNotFound(_))));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn graph_op_rejects_duplicate_node_and_edge_ids() {
         let fixture = mini_fixture();
         let dup_node = create_node(mini_node("root", 0.0, 0.0, vec![]));
@@ -376,7 +376,7 @@ mod tests {
         assert!(matches!(validate_trinity_graph_operation(&dup_edge, &fixture), Err(crate::artifacts::jack::TrinityRamError::EdgeAlreadyExists(_))));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn graph_op_rejects_missing_entities_on_delete_rename_reposition() {
         let fixture = mini_fixture();
         assert!(matches!(validate_trinity_graph_operation(&delete_node("ghost".into()), &fixture), Err(crate::artifacts::jack::TrinityRamError::NodeNotFound(_))));
@@ -385,7 +385,7 @@ mod tests {
         assert!(matches!(validate_trinity_graph_operation(&move_node("ghost".into(), 0.0, 0.0), &fixture), Err(crate::artifacts::jack::TrinityRamError::NodeNotFound(_))));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn graph_op_set_data_property_rejects_unknown_entity_kind() {
         let fixture = mini_fixture();
         let mut nodes = fixture.nodes();
@@ -395,28 +395,28 @@ mod tests {
         assert!(matches!(err, crate::artifacts::jack::TrinityRamError::UnknownEntityKind { .. }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn graph_op_set_data_property_rejects_unknown_property_key() {
         let fixture = mini_fixture();
         let err = validate_trinity_graph_operation(&change_data_property(EntityRef::Node("root".into()), "bogus".into(), PropertyValue::Null), &fixture).expect_err("unknown key");
         assert!(matches!(err, crate::artifacts::jack::TrinityRamError::UnknownPropertyAtPath { .. }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn graph_op_set_data_property_rejects_type_mismatch() {
         let fixture = mini_fixture();
         let err = validate_trinity_graph_operation(&change_data_property(EntityRef::Node("root".into()), "label".into(), PropertyValue::Number(1.0)), &fixture).expect_err("type mismatch");
         assert!(matches!(err, crate::artifacts::jack::TrinityRamError::PropertyTypeMismatch { .. }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn graph_op_clear_data_property_rejects_missing_entities() {
         let fixture = mini_fixture();
         assert!(matches!(validate_trinity_graph_operation(&remove_data_property(EntityRef::Node("ghost".into()), "label".into()), &fixture), Err(crate::artifacts::jack::TrinityRamError::NodeNotFound(_))));
         assert!(matches!(validate_trinity_graph_operation(&remove_data_property(EntityRef::Edge("ghost".into()), "u".into()), &fixture), Err(crate::artifacts::jack::TrinityRamError::EdgeNotFound(_))));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn apply_trinity_graph_mutations_applies_valid_sequence_and_rejects_invalid() {
         let fixture = mini_fixture();
         let ok = apply_trinity_graph_mutations(fixture.clone(), &[rename_node("root".into(), "renamed".into())]).expect("rename applies");
@@ -426,7 +426,7 @@ mod tests {
         assert!(matches!(err, crate::artifacts::jack::TrinityRamError::NodeNotFound(_)));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn document_text_round_trip_graph_store() {
         let mut store = TrinityGraphStore::new(create_trinity_graph_envelope("test", mini_fixture()));
         dispatch_trinity_graph_mutations(&mut store, vec![rename_node("root".into(), "renamed".into())]).expect("apply");
@@ -434,7 +434,7 @@ mod tests {
         ::store::os_store::test_support::assert_document_pack_round_trip(&store);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dispatch_trinity_graph_mutations_noop_on_empty() {
         let mut store = TrinityGraphStore::new(create_trinity_graph_envelope("test", mini_fixture()));
         let generation_before = store.generation();
@@ -442,7 +442,7 @@ mod tests {
         assert_eq!(store.generation(), generation_before);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn graph_op_reposition_and_rename_undo_restore_prior_values() {
         let mut store = TrinityGraphStore::new(create_trinity_graph_envelope("test", mini_fixture()));
         dispatch_trinity_graph_mutations(&mut store, vec![move_node("root".into(), 50.0, 60.0)]).expect("reposition");
@@ -455,7 +455,7 @@ mod tests {
         assert_eq!(store.snapshot().unwrap().nodes().iter().find(|n| n.id == "root").unwrap().name, "core");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn graph_op_delete_edge_undo_recreates_edge() {
         let mut store = TrinityGraphStore::new(create_trinity_graph_envelope("test", mini_fixture()));
         dispatch_trinity_graph_mutations(&mut store, vec![delete_edge("e1".into())]).expect("delete edge");
@@ -464,7 +464,7 @@ mod tests {
         assert_eq!(store.snapshot().unwrap().edges().len(), 1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn graph_op_delete_node_undo_restores_node_and_incident_edges() {
         let mut store = TrinityGraphStore::new(create_trinity_graph_envelope("test", mini_fixture()));
         dispatch_trinity_graph_mutations(&mut store, vec![delete_node("root".into())]).expect("delete node");
@@ -477,7 +477,7 @@ mod tests {
         assert_eq!(projection.edges().len(), 1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn graph_op_set_and_clear_data_property_undo_round_trip() {
         let mut store = TrinityGraphStore::new(create_trinity_graph_envelope("test", mini_fixture()));
         dispatch_trinity_graph_mutations(&mut store, vec![change_data_property(EntityRef::Node("root".into()), "label".into(), PropertyValue::String("first".into()))]).expect("set");
@@ -493,7 +493,7 @@ mod tests {
         assert_eq!(value, Some(PropertyValue::String("first".into())));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dispatch_registers_semantic_descriptors() {
         register_trinity_graph_mutation_descriptors();
         for kind in <TrinityGraphMutation as protocol::SemanticMutation<JackSnapshot>>::kinds() {
@@ -505,26 +505,26 @@ mod tests {
     //#region 🧪️OutcomeLaws
     /// ⚖️ `📋️contract-freeze.md` §C2 laws, per verb family (`assert_outcome_policy_matrix` is not yet
     /// landed in `📡️spr/🧪️testkit` — TODO(1-D testkit laws pending) once it lands).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn delete_missing_node_is_a_target_missing_error() {
         let base = mini_fixture();
         protocol::testkit::assert_missing_target_is_error(&base, &TrinityGraphMutation::DeleteNode(DeleteNode { id: "does-not-exist".into() }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn rename_missing_node_is_a_target_missing_error() {
         let base = mini_fixture();
         protocol::testkit::assert_missing_target_is_error(&base, &TrinityGraphMutation::RenameNode(RenameNode { id: "does-not-exist".into(), new_name: "New".into() }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_node_duplicate_id_never_applies() {
         let base = mini_fixture();
         let duplicate = TrinityGraphMutation::CreateNode(CreateNode { node: mini_node("root", 0.0, 0.0, vec![]) });
         protocol::testkit::assert_fatal_never_applies(&duplicate.diff(&base));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_edge_duplicate_id_never_applies() {
         let base = mini_fixture();
         let duplicate = TrinityGraphMutation::CreateEdge(CreateEdge { edge: Edge { id: "e1".into(), kind: "Connection".into(), source: "root@out-a".into(), target: "child@in-a".into(), properties: PropertyBag::new() } });

@@ -195,7 +195,7 @@ mod carrier_law {
     use crate::artifacts::txt::TxtSnapshot;
     use store::ArtifactDsl;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn carrier_native_is_raw() {
         for text in ["", "hello\n", "a\r\nb\r\nc", "just one line, no newline", "Hello, \u{4e16}\u{754c}!\n\u{1f389}"] {
             let decoded = TxtSnapshot::parse_dsl(text).expect("decode");

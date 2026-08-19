@@ -122,12 +122,12 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dsl_round_trips_representative_document() {
         store::os_store::test_support::assert_dsl_round_trip(&representative_draw_document());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dsl_round_trips_document_without_assets_or_artboard() {
         let mut doc = default_draw_document("no-extras", None);
         doc.assets = Default::default();
@@ -136,7 +136,7 @@ mod tests {
         store::os_store::test_support::assert_dsl_round_trip(&doc);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dsl_round_trips_semio_example_fixture() {
         let doc = parse_dsl(SEMIO_DRAW_EXAMPLE_TEXT).expect("semio example fixture parses");
         assert_eq!(doc.id, "semio");
@@ -145,7 +145,7 @@ mod tests {
         store::os_store::test_support::assert_dsl_round_trip(&doc);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn draw_document_parse_dsl_reports_error_for_unknown_layer_kind() {
         let unknown_layer = DrawSnapshot::parse_dsl("schema=\"draw.document\" id=\"test\"\nlayers {\n  weird id=\"layer-1\"\n}\n");
         assert!(unknown_layer.is_err(), "an unrecognized layer keyword must fail to parse");

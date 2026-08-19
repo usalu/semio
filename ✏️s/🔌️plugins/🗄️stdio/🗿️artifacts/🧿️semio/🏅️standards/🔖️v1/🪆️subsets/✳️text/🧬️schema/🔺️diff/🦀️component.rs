@@ -216,7 +216,7 @@ mod tests {
     use crate::artifacts::semio::standards::v1::subsets::text::schema::snapshot::{SemioTextMarkKind, STDIO_SEMIOTEXT_DOCUMENT_SCHEMA};
     use protocol::DiffCodec;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn apply_replaces_runs_wholesale() {
         let base = SemioTextSnapshot { schema: STDIO_SEMIOTEXT_DOCUMENT_SCHEMA.into(), runs: vec![SemioTextRun { language: "en".into(), content: "a".into(), marks: vec![] }] };
         let diff = SemioTextDiff { runs: Some(SemioTextRunList { values: vec![SemioTextRun { language: "en".into(), content: "b".into(), marks: vec![] }] }) };
@@ -224,7 +224,7 @@ mod tests {
         assert_eq!(next.runs[0].content, "b");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_last_write_wins() {
         let mut d1 = SemioTextDiff { runs: Some(SemioTextRunList { values: vec![SemioTextRun { language: "en".into(), content: "a".into(), marks: vec![] }] }) };
         let d2 = SemioTextDiff { runs: Some(SemioTextRunList { values: vec![SemioTextRun { language: "en".into(), content: "b".into(), marks: vec![] }] }) };
@@ -232,7 +232,7 @@ mod tests {
         assert_eq!(d1, d2);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn diff_codec_text_binary_roundtrip_law() {
         for d in demo_diff_cases() {
             let printed = d.print_diff();
@@ -246,7 +246,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mark_kind_helper_smoke() {
         assert_eq!(dec_mark_kind("l").unwrap(), SemioTextMarkKind::Link);
     }

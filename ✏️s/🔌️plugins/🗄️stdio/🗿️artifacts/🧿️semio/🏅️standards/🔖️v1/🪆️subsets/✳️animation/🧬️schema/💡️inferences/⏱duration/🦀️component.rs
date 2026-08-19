@@ -58,26 +58,26 @@ mod tests {
         SemioAnimationSnapshot { schema: STDIO_SEMIOANIMATION_DOCUMENT_SCHEMA.into(), timelines }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn duration_is_the_latest_keyframe_across_every_channel() {
         let snap = snapshot(vec![AnimTimeline { name: None, channels: vec![channel(vec![keyframe(0.0), keyframe(1.5)])] }, AnimTimeline { name: None, channels: vec![channel(vec![keyframe(0.0), keyframe(3.25)]), channel(vec![keyframe(2.0)])] }]);
         let duration = compute_semio_animation_duration(&snap);
         assert_eq!(duration, SemioAnimationDuration { duration_seconds: 3.25, timeline_count: 2, channel_count: 3, keyframe_count: 5 });
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn no_keyframes_yields_zero_duration() {
         let snap = snapshot(vec![AnimTimeline { name: None, channels: vec![channel(Vec::new())] }]);
         assert_eq!(compute_semio_animation_duration(&snap).duration_seconds, 0.0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snap = snapshot(vec![AnimTimeline { name: None, channels: vec![channel(vec![keyframe(1.0)])] }]);
         assert_eq!(compute_semio_animation_duration(&snap), compute_semio_animation_duration(&snap));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(compute_semio_animation_duration(&SemioAnimationSnapshot::default()), SemioAnimationDuration::default());
     }

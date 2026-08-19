@@ -126,7 +126,7 @@ mod tests {
         doc
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_layer_visible_inverse_law() {
         let base = base_document();
         let layer_id = crate::artifacts::draw::schema::layer_id(&base.layers[0]).to_string();
@@ -134,7 +134,7 @@ mod tests {
         assert_mutation_inverse_law(&base, &mutation);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn rename_layer_inverse_law() {
         let base = base_document();
         let layer_id = crate::artifacts::draw::schema::layer_id(&base.layers[0]).to_string();
@@ -142,14 +142,14 @@ mod tests {
         assert_mutation_inverse_law(&base, &mutation);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_layer_inverse_law() {
         let base = base_document();
         let mutation = create_layer(None, None, create_draw_path_layer("New", Vec::new()));
         assert_mutation_inverse_law(&base, &mutation);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn delete_layer_inverse_law() {
         let base = base_document();
         let layer_id = crate::artifacts::draw::schema::layer_id(&base.layers[0]).to_string();
@@ -157,7 +157,7 @@ mod tests {
         assert_mutation_inverse_law(&base, &mutation);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn duplicate_layer_inverse_law() {
         let base = base_document();
         let layer_id = crate::artifacts::draw::schema::layer_id(&base.layers[0]).to_string();
@@ -165,7 +165,7 @@ mod tests {
         assert_mutation_inverse_law(&base, &mutation);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn reorder_layer_inverse_law() {
         let mut base = base_document();
         base.layers.push(create_draw_path_layer("Second", Vec::new()));
@@ -174,7 +174,7 @@ mod tests {
         assert_mutation_inverse_law(&base, &mutation);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_layer_opacity_diff_absorb_law() {
         let base = base_document();
         let layer_id = crate::artifacts::draw::schema::layer_id(&base.layers[0]).to_string();
@@ -187,25 +187,25 @@ mod tests {
     //#region 🧪️OutcomeLaws
     /// ⚖️ `📋️contract-freeze.md` §C2 laws, per verb family (`assert_outcome_policy_matrix` is not yet
     /// landed in `📡️spr/🧪️testkit` — TODO(1-D testkit laws pending) once it lands).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn delete_missing_layer_is_a_target_missing_error() {
         let base = base_document();
         assert_missing_target_is_error(&base, &delete_layer("does-not-exist".into()));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn rename_missing_layer_is_a_target_missing_error() {
         let base = base_document();
         assert_missing_target_is_error(&base, &rename_layer("does-not-exist".into(), "New Name".into()));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_layer_opacity_missing_layer_is_a_target_missing_error() {
         let base = base_document();
         assert_missing_target_is_error(&base, &set_layer_opacity("does-not-exist".into(), 0.5));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_layer_duplicate_id_never_applies() {
         let base = base_document();
         // Re-creating the exact existing node collides on id for real (ids are content-addressed).
@@ -214,7 +214,7 @@ mod tests {
     }
     //#endregion 🧪️OutcomeLaws
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dispatch_registers_semantic_descriptors() {
         register_draw_mutation_descriptors();
         for kind in DrawMutation::kinds() {

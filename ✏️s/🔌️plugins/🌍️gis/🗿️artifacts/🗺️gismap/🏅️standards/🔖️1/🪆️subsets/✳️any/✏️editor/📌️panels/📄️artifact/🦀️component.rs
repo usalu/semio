@@ -46,13 +46,13 @@ mod tests {
     use super::*;
     use crate::editor::gis2d::testkit::{app, render as render_body};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn document_lists_map_layers() {
         let mut app = app();
         assert!(render_body(&mut app, GIS2D_PLAY_BODY_DOCUMENT).contains("gis2d-play-document.layer.raster"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn the_definition_binds_the_framework_document_tab_to_this_body() {
         let definition = definition();
         assert!(matches!(definition.kind, PanelTabKind::App(ref id) if id == FRAMEWORK_PANEL_TAB_ARTIFACT_ID));

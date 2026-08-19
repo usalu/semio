@@ -15,7 +15,7 @@ use std::path::Path;
 /// @emoji 🧬️ Demonstration-only schema: no keyword, three keyed scalar fields — mirrors `pack`
 /// facade's own `sample_spec` test fixture so a pack file built by any wave-0 crate's tests
 /// round-trips through this CLI unmodified.
-fn sample_spec() -> crate::os_dsl::schema::RecordSpec {
+async fn sample_spec() -> crate::os_dsl::schema::RecordSpec {
     crate::os_dsl::schema::RecordSpec::new(
         None,
         crate::os_dsl::schema::RecordLayout::Lines,
@@ -25,7 +25,7 @@ fn sample_spec() -> crate::os_dsl::schema::RecordSpec {
 
 /// @emoji 🧬️ Demonstration-only schema exercising a keyword and a `List` shape, distinct from
 /// `sample_spec` — e.g. `note title="Todo" body="write the CLI" tags=[ "wave0" "pack" ]`.
-fn note_spec() -> crate::os_dsl::schema::RecordSpec {
+async fn note_spec() -> crate::os_dsl::schema::RecordSpec {
     crate::os_dsl::schema::RecordSpec::new(
         Some("note"),
         crate::os_dsl::schema::RecordLayout::Lines,
@@ -37,17 +37,36 @@ fn note_spec() -> crate::os_dsl::schema::RecordSpec {
     )
 }
 
+/// @emoji 📇️ Closed set of the two demonstration schema entries the built-in registry knows.
+/// Enum dispatch, not a `fn() -> RecordSpec` pointer table — `sample_spec`/`note_spec` are
+/// `async fn`s now, and an `async fn` item's pointer type is unnameable, so it cannot live in a
+/// fn-pointer-typed slot (R2 E4). The registry closed set fits O1's enum-dispatch shape exactly.
+#[derive(Clone, Copy)]
+enum SchemaKind {
+    Sample,
+    Note,
+}
+
+impl SchemaKind {
+    async fn spec(self) -> crate::os_dsl::schema::RecordSpec {
+        match self {
+            SchemaKind::Sample => sample_spec().await,
+            SchemaKind::Note => note_spec().await,
+        }
+    }
+}
+
 /// @emoji 📇️ The built-in `--schema <name>` registry. `TODO(wave2)`: app crates own the real
 /// 49-kind registry; this stays a fixed 2-entry demonstration table forever in `pack_cli`.
-fn schema_registry() -> HashMap<&'static str, fn() -> crate::os_dsl::schema::RecordSpec> {
-    let mut registry: HashMap<&'static str, fn() -> crate::os_dsl::schema::RecordSpec> = HashMap::new();
-    registry.insert("sample", sample_spec);
-    registry.insert("note", note_spec);
+async fn schema_registry() -> HashMap<&'static str, SchemaKind> {
+    let mut registry: HashMap<&'static str, SchemaKind> = HashMap::new();
+    registry.insert("sample", SchemaKind::Sample);
+    registry.insert("note", SchemaKind::Note);
     registry
 }
 
-fn registry_names() -> String {
-    let mut names: Vec<&'static str> = schema_registry().keys().copied().collect();
+async fn registry_names() -> String {
+    let mut names: Vec<&'static str> = schema_registry().await.keys().copied().collect();
     names.sort_unstable();
     names.join(", ")
 }
@@ -58,10 +77,10 @@ fn registry_names() -> String {
 /// implementation, lives here; the real fan-in implementation is the NEW `dsl_registry` crate
 /// (`🗣️dsl/📇️registry`), which depends on the app `🗣️dsl` crates this crate deliberately does not.
 pub trait SchemaResolver {
-    fn resolve(&self, schema: &str) -> Option<crate::os_dsl::schema::RecordSpec>;
+    async fn resolve(&self, schema: &str) -> Option<crate::os_dsl::schema::RecordSpec>;
     /// @emoji 📇️ Every schema name this resolver knows, for help/error text — default empty so a
     /// resolver that only cares about `resolve` doesn't have to implement it.
-    fn names(&self) -> Vec<String> {
+    async fn names(&self) -> Vec<String> {
         Vec::new()
     }
 }
@@ -73,25 +92,28 @@ pub trait SchemaResolver {
 struct BuiltinRegistry;
 
 impl SchemaResolver for BuiltinRegistry {
-    fn resolve(&self, schema: &str) -> Option<crate::os_dsl::schema::RecordSpec> {
-        schema_registry().get(schema).map(|spec_fn| spec_fn())
+    async fn resolve(&self, schema: &str) -> Option<crate::os_dsl::schema::RecordSpec> {
+        match schema_registry().await.get(schema).copied() {
+            Some(kind) => Some(kind.spec().await),
+            None => None,
+        }
     }
-    fn names(&self) -> Vec<String> {
-        let mut names: Vec<String> = schema_registry().keys().map(|s| s.to_string()).collect();
+    async fn names(&self) -> Vec<String> {
+        let mut names: Vec<String> = schema_registry().await.keys().map(|s| s.to_string()).collect();
         names.sort_unstable();
         names
     }
 }
 
-fn resolve_schema(name: &str) -> Option<crate::os_dsl::schema::RecordSpec> {
-    BuiltinRegistry.resolve(name)
+async fn resolve_schema(name: &str) -> Option<crate::os_dsl::schema::RecordSpec> {
+    BuiltinRegistry.resolve(name).await
 }
 //#endregion 🔖️Registry
 
 //#region 🔖️Args
 /// @emoji ✂️ Splits argv-style slices into positionals and `--flag value` / `--flag=value`
 /// pairs; a trailing bare `--flag` with nothing after it maps to an empty-string value.
-fn parse_args(args: &[String]) -> (Vec<String>, HashMap<String, String>) {
+async fn parse_args(args: &[String]) -> (Vec<String>, HashMap<String, String>) {
     let mut positional = Vec::new();
     let mut flags = HashMap::new();
     let mut index = 0;
@@ -116,7 +138,7 @@ fn parse_args(args: &[String]) -> (Vec<String>, HashMap<String, String>) {
     (positional, flags)
 }
 
-fn parse_level(flags: &HashMap<String, String>) -> Result<crate::os_pack::VerificationLevel, String> {
+async fn parse_level(flags: &HashMap<String, String>) -> Result<crate::os_pack::VerificationLevel, String> {
     match flags.get("level").map(String::as_str) {
         None => Ok(crate::os_pack::VerificationLevel::Standard),
         Some("trusted") => Ok(crate::os_pack::VerificationLevel::Trusted),
@@ -128,14 +150,14 @@ fn parse_level(flags: &HashMap<String, String>) -> Result<crate::os_pack::Verifi
 //#endregion 🔖️Args
 
 //#region 🔖️Format
-fn hex32(bytes: &[u8; 32]) -> String {
+async fn hex32(bytes: &[u8; 32]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
 
-fn print_manifest(manifest: &crate::os_pack::Manifest, footer: &crate::os_pack::Footer) {
+async fn print_manifest(manifest: &crate::os_pack::Manifest, footer: &crate::os_pack::Footer) {
     println!("== manifest ==");
     println!("  schema_name: {:?}", manifest.schema_name);
-    println!("  schema_hash: {}", hex32(&manifest.schema_hash));
+    println!("  schema_hash: {}", hex32(&manifest.schema_hash).await);
     println!("  doc_span: offset={} len={} frames={}", manifest.doc_span.offset, manifest.doc_span.len, manifest.doc_frame_count);
     println!("  symbols_span: offset={} len={}", manifest.symbols_span.offset, manifest.symbols_span.len);
     println!("  chunk_table_span: offset={} len={}", manifest.chunk_table_span.offset, manifest.chunk_table_span.len);
@@ -165,8 +187,8 @@ fn print_manifest(manifest: &crate::os_pack::Manifest, footer: &crate::os_pack::
 /// @emoji 🔍️ `pack inspect <file>` — prints header/footer/manifest/segment-span text; never
 /// panics on corrupt input, degrading to a forward-scan recovery summary if the manifest fails
 /// to load.
-fn cmd_inspect(rest: &[String]) -> i32 {
-    let (positional, _flags) = parse_args(rest);
+async fn cmd_inspect(rest: &[String]) -> i32 {
+    let (positional, _flags) = parse_args(rest).await;
     let Some(path) = positional.first() else {
         eprintln!("usage: pack inspect <file>");
         return 2;
@@ -179,8 +201,11 @@ fn cmd_inspect(rest: &[String]) -> i32 {
         }
     };
     let limits = crate::os_pack::PackLimits::default();
-    let recovery = crate::os_pack::recover(&source, &limits);
-    match crate::os_pack::PackFile::open_manifest(source, &limits, crate::os_pack::VerificationLevel::Standard) {
+    // 🔁️ `recover` is `async fn` now, so it must resolve exactly once (R10 residue shape 2) — its
+    // `Result` is borrowed in the `Ok` arm below and consumed in the `Err` arm, which is fine for a
+    // plain value but not for a `Future` that a second `.await` would try to re-drive.
+    let recovery = crate::os_pack::recover(&source, &limits).await;
+    match crate::os_pack::PackFile::open_manifest(source, &limits, crate::os_pack::VerificationLevel::Standard).await {
         Ok(pack_file) => {
             let superblock = pack_file.superblock();
             println!("== header ==");
@@ -192,7 +217,7 @@ fn cmd_inspect(rest: &[String]) -> i32 {
             println!("  content_hash: {}", superblock.footer.content_hash);
             println!("  prev_footer_offset: {}", superblock.footer.prev_footer_offset);
             if let Some(manifest) = pack_file.manifest() {
-                print_manifest(manifest, &superblock.footer);
+                print_manifest(manifest, &superblock.footer).await;
             }
             for id in 0..pack_file.chunk_count() {
                 if let Ok(range) = pack_file.chunk_range(crate::os_pack::ChunkId(id as u32)) {
@@ -230,13 +255,13 @@ fn cmd_inspect(rest: &[String]) -> i32 {
 /// @emoji 🛡️ `pack verify <file> [--level=trusted|standard|full]` — opens the manifest, reads
 /// the document body, and reads every chunk at the requested `VerificationLevel`; prints `OK`/
 /// `FAIL: <reason>` and never panics on corrupt input.
-fn cmd_verify(rest: &[String]) -> i32 {
-    let (positional, flags) = parse_args(rest);
+async fn cmd_verify(rest: &[String]) -> i32 {
+    let (positional, flags) = parse_args(rest).await;
     let Some(path) = positional.first() else {
         eprintln!("usage: pack verify <file> [--level=trusted|standard|full]");
         return 2;
     };
-    let level = match parse_level(&flags) {
+    let level = match parse_level(&flags).await {
         Ok(level) => level,
         Err(error) => {
             eprintln!("pack: {error}");
@@ -251,19 +276,19 @@ fn cmd_verify(rest: &[String]) -> i32 {
         }
     };
     let limits = crate::os_pack::PackLimits::default();
-    let pack_file = match crate::os_pack::PackFile::open_manifest(source, &limits, level) {
+    let pack_file = match crate::os_pack::PackFile::open_manifest(source, &limits, level).await {
         Ok(pack_file) => pack_file,
         Err(error) => {
             println!("FAIL: {error}");
             return 1;
         }
     };
-    if let Err(error) = pack_file.body_bytes(level) {
+    if let Err(error) = pack_file.body_bytes(level).await {
         println!("FAIL: {error}");
         return 1;
     }
     for id in 0..pack_file.chunk_count() {
-        if let Err(error) = pack_file.read_chunk(crate::os_pack::ChunkId(id as u32), level) {
+        if let Err(error) = pack_file.read_chunk(crate::os_pack::ChunkId(id as u32), level).await {
             println!("FAIL: chunk {id}: {error}");
             return 1;
         }
@@ -276,8 +301,8 @@ fn cmd_verify(rest: &[String]) -> i32 {
 //#region 🔖️Hash
 /// @emoji #⃣ `pack hash <file>` — prints the footer's `content_hash` hex, reading only the
 /// trailing footer bytes via `crate::os_pack::content_hash`.
-fn cmd_hash(rest: &[String]) -> i32 {
-    let (positional, _flags) = parse_args(rest);
+async fn cmd_hash(rest: &[String]) -> i32 {
+    let (positional, _flags) = parse_args(rest).await;
     let Some(path) = positional.first() else {
         eprintln!("usage: pack hash <file>");
         return 2;
@@ -289,7 +314,7 @@ fn cmd_hash(rest: &[String]) -> i32 {
             return 1;
         }
     };
-    match crate::os_pack::content_hash(&bytes) {
+    match crate::os_pack::content_hash(&bytes).await {
         Ok(hash) => {
             println!("{hash}");
             0
@@ -305,18 +330,18 @@ fn cmd_hash(rest: &[String]) -> i32 {
 //#region 🔖️ToDsl
 /// @emoji 📤️ `pack to-dsl <file> --schema <name>` — decodes against a registry spec and prints
 /// canonical `Document`-mode DSL text to stdout.
-fn cmd_to_dsl(rest: &[String]) -> i32 {
-    let (positional, flags) = parse_args(rest);
+async fn cmd_to_dsl(rest: &[String]) -> i32 {
+    let (positional, flags) = parse_args(rest).await;
     let Some(path) = positional.first() else {
         eprintln!("usage: pack to-dsl <file> --schema <name>");
         return 2;
     };
     let Some(schema_name) = flags.get("schema") else {
-        eprintln!("pack: to-dsl requires --schema <name> (registry: {})", registry_names());
+        eprintln!("pack: to-dsl requires --schema <name> (registry: {})", registry_names().await);
         return 2;
     };
-    let Some(spec) = resolve_schema(schema_name) else {
-        eprintln!("pack: unknown --schema '{schema_name}'; available: {}", registry_names());
+    let Some(spec) = resolve_schema(schema_name).await else {
+        eprintln!("pack: unknown --schema '{schema_name}'; available: {}", registry_names().await);
         return 2;
     };
     let bytes = match std::fs::read(path) {
@@ -326,11 +351,11 @@ fn cmd_to_dsl(rest: &[String]) -> i32 {
             return 1;
         }
     };
-    match crate::os_pack::decode_document(&bytes, &spec, &crate::os_pack::DecodeOptions::default()) {
+    match crate::os_pack::decode_document(&bytes, &spec, &crate::os_pack::DecodeOptions::default()).await {
         Ok((record, report)) => {
-            let mut writer = crate::os_dsl::schema::Writer::new();
-            crate::os_dsl::schema::print_record(&record, &spec, &mut writer);
-            print!("{}", writer.render(crate::os_dsl::schema::JoinMode::Document));
+            let mut writer = crate::os_dsl::schema::Writer::new().await;
+            crate::os_dsl::schema::print_record(&record, &spec, &mut writer).await;
+            print!("{}", writer.render(crate::os_dsl::schema::JoinMode::Document).await);
             if !report.unknown_field_ids.is_empty() {
                 eprintln!("note: unknown field ids not in schema '{schema_name}': {:?}", report.unknown_field_ids);
             }
@@ -350,22 +375,22 @@ fn cmd_to_dsl(rest: &[String]) -> i32 {
 //#region 🔖️FromDsl
 /// @emoji 📥️ `pack from-dsl <file> --schema <name> --out <file>` — parses `<file>`'s DSL text
 /// against a registry spec and encodes+writes the resulting pack file atomically to `--out`.
-fn cmd_from_dsl(rest: &[String]) -> i32 {
-    let (positional, flags) = parse_args(rest);
+async fn cmd_from_dsl(rest: &[String]) -> i32 {
+    let (positional, flags) = parse_args(rest).await;
     let Some(path) = positional.first() else {
         eprintln!("usage: pack from-dsl <file> --schema <name> --out <file>");
         return 2;
     };
     let Some(schema_name) = flags.get("schema") else {
-        eprintln!("pack: from-dsl requires --schema <name> (registry: {})", registry_names());
+        eprintln!("pack: from-dsl requires --schema <name> (registry: {})", registry_names().await);
         return 2;
     };
     let Some(out_path) = flags.get("out") else {
         eprintln!("pack: from-dsl requires --out <file>");
         return 2;
     };
-    let Some(spec) = resolve_schema(schema_name) else {
-        eprintln!("pack: unknown --schema '{schema_name}'; available: {}", registry_names());
+    let Some(spec) = resolve_schema(schema_name).await else {
+        eprintln!("pack: unknown --schema '{schema_name}'; available: {}", registry_names().await);
         return 2;
     };
     let text = match std::fs::read_to_string(path) {
@@ -375,14 +400,14 @@ fn cmd_from_dsl(rest: &[String]) -> i32 {
             return 1;
         }
     };
-    let record = match crate::os_dsl::schema::parse(&text, &spec, &crate::os_dsl::schema::ParseOptions::default()) {
+    let record = match crate::os_dsl::schema::parse(&text, &spec, &crate::os_dsl::schema::ParseOptions::default()).await {
         Ok(record) => record,
         Err(error) => {
             eprintln!("pack: dsl parse failed: {error}");
             return 1;
         }
     };
-    let bytes = match crate::os_pack::encode_document(&spec, &record, &crate::os_pack::EncodeOptions::default()) {
+    let bytes = match crate::os_pack::encode_document(&spec, &record, &crate::os_pack::EncodeOptions::default()).await {
         Ok(bytes) => bytes,
         Err(error) => {
             eprintln!("pack: encode failed: {error}");
@@ -405,7 +430,7 @@ fn cmd_from_dsl(rest: &[String]) -> i32 {
 //#region 🔖️Diff
 /// @emoji 🌳️ Field-by-field diff of two decoded records; `+`/`-`/`~` prefix additions,
 /// removals, and changes, keyed by field id ascending.
-fn diff_records(a: &crate::os_dsl::schema::RecordValue, b: &crate::os_dsl::schema::RecordValue) -> Vec<String> {
+async fn diff_records(a: &crate::os_dsl::schema::RecordValue, b: &crate::os_dsl::schema::RecordValue) -> Vec<String> {
     let mut ids: Vec<u16> = a.fields.keys().chain(b.fields.keys()).copied().collect();
     ids.sort_unstable();
     ids.dedup();
@@ -425,8 +450,8 @@ fn diff_records(a: &crate::os_dsl::schema::RecordValue, b: &crate::os_dsl::schem
 /// @emoji 🌗️ `pack diff <file-a> <file-b> [--schema <name>]` — structural `RecordValue` diff
 /// when `--schema` resolves, else a raw content-hash/length/first-mismatch summary. Exit code
 /// `0` when identical, `1` when they differ, `2` on a usage/resolution error.
-fn cmd_diff(rest: &[String]) -> i32 {
-    let (positional, flags) = parse_args(rest);
+async fn cmd_diff(rest: &[String]) -> i32 {
+    let (positional, flags) = parse_args(rest).await;
     if positional.len() < 2 {
         eprintln!("usage: pack diff <file-a> <file-b> [--schema <name>]");
         return 2;
@@ -449,26 +474,26 @@ fn cmd_diff(rest: &[String]) -> i32 {
     };
 
     if let Some(schema_name) = flags.get("schema") {
-        let Some(spec) = resolve_schema(schema_name) else {
-            eprintln!("pack: unknown --schema '{schema_name}'; available: {}", registry_names());
+        let Some(spec) = resolve_schema(schema_name).await else {
+            eprintln!("pack: unknown --schema '{schema_name}'; available: {}", registry_names().await);
             return 2;
         };
         let options = crate::os_pack::DecodeOptions::default();
-        let record_a = match crate::os_pack::decode_document(&bytes_a, &spec, &options) {
+        let record_a = match crate::os_pack::decode_document(&bytes_a, &spec, &options).await {
             Ok((record, _)) => record,
             Err(error) => {
                 eprintln!("pack: decode '{path_a}' failed: {error}");
                 return 1;
             }
         };
-        let record_b = match crate::os_pack::decode_document(&bytes_b, &spec, &options) {
+        let record_b = match crate::os_pack::decode_document(&bytes_b, &spec, &options).await {
             Ok((record, _)) => record,
             Err(error) => {
                 eprintln!("pack: decode '{path_b}' failed: {error}");
                 return 1;
             }
         };
-        let diffs = diff_records(&record_a, &record_b);
+        let diffs = diff_records(&record_a, &record_b).await;
         if diffs.is_empty() {
             println!("identical");
             0
@@ -479,8 +504,8 @@ fn cmd_diff(rest: &[String]) -> i32 {
             1
         }
     } else {
-        let hash_a = crate::os_pack::content_hash(&bytes_a);
-        let hash_b = crate::os_pack::content_hash(&bytes_b);
+        let hash_a = crate::os_pack::content_hash(&bytes_a).await;
+        let hash_b = crate::os_pack::content_hash(&bytes_b).await;
         if let (Ok(hash_a), Ok(hash_b)) = (hash_a, hash_b) {
             if hash_a == hash_b && bytes_a.len() == bytes_b.len() {
                 println!("identical (content_hash {hash_a}, {} bytes)", bytes_a.len());
@@ -501,7 +526,7 @@ fn cmd_diff(rest: &[String]) -> i32 {
 //#endregion 🔖️Diff
 
 //#region 🔖️Cli
-fn print_help() {
+async fn print_help() {
     println!("pack — inspect/verify/hash/convert .spk binary document pack files\n");
     println!("USAGE:");
     println!("  pack inspect <file>");
@@ -511,7 +536,7 @@ fn print_help() {
     println!("  pack from-dsl <file> --schema <name> --out <file>");
     println!("  pack diff <file-a> <file-b> [--schema <name>]\n");
     println!("SCHEMA REGISTRY (wave 0 scope):");
-    println!("  to-dsl/from-dsl/diff --schema resolve against a tiny built-in registry ({}) defined", registry_names());
+    println!("  to-dsl/from-dsl/diff --schema resolve against a tiny built-in registry ({}) defined", registry_names().await);
     println!("  locally in this crate for demonstration only. Full schema resolution across the 49 app");
     println!("  document kinds is out of scope for pack_cli — that wiring belongs to the app crates in");
     println!("  wave 2. inspect/verify/hash never need a schema (self-describing decode).");
@@ -520,25 +545,25 @@ fn print_help() {
 /// @emoji 🚪️ The CLI's single testable entry point — `main` is a thin `std::process::exit`
 /// wrapper around this. Never panics on malformed input; every subcommand handler maps errors
 /// to a printed message and a non-zero exit code instead.
-pub fn main_impl(args: &[String]) -> i32 {
+pub async fn main_impl(args: &[String]) -> i32 {
     let Some((command, rest)) = args.split_first() else {
-        print_help();
+        print_help().await;
         return 2;
     };
     match command.as_str() {
-        "inspect" => cmd_inspect(rest),
-        "verify" => cmd_verify(rest),
-        "hash" => cmd_hash(rest),
-        "to-dsl" => cmd_to_dsl(rest),
-        "from-dsl" => cmd_from_dsl(rest),
-        "diff" => cmd_diff(rest),
+        "inspect" => cmd_inspect(rest).await,
+        "verify" => cmd_verify(rest).await,
+        "hash" => cmd_hash(rest).await,
+        "to-dsl" => cmd_to_dsl(rest).await,
+        "from-dsl" => cmd_from_dsl(rest).await,
+        "diff" => cmd_diff(rest).await,
         "help" | "--help" | "-h" => {
-            print_help();
+            print_help().await;
             0
         }
         other => {
             eprintln!("pack: unknown subcommand '{other}'\n");
-            print_help();
+            print_help().await;
             2
         }
     }
@@ -554,12 +579,12 @@ mod tests {
     //#region 🔖️Fixtures
     static TEMP_COUNTER: AtomicU64 = AtomicU64::new(0);
 
-    fn temp_path(name: &str) -> std::path::PathBuf {
+    async fn temp_path(name: &str) -> std::path::PathBuf {
         let counter = TEMP_COUNTER.fetch_add(1, Ordering::Relaxed);
         std::env::temp_dir().join(format!("pack_cli_test_{}_{counter}_{name}", std::process::id()))
     }
 
-    fn sample_record(name: &str, age: u64, active: bool) -> crate::os_dsl::schema::RecordValue {
+    async fn sample_record(name: &str, age: u64, active: bool) -> crate::os_dsl::schema::RecordValue {
         let mut fields = HashMap::new();
         fields.insert(1, crate::os_dsl::schema::FieldValue::Text(name.to_string()));
         fields.insert(2, crate::os_dsl::schema::FieldValue::UInt(age));
@@ -567,7 +592,7 @@ mod tests {
         crate::os_dsl::schema::RecordValue { fields }
     }
 
-    fn sample_pack_bytes(name: &str, age: u64, active: bool) -> Vec<u8> {
+    async fn sample_pack_bytes(name: &str, age: u64, active: bool) -> Vec<u8> {
         let spec = sample_spec();
         let record = sample_record(name, age, active);
         crate::os_pack::encode_document(&spec, &record, &crate::os_pack::EncodeOptions::default()).unwrap()
@@ -576,7 +601,7 @@ mod tests {
 
     //#region 🔖️Inspect
     #[test]
-    fn cli_inspect_verify_hash_on_valid_pack() {
+    async fn cli_inspect_verify_hash_on_valid_pack() {
         let bytes = sample_pack_bytes("Ada Lovelace", 42, true);
         let path = temp_path("valid.spk");
         std::fs::write(&path, &bytes).unwrap();
@@ -593,7 +618,7 @@ mod tests {
 
     //#region 🔖️Corrupt
     #[test]
-    fn cli_verify_fails_on_corrupted_pack_without_panicking() {
+    async fn cli_verify_fails_on_corrupted_pack_without_panicking() {
         let mut bytes = sample_pack_bytes("Grace Hopper", 85, false);
         let mid = bytes.len() / 2;
         bytes[mid] ^= 0xFF;
@@ -611,7 +636,7 @@ mod tests {
     }
 
     #[test]
-    fn cli_handles_truncated_pack_without_panicking() {
+    async fn cli_handles_truncated_pack_without_panicking() {
         let bytes = sample_pack_bytes("Alan Turing", 41, true);
         let truncated = &bytes[..bytes.len() / 2];
         let path = temp_path("truncated.spk");
@@ -626,7 +651,7 @@ mod tests {
     }
 
     #[test]
-    fn cli_reports_missing_file_without_panicking() {
+    async fn cli_reports_missing_file_without_panicking() {
         let missing = temp_path("does-not-exist.spk").to_string_lossy().to_string();
         assert_eq!(main_impl(&[String::from("inspect"), missing.clone()]), 1);
         assert_eq!(main_impl(&[String::from("verify"), missing.clone()]), 1);
@@ -636,7 +661,7 @@ mod tests {
 
     //#region 🔖️Dsl
     #[test]
-    fn cli_to_dsl_and_from_dsl_round_trip_via_registry() {
+    async fn cli_to_dsl_and_from_dsl_round_trip_via_registry() {
         let bytes = sample_pack_bytes("Ada Lovelace", 42, true);
         let path = temp_path("roundtrip.spk");
         std::fs::write(&path, &bytes).unwrap();
@@ -649,7 +674,7 @@ mod tests {
         let dsl_path = temp_path("roundtrip.dsl");
         let spec = sample_spec();
         let record = sample_record("Grace Hopper", 7, false);
-        let mut writer = crate::os_dsl::schema::Writer::new();
+        let mut writer = crate::os_dsl::schema::Writer::new().await;
         crate::os_dsl::schema::print_record(&record, &spec, &mut writer);
         std::fs::write(&dsl_path, writer.render(crate::os_dsl::schema::JoinMode::Document)).unwrap();
         let dsl_path_str = dsl_path.to_string_lossy().to_string();
@@ -667,7 +692,7 @@ mod tests {
     }
 
     #[test]
-    fn cli_from_dsl_reports_parse_failure_without_panicking() {
+    async fn cli_from_dsl_reports_parse_failure_without_panicking() {
         let bad_dsl_path = temp_path("bad.dsl");
         std::fs::write(&bad_dsl_path, "name=").unwrap();
         let out_path = temp_path("bad-out.spk");
@@ -680,7 +705,7 @@ mod tests {
 
     //#region 🔖️Cli
     #[test]
-    fn cli_help_and_unknown_subcommand() {
+    async fn cli_help_and_unknown_subcommand() {
         assert_eq!(main_impl(&[]), 2);
         assert_eq!(main_impl(&[String::from("help")]), 0);
         assert_eq!(main_impl(&[String::from("--help")]), 0);
@@ -688,7 +713,7 @@ mod tests {
     }
 
     #[test]
-    fn cli_parse_args_splits_flags_and_positionals() {
+    async fn cli_parse_args_splits_flags_and_positionals() {
         let args = vec![String::from("a.spk"), String::from("--level=full"), String::from("--schema"), String::from("sample"), String::from("b.spk")];
         let (positional, flags) = parse_args(&args);
         assert_eq!(positional, vec!["a.spk".to_string(), "b.spk".to_string()]);

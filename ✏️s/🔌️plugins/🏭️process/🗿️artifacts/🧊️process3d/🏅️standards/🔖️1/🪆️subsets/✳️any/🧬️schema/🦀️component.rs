@@ -49,7 +49,7 @@ pub struct Process3dArtifact {
 
 //#region 🔖️Conversions
 impl Default for Process3dArtifact {
-    async fn default() -> Self {
+    fn default() -> Self {
         let base = crate::artifacts::process3d::empty_process3d_snapshot();
         Self {
             workshop: base.workshop,
@@ -460,8 +460,8 @@ impl MachineCatalog for MetalCatalog {
     }
 }
 
-pub async fn metal_catalog() -> Box<dyn MachineCatalog> {
-    Box::new(MetalCatalog)
+pub async fn metal_catalog() -> MetalCatalog {
+    MetalCatalog
 }
 
 /// 🪵️ Built-in wood-shop machine catalog (saws, drill press, CNC router, fasteners). Folded in from the
@@ -609,8 +609,8 @@ impl MachineCatalog for WoodCatalog {
     }
 }
 
-pub async fn wood_catalog() -> Box<dyn MachineCatalog> {
-    Box::new(WoodCatalog)
+pub async fn wood_catalog() -> WoodCatalog {
+    WoodCatalog
 }
 
 /// 🤖️ Built-in robotic/CNC machine catalog (multi-axis mills, gantry CNC, waterjet, laser, assembler).
@@ -738,8 +738,8 @@ impl MachineCatalog for RoboticCatalog {
     }
 }
 
-pub async fn robotic_catalog() -> Box<dyn MachineCatalog> {
-    Box::new(RoboticCatalog)
+pub async fn robotic_catalog() -> RoboticCatalog {
+    RoboticCatalog
 }
 
 /// 🧱️ Built-in concrete-shop machine catalog (saws, core drilling, anchors, grinding). Folded in from
@@ -863,8 +863,8 @@ impl MachineCatalog for ConcreteCatalog {
     }
 }
 
-pub async fn concrete_catalog() -> Box<dyn MachineCatalog> {
-    Box::new(ConcreteCatalog)
+pub async fn concrete_catalog() -> ConcreteCatalog {
+    ConcreteCatalog
 }
 //#endregion 🔖️Catalog
 
@@ -908,14 +908,14 @@ mod tests {
     use super::*;
 
     //#region 🔖️ExampleFixtures
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn default_document_parses_timber_example() {
         let document = default_document();
         assert!(!document.steps.child_id.is_empty());
         assert!(document.resolved_up_to.is_none());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn plate_document_parses_and_opens_mid_timeline() {
         let document = plate_document();
         assert!(!document.steps.child_id.is_empty());
@@ -927,7 +927,7 @@ mod tests {
     mod metal_catalog_tests {
         use super::*;
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn every_machine_and_capability_id_is_unique() {
             let machines = MetalCatalog.machines();
             let mut machine_ids: Vec<&str> = machines.iter().map(|machine| machine.id.as_str()).collect();
@@ -942,7 +942,7 @@ mod tests {
             }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn every_recipe_and_rule_parameter_resolves() {
             for machine in MetalCatalog.machines() {
                 for capability in &machine.capabilities {
@@ -968,7 +968,7 @@ mod tests {
             }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn machines_round_trip_json() {
             let machines = MetalCatalog.machines();
             let json = serde_json::to_string(&machines).expect("serialize");
@@ -976,7 +976,7 @@ mod tests {
             assert_eq!(parsed, machines);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn catalog_has_metal_identity() {
             let catalog = MetalCatalog;
             assert_eq!(catalog.catalog_id(), "metal");
@@ -989,7 +989,7 @@ mod tests {
     mod wood_catalog_tests {
         use super::*;
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn every_machine_and_capability_id_is_unique() {
             let machines = WoodCatalog.machines();
             let mut machine_ids: Vec<&str> = machines.iter().map(|machine| machine.id.as_str()).collect();
@@ -1005,7 +1005,7 @@ mod tests {
         }
 
         /// ✅️ Every recipe field and rule parameter must resolve within its own capability's parameters.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn every_recipe_and_rule_parameter_resolves() {
             for machine in WoodCatalog.machines() {
                 for capability in &machine.capabilities {
@@ -1031,7 +1031,7 @@ mod tests {
             }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn machines_round_trip_json() {
             let machines = WoodCatalog.machines();
             let json = serde_json::to_string(&machines).expect("serialize");
@@ -1039,7 +1039,7 @@ mod tests {
             assert_eq!(parsed, machines);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn catalog_has_wood_identity() {
             let catalog = WoodCatalog;
             assert_eq!(catalog.catalog_id(), "wood");
@@ -1052,7 +1052,7 @@ mod tests {
     mod robotic_catalog_tests {
         use super::*;
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn every_machine_and_capability_id_is_unique() {
             let machines = RoboticCatalog.machines();
             let mut machine_ids: Vec<&str> = machines.iter().map(|machine| machine.id.as_str()).collect();
@@ -1067,7 +1067,7 @@ mod tests {
             }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn every_recipe_and_rule_parameter_resolves() {
             for machine in RoboticCatalog.machines() {
                 for capability in &machine.capabilities {
@@ -1093,7 +1093,7 @@ mod tests {
             }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn machines_round_trip_json() {
             let machines = RoboticCatalog.machines();
             let json = serde_json::to_string(&machines).expect("serialize");
@@ -1101,7 +1101,7 @@ mod tests {
             assert_eq!(parsed, machines);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn catalog_has_robotic_identity() {
             let catalog = RoboticCatalog;
             assert_eq!(catalog.catalog_id(), "robotic");
@@ -1114,7 +1114,7 @@ mod tests {
     mod concrete_catalog_tests {
         use super::*;
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn every_machine_and_capability_id_is_unique() {
             let machines = ConcreteCatalog.machines();
             let mut machine_ids: Vec<&str> = machines.iter().map(|machine| machine.id.as_str()).collect();
@@ -1129,7 +1129,7 @@ mod tests {
             }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn every_recipe_and_rule_parameter_resolves() {
             for machine in ConcreteCatalog.machines() {
                 for capability in &machine.capabilities {
@@ -1155,7 +1155,7 @@ mod tests {
             }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn machines_round_trip_json() {
             let machines = ConcreteCatalog.machines();
             let json = serde_json::to_string(&machines).expect("serialize");
@@ -1163,7 +1163,7 @@ mod tests {
             assert_eq!(parsed, machines);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn catalog_has_concrete_identity() {
             let catalog = ConcreteCatalog;
             assert_eq!(catalog.catalog_id(), "concrete");

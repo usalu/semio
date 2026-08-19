@@ -107,7 +107,7 @@ pub mod derived_composition {
             <StepSnapshot as store::ArtifactPack>::encode_pack(&StepSnapshot::from_part21_document(doc))
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn composer_injects_file_schema_and_stamps_clean_document() {
             let bytes = clean_bytes();
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Binary(&bytes) }];
@@ -116,7 +116,7 @@ pub mod derived_composition {
             assert!(crate::artifacts::step::standards::v_ap214::engine::ladder::file_schema_contains(&composed.snapshot.to_part21_document(), "AUTOMOTIVE_DESIGN"), "composer must inject FILE_SCHEMA=AUTOMOTIVE_DESIGN");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn subset_validator_recheck_flags_missing_file_schema_on_the_raw_wire_payload() {
             // Unlike `compose`, `validate` never runs `ensure_file_schema` -- a wire payload that
             // skipped this subset's own composer genuinely lacks the injection.

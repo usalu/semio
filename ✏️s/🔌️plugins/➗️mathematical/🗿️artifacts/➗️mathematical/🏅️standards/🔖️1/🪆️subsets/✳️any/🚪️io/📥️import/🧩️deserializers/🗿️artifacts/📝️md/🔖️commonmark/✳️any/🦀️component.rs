@@ -15,7 +15,7 @@ pub struct MdIntoMathematical;
 impl Deserializer<MathematicalSnapshot> for MdIntoMathematical {
     const FROM: Dialect = MD_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Canonical;
-    async fn deserialize(payload: &IoPayload) -> IoResult<MathematicalSnapshot> {
+    fn deserialize(payload: &IoPayload) -> IoResult<MathematicalSnapshot> {
         let IoPayload::Binary(bytes) = payload else {
             return Err(IoError { message: "MdIntoMathematical: expected a binary md payload".to_string(), diagnostics: Vec::new() });
         };

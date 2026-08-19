@@ -112,7 +112,7 @@ impl store::ArtifactPack for Block3dSnapshot {
 //#endregion 🔖️HandcraftedArtifactCodecs
 
 impl Default for Block3dSnapshot {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self {
             schema: BLOCK_3D_SCHEMA.to_string(),
             object_kind: BlockKindIdentity::default(),

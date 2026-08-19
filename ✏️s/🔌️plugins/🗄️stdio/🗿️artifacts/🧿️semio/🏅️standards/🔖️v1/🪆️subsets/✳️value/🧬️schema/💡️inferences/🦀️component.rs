@@ -41,7 +41,7 @@ impl protocol::Inference<SemioValueSnapshot> for SemioValueInference {
 /// (`nullCount: 1`) — exactly the trap this ticket's own `📌️important.md` names for a non-empty
 /// snapshot default.
 impl Default for SemioValueInference {
-    async fn default() -> Self {
+    fn default() -> Self {
         <Self as protocol::Inference<SemioValueSnapshot>>::infer(&SemioValueSnapshot::default())
     }
 }
@@ -92,13 +92,13 @@ mod tests {
     use super::*;
     use protocol::Inference;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = SemioValueSnapshot::default();
         assert_eq!(SemioValueInference::infer(&snapshot), SemioValueInference::infer(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(SemioValueInference::infer(&SemioValueSnapshot::default()), SemioValueInference::default());
     }

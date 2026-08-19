@@ -38,7 +38,7 @@ pub struct RasterCamera {
 }
 
 impl Default for RasterCamera {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { x: 0.0, y: 0.0, zoom: 1.0 }
     }
 }
@@ -68,7 +68,7 @@ pub struct RasterTransform {
 }
 
 impl Default for RasterTransform {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { x: 0.0, y: 0.0, scale_x: 1.0, scale_y: 1.0, rotation: 0.0 }
     }
 }
@@ -480,7 +480,7 @@ async fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn artifact_kind_keeps_the_media_schema_matching_the_store_schema() {
         assert_eq!(artifact_kind().schema, RASTER_DOCUMENT_SCHEMA);
     }

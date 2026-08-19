@@ -105,14 +105,14 @@ mod tests {
         (model, tb.build().unwrap())
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn derive_seed_is_deterministic_and_varies_by_index() {
         assert_eq!(derive_seed(42, 3), derive_seed(42, 3));
         assert_ne!(derive_seed(42, 0), derive_seed(42, 1));
         assert_ne!(derive_seed(42, 5), derive_seed(43, 5));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn multi_start_finds_a_valid_solution() {
         let (model, topo, arcs) = checkerboard(20);
         let config = SearchConfig::default();
@@ -123,7 +123,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn multi_start_proves_unsat_when_every_attempt_would() {
         let (model, topo) = k_graph(5, 4); // pigeonhole unsat regardless of seed
         let config = SearchConfig::default();
@@ -134,7 +134,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn multi_start_is_deterministic_across_repeated_calls() {
         let (model, topo, _arcs) = checkerboard(12);
         let config = SearchConfig::default();
@@ -146,7 +146,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn single_attempt_matches_a_plain_solve_call() {
         let (model, topo, _arcs) = checkerboard(10);
         let config = SearchConfig::default();

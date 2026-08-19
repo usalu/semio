@@ -49,7 +49,7 @@ mod tests {
     use super::*;
     use crate::editor::remodel::config::RemodelConfig;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn every_layer_gets_its_own_toggle_and_a_default_open_group() {
         let config = RemodelConfig::default();
         let labels = semio_framework_plugin::resolve_labels_for_locale::<RemodelLabels>("en-US");

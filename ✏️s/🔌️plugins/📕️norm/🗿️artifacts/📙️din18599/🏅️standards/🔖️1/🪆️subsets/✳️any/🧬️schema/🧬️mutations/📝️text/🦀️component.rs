@@ -161,12 +161,12 @@ impl protocol::OpBinary for Din18599Mutation {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_text_round_trips_change_use_class() {
         store::os_store::test_support::assert_op_line_round_trip(&Din18599Mutation::ChangeUseClass(change_use_class::mutation::ChangeUseClass { new_use_class: crate::artifacts::din18599::UseClass::Office }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_text_round_trips_update_climate() {
         store::os_store::test_support::assert_op_line_round_trip(&Din18599Mutation::UpdateClimate(update_climate::mutation::UpdateClimate {
             new_climate: MonthlyClimate { theta_e_c: [-12.0, -9.0, -2.0, 6.0, 15.0, 22.0, 25.0, 24.0, 18.0, 9.0, -1.0, -8.0], g_h_w_m2: [25.0, 55.0, 95.0, 135.0, 175.0, 195.0, 205.0, 185.0, 135.0, 85.0, 35.0, 18.0] },
@@ -175,7 +175,7 @@ mod tests {
 
     /// ⚖️ Every variant, not just the hand-picked ones above — full-coverage `OpText` round trip over
     /// the closed vocabulary, one sample value per field.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn every_variant_op_text_round_trips() {
         for mutation in every_mutation() {
             store::os_store::test_support::assert_op_line_round_trip(&mutation);

@@ -22,7 +22,7 @@ pub struct TsvArtifact {
 }
 
 impl Default for TsvArtifact {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self::from_snapshot(TsvSnapshot::default())
     }
 }

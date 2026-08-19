@@ -3404,7 +3404,7 @@ mod handcrafted_diff_codec_tests {
     /// `Replace` (kind-change) branch of `DxfEntityDiff` and a NON-`Replace` kind-specific patch,
     /// plus a nested block-level `entities` sub-diff (the SAME `DxfEntitiesDiff` machinery reused
     /// at two tree depths) — shared with `⚙️engine/🦀️component.rs`'s own conformance laws.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn diff_codec_text_binary_roundtrip_law() {
         for d in demo_diff_cases() {
             let printed = d.print_diff();

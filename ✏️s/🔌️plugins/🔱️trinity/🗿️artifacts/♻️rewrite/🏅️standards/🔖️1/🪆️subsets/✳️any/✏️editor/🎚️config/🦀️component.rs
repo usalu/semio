@@ -84,7 +84,7 @@ impl store::ArtifactPack for RewriteConfig {
 
 
 impl Default for RewriteConfig {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self {
             before_pane_camera: Camera::default(),
             reorganize_epoch: 0,
@@ -220,14 +220,14 @@ mod tests {
     use protocol::Mutation;
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn rewrite_config_default_has_default_locale() {
         let config = RewriteConfig::default();
         assert_eq!(config.locale, "en-US");
         assert_eq!(config.before_pane_camera, Camera::default());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn rewrite_config_dsl_round_trips() {
         let mut config = RewriteConfig { reorganize_epoch: 3, ..RewriteConfig::default() };
         config.lod_mode_by_window.insert("trinity-rewrite-before".into(), "compact".into());
@@ -235,7 +235,7 @@ mod tests {
         ::store::os_store::test_support::assert_dsl_pack_equivalence(&config);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn rewrite_config_operation_backwards_restores_prior_snapshot() {
         let base = RewriteConfig::default();
         let operation = RewriteConfigMutation::SetReorganizeEpoch { value: 7 };
@@ -246,7 +246,7 @@ mod tests {
         assert_eq!(restored, base);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn rewrite_config_operation_text_round_trips() {
         ::store::os_store::test_support::assert_op_line_round_trip(&RewriteConfigMutation::SetLodMode { window_id: "trinity-rewrite-before".into(), value: "compact".into() });
         ::store::os_store::test_support::assert_op_line_round_trip(&RewriteConfigMutation::SetReorganizeEpoch { value: 4 });

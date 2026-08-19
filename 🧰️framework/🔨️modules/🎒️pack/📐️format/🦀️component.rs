@@ -63,8 +63,8 @@ impl Header {
         buf[10..12].copy_from_slice(&self.version_minor.to_le_bytes());
         buf[12..16].copy_from_slice(&self.required_flags.to_le_bytes());
         buf[16..20].copy_from_slice(&self.optional_flags.to_le_bytes());
-        let crc = crc32c(&buf[0..20]);
-        buf[20..24].copy_from_slice(&crc.await.to_le_bytes());
+        let crc = crc32c(&buf[0..20]).await;
+        buf[20..24].copy_from_slice(&crc.to_le_bytes());
         buf
     }
 
@@ -136,8 +136,8 @@ impl Footer {
         buf.extend_from_slice(&self.file_len.to_le_bytes());
         buf.extend_from_slice(&self.content_hash.0);
         buf.extend_from_slice(&self.prev_footer_offset.to_le_bytes());
-        let crc = crc32c(&buf);
-        buf.extend_from_slice(&crc.await.to_le_bytes());
+        let crc = crc32c(&buf).await;
+        buf.extend_from_slice(&crc.to_le_bytes());
         buf
     }
 
@@ -212,8 +212,8 @@ async fn encode_segment(kind: u8, codec: CodecId, payload: &[u8]) -> Result<Enco
     }
     let header_len = buf.len();
     buf.extend_from_slice(&stored);
-    let crc = crc32c(&buf);
-    buf.extend_from_slice(&crc.await.to_le_bytes());
+    let crc = crc32c(&buf).await;
+    buf.extend_from_slice(&crc.to_le_bytes());
     Ok(EncodedSegment { bytes: buf, header_len, stored_len: stored.len() })
 }
 

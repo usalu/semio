@@ -30,7 +30,7 @@ mod tests {
     use super::*;
     use crate::artifacts::note::NoteSnapshot;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_binary_round_trips_and_agrees_with_text() {
         let operation = crate::artifacts::note::schema::mutations::change_grid_spacing(Some(24.0));
         store::os_store::test_support::assert_op_text_binary_equivalence(&operation);
@@ -38,7 +38,7 @@ mod tests {
         assert_eq!(decode_op(&bytes).expect("decode"), operation);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn note_document_text_round_trips_store_with_applied_operation() {
         let envelope = store::create_document_envelope::<NoteSnapshot, NoteMutation>("note.document", "doc-text-test", crate::artifacts::note::schema::empty_note_snapshot(), None);
         let mut doc_store = store::ArtifactStore::new(envelope).expect("valid artifact store fixture");
@@ -52,7 +52,7 @@ mod tests {
     /// `NoteMutation`'s `Edit` round-trips through `protocol::MutationEnvelope`s beside this file's
     /// existing pack round-trip law (same pattern as `mathematical_protocol`'s own
     /// `command_envelope_round_trip_holds_for_an_applied_operation`).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn command_envelope_round_trip_holds_for_an_applied_operation() {
         use protocol::{ArtifactId, Edit, SchemaId};
 
@@ -70,14 +70,14 @@ mod tests {
 mod semio_protocol_conformance {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn component_protocol_semio_is_protocol_dialect() {
         let g = ::dsl::parse_grammar(COMPONENT_PROTOCOL_SEMIO).expect("parse protocol.semio");
         assert_eq!(g.dialect, ::dsl::SemioDialect::Protocol);
         assert!(!COMPONENT_PROTOCOL_SEMIO.is_empty());
         let _ = COMPONENT_PROTOCOL_PATH;
     }
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn verify_protocol_bytes_against_encoded_spr() {
         use crate::artifacts::note::standards::v1::subsets::any::io::mutations::text::NoteMutation;
         let operation = crate::artifacts::note::schema::mutations::change_grid_visible(Some(false));

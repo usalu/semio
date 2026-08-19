@@ -277,20 +277,20 @@ pub async fn refine_root(p: &Poly, mut lo: f64, mut hi: f64, tol: f64, max_iters
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn poly_eval_matches_direct_computation() {
         let p = Poly::new(vec![1.0, -2.0, 3.0]); // 1 - 2x + 3x^2
         assert!((p.eval(2.0) - (1.0 - 4.0 + 12.0)).abs() < 1e-12);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn poly_derivative_matches_power_rule() {
         let p = Poly::new(vec![1.0, -2.0, 3.0, 4.0]); // 1 - 2x + 3x^2 + 4x^3
         let d = p.derivative();
         assert_eq!(d.coeffs, vec![-2.0, 6.0, 12.0]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn eval_with_derivative_matches_separate_calls() {
         let p = Poly::new(vec![2.0, -1.0, 0.5, 3.0]);
         let (v, dv) = p.eval_with_derivative(1.5);
@@ -298,7 +298,7 @@ mod tests {
         assert!((dv - p.derivative().eval(1.5)).abs() < 1e-12);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn solve_quadratic_finds_known_roots() {
         // (x-2)(x-3) = x^2 -5x+6
         let roots = solve_quadratic(1.0, -5.0, 6.0);
@@ -307,12 +307,12 @@ mod tests {
         assert!((roots[1] - 3.0).abs() < 1e-9);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn solve_quadratic_handles_no_real_roots() {
         assert!(solve_quadratic(1.0, 0.0, 1.0).is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn solve_quadratic_avoids_cancellation_for_large_b() {
         // Classic near-cancellation case: a=1, b=1e8, c=1. Naive formula loses precision.
         let roots = solve_quadratic(1.0, 1e8, 1.0);
@@ -323,7 +323,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn solve_cubic_finds_three_known_real_roots() {
         // (x-1)(x-2)(x-3) = x^3 -6x^2+11x-6
         let mut roots = solve_cubic(1.0, -6.0, 11.0, -6.0);
@@ -334,7 +334,7 @@ mod tests {
         assert!((roots[2] - 3.0).abs() < 1e-9);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn solve_cubic_finds_single_real_root() {
         // x^3 + x + 1 has exactly one real root (~-0.6823)
         let roots = solve_cubic(1.0, 0.0, 1.0, 1.0);
@@ -343,7 +343,7 @@ mod tests {
         assert!(p.eval(roots[0]).abs() < 1e-9);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn bernstein_eval_matches_monomial_conversion() {
         let p = Poly::new(vec![1.0, 2.0, -3.0, 0.5]);
         let b = Bernstein::from_monomial(&p);
@@ -353,7 +353,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn bernstein_to_monomial_round_trips_from_monomial() {
         let p = Poly::new(vec![3.0, -1.5, 2.0, 4.0, -0.25]);
         let b = Bernstein::from_monomial(&p);
@@ -364,7 +364,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn bernstein_subdivide_matches_original_at_shared_endpoints_and_split_point() {
         let b = Bernstein::new(vec![0.0, 3.0, -1.0, 2.0]);
         let t = 0.4;
@@ -377,19 +377,19 @@ mod tests {
         assert!((left.eval(0.5) - b.eval(t * 0.5)).abs() < 1e-9);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn sign_variations_certifies_no_root_for_monotone_positive_control_polygon() {
         let b = Bernstein::new(vec![1.0, 2.0, 3.0, 4.0]);
         assert_eq!(b.sign_variations(), 0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn sign_variations_detects_single_sign_change() {
         let b = Bernstein::new(vec![-1.0, -0.5, 1.0, 2.0]);
         assert_eq!(b.sign_variations(), 1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn isolate_roots_finds_single_root_of_linear_bernstein() {
         // Line from -1 at t=0 to 1 at t=1: root at t=0.5.
         let b = Bernstein::new(vec![-1.0, 1.0]);
@@ -398,13 +398,13 @@ mod tests {
         assert!(intervals[0].0 <= 0.5 && intervals[0].1 >= 0.5);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn isolate_roots_finds_no_intervals_for_root_free_polynomial() {
         let b = Bernstein::new(vec![1.0, 2.0, 3.0]);
         assert!(isolate_roots(&b, 20).is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn refine_root_converges_to_known_root() {
         let p = Poly::new(vec![-6.0, 11.0, -6.0, 1.0]); // (x-1)(x-2)(x-3)
         let root = refine_root(&p, 2.5, 3.5, 1e-12, 100);
@@ -431,7 +431,7 @@ mod tests {
             roots
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn isolate_roots_plus_refine_matches_bisection_oracle_on_random_polynomials() {
             let mut rng = semio_framework_geometry::random::Rng::from_seed(23);
             for _ in 0..200 {
@@ -453,7 +453,7 @@ mod tests {
             }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn bernstein_monomial_round_trip_holds_on_random_polynomials() {
             let mut rng = semio_framework_geometry::random::Rng::from_seed(29);
             for _ in 0..200 {

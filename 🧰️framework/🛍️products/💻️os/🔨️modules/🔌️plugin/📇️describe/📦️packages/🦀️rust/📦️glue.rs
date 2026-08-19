@@ -235,28 +235,28 @@ async fn run_describe(args: Vec<String>) -> i32 {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn sha256_hex_matches_known_vector() {
         // "" -> e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 (well-known empty-input SHA-256)
         assert_eq!(sha256_hex(b""), "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn run_with_no_args_returns_usage_exit_code() {
         assert_eq!(run(Vec::new()), 2);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn run_with_unknown_command_returns_usage_exit_code() {
         assert_eq!(run(vec!["not-describe".to_string()]), 2);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn run_describe_without_out_flag_returns_usage_exit_code() {
         assert_eq!(run(vec!["describe".to_string(), "component.wasm".to_string()]), 2);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn run_describe_on_missing_file_returns_failure_exit_code() {
         let code = run(vec!["describe".to_string(), "/nonexistent/component.wasm".to_string(), "--out".to_string(), "/tmp/does-not-matter".to_string()]);
         assert_eq!(code, 1);

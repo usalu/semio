@@ -41,7 +41,7 @@ mod tests {
     /// 🧬️ Driven directly through `handle` (not `dispatch`, which routes through `VcsArtifactApp` and
     /// never applies `effects` to its own store — that's the real host's job): asserts on the `Emit`
     /// itself, the same shape `commands::set_active_example`'s fem3d sibling tests use.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_active_example_loads_default_fixture_2d() {
         let snapshot = crate::artifacts::fem2d::schema::empty_fem2d_snapshot();
         let history = semio_framework_plugin::HistoryView::empty();
@@ -57,7 +57,7 @@ mod tests {
         assert!(!loaded.nodes.is_empty(), "expected the default fixture's nodes");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_active_example_unknown_id_resets_to_empty_document_2d() {
         let snapshot = crate::artifacts::fem2d::schema::empty_fem2d_snapshot();
         let history = semio_framework_plugin::HistoryView::empty();
@@ -75,7 +75,7 @@ mod tests {
     /// 🧬️ `setActiveExample` replaces document content via a `Effect::LoadDocument`, so it MUST be
     /// declared as a Mutation, not a View/Shell action — the framework's "View/Shell actions must not
     /// emit operations" guard would otherwise reject it.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_active_example_is_declared_as_operation_2d() {
         let definition = crate::editor::fem2d::create_fem2d_app();
         let action = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|action| action.id == "setActiveExample").expect("setActiveExample declared");

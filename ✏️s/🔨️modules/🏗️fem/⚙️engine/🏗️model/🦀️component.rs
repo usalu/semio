@@ -504,7 +504,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn solves_single_spring_against_hand_calc() {
         let model = two_spring_model();
         let result = solve_linear_static(&model).expect("solves");
@@ -518,7 +518,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn equilibrium_checks_are_near_zero() {
         let model = two_spring_model();
         let result = solve_linear_static(&model).expect("solves");
@@ -526,27 +526,27 @@ mod tests {
         assert!(result.checks.reaction_sum[Dof::Tx.index()].abs() < 1e-9);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn empty_model_is_rejected() {
         let model = Model::default();
         assert_eq!(solve_linear_static(&model), Err(FemError::EmptyModel));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dangling_node_ref_is_rejected() {
         let mut model = two_spring_model();
         model.supports.push(Support { node_id: "missing".into(), fixed: vec![Dof::Tx] });
         assert_eq!(solve_linear_static(&model), Err(FemError::DanglingNodeRef("missing".into())));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn unconstrained_model_is_singular() {
         let mut model = two_spring_model();
         model.supports.clear();
         assert_eq!(solve_linear_static(&model), Err(FemError::Singular));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn load_on_inactive_dof_is_silently_skipped() {
         let mut model = two_spring_model();
         model.nodal_loads.push(NodalLoad { node_id: "n2".into(), dof: Dof::Ty, value: 999.0 });
@@ -556,7 +556,7 @@ mod tests {
     }
 
     /// 🔍️ Duplicate node ids are rejected the same way `analyses::validate` rejects them.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn duplicate_node_id_is_rejected() {
         let mut model = two_spring_model();
         model.nodes.push(Node { id: "n1".into(), pos: [5.0, 0.0, 0.0] });
@@ -564,7 +564,7 @@ mod tests {
     }
 
     /// 🔍️ `Model`'s hand-rolled `Debug` (trait objects aren't `Debug`) must print element ids, not panic.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn model_debug_fmt_prints_element_ids_not_trait_objects() {
         let model = two_spring_model();
         let printed = format!("{model:?}");
@@ -574,7 +574,7 @@ mod tests {
 
     /// 🌬️ A member UDL on an element that doesn't override `equivalent_nodal_loads` (the trait default,
     /// `None`) is silently a no-op — same displacement as solving with no member load at all.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn member_udl_on_element_without_udl_support_is_a_no_op() {
         let mut model = two_spring_model();
         model.member_loads.push(("e1".into(), MemberUdl { wx: 123.0, wy: 456.0, wz: 0.0 }));

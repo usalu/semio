@@ -31,7 +31,7 @@ mod tests {
     use crate::demo_space_projection;
     use semio_framework_os::{register_artifact_descriptor, ArtifactKindSpec, MediaClass, MediaForm, MediaPortDirection, MediaType, MediaWireFormat};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn space_command_op_text_round_trips_every_variant() {
         store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::ConnectMediaPorts(ConnectMediaPorts {
             source_node_id: "n1".into(),
@@ -42,7 +42,7 @@ mod tests {
         store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::DisconnectMediaEdge(crate::engine::space::commands::disconnect_media_edge::DisconnectMediaEdge { edge_id: "e1".into() }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn connect_media_ports_rejects_incompatible_types_via_notice() {
         register_artifact_descriptor(&ArtifactKindSpec {
             id: "test.contract.2d".into(),
@@ -88,7 +88,7 @@ mod tests {
         assert!(matches!(emit.effects.first(), Some(semio_framework_plugin::Effect::Notify { .. })), "an incompatible connect must surface a Notify effect instead");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn connect_media_ports_negotiates_a_contract_for_compatible_types() {
         register_artifact_descriptor(&ArtifactKindSpec {
             id: "test.contract.doc-a".into(),

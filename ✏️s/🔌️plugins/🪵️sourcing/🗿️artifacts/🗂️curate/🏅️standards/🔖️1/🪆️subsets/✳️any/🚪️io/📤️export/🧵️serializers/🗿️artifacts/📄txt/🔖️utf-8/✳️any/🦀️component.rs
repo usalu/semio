@@ -17,7 +17,7 @@ pub struct CurateIntoTxt;
 impl Serializer<CurateSnapshot> for CurateIntoTxt {
     const INTO: Dialect = TXT_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    async fn serialize(_from: &CurateSnapshot) -> IoResult<IoPayload> {
+    fn serialize(_from: &CurateSnapshot) -> IoResult<IoPayload> {
         Err(IoError { message: "CurateIntoTxt: txt export not yet implemented".to_string(), diagnostics: Vec::new() })
     }
 }

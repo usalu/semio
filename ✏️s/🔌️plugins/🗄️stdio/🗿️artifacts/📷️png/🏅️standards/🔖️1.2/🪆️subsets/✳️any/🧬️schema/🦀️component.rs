@@ -61,7 +61,7 @@ pub struct PngArtifact {
 }
 
 impl Default for PngArtifact {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self::from_snapshot(PngSnapshot::default())
     }
 }

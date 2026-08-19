@@ -3,7 +3,7 @@
 //! ordinary domain overrides and fixed pins before delegating to the same generic kernel.
 
 use crate::wfc_engine::bitset::PatternSet;
-use crate::wfc_engine::constraint::{build_adjacency_view, AdjacencyView, Constraint, ConstraintSet};
+use crate::wfc_engine::constraint::{build_adjacency_view, AdjacencyView, ConstraintSet, Constraints};
 use crate::wfc_engine::error::SolveError;
 use crate::wfc_engine::grid3d::Grid3dTopology;
 use crate::wfc_engine::ids::PatternId;
@@ -20,7 +20,7 @@ pub struct Grid3dSolverBuilder {
     init_domains: Option<Vec<PatternSet>>,
     fixed: Vec<(crate::wfc_engine::ids::NodeId, PatternId)>,
     config: SearchConfig,
-    constraints: Vec<Box<dyn Constraint>>,
+    constraints: Vec<Constraints>,
 }
 
 impl Grid3dSolverBuilder {
@@ -49,7 +49,7 @@ impl Grid3dSolverBuilder {
 
     /// 🏗️ Adds a global constraint. See [`crate::wfc_engine::constraint::Constraint`]'s docs for exactly when
     /// it runs (initial restriction + complete-assignment validation, not incremental mid-search).
-    pub async fn constraint(mut self, c: Box<dyn Constraint>) -> Self {
+    pub async fn constraint(mut self, c: Constraints) -> Self {
         self.constraints.push(c);
         self
     }
@@ -81,7 +81,7 @@ pub struct Grid3dSolver {
     init_domains: Vec<PatternSet>,
     fixed: Vec<(crate::wfc_engine::ids::NodeId, PatternId)>,
     config: SearchConfig,
-    constraints: Vec<Box<dyn Constraint>>,
+    constraints: Vec<Constraints>,
     adjacency: AdjacencyView,
 }
 
@@ -155,7 +155,7 @@ mod tests {
         (model, topo)
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn solves_a_checkerboard_volume() {
         let (model, topo) = checkerboard3d(4, Boundary::Open);
         let mut solver = Grid3dSolverBuilder::new(model, topo).build().unwrap();
@@ -163,7 +163,7 @@ mod tests {
         assert!(matches!(outcome, SolveOutcome::Solved(_)));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fix_pins_a_voxel_and_propagates() {
         let (model, topo) = checkerboard3d(3, Boundary::Open);
         let black = PatternId(0);
@@ -179,7 +179,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn masked_voxels_are_excluded_and_solve_completes() {
         let mut b = TiledModelBuilder::new();
         let black = b.tile(1.0);
@@ -196,21 +196,21 @@ mod tests {
         assert!(matches!(solver.solve(1), SolveOutcome::Solved(_)));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn wrap_boundary_solves_consistently() {
         let (model, topo) = checkerboard3d(4, Boundary::Wrap);
         let mut solver = Grid3dSolverBuilder::new(model, topo).build().unwrap();
         assert!(matches!(solver.solve(1), SolveOutcome::Solved(_)));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn odd_size_wrap_is_unsatisfiable_for_two_color_checkerboard() {
         let (model, topo) = checkerboard3d(3, Boundary::Wrap);
         let mut solver = Grid3dSolverBuilder::new(model, topo).config(SearchConfig { mode: search::SearchMode::Backtrack, ..Default::default() }).build().unwrap();
         assert!(matches!(solver.solve(1), SolveOutcome::Unsatisfiable(_)));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn graph_vs_grid3d_strict_equivalence_face6_open() {
         // Independently hand-enumerated arcs for a 2x2x3 Face6/Open grid, fed into a
         // GraphTopology, compared against the same model solved through Grid3dTopology.

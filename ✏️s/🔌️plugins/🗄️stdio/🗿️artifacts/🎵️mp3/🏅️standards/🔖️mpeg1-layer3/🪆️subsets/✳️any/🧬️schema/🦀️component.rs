@@ -23,7 +23,7 @@ pub struct Mp3Artifact {
 }
 
 impl Default for Mp3Artifact {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self::from_snapshot(Mp3Snapshot::default())
     }
 }

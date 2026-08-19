@@ -39,7 +39,7 @@ pub struct NoteArtifact {
 
 //#region 🔖️Conversions
 impl Default for NoteArtifact {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self::from_snapshot(crate::artifacts::note::NoteSnapshot::default())
     }
 }
@@ -693,7 +693,7 @@ mod tests {
     use super::*;
 
     /// 🧪️ Relocated from the deleted `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn clone_block_reids_group_children() {
         let child = create_block_by_kind("text", 0.0, 0.0);
         let child_id = block_id(&child).to_string();

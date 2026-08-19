@@ -35,7 +35,7 @@ mod tests {
     use crate::editor::animate::PresentCommand;
     use semio_framework_plugin::testkit::meta;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn seed_grid_action_adds_tiles() {
         let mut app = present_app();
         dispatch(&mut app, PresentCommand::SeedGrid(SeedGrid { rows: 2, columns: 2 }));
@@ -47,7 +47,7 @@ mod tests {
     /// pack bytes rather than an `artifact_mutations` entry — `dispatch`'s in-process `VcsArtifactApp`
     /// never applies `effects` to its own store (that's the real host's job), so this asserts directly
     /// on the emitted effect rather than through `app.snapshot()`.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_active_example_demo_emits_a_reset_effect_after_seed() {
         use semio_framework_plugin::Effect;
         let mut app = present_app();
@@ -76,7 +76,7 @@ mod tests {
     /// MECHANISM); `clearTiles` clears the document, and its `interactionSelect` effect asks the
     /// framework to clear the "tiles" domain's selection too (asserted directly on the effect — the
     /// in-process test harness never applies `effects` to itself).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn clear_tiles_action_empties_tiles_and_requests_a_selection_clear() {
         use semio_framework_plugin::Effect;
         let mut app = present_app();

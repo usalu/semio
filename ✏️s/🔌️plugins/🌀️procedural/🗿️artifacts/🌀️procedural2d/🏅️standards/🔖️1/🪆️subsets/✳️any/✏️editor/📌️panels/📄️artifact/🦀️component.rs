@@ -37,7 +37,7 @@ mod tests {
     use crate::editor::procedural2d::testkit::{app, render as render_body};
     use semio_framework_plugin::PluginApp;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn document_lists_widgets() {
         let mut app = app();
         let rendered = render_body(&mut app, PROCEDURAL2D_PLAY_BODY_DOCUMENT);
@@ -46,7 +46,7 @@ mod tests {
         assert!(rendered.contains(first), "document tree missing widget id {first}: {rendered}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn definition_binds_the_framework_document_tab_to_this_body_key() {
         let definition = definition();
         assert_eq!(definition.id(), FRAMEWORK_PANEL_TAB_ARTIFACT_ID);

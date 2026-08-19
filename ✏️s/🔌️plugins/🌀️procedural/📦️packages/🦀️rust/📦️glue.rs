@@ -8,6 +8,12 @@
 //! `TaxonomyLibShape` policy lint both fail on it (see master ticket
 //! `26/08/05/CRATE-CONSOLIDATION-AND-PLUGIN-TAXONOMY-RESTRUCTURE`, Single-File-Repo hazard ruling).
 
+// 🚦️ R7/R3: `Constraint` (`⛓️constraint`) is `#[dyn_enum]`-annotated with `async fn` methods.
+// Send-ness comes structurally from the generated `Constraints` enum, never from a `+ Send` bound
+// on the trait — this silences the resulting `async_fn_in_trait` lint without taking rustc's
+// `-> impl Future + Send` suggestion, which would break guest `?Send` futures.
+#![allow(async_fn_in_trait)]
+
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;

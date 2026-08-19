@@ -18,7 +18,7 @@ pub struct SvgSnapshot {
 }
 
 impl Default for SvgSnapshot {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { schema: STDIO_SVG_DOCUMENT_SCHEMA.into(), doc: XmlDocument { root: Some(XmlNode::Element { name: "svg".into(), attrs: Vec::new(), children: Vec::new() }), doctype: None, declaration: None, prolog: Vec::new() } }
     }
 }
@@ -1320,7 +1320,7 @@ impl store::ArtifactPack for SvgSnapshot {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn schema_facets_reject_source_and_raw_doctype_shadow_state() {
         let facets = [
             include_str!("🦀️component.rs"),
@@ -1366,19 +1366,19 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn artifact_dsl_rejects_native_svg_without_a_semio_envelope() {
         assert!(<SvgSnapshot as store::ArtifactDsl>::parse_dsl(r#"<svg xmlns="http://www.w3.org/2000/svg"/>"#).is_err());
     }
 
     //#region PathGrammar
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn path_implicit_lineto_repetition_after_moveto() {
         let cmds = parse_path_data("M 0 0 10 10 20 20").unwrap();
         assert_eq!(cmds, vec![PathCommand::MoveTo { x: 0.0, y: 0.0, relative: false }, PathCommand::LineTo { x: 10.0, y: 10.0, relative: false }, PathCommand::LineTo { x: 20.0, y: 20.0, relative: false },]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn path_arc_flag_squeeze_decomposes_correctly() {
         // 🚩 THE classic bug: "A5 5 0 108 8" must decompose as flags 1,0 then x=8,y=8 -- not 10,8,8.
         let cmds = parse_path_data("M40,20 A5 5 0 108 8").unwrap();
@@ -1392,13 +1392,13 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn path_relative_and_close() {
         let cmds = parse_path_data("m0,0 10,0 0,10z").unwrap();
         assert_eq!(cmds, vec![PathCommand::MoveTo { x: 0.0, y: 0.0, relative: true }, PathCommand::LineTo { x: 10.0, y: 0.0, relative: true }, PathCommand::LineTo { x: 0.0, y: 10.0, relative: true }, PathCommand::ClosePath,]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn path_round_trips_through_string() {
         let cmds = parse_path_data("M0,0 C1,1 2,2 3,3 S4,4 5,5 A5 5 0 108 8 Z").unwrap();
         let text = path_data_to_string(&cmds);
@@ -1406,14 +1406,14 @@ mod tests {
         assert_eq!(cmds, reparsed);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn path_missing_leading_command_is_error() {
         assert!(parse_path_data("10 10 L20 20").is_err());
     }
     //#endregion PathGrammar
 
     //#region TransformGrammar
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn transform_parses_all_functions() {
         let ops = parse_transform_list("translate(10,20) scale(2) rotate(90,5,5) skewX(30) skewY(-15) matrix(1,0,0,1,0,0)").unwrap();
         assert_eq!(
@@ -1429,7 +1429,7 @@ mod tests {
         );
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn transform_composition_order_matches_svg_semantics() {
         // translate(10,0) rotate(90) applied to (1,0) => (10,1): rotate happens in local space first.
         let m = transform_ops_to_matrix(&parse_transform_list("translate(10,0) rotate(90)").unwrap());
@@ -1437,14 +1437,14 @@ mod tests {
         assert!((px - 10.0).abs() < 1e-9 && (py - 1.0).abs() < 1e-9);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn transform_rotate_about_center_fixes_that_point() {
         let m = transform_ops_to_matrix(&parse_transform_list("rotate(45,7,3)").unwrap());
         let (px, py) = (m.a * 7.0 + m.c * 3.0 + m.e, m.b * 7.0 + m.d * 3.0 + m.f);
         assert!((px - 7.0).abs() < 1e-9 && (py - 3.0).abs() < 1e-9);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn transform_wrong_arity_is_error() {
         assert!(parse_transform_list("scale(1,2,3)").is_err());
         assert!(parse_transform_list("frobnicate(1)").is_err());
@@ -1452,7 +1452,7 @@ mod tests {
     //#endregion TransformGrammar
 
     //#region StyleAndGeometry
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn style_declarations_parse_and_unrecognized_ones_are_retained() {
         let mut p = PresentationAttrs::default();
         for (k, v) in parse_style_decls("fill: red; stroke:blue ; opacity:0.5; letter-spacing: 2px") {
@@ -1466,7 +1466,7 @@ mod tests {
         assert_eq!(p.extra_style, vec![("letter-spacing".to_string(), "2px".to_string())]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn view_box_and_points_parse() {
         assert_eq!(parse_view_box("0 0 100 50").unwrap(), ViewBox { min_x: 0.0, min_y: 0.0, width: 100.0, height: 50.0 });
         assert_eq!(parse_points("0,0 10,0 5,10").unwrap(), vec![(0.0, 0.0), (10.0, 0.0), (5.0, 10.0)]);
@@ -1476,7 +1476,7 @@ mod tests {
     //#endregion StyleAndGeometry
 
     //#region TypedParse
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn typed_parse_of_multi_element_document_with_gradient_group_and_arc_path() {
         // 🚧️ `r##"..."##` (not `r#"..."#`) because the fixture's `stop-color="#ff0000"` contains
         // the literal 2-char sequence `"#`, which would otherwise close a single-hash raw string.
@@ -1569,7 +1569,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn unknown_element_and_attrs_survive_losslessly() {
         let text = r#"<svg xmlns="http://www.w3.org/2000/svg"><customThing data-x="1"><rect x="0" y="0" width="1" height="1"/></customThing></svg>"#;
         let doc = xml_document_from_text(text).unwrap();

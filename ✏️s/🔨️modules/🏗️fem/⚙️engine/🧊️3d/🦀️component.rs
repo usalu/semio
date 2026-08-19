@@ -151,7 +151,7 @@ mod tests {
     // #endregion 🔖️Fixtures
 
     // #region 🔖️BuildModel
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn build_model_rejects_dangling_material() {
         let (mut doc, ..) = cantilever_fixture();
         if let FemElement::Frame { material_id, .. } = &mut doc.elements[0] {
@@ -161,7 +161,7 @@ mod tests {
         assert!(err.to_string().contains("missing"), "error should name the dangling id: {err}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn build_model_rejects_dangling_section() {
         let (mut doc, ..) = cantilever_fixture();
         if let FemElement::Frame { section_id, .. } = &mut doc.elements[0] {
@@ -171,7 +171,7 @@ mod tests {
         assert!(err.to_string().contains("missing"), "error should name the dangling id: {err}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn build_model_rejects_dangling_node() {
         let (mut doc, ..) = cantilever_fixture();
         if let FemElement::Frame { end, .. } = &mut doc.elements[0] {
@@ -183,7 +183,7 @@ mod tests {
     // #endregion 🔖️BuildModel
 
     // #region 🔖️CantileverBenchmark
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn cantilever_tip_load_matches_analytical_solution() {
         let (doc, e, iy, l, p, _iz) = cantilever_fixture();
         let result = fem3d_solve(&doc, "point").expect("solves");
@@ -218,7 +218,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn truss_3d_solve_is_finite_and_balanced() {
         let doc = truss_fixture();
         let result = fem3d_solve(&doc, "drop").expect("solves");
@@ -236,7 +236,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fem3d_solve_unknown_case_id_errors() {
         let (doc, ..) = cantilever_fixture();
         let err = fem3d_solve(&doc, "missing-case").unwrap_err();
@@ -245,7 +245,7 @@ mod tests {
     // #endregion 🔖️CantileverBenchmark
 
     // #region 🔖️SolveAll
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fem3d_solve_all_returns_case_and_combination_results() {
         let (mut doc, ..) = cantilever_fixture();
         doc.load_cases.push(FemLoadCase { id: "point2".into(), name: "Point Load 2".into(), loads: vec![crate::artifacts::fem3d::FemLoad::Nodal { id: "l2".into(), node_id: "n2".into(), dof: FemDof::Tz, value: -2000.0 }], self_weight: false });
@@ -269,7 +269,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn self_weight_case_produces_nonzero_reactions() {
         let (mut doc, _e, _iy, l, _p, _iz) = cantilever_fixture();
         let (area, rho) = (doc.sections[0].area, doc.materials[0].rho);
@@ -287,7 +287,7 @@ mod tests {
     /// 🌬️ A `FemLoad::MemberUdl` on the cantilever fixture's `Frame3`: base shear must equal the
     /// classical `wL` total, same benchmark `elements3d::tests::frame3_udl_cantilever_matches_hand_calc`
     /// checks headlessly, now exercised through the document bridge's load translation.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn member_udl_load_matches_total_wl() {
         let (mut doc, _e, _iy, l, _p, _iz) = cantilever_fixture();
         let w = 800.0;
@@ -301,7 +301,7 @@ mod tests {
     // #endregion 🔖️SolveAll
 
     // #region 🔖️Solids
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn solid_self_weight_matches_total_mass_times_gravity() {
         let doc = solid_slab_doc();
         let results = fem3d_solve_all(&doc).expect("solid self-weight solves");
@@ -315,7 +315,7 @@ mod tests {
     /// ⚖️ A uniform pressure over the solid's top face must balance EXACTLY (mesh-independent, since
     /// tributary-area nodal loads sum to `pressure * footprintArea` regardless of triangulation) —
     /// possible only now that `fem_3d` meshes solids at all.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn solid_area_load_matches_pressure_times_footprint_area() {
         let mut doc = solid_slab_doc();
         doc.load_cases = vec![FemLoadCase { id: "pressure".into(), name: "Pressure".into(), loads: vec![crate::artifacts::fem3d::FemLoad::Area { id: "a1".into(), solid_id: "sol1".into(), pressure: 8000.0 }], self_weight: false }];
@@ -332,7 +332,7 @@ mod tests {
     /// bundled default example fixture in one pass — kept here (rather than split per sub-module) since
     /// it exercises `build_model`/`fem3d_solve_all` (this file), `fem3d_mesh_preview`/
     /// `fem3d_nodal_von_mises` (`mesh_preview.rs`) and `fem3d_buckling` (`modal_buckling.rs`) together.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn example_fixture_parses() {
         let doc: Fem3dSnapshot = crate::artifacts::fem3d::dsl::parse_dsl(crate::artifacts::fem3d::dsl::FEM3D_EXAMPLE_TEXT).expect("example fixture parses");
         assert_eq!(doc.nodes.len(), 16);

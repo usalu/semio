@@ -53,7 +53,7 @@ mod tests {
     use crate::editor::shooting::testkit::{dispatch, shooting_app};
     use crate::editor::shooting::ShootingCommand;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn export_active_shot_produces_one_icon_render_item() {
         let mut app = shooting_app();
         let result = dispatch(&mut app, ShootingCommand::ExportShots(export_shots::ExportShots { all: false }));
@@ -67,7 +67,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn export_all_shots_produces_one_item_per_shot() {
         let mut app = shooting_app();
         let result = dispatch(&mut app, ShootingCommand::ExportShots(export_shots::ExportShots { all: true }));

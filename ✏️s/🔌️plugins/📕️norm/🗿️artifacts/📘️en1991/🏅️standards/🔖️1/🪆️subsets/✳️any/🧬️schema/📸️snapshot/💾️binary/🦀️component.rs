@@ -23,7 +23,7 @@ pub async fn decode(bytes: &[u8]) -> Result<En1991Snapshot, PackError> {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn document_pack_round_trips_and_agrees_with_dsl() {
         let document = En1991Snapshot::default();
         store::os_store::test_support::assert_dsl_pack_equivalence(&document);

@@ -84,7 +84,7 @@ mod tests {
         forward
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn insert_remove_run_round_trips() {
         let base = fixture();
         let new_run = SemioTextRun { language: "de".into(), content: "hallo".into(), marks: vec![] };
@@ -103,7 +103,7 @@ mod tests {
         assert_eq!(after_remove.runs[0], base.runs[1]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn remove_run_of_an_out_of_range_index_has_an_empty_inverse() {
         let base = fixture();
         let remove = SemioTextMutation::RemoveRun(remove_run::mutation::RemoveRun { index: 99 });
@@ -111,7 +111,7 @@ mod tests {
         assert_eq!(remove.diff(&base).diff().apply(&base).expect("apply must succeed for a well-formed fixture"), base, "an out-of-range remove is a no-op");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn edit_run_and_change_run_language_round_trip() {
         let base = fixture();
 
@@ -128,7 +128,7 @@ mod tests {
         assert!(missing.inverse(&base).is_empty(), "editing an absent index has nothing to undo");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn reorder_runs_round_trips() {
         let base = fixture();
         assert!(base.runs.len() >= 2, "fixture must have at least two runs to exercise reorder");
@@ -139,7 +139,7 @@ mod tests {
         assert_eq!(after.runs[1], base.runs[0]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_remove_mark_round_trips() {
         let base = fixture();
         let mark = SemioTextMark { kind: SemioTextMarkKind::Link, href: "https://semio.tech".into() };
@@ -156,7 +156,7 @@ mod tests {
         assert!(after_remove.runs[1].marks.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_remove_mark_of_an_absent_run_has_an_empty_inverse() {
         let base = fixture();
         let remove = SemioTextMutation::RemoveMark(remove_mark::mutation::RemoveMark { run_index: 99, index: 0 });
@@ -164,7 +164,7 @@ mod tests {
         assert_eq!(remove.diff(&base).diff().apply(&base).expect("apply must succeed for a well-formed fixture"), base);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn semantic_kinds_cover_every_variant() {
         assert_eq!(SemioTextMutation::kinds().len(), 7);
         let mutation = SemioTextMutation::RemoveRun(remove_run::mutation::RemoveRun { index: 2 });

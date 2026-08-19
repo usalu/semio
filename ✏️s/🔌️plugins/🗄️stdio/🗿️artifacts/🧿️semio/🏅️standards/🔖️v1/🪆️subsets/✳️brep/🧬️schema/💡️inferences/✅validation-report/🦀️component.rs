@@ -240,13 +240,13 @@ mod tests {
     }
 
     //#region 🧪️Honesty
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn valid_snapshot_has_no_findings() {
         let values = store::infer_field::<SemioBrepSnapshot, BrepValidationReport>(&valid_snapshot(), None);
         assert!(values["document"].is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dangling_reference_is_a_real_finding_not_a_faked_one() {
         let mut broken = valid_snapshot();
         broken.edges[0].end_vertex = "v-missing".into();
@@ -257,7 +257,7 @@ mod tests {
     //#endregion 🧪️Honesty
 
     //#region 🧪️CacheTransparencyLaw
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn disabled_cache_matches_pure_recompute() {
         let snapshot = valid_snapshot();
         let pure = store::infer_field::<SemioBrepSnapshot, BrepValidationReport>(&snapshot, None);
@@ -268,7 +268,7 @@ mod tests {
     //#endregion 🧪️CacheTransparencyLaw
 
     //#region 🧪️IncrementalityLaw
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn identical_snapshot_recompute_is_a_cache_hit() {
         let mut cache = InferenceCache::new(InferenceCacheConfig { enabled: true, record_stats: true, ..Default::default() });
         let base = valid_snapshot();
@@ -280,7 +280,7 @@ mod tests {
         assert_eq!(after.hits - before.hits, 1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn changing_any_collection_misses_the_cache() {
         let mut cache = InferenceCache::new(InferenceCacheConfig { enabled: true, record_stats: true, ..Default::default() });
         let base = valid_snapshot();
@@ -337,7 +337,7 @@ mod tests {
         add_solid(body, shell, vec![], rec)
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn a_cleanly_built_tetrahedron_validates_with_no_issues() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
@@ -346,7 +346,7 @@ mod tests {
         assert!(issues.is_empty(), "unexpected issues on a clean solid: {issues:?}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn a_broken_ring_pointer_is_detected() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
@@ -361,7 +361,7 @@ mod tests {
         assert!(issues.iter().any(|i| i.code == "broken-ring" || i.code == "next-prev-mismatch"), "expected a ring issue, got {issues:?}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn a_vertex_tolerance_exceeding_its_edge_tolerance_is_detected() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
@@ -372,7 +372,7 @@ mod tests {
         assert!(issues.iter().any(|i| i.code == "tolerance-containment-violated"), "expected a tolerance issue, got {issues:?}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn a_non_manifold_edge_is_flagged() {
         // Build a free-standing edge with three coedges referencing it (impossible in a clean
         // 2-manifold build, so constructed directly).
@@ -397,7 +397,7 @@ mod tests {
         assert!(issues.iter().any(|i| i.code == "non-manifold-edge"), "expected a non-manifold-edge issue, got {issues:?}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn same_parameter_violation_is_detected_when_pcurve_disagrees_with_3d_curve() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();

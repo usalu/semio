@@ -38,7 +38,7 @@ async fn default_contributions_json() -> String {
 }
 
 impl Default for ImperativeArtifact {
-    async fn default() -> Self {
+    fn default() -> Self {
         let empty = crate::artifacts::imperative::schema::snapshot::ImperativeSnapshot::default();
         Self {
             schema: empty.schema,

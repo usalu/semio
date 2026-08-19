@@ -73,14 +73,14 @@ async fn node_view(path: Vec<String>, key_label: Option<&str>, value: &JsonValue
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn definition_declares_a_tree_window() {
         let def = definition();
         assert_eq!(def.id, WINDOW_KIND_ID);
         assert_eq!(def.body_key, BODY_KEY);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn render_walks_object_and_array_members() {
         let document = JsonSnapshot { schema: "stdio.json".into(), value: JsonValue::Object { members: vec![JsonMember { key: "a".into(), value: JsonValue::Bool { value: true } }] } };
         let UiNode::Tree(node) = render(&document) else { panic!("expected Tree") };

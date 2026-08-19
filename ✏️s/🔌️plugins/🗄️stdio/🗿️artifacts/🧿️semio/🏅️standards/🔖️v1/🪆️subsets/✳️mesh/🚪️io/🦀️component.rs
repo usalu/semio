@@ -183,7 +183,7 @@ pub mod derived_composition {
         use super::*;
         use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMaterial, SemioMesh, SemioPrimitive};
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn clean_snapshot_has_no_diagnostics() {
             let snapshot = SemioMeshSnapshot {
                 meshes: vec![SemioMesh { id: "m1".into(), primitives: vec![SemioPrimitive { id: "p1".into(), material_id: Some("mat1".into()), ..Default::default() }] }],
@@ -193,14 +193,14 @@ pub mod derived_composition {
             assert!(check_mesh_referential_invariants(&snapshot).is_empty());
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn dangling_material_ref_is_flagged() {
             let snapshot = SemioMeshSnapshot { meshes: vec![SemioMesh { id: "m1".into(), primitives: vec![SemioPrimitive { id: "p1".into(), material_id: Some("missing".into()), ..Default::default() }] }], ..Default::default() };
             let diagnostics = check_mesh_referential_invariants(&snapshot);
             assert!(diagnostics.iter().any(|d| d.code.0 == "stdio.semio_mesh.dangling-material-ref"), "got {diagnostics:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn duplicate_ids_are_flagged_per_collection() {
             let snapshot = SemioMeshSnapshot {
                 meshes: vec![SemioMesh { id: "dup".into(), primitives: vec![] }, SemioMesh { id: "dup".into(), primitives: vec![] }],
@@ -213,7 +213,7 @@ pub mod derived_composition {
             assert!(diagnostics.iter().any(|d| d.code.0 == "stdio.semio_mesh.duplicate-material-id"), "got {diagnostics:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn validator_decodes_and_runs_the_referential_checks_end_to_end() {
             let snapshot = SemioMeshSnapshot { meshes: vec![SemioMesh { id: "m1".into(), primitives: vec![SemioPrimitive { id: "p1".into(), material_id: Some("missing".into()), ..Default::default() }] }], ..Default::default() };
             let bytes = store::ArtifactPack::encode_pack(&snapshot);
@@ -234,7 +234,7 @@ pub mod derived_composition {
             /// ✅️ "committed files parse": all 6 handcrafted `.grammar.semio`/`.protocol.semio` files
             /// parse under the real dialect — independent of, and cheaper than, the two `recognize`/
             /// `walk_protocol` laws below.
-            #[test]
+            #[semio_framework_async_macros::async_test]
             async fn committed_facet_files_parse() {
                 for (label, text) in [("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO)] {
                     let grammar = dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
@@ -250,7 +250,7 @@ pub mod derived_composition {
             /// `m5_handcrafted_grammar_conformance` harness uses (envelope id prepended as the bare
             /// `artifact-mark` token), so this is a direct proof this facet will pass that harness once
             /// graduated.
-            #[test]
+            #[semio_framework_async_macros::async_test]
             async fn grammar_conformance_law() {
                 let grammar = dsl::parse_grammar(snapshot::text::COMPONENT_GRAMMAR_SEMIO).expect("parse snapshot grammar");
                 let recognizer = dsl::Recognizer::compile(&grammar);
@@ -262,7 +262,7 @@ pub mod derived_composition {
 
             /// ✅️ `ops_grammar_conformance_law`: the mutations grammar recognizes real `print_op` output
             /// for every `SemioMeshMutation` variant (`mutations::demo_mutation_cases()`).
-            #[test]
+            #[semio_framework_async_macros::async_test]
             async fn ops_grammar_conformance_law() {
                 let grammar = dsl::parse_grammar(mutations::text::COMPONENT_GRAMMAR_SEMIO).expect("parse mutations grammar");
                 let recognizer = dsl::Recognizer::compile(&grammar);
@@ -275,7 +275,7 @@ pub mod derived_composition {
             /// ✅️ `diff_grammar_conformance_law`: the diff grammar recognizes real `print_diff` output
             /// for every representative `SemioMeshDiff` (`diff::demo_diff_cases()`), incl. the empty
             /// (no-op) diff.
-            #[test]
+            #[semio_framework_async_macros::async_test]
             async fn diff_grammar_conformance_law() {
                 let grammar = dsl::parse_grammar(diff::text::COMPONENT_GRAMMAR_SEMIO).expect("parse diff grammar");
                 let recognizer = dsl::Recognizer::compile(&grammar);
@@ -288,7 +288,7 @@ pub mod derived_composition {
             /// ✅️ `protocol_walk_law`: `walk_protocol` against REAL bytes for all three facets —
             /// snapshot pack (`encode_pack`, envelope-unwrapped first), every demo mutation's
             /// `encode_op`, and every demo diff's `encode_diff` — asserting `consumed == bytes.len()`.
-            #[test]
+            #[semio_framework_async_macros::async_test]
             async fn protocol_walk_law() {
                 let pack_spec = dsl::parse_protocol(snapshot::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
                 let packed = snapshot::encode_mesh_pack(&snapshot::demo_mesh_snapshot());
@@ -315,7 +315,7 @@ pub mod derived_composition {
             /// `print_dsl`/`encode_pack` output of `engine::demo_mesh_snapshot()` —
             /// `parse_dsl(fixture) == demo()`, `print_dsl(demo()) == fixture` (byte-for-byte), and the
             /// pack twin — so the fixtures can never silently drift back to a fake.
-            #[test]
+            #[semio_framework_async_macros::async_test]
             async fn fixture_honesty_law() {
                 const FIXTURE_DSL: &str = include_str!("../📚️examples/🧊️cube/🖼️assets/🗣️example.dsl.semio");
                 const FIXTURE_PACK: &[u8] = include_bytes!("../📚️examples/🧊️cube/🖼️assets/🎒️example.pack.semio");
@@ -395,7 +395,7 @@ pub mod derived_composition {
             }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn cube_subset_integrated_roundtrip() {
             let text = include_str!("../📚️examples/🧊️cube/🖼️assets/🗣️example.dsl.semio");
             let asset = store::os_store::test_support::ExampleAsset { bytes: text.as_bytes(), text: Some(text), provenance: "✳️mesh/📚️examples/🧊️cube/🖼️assets/🗣️example.dsl.semio" };

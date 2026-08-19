@@ -416,7 +416,7 @@ mod tests {
 
     /// 🧪️ mutation_diff_law + inverse_law: `NoMutation`, `SetSnapshot` (cross-kind), and a real
     /// wrapped per-field mutation (`Audio(SetSampleRate)`).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mutation_diff_law_covers_no_mutation_set_snapshot_and_a_wrapped_variant() {
         let base = audio_base();
 
@@ -449,7 +449,7 @@ mod tests {
 
     /// 🧪️ mutation_diff_law, second wrapped subset (flow's id-keyed `InsertNode`) — proves
     /// the dispatch works for a collection-shaped mutation, not just a scalar one.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mutation_diff_law_flow_insert_node() {
         let base = flow_base();
         let node = FlowNode { id: "n1".into(), kind: "task".into(), label: "N1".into(), params: vec![], position: SemioPoint2 { x: 1.0, y: 2.0 } };
@@ -468,7 +468,7 @@ mod tests {
     }
 
     /// 🧪️ A wrapped mutation for the wrong kind remains unapplied and records its mismatch diagnostic.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn kind_mismatch_wrapped_mutation_records_an_error_outcome() {
         let base = flow_base();
         let wrapped = SemioMutation::Audio(SemioAudioMutation::SetSampleRate { sample_rate: 1 });
@@ -493,7 +493,7 @@ mod tests {
     /// `vec![NoMutation]` unconditionally — brep's/mesh's absent-target verbs correctly return
     /// `Vec::new()` instead, since there is nothing to undo, which is the opposite shape this loop
     /// assumes).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn all_eleven_wrapped_kinds_diff_and_inverse_route_correctly() {
         let bases: Vec<SemioSubsetSnapshot> = vec![
             SemioSubsetSnapshot::Model(Default::default()),
@@ -547,7 +547,7 @@ mod tests {
 
     /// 🧪️ `text`'s own wrapped-kind coverage: a real `InsertRun` routes through the any-level
     /// dispatch, produces a nested `SemioDiff::Text`, and its inverse restores `base` exactly.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn wrapped_text_kind_diff_and_inverse_route_correctly() {
         use crate::artifacts::semio::standards::v1::subsets::text::schema::mutations::insert_run;
         use crate::artifacts::semio::standards::v1::subsets::text::schema::snapshot::SemioTextRun;
@@ -572,7 +572,7 @@ mod tests {
     /// DKM #2550 migrated `✳️brep` off the banned `NoMutation`/`SetSnapshot` vocabulary onto SMO's
     /// approved 13-verb table). A real `CreateVertex` routes through the any-level dispatch,
     /// produces a nested `SemioDiff::Brep`, and its inverse restores `base` exactly.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn wrapped_brep_kind_diff_and_inverse_route_correctly() {
         use crate::artifacts::semio::standards::v1::subsets::brep::schema::mutations::create_vertex;
 
@@ -596,7 +596,7 @@ mod tests {
     /// DKM #2550 migrated `✳️mesh` off the banned `NoMutation`/`SetSnapshot` vocabulary onto its
     /// own 17-verb table). A real `CreateMesh` routes through the any-level dispatch, produces a
     /// nested `SemioDiff::Mesh`, and its inverse restores `base` exactly.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn wrapped_mesh_kind_diff_and_inverse_route_correctly() {
         use crate::artifacts::semio::standards::v1::subsets::mesh::schema::mutations::create_mesh;
         use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::SemioMesh;
@@ -620,7 +620,7 @@ mod tests {
     /// 🧪️ `table`'s own wrapped-kind coverage (mirrors `wrapped_text_kind_…` above): a real
     /// `InsertRow` routes through the any-level dispatch, produces a nested `SemioDiff::Table`, and
     /// its inverse restores `base` exactly.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn wrapped_table_kind_diff_and_inverse_route_correctly() {
         use crate::artifacts::semio::standards::v1::subsets::table::schema::mutations::insert_row;
         use crate::artifacts::semio::standards::v1::subsets::table::schema::snapshot::SemioTableRow;
@@ -644,7 +644,7 @@ mod tests {
     /// 🧪️ `graph`'s own wrapped-kind coverage (mirrors `wrapped_text_kind_…` above): a real
     /// `CreateNode` routes through the any-level dispatch, produces a nested `SemioDiff::Graph`,
     /// and its inverse restores `base` exactly.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn wrapped_graph_kind_diff_and_inverse_route_correctly() {
         use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint2;
         use crate::artifacts::semio::standards::v1::subsets::graph::schema::mutations::create_node;
@@ -670,7 +670,7 @@ mod tests {
     /// `CreateBrep` routes through the any-level dispatch, produces a nested `SemioDiff::Object`,
     /// and its inverse restores `base` exactly. `object` is the first COMPOSITE subset wrapped
     /// here — the mutation touches a CHILD slot (`brep`), not a scalar/collection field.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn wrapped_object_kind_diff_and_inverse_route_correctly() {
         use crate::artifacts::semio::standards::v1::subsets::object::schema::mutations::create_brep;
 
@@ -695,7 +695,7 @@ mod tests {
     /// `AddType` routes through the any-level dispatch, produces a nested `SemioDiff::Kit`, and its
     /// inverse restores `base` exactly. `kit` is the SECOND composite subset and the first to carry
     /// a LINK slot, though this particular case exercises a plain value-collection mutation.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn wrapped_kit_kind_diff_and_inverse_route_correctly() {
         use crate::artifacts::semio::standards::v1::subsets::kit::schema::mutations::add_type;
 
@@ -716,7 +716,7 @@ mod tests {
     }
 
     /// 🧪️ op_text_binary_roundtrip_law across `NoMutation`, `SetSnapshot`, and a wrapped variant.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_text_binary_roundtrip_law() {
         let base = audio_base();
         let cases = [SemioMutation::NoMutation, SemioMutation::SetSnapshot { snapshot: base.clone() }, SemioMutation::Audio(SemioAudioMutation::SetSampleRate { sample_rate: 22_050 }), SemioMutation::Flow(SemioFlowMutation::NoMutation)];

@@ -1,0 +1,576 @@
+{
+  "crate": "semio-framework-os-kernel",
+  "history": [
+    {
+      "pass": 1,
+      "errors": 1020,
+      "edits": 0,
+      "ambiguous": 0,
+      "other": 112
+    }
+  ],
+  "residual_errors": 1020,
+  "ambiguous": [],
+  "other": [
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🔍️lexer/🦀️component.rs:148",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🔍️lexer/🦀️component.rs:160",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🔍️lexer/🦀️component.rs:693",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/././../../🔨️modules/🗣️dsl/👪️family/🗂️catalog/🦀️component.rs:18",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/././../../🔨️modules/🗣️dsl/👪️family/🗂️catalog/🦀️component.rs:46",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/././../../🔨️modules/🗣️dsl/👪️family/🕸️graph/🦀️component.rs:43",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/././../../🔨️modules/🗣️dsl/👪️family/🕸️graph/🦀️component.rs:51",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/././../../🔨️modules/🗣️dsl/👪️family/🕸️graph/🦀️component.rs:91",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/././../../🔨️modules/🗣️dsl/👪️family/🧑‍🍳️recipe/🦀️component.rs:69",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/././../../🔨️modules/🗣️dsl/👪️family/🎬️scene/🦀️component.rs:10",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/././../../🔨️modules/🗣️dsl/👪️family/📊️sheet/🦀️component.rs:96",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/📖️grammar/🦀️component.rs:1753",
+      "code": "E0382",
+      "msg": "use of moved value: `reg`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/📖️grammar/🦀️component.rs:1756",
+      "code": "E0382",
+      "msg": "use of moved value: `reg`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/📖️grammar/🦀️component.rs:1759",
+      "code": "E0382",
+      "msg": "use of moved value: `reg`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/📖️grammar/🦀️component.rs:1762",
+      "code": "E0382",
+      "msg": "use of moved value: `reg`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/📖️grammar/🦀️component.rs:1765",
+      "code": "E0382",
+      "msg": "use of moved value: `reg`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/📖️grammar/🦀️component.rs:1768",
+      "code": "E0382",
+      "msg": "use of moved value: `reg`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/📖️grammar/🦀️component.rs:1770",
+      "code": "E0382",
+      "msg": "use of moved value: `reg`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/📖️grammar/🦀️component.rs:1832",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/📖️grammar/🦀️component.rs:1852",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🖋️notation/🦀️component.rs:83",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🖋️notation/🦀️component.rs:306",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:547",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:1280",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:1316",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:1410",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:2240",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🎒️pack/🧪️testkit/🦀️component.rs:255",
+      "code": "E0382",
+      "msg": "use of moved value: `id`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🎒️pack/🔢️value/🦀️component.rs:554",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🎒️pack/🔢️value/🦀️component.rs:993",
+      "code": "E0382",
+      "msg": "use of moved value: `elem_tag`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:444",
+      "code": "E0505",
+      "msg": "cannot move out of `id` because it is borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:619",
+      "code": "E0271",
+      "msg": "expected `{closure@🦀️component.rs:619:55}` to return `MutationMessage`, but it returns `impl Future<Output = MutationMessage>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:864",
+      "code": "E0499",
+      "msg": "cannot borrow `out` as mutable more than once at a time"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:867",
+      "code": "E0499",
+      "msg": "cannot borrow `out` as mutable more than once at a time"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:871",
+      "code": "E0499",
+      "msg": "cannot borrow `out` as mutable more than once at a time"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:874",
+      "code": "E0499",
+      "msg": "cannot borrow `out` as mutable more than once at a time"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:879",
+      "code": "E0499",
+      "msg": "cannot borrow `out` as mutable more than once at a time"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:881",
+      "code": "E0499",
+      "msg": "cannot borrow `out` as mutable more than once at a time"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:884",
+      "code": "E0499",
+      "msg": "cannot borrow `out` as mutable more than once at a time"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:886",
+      "code": "E0499",
+      "msg": "cannot borrow `out` as mutable more than once at a time"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:894",
+      "code": "E0499",
+      "msg": "cannot borrow `out` as mutable more than once at a time"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:897",
+      "code": "E0505",
+      "msg": "cannot move out of `out` because it is borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/💎️materialize/🦀️component.rs:282",
+      "code": "E0382",
+      "msg": "use of moved value: `cursor`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/💎️materialize/🦀️component.rs:322",
+      "code": "E0382",
+      "msg": "use of moved value: `cursor`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️testkit/🦀️component.rs:353",
+      "code": "E0382",
+      "msg": "use of moved value: `cursor`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️testkit/🦀️component.rs:456",
+      "code": "E0382",
+      "msg": "use of moved value: `cursor`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️testkit/🦀️component.rs:551",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️testkit/🦀️component.rs:562",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️testkit/🦀️component.rs:713",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/📇️directory/🪪️identity/🦀️component.rs:151",
+      "code": "E0271",
+      "msg": "expected `load` to return `Option<_>`, but it returns `impl Future<Output = Option<Identity>>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/📇️directory/🦀️component.rs:141",
+      "code": "E0271",
+      "msg": "expected `fold` to return `DirectoryReadModel`, but it returns `impl Future<Output = DirectoryReadModel>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:377",
+      "code": "E0038",
+      "msg": "the trait `ResourceResolver` is not dyn compatible"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:383",
+      "code": "E0038",
+      "msg": "the trait `ResourceResolver` is not dyn compatible"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:383",
+      "code": "E0038",
+      "msg": "the trait `ResourceResolver` is not dyn compatible"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:390",
+      "code": "E0038",
+      "msg": "the trait `PayloadSource` is not dyn compatible"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:396",
+      "code": "E0038",
+      "msg": "the trait `ResourceResolver` is not dyn compatible"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:396",
+      "code": "E0038",
+      "msg": "the trait `ResourceResolver` is not dyn compatible"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:396",
+      "code": "E0038",
+      "msg": "the trait `ResourceResolver` is not dyn compatible"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:397",
+      "code": "E0038",
+      "msg": "the trait `ResourceResolver` is not dyn compatible"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:399",
+      "code": "E0038",
+      "msg": "the trait `PayloadSource` is not dyn compatible"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:425",
+      "code": "E0038",
+      "msg": "the trait `ResourceResolver` is not dyn compatible"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:431",
+      "code": "E0038",
+      "msg": "the trait `ResourceResolver` is not dyn compatible"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:431",
+      "code": "E0038",
+      "msg": "the trait `ResourceResolver` is not dyn compatible"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:437",
+      "code": "E0038",
+      "msg": "the trait `PayloadSink` is not dyn compatible"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:443",
+      "code": "E0038",
+      "msg": "the trait `ResourceResolver` is not dyn compatible"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:443",
+      "code": "E0038",
+      "msg": "the trait `ResourceResolver` is not dyn compatible"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:443",
+      "code": "E0038",
+      "msg": "the trait `ResourceResolver` is not dyn compatible"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:444",
+      "code": "E0038",
+      "msg": "the trait `ResourceResolver` is not dyn compatible"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:445",
+      "code": "E0038",
+      "msg": "the trait `PayloadSink` is not dyn compatible"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:480",
+      "code": "E0038",
+      "msg": "the trait `RandomAccessPayload` is not dyn compatible"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:479",
+      "code": "E0038",
+      "msg": "the trait `RandomAccessPayload` is not dyn compatible"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:560",
+      "code": "E0038",
+      "msg": "the trait `RandomAccessPayload` is not dyn compatible"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:599",
+      "code": "E0038",
+      "msg": "the trait `RandomAccessPayload` is not dyn compatible"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:1235",
+      "code": "E0507",
+      "msg": "cannot move out of `*dialect` which is behind a shared reference"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🧬️schema/🦀️component.rs:97",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:578",
+      "code": "E0382",
+      "msg": "use of moved value: `envelope`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:2832",
+      "code": "E0271",
+      "msg": "expected `history_message_from_mutation_message` to return `HistoryMessage`, but it returns `impl Future<Output = HistoryMessage>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:4410",
+      "code": "E0382",
+      "msg": "use of moved value: `current`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:4776",
+      "code": "E0505",
+      "msg": "cannot move out of `command` because it is borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:4946",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5015",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5068",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5533",
+      "code": "E0382",
+      "msg": "use of moved value: `candidate`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5534",
+      "code": "E0382",
+      "msg": "use of moved value: `candidate`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5535",
+      "code": "E0382",
+      "msg": "use of moved value: `candidate`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5537",
+      "code": "E0382",
+      "msg": "use of moved value: `candidate`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5538",
+      "code": "E0382",
+      "msg": "use of moved value: `candidate`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:6745",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:6754",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:6808",
+      "code": "E0506",
+      "msg": "cannot assign to `self.merge_policy` because it is borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:7880",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🧩️extension/🦀️component.rs:169",
+      "code": "E0382",
+      "msg": "use of moved value: `options`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🧩️extension/🦀️component.rs:179",
+      "code": "E0382",
+      "msg": "use of moved value: `options`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:1003",
+      "code": "E0053",
+      "msg": "method `default` has an incompatible type for trait"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:1077",
+      "code": "E0053",
+      "msg": "method `default` has an incompatible type for trait"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:1143",
+      "code": "E0053",
+      "msg": "method `default` has an incompatible type for trait"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:545",
+      "code": "E0038",
+      "msg": "the trait `PayloadSource` is not dyn compatible"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:585",
+      "code": "E0038",
+      "msg": "the trait `PayloadSource` is not dyn compatible"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:624",
+      "code": "E0038",
+      "msg": "the trait `PayloadSink` is not dyn compatible"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:370",
+      "code": "E0038",
+      "msg": "the trait `ResourceResolver` is not dyn compatible"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:418",
+      "code": "E0038",
+      "msg": "the trait `ResourceResolver` is not dyn compatible"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:640",
+      "code": "E0038",
+      "msg": "the trait `PayloadSink` is not dyn compatible"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:504",
+      "code": "E0038",
+      "msg": "the trait `RandomAccessPayload` is not dyn compatible"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:429",
+      "code": "E0038",
+      "msg": "the trait `ResourceResolver` is not dyn compatible"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:435",
+      "code": "E0038",
+      "msg": "the trait `PayloadSink` is not dyn compatible"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:381",
+      "code": "E0038",
+      "msg": "the trait `ResourceResolver` is not dyn compatible"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:387",
+      "code": "E0038",
+      "msg": "the trait `PayloadSource` is not dyn compatible"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:498",
+      "code": "E0038",
+      "msg": "the trait `PayloadSource` is not dyn compatible"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🌿️vcs/🦀️component.rs:275",
+      "code": "E0311",
+      "msg": "the parameter type `TId` may not live long enough"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:499",
+      "code": "E0038",
+      "msg": "the trait `PayloadSink` is not dyn compatible"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:370",
+      "code": "E0038",
+      "msg": "the trait `ResourceResolver` is not dyn compatible"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:418",
+      "code": "E0038",
+      "msg": "the trait `ResourceResolver` is not dyn compatible"
+    }
+  ]
+}

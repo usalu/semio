@@ -21,7 +21,7 @@ pub struct NotePresence {
 }
 
 impl Default for NotePresence {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self {
             camera_x: 0.0,
             camera_y: 0.0,

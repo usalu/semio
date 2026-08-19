@@ -100,14 +100,14 @@ mod tests {
     }
 
     //#region 🧪️TopologyLaws
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn a_direct_cycle_between_two_nodes_is_reported() {
         let g = graph(vec![node("a"), node("b")], vec![edge("e1", "a", "b"), edge("e2", "b", "a")]);
         let topology = compute_mathematical_topology(&g);
         assert!(!topology.cycle_free, "a->b->a is a genuine cycle");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn an_edge_to_a_missing_node_is_dropped_not_a_cycle() {
         let g = graph(vec![node("a")], vec![edge("e1", "a", "missing")]);
         let topology = compute_mathematical_topology(&g);
@@ -115,7 +115,7 @@ mod tests {
         assert_eq!(topology.topo_order, vec!["a"]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn an_undirected_display_flag_still_uses_the_edge_data_source_target() {
         let mut g = graph(vec![node("a"), node("b")], vec![edge("e1", "a", "b")]);
         g.directed = false;

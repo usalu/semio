@@ -767,7 +767,7 @@ mod tests {
             .collect()
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn schema_runtime_capabilities_exactly_match_registered_declarations() {
         let factories = artifact_factories();
         for source in sources().unwrap() {
@@ -779,7 +779,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn gltf_capability_ledger_is_honest() {
         let ledger = capability_ledger().unwrap();
         assert_eq!(ledger.declared, CapabilityCounts { codecs: 6, mutations: 3, inferences: 67 });
@@ -788,7 +788,7 @@ mod tests {
         assert_eq!(ledger.verified, CapabilityCounts::default());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn gltf_executable_identity_keys_are_exactly_the_registered_services() {
         let source = sources().unwrap().into_iter().find(|source| source.artifact == "gltf").expect("gltf source");
         let mappings = executable_mappings(&source).expect("gltf executable mappings");
@@ -805,13 +805,13 @@ mod tests {
         );
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn schema_keys_and_runtime_factories_are_exact() {
         let sources = sources().unwrap();
         assert_eq!(artifact_factories().keys().copied().collect::<BTreeSet<_>>(), sources.iter().map(|source| source.artifact.as_str()).collect());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn gltf_representation_capability_has_exact_format_claims() {
         let definition = artifact_definitions().unwrap().into_iter().find(|definition| definition.identity().as_str() == "s.stdio.gltf").expect("gltf definition");
         let capability = definition.capabilities().find(|capability| capability.identity().as_str() == "s.stdio.gltf.runtime.representation.mime-model-gltf-json-extension-gltf.v1").expect("gltf runtime representation");

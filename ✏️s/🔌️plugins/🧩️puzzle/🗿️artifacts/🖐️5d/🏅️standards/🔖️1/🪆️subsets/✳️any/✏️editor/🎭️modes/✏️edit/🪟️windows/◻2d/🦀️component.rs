@@ -183,7 +183,7 @@ mod tests {
     use super::*;
     use crate::editor::puzzle5d::testkit::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn renders_the_board_scene() {
         let mut app = app();
         assert!(render_body(&mut app, BODY_KEY).contains("board-2d"));

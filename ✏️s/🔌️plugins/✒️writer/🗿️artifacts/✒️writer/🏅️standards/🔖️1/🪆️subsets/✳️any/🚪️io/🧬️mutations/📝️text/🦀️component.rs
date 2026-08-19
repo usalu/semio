@@ -63,7 +63,7 @@ mod tests {
         )
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn writer_op_text_round_trips_every_variant() {
         let jack = jack_snapshot();
         store::os_store::test_support::assert_op_line_round_trip(&WriterMutation::EditText(EditText { text: "line one\nline two".into() }));
@@ -78,7 +78,7 @@ mod tests {
 mod semio_grammar_conformance {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn component_grammar_semio_is_grammar_dialect() {
         let g = ::dsl::parse_grammar(COMPONENT_GRAMMAR_SEMIO).expect("parse grammar.semio");
         assert_eq!(g.dialect, ::dsl::SemioDialect::Grammar);

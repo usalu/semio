@@ -36,7 +36,7 @@ mod tests {
     use crate::editor::animate::PresentCommand;
     use semio_framework_plugin::testkit::meta;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn copy_prompt_is_shell_effect_not_view_mutation() {
         let mut app = present_app_with_registry();
         app.dispatch_typed(PresentCommand::SeedGrid(crate::editor::animate::commands::seed_grid::SeedGrid { rows: 2, columns: 2 }), &meta("local")).expect("seed grid");
@@ -45,7 +45,7 @@ mod tests {
         assert!(matches!(result.requested_effects.as_slice(), [Effect::DownloadMediaExport { mime_type, .. }] if mime_type == "text/markdown"), "copyPrompt emits exactly one media-export host effect carrying the morph prompt");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn export_video_from_deck_reports_no_scene_hashes_as_download_error() {
         let mut app = present_app();
         let result = app.dispatch_typed(PresentCommand::ExportVideoFromDeck(export_video_from_deck::ExportVideoFromDeck { output_dir: "output/animate-video".into(), scene_json: "{}".into() }), &meta("local")).expect("export");

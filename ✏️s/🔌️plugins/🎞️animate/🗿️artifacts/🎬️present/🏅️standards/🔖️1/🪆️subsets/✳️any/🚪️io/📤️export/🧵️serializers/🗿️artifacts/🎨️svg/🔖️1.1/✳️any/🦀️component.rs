@@ -16,7 +16,7 @@ pub struct PresentIntoSvg;
 impl Serializer<PresentSnapshot> for PresentIntoSvg {
     const INTO: Dialect = SVG_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    async fn serialize(from: &PresentSnapshot) -> IoResult<IoPayload> {
+    fn serialize(from: &PresentSnapshot) -> IoResult<IoPayload> {
         let bytes = <PresentSnapshot as store::ArtifactPack>::encode_pack(from);
         let wire = <SvgSnapshot as store::ArtifactPack>::decode_pack(&bytes).map_err(|error| IoError { message: format!("PresentIntoSvg: {error}"), diagnostics: Vec::new() })?;
         Ok(IoOutcome::clean(IoPayload::Binary(<SvgSnapshot as store::ArtifactPack>::encode_pack(&wire))))

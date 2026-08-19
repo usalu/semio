@@ -171,7 +171,7 @@ mod tests {
     use super::*;
     use crate::units::P_STD;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn ach_infiltration_scales_with_volume() {
         let spec = InfiltrationSpec {
             method: InfiltrationMethod::ScheduledAch,
@@ -190,20 +190,20 @@ mod tests {
         assert!((flow - 200.0 * 0.5 / 3600.0).abs() < 1e-9);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn ventilation_load_positive_when_outdoor_colder() {
         let (sens, _) = ventilation_load_w(0.1, 22.0, 0.009, 5.0, 0.004, P_STD, 0.0);
         assert!(sens < 0.0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn heat_recovery_reduces_load() {
         let (sens0, _) = ventilation_load_w(0.2, 22.0, 0.009, 5.0, 0.004, P_STD, 0.0);
         let (sens1, _) = ventilation_load_w(0.2, 22.0, 0.009, 5.0, 0.004, P_STD, 0.8);
         assert!(sens1.abs() < sens0.abs());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn hybrid_uses_natural_when_favorable() {
         let ctrl = HybridVentilationControl { outdoor_temp_min_c: 10.0, outdoor_temp_max_c: 28.0, max_wind_speed_m_s: 5.0, natural_ach: 2.0, mechanical_backup: true };
         let flow = hybrid_ventilation_flow_m3_s(&ctrl, 300.0, 20.0, 2.0, 0.05);

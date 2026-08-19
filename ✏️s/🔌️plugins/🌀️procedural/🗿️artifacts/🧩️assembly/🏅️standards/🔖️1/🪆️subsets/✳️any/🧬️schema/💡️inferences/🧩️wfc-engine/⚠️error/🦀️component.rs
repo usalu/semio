@@ -48,7 +48,7 @@ pub enum ModelError {
 }
 
 impl core::fmt::Display for ModelError {
-    async fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
             Self::EmptyPatternUniverse => write!(f, "model has zero patterns"),
             Self::UnknownPattern(p) => write!(f, "unknown pattern id {p}"),
@@ -99,7 +99,7 @@ pub enum TopologyError {
 }
 
 impl core::fmt::Display for TopologyError {
-    async fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
             Self::ZeroDimension { axis } => write!(f, "grid dimension `{axis}` must be nonzero"),
             Self::SizeOverflow => write!(f, "grid size computation overflowed"),
@@ -141,7 +141,7 @@ pub enum ConstraintError {
 }
 
 impl core::fmt::Display for ConstraintError {
-    async fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
             Self::InvalidBounds { reason } => write!(f, "invalid constraint bounds: {reason}"),
             Self::UnknownRegion(r) => write!(f, "unknown region id {r}"),
@@ -176,7 +176,7 @@ pub enum SolveError {
 }
 
 impl core::fmt::Display for SolveError {
-    async fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
             Self::ModelTopologyMismatch { reason } => write!(f, "model/topology mismatch: {reason}"),
             Self::SeedMissingInStrictMode => write!(f, "strict-integer mode requires an all-integer weight table"),
@@ -197,7 +197,7 @@ impl std::error::Error for SolveError {}
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn display_messages_are_human_readable() {
         let e = ModelError::InvalidWeight { pattern_index: 3, value: -1.0 };
         assert_eq!(e.to_string(), "invalid weight at pattern index 3: -1");
@@ -212,7 +212,7 @@ mod tests {
         assert_eq!(s.to_string(), "checkpoint version mismatch: expected 1, found 2");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn errors_are_std_error() {
         async fn assert_std_error<E: std::error::Error>(_e: &E) {}
         assert_std_error(&ModelError::EmptyPatternUniverse);

@@ -52,7 +52,7 @@ mod tests {
     /// spawns a node, selects it via the framework's real `interactionSelect` action (the only way a
     /// downstream crate can populate a genuine `InteractionView`, see `testkit::app`'s own doc
     /// comment), then confirms `deleteSelection` removes exactly that node.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn delete_selection_removes_the_live_selected_node() {
         seed_draw_plugin();
         let mut app = app_with_registry();

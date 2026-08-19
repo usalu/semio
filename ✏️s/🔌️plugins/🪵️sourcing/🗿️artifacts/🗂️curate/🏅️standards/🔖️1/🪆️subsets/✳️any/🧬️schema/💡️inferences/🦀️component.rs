@@ -40,7 +40,7 @@ impl protocol::Inference<CurateSnapshot> for CurateInference {
 /// the real default, don't derive structurally" trick `AddInference` uses in
 /// `📡️spr/🎮️command/🦀️component.rs`.
 impl Default for CurateInference {
-    async fn default() -> Self {
+    fn default() -> Self {
         <Self as protocol::Inference<CurateSnapshot>>::infer(&CurateSnapshot::default())
     }
 }
@@ -126,18 +126,18 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = picked_snapshot();
         assert_eq!(CurateInference::infer(&snapshot), CurateInference::infer(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(CurateInference::infer(&CurateSnapshot::default()), CurateInference::default());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn entries_counts_curated_lines_and_total_quantity() {
         let inferred = CurateInference::infer(&picked_snapshot());
         assert_eq!(inferred.entries.entry_count, 2);
@@ -149,7 +149,7 @@ mod tests {
         crate::artifacts::curate::curate_snapshot_from_stock(crate::artifacts::curate::schema::demo_stock(), Vec::new())
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn sourcing_catalog_fragment_maps_stock_into_the_puzzle3d_kit_catalog_shape() {
         let document = sample_document();
         let stock = crate::artifacts::curate::stock_of(&document);

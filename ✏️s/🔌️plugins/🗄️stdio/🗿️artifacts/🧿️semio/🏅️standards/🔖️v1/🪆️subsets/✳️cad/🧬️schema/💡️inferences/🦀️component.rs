@@ -32,7 +32,7 @@ impl protocol::Inference<SemioCadSnapshot> for SemioCadInference {
 /// 🌱 Defined in terms of `infer` (not derived) — keeps the law correct regardless of whether
 /// `SemioCadSnapshot::default()`'s `entities`/`blocks` ever stop being empty.
 impl Default for SemioCadInference {
-    async fn default() -> Self {
+    fn default() -> Self {
         <Self as protocol::Inference<SemioCadSnapshot>>::infer(&SemioCadSnapshot::default())
     }
 }
@@ -85,13 +85,13 @@ mod tests {
     use super::*;
     use protocol::Inference;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = SemioCadSnapshot::default();
         assert_eq!(SemioCadInference::infer(&snapshot), SemioCadInference::infer(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(SemioCadInference::infer(&SemioCadSnapshot::default()), SemioCadInference::default());
     }

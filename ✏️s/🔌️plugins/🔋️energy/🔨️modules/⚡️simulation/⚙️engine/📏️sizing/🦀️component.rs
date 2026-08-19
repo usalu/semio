@@ -17,7 +17,7 @@ pub struct SizingConfig {
 }
 
 impl Default for SizingConfig {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self {
             heating_design_day: DesignDay {
                 name: "Winter Design".into(),
@@ -99,7 +99,7 @@ mod tests {
     use crate::model::EntityId;
     use crate::model::{Model, Site, Zone};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn sizes_zone_with_surfaces() {
         let model = Model {
             name: "Test".into(),
@@ -111,7 +111,7 @@ mod tests {
         assert!(!tables.zone_loads.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn sizes_equipment_for_ideal_loads_zone() {
         let model = crate::sim::test_model_single_zone();
         let tables = SizingManager::size(&model, &SizingConfig::default());
@@ -119,13 +119,13 @@ mod tests {
         assert!(tables.equipment[0].design_load_w > 0.0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn coincident_peak_sums_all_loads() {
         assert!((SizingManager::coincident_peak(&[1000.0, 2000.0, 500.0]) - 3500.0).abs() < 1e-9);
         assert_eq!(SizingManager::coincident_peak(&[]), 0.0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn non_coincident_peak_takes_maximum() {
         assert!((SizingManager::non_coincident_peak(&[1000.0, 2000.0, 500.0]) - 2000.0).abs() < 1e-9);
         assert_eq!(SizingManager::non_coincident_peak(&[]), 0.0);

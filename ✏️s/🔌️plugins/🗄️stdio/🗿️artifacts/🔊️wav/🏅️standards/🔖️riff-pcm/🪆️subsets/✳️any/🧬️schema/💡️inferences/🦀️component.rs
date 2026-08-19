@@ -33,7 +33,7 @@ impl protocol::Inference<WavSnapshot> for WavInference {
 /// `WavSnapshot::default()`'s `fmt`/`data` ever stop matching this shape (its own hand-rolled
 /// `Default` already picks a real 44.1kHz mono PCM16 form, not a zeroed struct).
 impl Default for WavInference {
-    async fn default() -> Self {
+    fn default() -> Self {
         <Self as protocol::Inference<WavSnapshot>>::infer(&WavSnapshot::default())
     }
 }
@@ -85,13 +85,13 @@ mod tests {
     use super::*;
     use protocol::Inference;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = WavSnapshot::default();
         assert_eq!(WavInference::infer(&snapshot), WavInference::infer(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(WavInference::infer(&WavSnapshot::default()), WavInference::default());
     }

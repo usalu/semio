@@ -808,58 +808,58 @@ pub async fn check_rc_beam_from_fem(span_m: f64, udl_kn_m: f64, f_ck: f64, b_mm:
 mod compliance_helpers_tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn rc_beam_e2e() {
         let report = check_rc_beam(120.0, 80.0, 30.0, 300.0, 500.0, 2500.0, 500.0, 0.01, 200.0, AnnexChoice::De);
         assert!(!report.checks.is_empty());
         assert!(report.checks[0].utilization > 0.0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn punching_v_rd_max_c30() {
         let v = part_1_1::punching_v_rd_max_mpa(30.0, AnnexChoice::De);
         assert!((v - 4.488).abs() < 0.1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn slenderness_column() {
         let i = part_1_1::radius_of_gyration_mm(300_000.0, 2.25e9);
         let lambda = part_1_1::slenderness_lambda(3000.0, i);
         assert!((lambda - 34.6).abs() < 1.0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn crack_width_wk() {
         let eps_sm = part_1_1::steel_strain_eps_sm(200.0, 0.01, 2.9, 200_000.0);
         let wk = part_1_1::crack_width_wk_mm(eps_sm, 0.0001, 300.0);
         assert!(wk > 0.0 && wk < 0.5);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn deflection_ss_udl() {
         let delta = part_1_1::deflection_ss_udl_mm(20.0, 6.0, 30_000.0, 1.875e9);
         assert!((delta - 6.0).abs() < 0.5);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fire_cover_beam_r60() {
         let req = part_1_2::min_axis_distance_mm(part_1_2::ElementType::Beam, FireRating::R60);
         assert!((req - 35.0).abs() < 0.1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn liquid_retaining_stress_limit() {
         assert!((part_3::steel_stress_limit_mpa("XD1") - 160.0).abs() < 0.1);
         let wk = part_3::crack_width_liquid_mm(220.0, "XD1", 250.0, 200_000.0);
         assert!(wk < 0.25);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn na_de_alpha_cc() {
         assert!((na_de::AnnexParams::de().alpha_cc - 0.85).abs() < 1e-9);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     #[cfg(feature = "cross-fem")]
     async fn rc_beam_from_fem_e2e() {
         let report = check_rc_beam_from_fem(6.0, 20.0, 30.0, 300.0, 500.0, 2500.0, 500.0, 0.01, AnnexChoice::De).expect("fem solve");
@@ -868,7 +868,7 @@ mod compliance_helpers_tests {
         assert!((m_ed - 90.0).abs() < 1.0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn prestress_transfer_c30() {
         let sigma = part_1_1::prestress_transfer_stress_mpa(800.0, 135_000.0);
         assert!((sigma - 5.93).abs() < 0.1);
@@ -879,7 +879,7 @@ mod compliance_helpers_tests {
         assert!(report.checks[2].utilization < 1.0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn annex_params_alpha_cc_de_vs_en_divergence() {
         let f_ck = 30.0;
         let f_cd_de = na_de::AnnexParams::de().f_cd_mpa(f_ck);
@@ -889,14 +889,14 @@ mod compliance_helpers_tests {
         assert!(f_cd_en > f_cd_de);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn flexural_resistance_annex_divergence() {
         let m_rd_de = part_1_1::flexural_resistance_knm(30.0, 300.0, 450.0, 1200.0, 500.0, AnnexChoice::De);
         let m_rd_en = part_1_1::flexural_resistance_knm(30.0, 300.0, 450.0, 1200.0, 500.0, AnnexChoice::En);
         assert!(m_rd_en > m_rd_de);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fire_r60_required_axis_distance_at_160mm() {
         let a = part_1_2::required_axis_distance_beam_mm(160.0, FireRating::R60);
         assert!((a - 35.0).abs() < 1e-9);
@@ -906,7 +906,7 @@ mod compliance_helpers_tests {
         assert_eq!(fail.status, CheckStatus::Fail);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn bridge_concrete_stress_and_fatigue() {
         let limit = part_2::concrete_stress_limit_frequent_mpa(30.0);
         assert!((limit - 18.0).abs() < 1e-9);
@@ -920,7 +920,7 @@ mod compliance_helpers_tests {
         assert_eq!(fatigue_fail.status, CheckStatus::Fail);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn tightness_class_crack_width_limits() {
         assert!(part_3::tightness_crack_width_limit_mm(TightnessClass::Tc0, 10.0).is_none());
         assert!((part_3::tightness_crack_width_limit_mm(TightnessClass::Tc1, 10.0).unwrap() - 0.3).abs() < 1e-9);
@@ -930,7 +930,7 @@ mod compliance_helpers_tests {
         assert_eq!(tc0_check.status, CheckStatus::NotApplicable);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn anchor_m12_steel_and_concrete_cone_uncracked() {
         let f_ck = 30.0;
         let h_ef = 80.0;
@@ -955,7 +955,7 @@ mod compliance_helpers_tests {
         assert!(cone_check.status != CheckStatus::Fail);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn anchor_edge_shear_breakout() {
         let v_rk_c = part_4::concrete_edge_resistance_v0_rk_c_n(12.0, 80.0, 30.0, 100.0);
         assert!(v_rk_c > 0.0);

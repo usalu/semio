@@ -611,7 +611,7 @@ mod tests {
         demo_mutation_cases()
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mutation_diff_law() {
         let base = base_snapshot();
         for m in all_variants(&base) {
@@ -621,7 +621,7 @@ mod tests {
     //#endregion 🔖️mutation_diff_law
 
     //#region 🔖️inverse_law
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inverse_law() {
         let base = base_snapshot();
         for m in all_variants(&base) {
@@ -654,7 +654,7 @@ mod tests {
         assert_eq!(merged.apply(base).expect("merged diff must apply to base"), sequential, "absorb(d1,d2).apply(base) must equal sequential application for {m1:?} + {m2:?}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_law() {
         let base = base_snapshot();
 
@@ -684,7 +684,7 @@ mod tests {
         assert_absorb_law(&base, PngMutation::SetTransparency { trns: Some(PngTransparency::Grayscale { gray: 1 }) }, PngMutation::SetTransparency { trns: None });
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_law_associativity() {
         let base = base_snapshot();
         let d1 = PngMutation::InsertTextChunk { index: 0, chunk: text_chunk("A", "a") }.diff(&base);
@@ -712,7 +712,7 @@ mod tests {
     //#endregion 🔖️absorb_law
 
     //#region 🔖️between_roundtrip_law
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn between_roundtrip_law() {
         let a = base_snapshot();
         let mut b = base_snapshot();
@@ -729,7 +729,7 @@ mod tests {
     //#endregion 🔖️between_roundtrip_law
 
     //#region 🔖️codec_retention_law
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn codec_retention_law() {
         let bytes = std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🗿️artifacts/📷️png/📚️examples/🎬️demo/🖼️assets/📷️example.png"));
         let bytes = match bytes {
@@ -750,7 +750,7 @@ mod tests {
     //#endregion 🔖️codec_retention_law
 
     //#region 🔖️field_sweep
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn field_sweep_covers_every_mutable_field() {
         let a = sweep_a();
         let b = sweep_b();
@@ -838,7 +838,7 @@ mod tests {
     }
     //#endregion 🔖️field_sweep
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn out_of_range_mutation_is_noop_not_panic() {
         let base = base_snapshot();
         let mut snap = base.clone();
@@ -856,7 +856,7 @@ mod tests {
     /// payload) plus two extra `SetSnapshot` cases (`sweep_a`/`sweep_b`) so the whole-snapshot
     /// positional codec's `Some` AND `None` branches for every one of its 8 optional fields, plus
     /// its `text_chunks`/`chunk_order`/`unknown_chunks` lists, both get covered.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_text_binary_roundtrip_law() {
         let base = base_snapshot();
         let mut mutations = all_variants(&base);

@@ -18,6 +18,11 @@
 //! once, while every per-standard fact — schema, ids, labels, compute — lives in that standard's own
 //! artifact and app nodes.
 
+// 🧬️ `async fn` in public traits (`NationalAnnex`, `ScriptRuntime`, …) cannot specify auto-trait bounds —
+// the lint's `Send` concern is answered structurally (R3/R7): every former `dyn` seam is now a concrete
+// enum, so `Send` is derived at each spawn site from the concrete type, never asserted on the trait.
+#![allow(async_fn_in_trait)]
+
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;

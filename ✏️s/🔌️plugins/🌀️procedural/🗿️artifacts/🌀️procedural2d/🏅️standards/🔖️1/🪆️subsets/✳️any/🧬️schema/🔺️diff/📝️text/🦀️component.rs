@@ -214,7 +214,7 @@ mod tests {
     use super::*;
     use crate::artifacts::procedural2d::schema::empty_procedural2d_snapshot;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn diff_absorb_prefers_incoming_fixture_and_scalars() {
         let base = empty_procedural2d_snapshot();
         let mut first = diff_fixture_from_helpers(
@@ -236,7 +236,7 @@ mod tests {
         assert_eq!(first.locale.as_deref(), Some("de-DE"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn diff_apply_updates_fixture_widgets() {
         let snapshot = empty_procedural2d_snapshot();
         let existing_id = widget_id(&snapshot.fixture.widgets[1]).to_string();

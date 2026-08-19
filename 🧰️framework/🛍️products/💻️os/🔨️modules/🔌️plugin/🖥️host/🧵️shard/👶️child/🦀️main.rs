@@ -19,8 +19,8 @@
 use semio_framework::kernel::Budget;
 use semio_framework_actor::ActorId;
 use semio_framework_plugin_host::process_transport::StdioTransport;
-use semio_framework_plugin_host::shard::ShardLoop;
-use semio_framework_plugin_host::{GuestRuntime, PackageHash, PackageId, PackageRef, SharedEngineConfig, WasmtimeRuntime};
+use semio_framework_plugin_host::shard::{ShardLoop, ShardTransports};
+use semio_framework_plugin_host::{GuestRuntime, GuestRuntimes, PackageHash, PackageId, PackageRef, SharedEngineConfig, WasmtimeRuntime};
 use std::sync::Arc;
 use std::time::Duration;
 
@@ -41,10 +41,10 @@ fn main() {
         std::process::exit(2);
     });
 
-    let runtime = Arc::new(WasmtimeRuntime::new(SharedEngineConfig::default()).unwrap_or_else(|error| {
+    let runtime = Arc::new(GuestRuntimes::Wasmtime(WasmtimeRuntime::new(SharedEngineConfig::default()).unwrap_or_else(|error| {
         eprintln!("[semio-shard] engine init failed: {error}");
         std::process::exit(1);
-    }));
+    })));
     let bytes = std::fs::read(wasm_path).unwrap_or_else(|error| {
         eprintln!("[semio-shard] read {wasm_path}: {error}");
         std::process::exit(1);
@@ -61,7 +61,7 @@ fn main() {
     });
 
     let transport = StdioTransport::new(200);
-    let mut shard = ShardLoop::new(runtime, Box::new(transport));
+    let mut shard = ShardLoop::new(runtime, ShardTransports::Stdio(transport));
     shard.register(ActorId(actor_id), instance);
     eprintln!("[semio-shard] pid={} package={package_id} actor={actor_id} ready", std::process::id());
 
@@ -74,10 +74,16 @@ fn main() {
     // Maintenance)` (`ShardLoop::granted_budget`'s own documented fallback), a behavior change
     // from the previous hardcoded 200M-fuel constant, and an honest one: this binary never
     // computed a real per-turn budget itself either.
-    loop {
-        if let Err(error) = shard.pump() {
-            eprintln!("[semio-shard] pump error: {error}");
+    //
+    // 👶️ host-dedyn: ONE `block_on` wrapping the whole loop — `fn main` (E3) is this process's
+    // thread root, exactly `poll_ready`'s replacement the packet brief describes
+    // ("each shard thread runs block_on(loop.run())").
+    semio_framework_async::block_on(async {
+        loop {
+            if let Err(error) = shard.pump().await {
+                eprintln!("[semio-shard] pump error: {error}");
+            }
+            std::thread::sleep(Duration::from_millis(5));
         }
-        std::thread::sleep(Duration::from_millis(5));
-    }
+    });
 }

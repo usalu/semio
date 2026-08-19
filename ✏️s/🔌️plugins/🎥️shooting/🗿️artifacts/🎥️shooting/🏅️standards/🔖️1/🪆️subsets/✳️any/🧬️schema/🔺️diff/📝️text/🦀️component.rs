@@ -312,7 +312,7 @@ mod tests {
     use super::*;
 
     /// ⚖️ LAW: an empty diff is a no-operation on the snapshot.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn empty_diff_is_a_no_operation() {
         let base = crate::artifacts::shooting::empty_shooting_snapshot();
         let diff = ShootingDiff::default();

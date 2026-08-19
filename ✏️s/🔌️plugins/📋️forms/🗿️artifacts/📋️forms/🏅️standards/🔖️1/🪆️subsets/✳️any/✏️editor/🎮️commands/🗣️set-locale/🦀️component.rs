@@ -22,7 +22,7 @@ mod tests {
     use crate::editor::forms::testkit::{dispatch, forms_app, render};
     use crate::editor::forms::{FormsCommand, FORMS_PLAY_BODY_BLUEPRINT};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn forms_labels_resolve_native_english_and_german() {
         let mut app = forms_app();
         let english = render(&mut app, FORMS_PLAY_BODY_BLUEPRINT);

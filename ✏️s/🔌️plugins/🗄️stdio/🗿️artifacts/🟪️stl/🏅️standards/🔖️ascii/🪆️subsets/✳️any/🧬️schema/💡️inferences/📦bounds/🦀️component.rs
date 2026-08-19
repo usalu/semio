@@ -60,7 +60,7 @@ mod tests {
         StlTriangle { normal, vertices }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn bounds_matches_hand_built_triangle_extent() {
         let snapshot = StlSnapshot {
             schema: STDIO_STL_DOCUMENT_SCHEMA.into(),
@@ -73,13 +73,13 @@ mod tests {
         assert_eq!(bounds.triangle_count, 2);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = StlSnapshot { schema: STDIO_STL_DOCUMENT_SCHEMA.into(), solid_name: "solid".into(), triangles: vec![triangle([0.0, 0.0, 1.0], [[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0]])] };
         assert_eq!(compute_stl_bounds(&snapshot), compute_stl_bounds(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(compute_stl_bounds(&StlSnapshot::default()), StlBounds::default());
     }

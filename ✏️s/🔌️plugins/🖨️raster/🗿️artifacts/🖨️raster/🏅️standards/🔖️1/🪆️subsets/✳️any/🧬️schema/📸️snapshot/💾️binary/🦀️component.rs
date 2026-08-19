@@ -30,7 +30,7 @@ mod tests {
     use crate::artifacts::raster::mutations::create_layer;
     use std::collections::BTreeMap;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn pack_round_trips_and_agrees_with_dsl() {
         let document = crate::artifacts::raster::schema::semio_fixture_snapshot();
         store::os_store::test_support::assert_dsl_pack_equivalence(&document);
@@ -38,7 +38,7 @@ mod tests {
         assert_eq!(decode(&bytes).expect("decode"), document);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn pack_round_trips_representative_document() {
         let mut assets = BTreeMap::new();
         assets.insert("asset-1".into(), crate::artifacts::raster::image_asset_child_handle("asset-1", &RasterImageAsset { mime: "image/png".into(), data: b"abc".to_vec() }));
@@ -102,7 +102,7 @@ mod tests {
     /// `RasterMutation`'s `Edit` round-trips through `protocol::MutationEnvelope`s beside this file's
     /// existing pack round-trip laws (same pattern as `mathematical_pack`'s own
     /// `command_envelope_round_trip_holds_for_an_applied_operation`).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn command_envelope_round_trip_holds_for_an_applied_operation() {
         use protocol::{ArtifactId, Edit, SchemaId};
         use store::{create_document_envelope, ArtifactCommand, ArtifactStore};

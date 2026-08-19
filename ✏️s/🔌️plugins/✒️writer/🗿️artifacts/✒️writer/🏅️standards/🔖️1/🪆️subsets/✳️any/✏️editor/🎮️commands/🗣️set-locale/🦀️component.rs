@@ -23,7 +23,7 @@ mod tests {
         use crate::editor::writer::testkit::{dispatch, new_app, render};
     use crate::editor::writer::{WriterCommand, WRITER_PLAY_BODY_INSPECTION};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn writer_labels_resolve_native_english_and_german() {
         let mut app = new_app();
         let english = render(&mut app, WRITER_PLAY_BODY_INSPECTION);

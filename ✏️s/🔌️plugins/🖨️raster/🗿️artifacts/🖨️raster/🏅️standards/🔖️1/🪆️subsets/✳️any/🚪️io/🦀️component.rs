@@ -310,7 +310,7 @@ pub async fn raster_image_layer_and_asset(png_base64: &str) -> (String, RasterIm
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn raster_image_layer_and_asset_builds_a_pixel_layer_and_matching_asset() {
         let (asset_id, asset, layer) = raster_image_layer_and_asset("aGVsbG8=");
         assert_eq!(asset.data, b"hello".to_vec());

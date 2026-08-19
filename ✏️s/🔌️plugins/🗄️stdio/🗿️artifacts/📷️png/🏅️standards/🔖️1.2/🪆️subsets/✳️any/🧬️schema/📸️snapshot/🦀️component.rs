@@ -294,7 +294,7 @@ pub struct PngSnapshot {
 }
 
 impl Default for PngSnapshot {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self {
             schema: STDIO_PNG_DOCUMENT_SCHEMA.into(),
             width: 0,

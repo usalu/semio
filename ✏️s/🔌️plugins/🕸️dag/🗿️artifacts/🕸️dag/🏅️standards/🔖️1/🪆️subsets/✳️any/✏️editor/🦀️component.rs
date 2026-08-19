@@ -379,7 +379,7 @@ mod tests {
 
     /// 🏷️ Every declared manifest action id must be reachable as exactly one command row, and every
     /// row's wire keyword must be distinct — the cross-cutting invariant `app_commands!` is there to hold.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn command_surface_has_the_expected_row_count_and_distinct_wire_keywords() {
         let commands = every_command();
         assert_eq!(commands.len(), 13, "every DagCommand row must be covered by every_command()");
@@ -390,7 +390,7 @@ mod tests {
     }
 
     /// ⚖️ LAW: text and binary are two projections of the same command, for every single row.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn every_command_round_trips_through_text_and_binary() {
         for command in every_command() {
             store::os_store::test_support::assert_op_text_binary_equivalence(&command);
@@ -400,7 +400,7 @@ mod tests {
     /// ⚖️ LAW: the leading token of every printed op line is the row's `dsl` wire keyword — what a
     /// missing `#[dsl(keyword = ..)]` on a payload struct silently breaks (the record prints with no
     /// keyword at all and no longer parses).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn every_printed_op_line_starts_with_the_rows_declared_wire_keyword() {
         let expectations: Vec<(&str, DagCommand)> = vec![
             ("add-node", DagCommand::AddNode(add_node::AddNode { kind: "slider".into(), x: Some(10.0), y: None })),
@@ -427,7 +427,7 @@ mod tests {
     /// `DagCommand` row with `Option` fields), pinned to the exact bytes captured from the pre-merge
     /// `dag_protocol` crate (this ticket's `🧪️wire-baseline-before.txt`, row 1). A regression here is a
     /// real format break, not a test-fixture mismatch.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn optional_field_rows_keep_their_pre_migration_bytes() {
         let cases: [(DagCommand, &str, &str); 1] = [(DagCommand::AddNode(add_node::AddNode { kind: "slider".into(), x: Some(10.0), y: None }), "add-node add-node kind=slider x=10", "01000106736c696465720200060001050000000000002440")];
         for (command, text, hex) in cases {
@@ -439,7 +439,7 @@ mod tests {
     //#endregion 🔖️CommandSurface
 
     //#region 🔖️ManifestSanity
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn the_manifest_stitches_every_taxonomy_node() {
         let json = serde_json::to_string(&create_dag_app()).expect("app definition json");
         assert!(json.contains(DAG_PLAY_WINDOW_MAIN), "main window kind missing from the manifest: {json}");
@@ -457,7 +457,7 @@ mod tests {
     // registration this test guarded is dropped along with `.example_source(...)` (see the doc comment
     // on `create_dag_app`'s `.build_definition()` call), not silently — reported in the migration report.
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn every_declared_action_is_registered() {
         let definition = create_dag_app();
         for command in ["addNode", "removeNode", "deleteSelection", "nodeGraphEdit", "connectMediaPorts", "disconnect", "moveMediaNode", "renameDagNode", "reorganize", "patchDagNodes", "nodeGraphViewport", "graphPointerDown"] {
@@ -467,7 +467,7 @@ mod tests {
 
     /// 🕹️ `graph` is declared once, node/edge granularities, `Topology` hierarchy, scoped to the main
     /// window — the framework auto-injects the six interaction actions for it (never app-declared).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn declares_the_graph_interaction_domain_scoped_to_the_main_window() {
         let definition = create_dag_app();
         let interaction = definition.interactions.iter().find(|def| def.id == DAG_PLAY_INTERACTION_DOMAIN).expect("graph domain declared");
@@ -483,7 +483,7 @@ mod tests {
     /// registers every edge as a sibling child of that same source — enough structure for
     /// `validate_state` to prune a stale selection the moment `removeNode`/`disconnect` deletes its
     /// target, and for transitive hover to cover a node's downstream nodes and edges.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn interaction_topology_covers_every_node_and_edge_via_their_edges() {
         let mut app: DagApp = new_app_with_registry();
         let snapshot = app.snapshot().expect("snapshot");
@@ -504,7 +504,7 @@ mod tests {
     /// selection, and the known `deleteSelection` destructive row (dispatched via `nodeGraphEdit` —
     /// `NodeGraphDeleteDispatch::ViaNodeGraphEdit`) is always last, either as a top-level leaf or as the
     /// tail of its group.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn context_menu_grouped_disclosure_stays_within_budget_and_keeps_destructive_last() {
         use semio_framework_plugin::{ContextMenuHit, ContextMenuSelectionGroup, ContextMenuSurfaceTarget, UiMenuRef};
 
@@ -535,14 +535,14 @@ mod tests {
     //#endregion 🔖️ContextMenu
 
     //#region 🔖️CrossCutting
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
         use crate::editor::dag::testkit::{new_app, render};
         let mut app = new_app();
         assert!(render(&mut app, "dag.play.nope").contains("Unknown body"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn whole_document_operation_is_not_supported_as_an_in_history_mutation() {
         let replacement = crate::artifacts::dag::default_snapshot();
         assert!(DagPlayApp::whole_document_operation(replacement).is_none(), "whole-document replace goes through ArtifactStore::reset, never a mutation");
@@ -550,7 +550,7 @@ mod tests {
 
     /// 🧬️ Two instances apply DISJOINT edits (A adds a note node, B adds a slider node) and converge to
     /// contain BOTH via a `MemoryBackbone` — impossible with whole-document snapshots.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn two_instances_converge_disjoint_edits_via_backbone() {
         semio_framework_plugin::testkit::assert_two_instances_converge::<semio_framework_plugin::EditorApp<DagPlayApp>, (bool, bool)>(
             "mem://dag-convergence",
@@ -564,7 +564,7 @@ mod tests {
         );
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn ingest_operations_is_idempotent_for_dag() {
         semio_framework_plugin::testkit::assert_ingest_idempotent::<semio_framework_plugin::EditorApp<DagPlayApp>, usize>(DagCommand::AddNode(add_node::AddNode { kind: "note".into(), x: None, y: None }), |app| app.snapshot().expect("projection").nodes().len());
     }

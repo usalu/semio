@@ -976,7 +976,7 @@ mod handcrafted_diff_codec_tests {
     /// 🧪️ diff_codec_text_binary_roundtrip_law: exercises the recursive enum tree (`Element`/
     /// `Text`/`Comment`/`RawText`/`Replace` `HtmlNodeDiff` variants), the top-level tri-state, and
     /// nested attribute/child add/remove/modify.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn diff_codec_text_binary_roundtrip_law() {
         let a = snapshot(Some("DOCTYPE html"), elem("html", vec![("lang", Some("en"))], vec![elem("p", vec![("id", Some("x")), ("disabled", None)], vec![])]));
         let b = snapshot(

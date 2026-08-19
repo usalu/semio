@@ -40,7 +40,7 @@ mod tests {
     use crate::editor::mathematical::MathematicalCommand;
     use crate::artifacts::mathematical::MathematicalGeometry;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_artifact_replaces_graph_and_geometry() {
         let mut app = math_app();
         let geometry = MathematicalGeometry { points: vec![crate::artifacts::mathematical::MathematicalPoint { x: 1.0, y: 2.0 }] };

@@ -46,13 +46,13 @@ pub async fn render(document: &RewriteSnapshot) -> UiNode {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn definition_declares_the_shared_text_window_kind() {
         let def = definition();
         assert_eq!(def.id, WINDOW_KIND_ID);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn rule_text_embeds_lhs_and_rhs() {
         let state = RewriteSnapshot { before_fixture_json: "{}".into(), lhs_json: r#"{"whereClause":"a.name = 'b'"}"#.into(), rhs_json: r#"{"parameters":[]}"#.into(), parameter_bindings: Default::default(), rule_layout: Default::default() };
         let text = rule_text(&state);

@@ -102,7 +102,7 @@ impl store::ArtifactPack for JackConfig {
 
 
 impl Default for JackConfig {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self {
             camera: Camera::default(),
             active_fixture_id: String::new(),
@@ -275,14 +275,14 @@ mod tests {
     use protocol::Mutation;
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn jack_config_default_has_default_locale() {
         let config = JackConfig::default();
         assert_eq!(config.locale, "en-US");
         assert_eq!(config.camera, Camera::default());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn jack_config_dsl_round_trips() {
         let mut config = JackConfig {
             jack_query: "MATCH (a:Piece) RETURN a".into(),
@@ -294,7 +294,7 @@ mod tests {
         ::store::os_store::test_support::assert_dsl_pack_equivalence(&config);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn jack_config_operation_backwards_restores_prior_snapshot() {
         let base = JackConfig::default();
         let operation = JackConfigMutation::SetActiveFixture { value: "nakagin".into() };
@@ -305,7 +305,7 @@ mod tests {
         assert_eq!(restored, base);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn jack_config_operation_text_round_trips() {
         ::store::os_store::test_support::assert_op_line_round_trip(&JackConfigMutation::SetLodMode { window_id: "trinity-jack-graph".into(), value: "compact".into() });
         ::store::os_store::test_support::assert_op_line_round_trip(&JackConfigMutation::SetActiveFixture { value: "nakagin".into() });

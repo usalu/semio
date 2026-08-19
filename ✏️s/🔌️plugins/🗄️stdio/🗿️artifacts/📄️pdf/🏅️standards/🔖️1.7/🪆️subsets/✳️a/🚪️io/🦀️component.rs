@@ -134,7 +134,7 @@ pub mod derived_composition {
             bytes.iter().map(|b| format!("{b:02x}")).collect()
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn conforming_builder_snapshot_composes_and_stamps_a() {
             let snapshot = PdfABuilder::new("sRGB IEC61966-2.1").add_page(crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::PdfPage::new(100.0, 100.0)).build().unwrap();
             let bytes = <PdfSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
@@ -143,7 +143,7 @@ pub mod derived_composition {
             assert!(composed.diagnostics.iter().all(|d| d.severity != Severity::Error), "no hard diagnostics expected: {:?}", composed.diagnostics);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn javascript_action_reachable_from_open_action_fails_compose_with_real_diagnostic() {
             let bytes = minimal_pdf_with_extra_object(b"<< /S /JavaScript /JS (app.alert(1)) >>");
             let hex = hex_encode(&bytes);
@@ -152,7 +152,7 @@ pub mod derived_composition {
             assert!(err.diagnostics.iter().any(|d| d.code.0 == CODE_JAVASCRIPT && d.severity == Severity::Error), "got {:?}", err.diagnostics);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn launch_action_reachable_from_open_action_fails_compose_with_real_diagnostic() {
             let bytes = minimal_pdf_with_extra_object(b"<< /S /Launch /F (calc.exe) >>");
             let hex = hex_encode(&bytes);
@@ -161,7 +161,7 @@ pub mod derived_composition {
             assert!(err.diagnostics.iter().any(|d| d.code.0 == CODE_LAUNCH && d.severity == Severity::Error), "got {:?}", err.diagnostics);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn encrypted_trailer_document_is_rejected_upstream_by_the_shared_engine() {
             // 🔒 `⚙️engine::decode_pdf` already refuses any file whose trailer declares /Encrypt
             // (`PdfEngineError::Unsupported`) -- composing through the ✳️any delegate surfaces that as
@@ -183,7 +183,7 @@ pub mod derived_composition {
             assert!(err.diagnostics.iter().any(|d| d.message.contains("Encrypt")), "must be the real engine-level /Encrypt rejection, not a spurious decode error: {err:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn subset_validator_recheck_flags_soft_diagnostics_on_the_wire_payload() {
             let snapshot = PdfABuilder::new("sRGB IEC61966-2.1").add_page(crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::PdfPage::new(50.0, 50.0)).build().unwrap();
             let bytes = <PdfSnapshot as store::ArtifactPack>::encode_pack(&snapshot);

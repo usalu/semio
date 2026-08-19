@@ -37,7 +37,7 @@ pub async fn compute_zip_entries(snapshot: &ZipSnapshot) -> ZipEntries {
 }
 
 impl Default for ZipEntries {
-    async fn default() -> Self {
+    fn default() -> Self {
         compute_zip_entries(&ZipSnapshot::default())
     }
 }
@@ -53,7 +53,7 @@ mod tests {
         ZipEntry { name: name.into(), data: data.to_vec(), ..ZipEntry::default() }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn real_entries_are_counted_and_sized_exactly() {
         let snapshot = ZipSnapshot { entries: vec![entry("a.txt", b"hello"), entry("b.txt", b"world!")], ..ZipSnapshot::default() };
         let entries = compute_zip_entries(&snapshot);
@@ -61,27 +61,27 @@ mod tests {
         assert_eq!(entries.total_uncompressed_size, 5 + 6);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn empty_archive_yields_a_real_zero_census() {
         let entries = compute_zip_entries(&ZipSnapshot::default());
         assert_eq!(entries.entry_count, 0);
         assert_eq!(entries.total_uncompressed_size, 0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn different_content_yields_a_different_digest() {
         let a = ZipSnapshot { entries: vec![entry("a.txt", b"hello")], ..ZipSnapshot::default() };
         let b = ZipSnapshot { entries: vec![entry("a.txt", b"goodbye")], ..ZipSnapshot::default() };
         assert_ne!(compute_zip_entries(&a).content_digest, compute_zip_entries(&b).content_digest);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = ZipSnapshot { entries: vec![entry("a.txt", b"hello")], ..ZipSnapshot::default() };
         assert_eq!(compute_zip_entries(&snapshot), compute_zip_entries(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(compute_zip_entries(&ZipSnapshot::default()), ZipEntries::default());
     }

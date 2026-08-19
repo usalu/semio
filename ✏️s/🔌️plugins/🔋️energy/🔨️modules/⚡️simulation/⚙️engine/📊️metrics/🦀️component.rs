@@ -13,7 +13,7 @@ pub struct SourceEnergyFactors {
 }
 
 impl Default for SourceEnergyFactors {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { electricity: 3.0, natural_gas: 1.05, district_heating: 1.2, district_cooling: 1.1 }
     }
 }
@@ -26,7 +26,7 @@ pub struct EmissionFactors {
 }
 
 impl Default for EmissionFactors {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { electricity_kg_per_kwh: 0.4, natural_gas_kg_per_kwh: 0.2 }
     }
 }
@@ -89,7 +89,7 @@ pub async fn compute_environmental(electricity_kwh: f64, gas_kwh: f64, factors: 
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn resilience_counts_extremes() {
         let temps = vec![35.0, 5.0, 22.0];
         let r = compute_resilience(&temps, 20.0, 26.0, true);

@@ -226,100 +226,100 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn process3d_op_text_round_trips_create_step() {
         store::os_store::test_support::assert_op_line_round_trip(&Process3dMutation::CreateStep(create_step::mutation::CreateStep { index: 0, step: cut_step("cut-1") }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn process3d_op_text_round_trips_delete_step() {
         store::os_store::test_support::assert_op_line_round_trip(&Process3dMutation::DeleteStep(delete_step::mutation::DeleteStep { id: "cut-1".into() }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn process3d_op_text_round_trips_rename_step() {
         store::os_store::test_support::assert_op_line_round_trip(&Process3dMutation::RenameStep(rename_step::mutation::RenameStep { id: "cut-1".into(), new_label: "Renamed".into() }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn process3d_op_text_round_trips_change_step_enabled() {
         store::os_store::test_support::assert_op_line_round_trip(&Process3dMutation::ChangeStepEnabled(change_step_enabled::mutation::ChangeStepEnabled { id: "cut-1".into(), new_enabled: false }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn process3d_op_text_round_trips_change_step_origin_set() {
         let new_origin = Some(StepOrigin { machine_id: "tableSaw".into(), capability_id: "crosscut".into() });
         store::os_store::test_support::assert_op_line_round_trip(&Process3dMutation::ChangeStepOrigin(change_step_origin::mutation::ChangeStepOrigin { id: "cut-1".into(), new_origin }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn process3d_op_text_round_trips_change_step_origin_clear() {
         store::os_store::test_support::assert_op_line_round_trip(&Process3dMutation::ChangeStepOrigin(change_step_origin::mutation::ChangeStepOrigin { id: "cut-1".into(), new_origin: None }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn process3d_op_text_round_trips_replace_step_measure() {
         let new_measure = ProcessMeasure::Drill { radius: 0.03, depth: 0.4, pose: Pose { position: [1.0, 2.0, 3.0], axis: [0.0, 1.0, 0.0], angle: 0.7 } };
         store::os_store::test_support::assert_op_line_round_trip(&Process3dMutation::ReplaceStepMeasure(replace_step_measure::mutation::ReplaceStepMeasure { id: "cut-1".into(), new_measure }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn process3d_op_text_round_trips_reorder_steps() {
         store::os_store::test_support::assert_op_line_round_trip(&Process3dMutation::ReorderSteps(reorder_steps::mutation::ReorderSteps { id: "cut-1".into(), to_index: 2 }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn process3d_op_text_round_trips_create_machine() {
         store::os_store::test_support::assert_op_line_round_trip(&Process3dMutation::CreateMachine(create_machine::mutation::CreateMachine { index: 0, machine: circular_saw_machine() }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn process3d_op_text_round_trips_delete_machine() {
         store::os_store::test_support::assert_op_line_round_trip(&Process3dMutation::DeleteMachine(delete_machine::mutation::DeleteMachine { id: "circularSaw".into() }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn process3d_op_text_round_trips_rename_machine() {
         store::os_store::test_support::assert_op_line_round_trip(&Process3dMutation::RenameMachine(rename_machine::mutation::RenameMachine { id: "circularSaw".into(), new_label: "Big Saw".into() }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn process3d_op_text_round_trips_change_machine_icon() {
         store::os_store::test_support::assert_op_line_round_trip(&Process3dMutation::ChangeMachineIcon(change_machine_icon::mutation::ChangeMachineIcon { id: "circularSaw".into(), new_icon_id: "drill".into() }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn process3d_op_text_round_trips_replace_machine_capabilities_full() {
         store::os_store::test_support::assert_op_line_round_trip(&Process3dMutation::ReplaceMachineCapabilities(replace_machine_capabilities::mutation::ReplaceMachineCapabilities { id: "circularSaw".into(), new_capabilities: circular_saw_machine().capabilities }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn process3d_op_text_round_trips_replace_machine_capabilities_empty() {
         store::os_store::test_support::assert_op_line_round_trip(&Process3dMutation::ReplaceMachineCapabilities(replace_machine_capabilities::mutation::ReplaceMachineCapabilities { id: "circularSaw".into(), new_capabilities: vec![] }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn process3d_op_text_round_trips_move_stock() {
         store::os_store::test_support::assert_op_line_round_trip(&Process3dMutation::MoveStock(move_stock::mutation::MoveStock { new_pose: Pose { position: [1.0, 2.0, 3.0], axis: [0.0, 1.0, 0.0], angle: 0.7 } }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn process3d_op_text_round_trips_change_stock_label() {
         store::os_store::test_support::assert_op_line_round_trip(&Process3dMutation::ChangeStockLabel(change_stock_label::mutation::ChangeStockLabel { new_label: "Timber Beam".into() }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn process3d_op_text_round_trips_replace_stock_solid() {
         let new_solid = brep_child_handle("stock", &brep_snapshot_for_working_solid(&WorkingSolid::ImportedMesh { mesh_url: "data:model/gltf-binary;base64,AAAA".into() }));
         store::os_store::test_support::assert_op_line_round_trip(&Process3dMutation::ReplaceStockSolid(replace_stock_solid::mutation::ReplaceStockSolid { new_solid }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn process3d_op_text_round_trips_change_cursor_some() {
         store::os_store::test_support::assert_op_line_round_trip(&Process3dMutation::ChangeCursor(change_cursor::mutation::ChangeCursor { new_resolved_up_to: Some(3) }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn process3d_op_text_round_trips_change_cursor_none() {
         store::os_store::test_support::assert_op_line_round_trip(&Process3dMutation::ChangeCursor(change_cursor::mutation::ChangeCursor { new_resolved_up_to: None }));
     }
@@ -328,14 +328,14 @@ mod tests {
     /// no-op now (`steps` composes an `s.stdio.semio.flow` CHILD HANDLE — no resolver, see
     /// `ProcessWorkingScene`'s doc comment), so per the sanctioned `MutationKind::inverse` contract
     /// ("a mutation with nothing to undo returns `Vec::new()`"), there is nothing to invert.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inverse_of_create_step_is_empty_since_it_is_a_documented_no_op() {
         let snapshot = empty_process3d_snapshot();
         let mutation = Process3dMutation::CreateStep(create_step::mutation::CreateStep { index: 0, step: cut_step("a") });
         assert!(mutation.inverse(&snapshot).is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inverse_of_create_machine_is_delete_machine() {
         let snapshot = empty_process3d_snapshot();
         let mutation = Process3dMutation::CreateMachine(create_machine::mutation::CreateMachine { index: 0, machine: circular_saw_machine() });
@@ -349,7 +349,7 @@ mod tests {
 
     /// 📸️ Sanity: the stock fields (unrelated to the mutation vocabulary) still round-trip through
     /// the artifact's DSL document codec.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn imported_mesh_stock_round_trips_document_dsl() {
         let stock_solid = brep_child_handle("stock", &brep_snapshot_for_working_solid(&WorkingSolid::ImportedMesh { mesh_url: "data:model/gltf-binary;base64,AAAA".into() }));
         let snapshot = Process3dSnapshot { stock_id: "stock".into(), stock_label: "Imported GLB".into(), stock_pose: Pose::default(), stock_solid, ..empty_process3d_snapshot() };

@@ -33,7 +33,7 @@ mod tests {
     use crate::editor::forms::commands::remove_step::RemoveStep;
     use crate::editor::forms::commands::update_form::UpdateForm;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_step_action_appends_step() {
         let mut app = forms_app();
         let before = forms_steps(&app.snapshot().expect("projection")).len();
@@ -41,7 +41,7 @@ mod tests {
         assert_eq!(forms_steps(&app.snapshot().expect("projection")).len(), before + 1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn patch_step_updates_title_and_description() {
         let mut app = forms_app();
         let step_id = forms_steps(&app.snapshot().expect("projection"))[0].id.clone();
@@ -49,7 +49,7 @@ mod tests {
         assert_eq!(forms_steps(&app.snapshot().expect("projection"))[0].title, "Renamed");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn remove_and_move_step_actions() {
         let mut app = forms_app();
         dispatch(&mut app, FormsCommand::AddStep(AddStep {}));
@@ -60,7 +60,7 @@ mod tests {
         assert!(forms_steps(&app.snapshot().expect("projection")).iter().all(|step| step.id != last_step_id));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn update_form_action_sets_title() {
         let mut app = forms_app();
         dispatch(&mut app, FormsCommand::UpdateForm(UpdateForm { title: "My Form".into() }));

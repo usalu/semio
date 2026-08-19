@@ -65,7 +65,7 @@ pub struct Ifc2x3Snapshot {
 }
 
 impl Default for Ifc2x3Snapshot {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { schema: STDIO_IFC2X3_DOCUMENT_SCHEMA.into(), document: Part21Document::default(), edm_preamble: None }
     }
 }

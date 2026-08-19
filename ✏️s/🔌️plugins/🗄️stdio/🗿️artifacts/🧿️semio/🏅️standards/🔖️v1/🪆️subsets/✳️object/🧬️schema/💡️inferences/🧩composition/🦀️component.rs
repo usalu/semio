@@ -50,7 +50,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn census_reflects_child_presence_and_own_translation() {
         let composition = compute_semio_object_composition(&populated());
         assert!(composition.has_brep);
@@ -59,7 +59,7 @@ mod tests {
         assert_eq!(composition.position, SemioPoint3 { x: 1.0, y: 2.0, z: 3.0 });
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absent_children_are_honestly_false() {
         let composition = compute_semio_object_composition(&SemioObjectSnapshot::default());
         assert!(!composition.has_brep);
@@ -67,13 +67,13 @@ mod tests {
         assert!(!composition.has_properties);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = populated();
         assert_eq!(compute_semio_object_composition(&snapshot), compute_semio_object_composition(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(compute_semio_object_composition(&SemioObjectSnapshot::default()), SemioObjectComposition::default());
     }

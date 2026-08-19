@@ -112,7 +112,7 @@ async fn default_brush_radius() -> f64 {
 }
 
 impl Default for Block3dConfig {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self {
             active_representation_id: None,
             wanted_tags: Vec::new(),
@@ -322,7 +322,7 @@ impl Mutation<Block3dConfig> for Block3dConfigMutation {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn block3d_config_default_has_all_tags() {
         let config = Block3dConfig::default();
         assert!(config.active_representation_id.is_none());
@@ -335,7 +335,7 @@ mod tests {
     /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: selection/hover moved off this
     /// config onto the framework's `vortex` interaction domain — this now exercises a genuinely
     /// remaining config mutation (`SetActiveRepresentation`) for the backwards-restores-snapshot contract.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn config_operation_backwards_restores_the_pre_operation_snapshot() {
         let base = Block3dConfig::default();
         let operation = Block3dConfigMutation::SetActiveRepresentation { representation_id: Some("r0".into()) };

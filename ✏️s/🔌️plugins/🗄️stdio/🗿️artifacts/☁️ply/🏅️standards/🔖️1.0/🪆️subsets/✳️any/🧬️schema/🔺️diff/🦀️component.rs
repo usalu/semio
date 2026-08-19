@@ -1502,7 +1502,7 @@ mod codec_tests {
     /// added) simultaneously via a real `between()` result in both directions, the nested
     /// index-keyed `rows` triple, the weak `properties` replace, and both `PlyProperty`/
     /// `PlyValue` enum tag families (incl. `PlyValue::List`'s recursion).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn diff_codec_text_binary_roundtrip_law() {
         for d in demo_diff_cases() {
             let printed = d.print_diff();

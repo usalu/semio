@@ -216,7 +216,7 @@ mod tests {
     }
 
     /// 🧪️ mutation_diff_law + inverse_law, exercised across every real variant.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mutation_diff_law_and_inverse_law_hold_for_every_variant() {
         let base = base_snapshot();
         let variants = vec![
@@ -246,7 +246,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn remove_stream_then_insert_stream_round_trips() {
         let mut base = base_snapshot();
         base.streams.push(AviStream { strh: base.streams[0].strh.clone(), strf: base.streams[0].strf.clone(), chunks: vec![] });
@@ -260,7 +260,7 @@ mod tests {
         assert_eq!(round, base);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_snapshot_still_works_as_a_full_replace() {
         let base = base_snapshot();
         let mut next = base.clone();
@@ -275,7 +275,7 @@ mod tests {
     }
 
     /// 🧪️ op_text_binary_roundtrip_law
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_text_binary_roundtrip_law() {
         let base = base_snapshot();
         for m in [

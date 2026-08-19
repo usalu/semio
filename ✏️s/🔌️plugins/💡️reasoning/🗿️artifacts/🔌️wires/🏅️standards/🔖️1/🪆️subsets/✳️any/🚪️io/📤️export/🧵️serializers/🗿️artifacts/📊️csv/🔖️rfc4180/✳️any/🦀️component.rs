@@ -16,7 +16,7 @@ pub struct WiresIntoCsv;
 impl Serializer<WiresSnapshot> for WiresIntoCsv {
     const INTO: Dialect = CSV_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    async fn serialize(_from: &WiresSnapshot) -> IoResult<IoPayload> {
+    fn serialize(_from: &WiresSnapshot) -> IoResult<IoPayload> {
         let csv = CsvSnapshot { schema: STDIO_CSV_DOCUMENT_SCHEMA.into(), has_header: true, records: Vec::new() };
         Ok(IoOutcome::clean(IoPayload::Binary(<CsvSnapshot as store::ArtifactPack>::encode_pack(&csv))))
     }

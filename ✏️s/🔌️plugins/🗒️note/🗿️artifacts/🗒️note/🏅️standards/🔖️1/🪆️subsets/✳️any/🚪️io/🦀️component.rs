@@ -325,7 +325,7 @@ mod media_tests {
     use semio_s_plugin_stdio::artifacts::dwg::{DwgColor, DwgEntity, DwgLayer};
 
     /// 🧪️ Relocated from the deleted `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn imports_dwg_polyline_and_text_into_note_blocks() {
         let drawing = DwgDrawing {
             layers: vec![DwgLayer::default()],
@@ -358,7 +358,7 @@ mod media_tests {
     }
 
     /// 🧪️ Relocated from the deleted `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn imports_empty_dwg_drawing_as_valid_empty_note_snapshot() {
         let drawing = DwgDrawing::default();
         let value = note_document_json_from_dwg(&drawing).unwrap();
@@ -372,7 +372,7 @@ mod media_tests {
     /// strokes, and the Table catch-all outline all have to survive a real `SemioDrawingSnapshot`
     /// build + a real svg-composer round trip to show up in the output. Relocated from the deleted
     /// `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn document_to_svg_dispatches_through_semio_drawing_bridge() {
         let mut document = crate::artifacts::note::schema::empty_note_snapshot();
         document.blocks.push(NoteBlockNode::Text {
@@ -432,7 +432,7 @@ mod media_tests {
     /// 🧪️ Real proof an image block's asset bytes flow through `DrawNode::Image` (base64-decoded
     /// from the `NoteImageAsset.data` uri) and back out as a data uri on the svg side. Relocated
     /// from the deleted `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn document_to_svg_embeds_image_asset_bytes_as_data_uri() {
         let mut document = crate::artifacts::note::schema::empty_note_snapshot();
         document.assets.insert("asset-1".into(), NoteImageAsset { mime: "image/png".into(), data: "data:image/png;base64,AAECAw==".into(), width: Some(4.0), height: Some(4.0) });
@@ -443,7 +443,7 @@ mod media_tests {
     }
 
     /// 🧪️ Relocated from the deleted `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn note_document_to_drawing_snapshot_flattens_visible_blocks_into_one_layer() {
         let mut document = crate::artifacts::note::schema::empty_note_snapshot();
         document.blocks.push(crate::artifacts::note::schema::create_block_by_kind("text", 5.0, 6.0));

@@ -20,7 +20,7 @@ pub struct SvgArtifact {
 
 //#region 🔖️Conversions
 impl Default for SvgArtifact {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self::from_snapshot(SvgSnapshot::default())
     }
 }
@@ -561,7 +561,7 @@ pub mod derived_analysis {
         use crate::artifacts::svg::standards::v1_1::subsets::any::schema::{ElementBuilder, GradientStopSpec, PathBuilder, SvgBuilderConstruction as SvgBuilder};
         use semio_framework_plugin::ArtifactBuilder;
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn sniff_recognizes_real_svg_and_rejects_non_svg() {
             let svg = r#"<?xml version="1.0"?><svg xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="1" height="1"/></svg>"#;
             assert_eq!(SvgAnalyzerAnalysis::sniff(&AnalyzeSource::Text(svg)), IoConfidence::High);
@@ -569,7 +569,7 @@ pub mod derived_analysis {
             assert_ne!(SvgAnalyzerAnalysis::sniff(&AnalyzeSource::Text(not_svg)), IoConfidence::High);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn builder_constructs_a_complete_document_from_scratch() {
             let stops = vec![GradientStopSpec::new("0%").with_color("#ffffff"), GradientStopSpec::new("100%").with_color("#000000")];
             let snapshot = SvgBuilder::empty()
@@ -613,7 +613,7 @@ pub mod derived_analysis {
         /// outside this particular round trip by design (those are covered by parse-fidelity tests
         /// elsewhere, not by builder reconstruction, since `Unknown` is deliberately not
         /// builder-constructible: it exists purely as a lossless parse escape hatch).
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn analyzer_to_builder_round_trip() {
             // 🚧️ `r##"..."##`: the fixture's `stop-color="#ff0000"` contains the literal sequence
             // `"#`, which would otherwise close a single-hash raw string early.

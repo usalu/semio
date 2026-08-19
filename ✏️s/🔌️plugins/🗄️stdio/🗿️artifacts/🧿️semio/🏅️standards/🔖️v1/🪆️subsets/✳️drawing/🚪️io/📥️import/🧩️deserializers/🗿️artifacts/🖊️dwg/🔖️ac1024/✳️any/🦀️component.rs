@@ -85,7 +85,7 @@ mod tests {
         DwgSnapshot { version: "AC1015".into(), drawing: DwgLogicalDrawing::from_native(&drawing).expect("valid sample drawing"), ..DwgSnapshot::default() }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn buckets_entities_by_layer_in_entity_order() {
         let drawing = semio_framework_plugin::resolve_ready(SemioDrawingFromDwg::deserialize(&sample_dwg())).expect("deserialize");
         assert_eq!(drawing.layers.len(), 1);
@@ -100,7 +100,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn rejects_malformed_payload() {
         let bad = DwgSnapshot { drawing: DwgLogicalDrawing { extmin: vec![0.0], ..Default::default() }, ..DwgSnapshot::default() };
         assert!(semio_framework_plugin::resolve_ready(SemioDrawingFromDwg::deserialize(&bad)).is_err());

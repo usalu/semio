@@ -82,7 +82,7 @@ pub mod derived_composition {
         use crate::artifacts::pdf::standards::v1_4::subsets::x::schema::CODE_SCHEMA_GAP;
         use semio_framework_plugin::AnalyzeSource;
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn compose_always_carries_the_schema_gap_diagnostic() {
             let bytes = <PdfSnapshot as store::ArtifactPack>::encode_pack(&PdfSnapshot::default());
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Binary(&bytes) }];
@@ -90,7 +90,7 @@ pub mod derived_composition {
             assert!(composed.diagnostics.iter().any(|d| d.code.0 == CODE_SCHEMA_GAP), "got {:?}", composed.diagnostics);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn subset_validator_reports_the_schema_gap_diagnostic() {
             let bytes = <PdfSnapshot as store::ArtifactPack>::encode_pack(&PdfSnapshot::default());
             let diagnostics = PdfXValidator::validate(&IoPayload::Binary(bytes));

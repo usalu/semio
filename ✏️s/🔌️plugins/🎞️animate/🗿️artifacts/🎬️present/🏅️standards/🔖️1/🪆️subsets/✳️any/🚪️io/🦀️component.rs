@@ -104,20 +104,20 @@ mod tests {
     use super::*;
     use serde_json::json;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn animate_present_document_json_to_svg_embeds_title() {
         let (svg, width, height) = animate_present_document_json_to_svg(&json!({ "title": "My Deck" })).expect("svg");
         assert!(svg.contains("My Deck"));
         assert_eq!((width, height), (1280, 720));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn animate_present_document_json_to_svg_falls_back_to_app_label_without_title() {
         let (svg, _, _) = animate_present_document_json_to_svg(&json!({})).expect("svg fallback");
         assert!(svg.contains("Animate Present"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn from_dwg_builds_single_slide_deck_from_entity() {
         let drawing = semio_s_plugin_stdio::artifacts::dwg::DwgDrawing {
             layers: vec![semio_s_plugin_stdio::artifacts::dwg::DwgLayer::default()],
@@ -138,7 +138,7 @@ mod tests {
         assert!(source.src.starts_with("data:image/png;base64,"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn from_dwg_never_errors_on_empty_drawing() {
         let drawing = semio_s_plugin_stdio::artifacts::dwg::DwgDrawing::default();
         let document = animate_present_document_json_from_dwg(&drawing).expect("from_dwg on empty drawing");

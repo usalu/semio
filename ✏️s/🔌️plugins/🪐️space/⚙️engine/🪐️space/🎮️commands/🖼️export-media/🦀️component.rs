@@ -43,7 +43,7 @@ mod tests {
     use crate::engine::space::SpaceCommand;
     use crate::demo_space_projection;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn space_command_op_text_round_trips_every_variant() {
         store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::ExportMedia(ExportMedia { node_id: "n1".into(), format: "dwg".into() }));
         store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::ImportMedia(crate::engine::space::commands::import_media::ImportMedia { node_id: "n1".into(), format: "dwg".into() }));
@@ -61,7 +61,7 @@ mod tests {
     /// mirroring how lane 2-0 already adapted the `stdio_format_descriptors()` rename).
     const DWG_FORMAT_ID: &str = "s.stdio.dwg.standard.ac1018.representation.document";
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn export_media_emits_download_effect_and_import_requests_file_open() {
         use base64::Engine;
         crate::engine::space::testkit::seed_draw_plugin();

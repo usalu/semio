@@ -25,7 +25,7 @@ pub struct SemioAudioArtifact {
 }
 
 impl Default for SemioAudioArtifact {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self::from_snapshot(SemioAudioSnapshot::default())
     }
 }
@@ -156,7 +156,7 @@ pub mod derived_construction {
     mod tests {
         use super::*;
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn typed_constructors_build_the_expected_snapshot() {
             let snapshot = SemioAudioBuilderConstruction::new(44_100, SemioAudioFormat::Pcm16)
                 .add_channel(SemioAudioChannel { samples: vec![0.0, 0.5] })
@@ -169,7 +169,7 @@ pub mod derived_construction {
             assert_eq!(snapshot.tags[0].key, "title");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn mutate_then_absorb_round_trips_through_the_builder() {
             let builder = SemioAudioBuilderConstruction::new(48_000, SemioAudioFormat::Float32);
             let (builder, diff) = builder.mutate(SemioAudioMutation::InsertChannel { index: 0, channel: SemioAudioChannel { samples: vec![1.0, 2.0] } });
@@ -179,7 +179,7 @@ pub mod derived_construction {
             assert_eq!(rebuilt.build().expect("build"), snapshot_after_mutate);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn from_binary_and_from_text_round_trip_through_the_builder() {
             let snapshot = SemioAudioBuilderConstruction::new(22_050, SemioAudioFormat::Pcm24).add_channel(SemioAudioChannel { samples: vec![0.1] }).build().expect("build");
             let bytes = <SemioAudioSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
@@ -267,7 +267,7 @@ pub mod derived_analysis {
     mod tests {
         use super::*;
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn sniff_recognizes_own_marker_and_rejects_foreign_text() {
             let snapshot = SemioAudioSnapshot { sample_rate: 8_000, ..SemioAudioSnapshot::default() };
             let text = <SemioAudioSnapshot as store::ArtifactDsl>::print_dsl(&snapshot);
@@ -275,7 +275,7 @@ pub mod derived_analysis {
             assert_eq!(SemioAudioAnalyzerAnalysis::sniff(&AnalyzeSource::Text("not-audio-at-all")), IoConfidence::Low);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn analyze_decodes_a_real_binary_source() {
             let snapshot = SemioAudioSnapshot { sample_rate: 16_000, ..SemioAudioSnapshot::default() };
             let bytes = <SemioAudioSnapshot as store::ArtifactPack>::encode_pack(&snapshot);

@@ -91,14 +91,14 @@ async fn artboard_scene_records(document: &DrawSnapshot) -> Vec<Value> {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn definition_declares_a_canvas2d_window() {
         let def = definition();
         assert_eq!(def.id, WINDOW_KIND_ID);
         assert_eq!(def.surface_kind, SurfaceKind::Canvas2d);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn render_produces_a_scene_node_for_the_default_document() {
         let document = crate::artifacts::draw::schema::default_draw_document("empty", None);
         let _node = render(&document);

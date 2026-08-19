@@ -3,6 +3,7 @@
 use crate::artifacts::curate::{CuratedItem, CurateSnapshot, Filters, GeometryRecipe, ObjectKind, ObjectKindExtra, SourcingMutation};
 use schema::ArtifactSchema;
 use semio_framework::parse_contributions;
+use semio_framework_dispatch_macros::{dyn_enum, dyn_enum_close};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
@@ -37,7 +38,7 @@ async fn default_contributions_json() -> String {
 }
 
 impl Default for CurateArtifact {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self {
             catalog: crate::artifacts::curate::catalog_child_handle(&[]),
             stock_extra: Vec::new(),
@@ -365,7 +366,9 @@ async fn apply_curation_decision(document: &mut CurateSnapshot, decision: Curati
 
 //#region 🔖️Modules
 /// 🧩️ A sourcing module composes a typology subtree, demo catalogue kinds, and preview meshing for one
-/// object family (e.g. beams, windows, slabs) — modules are trait objects, not subclasses of a base app.
+/// object family (e.g. beams, windows, slabs) — closed set, enum-dispatched via `SourcingModules` below
+/// (O1/R11: closed set ⇒ `dyn_enum_close!`, not a trait object).
+#[dyn_enum]
 pub trait SourcingModule {
     async fn module_id(&self) -> &'static str;
     async fn label(&self) -> &'static str;
@@ -535,8 +538,10 @@ async fn leak_str(value: String) -> &'static str {
 }
 
 /// 🧩️ One hot-installed sourcing module deserialized from the `"sourcing.module"` topic contribution.
+/// `pub` (not crate-private) solely so it can sit as a variant payload in the `pub enum SourcingModules`
+/// below without tripping the `private_interfaces` lint — construction stays internal to this module.
 #[derive(Clone)]
-struct ContributedSourcingModule {
+pub struct ContributedSourcingModule {
     module_id: &'static str,
     label: &'static str,
     typology: TypologyNode,
@@ -558,6 +563,17 @@ impl SourcingModule for ContributedSourcingModule {
 
     async fn demo_kinds(&self) -> Vec<ObjectKind> {
         self.kinds.clone()
+    }
+}
+
+/// 🔀️ The closed set of `SourcingModule` implementors, enum-dispatched (O1 — no `Box<dyn SourcingModule>`).
+/// `dyn_enum_close!` generates the enum, `From<Variant>` impls, and the delegating `impl SourcingModule`.
+dyn_enum_close! {
+    pub enum SourcingModules: SourcingModule {
+        Beams(beams::BeamsModule),
+        Windows(windows::WindowsModule),
+        Slabs(slabs::SlabsModule),
+        Contributed(ContributedSourcingModule),
     }
 }
 
@@ -614,19 +630,15 @@ pub async fn sync_sourcing_module_contributions(contributions_json: &str) {
 }
 
 /// 🧩️ Every sourcing module known to this crate, in stable order.
-pub async fn sourcing_modules() -> Vec<Box<dyn SourcingModule>> {
-    let mut modules: Vec<Box<dyn SourcingModule>> = vec![
-        Box::new(beams::BeamsModule),
-        Box::new(windows::WindowsModule),
-        Box::new(slabs::SlabsModule),
-    ];
+pub async fn sourcing_modules() -> Vec<SourcingModules> {
+    let mut modules: Vec<SourcingModules> = vec![beams::BeamsModule.into(), windows::WindowsModule.into(), slabs::SlabsModule.into()];
     let contributed = CONTRIBUTED_SOURCING_MODULES.lock().expect("sourcing contributed modules lock");
-    modules.extend(contributed.iter().map(|module| Box::new(module.clone()) as Box<dyn SourcingModule>));
+    modules.extend(contributed.iter().map(|module| SourcingModules::from(module.clone())));
     modules
 }
 
 /// 🔎️ Looks up a single module by id.
-pub async fn module_for(module_id: &str) -> Option<Box<dyn SourcingModule>> {
+pub async fn module_for(module_id: &str) -> Option<SourcingModules> {
     sourcing_modules().into_iter().find(|module| module.module_id() == module_id)
 }
 //#endregion 🔖️Modules
@@ -720,7 +732,7 @@ mod tests {
         crate::artifacts::curate::curate_snapshot_from_stock(demo_stock(), Vec::new())
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn filtered_stock_matches_query() {
         let document = sample_document();
         let filters = Filters { query: "glulam".into(), ..Default::default() };
@@ -729,7 +741,7 @@ mod tests {
         assert_eq!(filtered[0].id, "beam-glulam-gl24h");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn filtered_stock_matches_module() {
         let document = sample_document();
         let filters = Filters { module_ids: vec!["slabs".into()], ..Default::default() };
@@ -738,7 +750,7 @@ mod tests {
         assert_eq!(filtered.len(), 3);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn filtered_stock_matches_typology_prefix() {
         let document = sample_document();
         let filters = Filters { typology_path: vec!["beams".into(), "steel".into()], ..Default::default() };
@@ -747,7 +759,7 @@ mod tests {
         assert!(filtered.iter().all(|kind| kind.typology_path.starts_with(&["beams".to_string(), "steel".to_string()])));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn filtered_stock_matches_min_availability() {
         let document = sample_document();
         let filters = Filters { min_availability: 20, ..Default::default() };
@@ -756,7 +768,7 @@ mod tests {
         assert!(!filtered.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn curate_delta_clamps_to_availability_and_zero_floor() {
         let mut document = sample_document();
         curate_delta(&mut document, "beam-steel-hea160", 100);
@@ -766,14 +778,14 @@ mod tests {
         assert!(document.curated.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn curate_delta_unknown_object_is_noop() {
         let mut document = sample_document();
         curate_delta(&mut document, "does-not-exist", 5);
         assert!(document.curated.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn curate_set_removes_entry_at_zero() {
         let mut document = sample_document();
         curate_set(&mut document, "slab-clt-160", 5);
@@ -783,7 +795,7 @@ mod tests {
         assert!(document.curated.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn typology_contains_and_flatten() {
         let module = beams::BeamsModule;
         let tree = module.typology();
@@ -802,12 +814,12 @@ mod tests {
         assert!(spec.indices.iter().all(|&i| i < vertex_count));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn box_recipe_produces_valid_mesh() {
         assert_mesh_spec_is_valid(&mesh_spec_for(&GeometryRecipe::Box { width: 0.2, height: 0.4, depth: 6.0 }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn frame_recipe_concatenates_four_pieces_into_a_valid_mesh() {
         let spec = mesh_spec_for(&GeometryRecipe::Frame { width: 1.0, height: 1.2, depth: 0.08, profile: 0.08 });
         assert_mesh_spec_is_valid(&spec);
@@ -816,7 +828,7 @@ mod tests {
         assert_eq!(spec.indices.len(), single_box.indices.len() * 4);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn grid_placement_centers_around_origin() {
         let positions: Vec<(f64, f64)> = (0..9).map(|i| grid_placement(9, i, 2.0)).collect();
         let sum_x: f64 = positions.iter().map(|(x, _)| x).sum();
@@ -827,14 +839,14 @@ mod tests {
         assert_eq!(unique.len(), 9);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn grid_scale_normalizes_to_cell_size() {
         let recipe = GeometryRecipe::Box { width: 0.2, height: 0.4, depth: 6.0 };
         let scale = grid_scale(&recipe, 2.0);
         assert!((bounding_extent(&recipe) * scale - 2.0).abs() < 1e-9);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn curate_document_dsl_round_trips_sample_and_empty() {
         store::os_store::test_support::assert_dsl_round_trip(&sample_document());
         store::os_store::test_support::assert_dsl_round_trip(&CurateSnapshot::default());
@@ -842,7 +854,7 @@ mod tests {
         store::os_store::test_support::assert_dsl_pack_equivalence(&CurateSnapshot::default());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn available_modules_tracks_contributed_modules() {
         sync_sourcing_module_contributions("[]");
         assert_eq!(available_modules().len(), 3);
@@ -868,7 +880,7 @@ mod tests {
         sync_sourcing_module_contributions("[]");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn sync_sourcing_module_contributions_adds_hot_installed_modules() {
         use semio_framework::{ProgramContributionEntry, TopicContribution};
         let entry = ProgramContributionEntry {

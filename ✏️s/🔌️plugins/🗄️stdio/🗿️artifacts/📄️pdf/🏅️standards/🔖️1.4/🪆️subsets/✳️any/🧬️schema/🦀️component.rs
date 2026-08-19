@@ -18,7 +18,7 @@ pub struct PdfArtifact {
 }
 
 impl Default for PdfArtifact {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self::from_snapshot(PdfSnapshot::default())
     }
 }

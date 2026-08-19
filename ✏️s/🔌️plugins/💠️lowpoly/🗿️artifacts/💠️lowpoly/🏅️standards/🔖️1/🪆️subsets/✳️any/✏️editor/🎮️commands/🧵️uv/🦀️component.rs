@@ -71,7 +71,7 @@ mod tests {
     use crate::editor::lowpoly::testkit::{app, dispatch};
     use crate::editor::lowpoly::LowpolyCommand;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn unwrap_active_resyncs_mesh_json() {
         let mut a = app();
         dispatch(&mut a, LowpolyCommand::UnwrapActive(super::unwrap_active::UnwrapActive {}));
@@ -80,7 +80,7 @@ mod tests {
         assert_eq!(a.snapshot().expect("projection").objects.len(), 1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn clear_seam_delegates_to_mark_uv_seam_with_seam_false() {
         let mut a = app();
         dispatch(&mut a, LowpolyCommand::ClearSeam(super::clear_seam::ClearSeam {}));

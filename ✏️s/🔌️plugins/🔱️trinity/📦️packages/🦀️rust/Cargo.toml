@@ -58,3 +58,6 @@ wasm-bindgen-futures = "0.4.71"
 js-sys = "0.3.83"
 web-sys = { version = "0.3.98", features = ["console", "HtmlCanvasElement"] }
 
+
+[dev-dependencies]
+semio-framework-async-macros = { path = "../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }

@@ -83,13 +83,13 @@ pub async fn math_graph_from_dsl(graph: MathematicalGraphDsl) -> Result<Mathemat
 /// JSON shape a caller would observe (were this ever actually put on a real wire) is `MathematicalGraph`'s own
 /// camelCase shape, not a `MathematicalGraphDsl`-internal one.
 impl Serialize for MathematicalGraphDsl {
-    async fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         math_graph_from_dsl(self.clone()).map_err(serde::ser::Error::custom)?.serialize(serializer)
     }
 }
 
 impl<'de> Deserialize<'de> for MathematicalGraphDsl {
-    async fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         Ok(math_graph_to_dsl(&MathematicalGraph::deserialize(deserializer)?))
     }
 }
@@ -231,19 +231,19 @@ pub async fn print_dsl(projection: &MathematicalSnapshot) -> String {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn math_projection_dsl_round_trips_default() {
         store::os_store::test_support::assert_dsl_round_trip(&MathematicalSnapshot::default());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn example_primary_text_round_trips() {
         let text = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
         let parsed = crate::artifacts::mathematical::dsl::parse_dsl(text).expect("parse example");
         store::os_store::test_support::assert_dsl_round_trip(&parsed);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn math_projection_dsl_round_trips_with_seed_and_empty_collections() {
         let mut graph = MathematicalGraph {
             algorithm: "bfs".into(),

@@ -214,7 +214,7 @@ pub mod spatial {
             Aabb { min, max }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn empty_bvh_returns_no_matches() {
             let bvh: Bvh<u32> = Bvh::build(Vec::new());
             assert_eq!(bvh.query_point_nearest([0.0, 0.0, 0.0]), None);
@@ -222,7 +222,7 @@ pub mod spatial {
             assert!(bvh.query_aabb_overlap(&aabb([0.0, 0.0, 0.0], [1.0, 1.0, 1.0])).is_empty());
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn nearest_point_finds_closest_leaf() {
             let items = vec![(aabb([0.0, 0.0, 0.0], [1.0, 1.0, 1.0]), "near"), (aabb([10.0, 10.0, 10.0], [11.0, 11.0, 11.0]), "far")];
             let bvh = Bvh::build(items);
@@ -230,7 +230,7 @@ pub mod spatial {
             assert_eq!(bvh.query_point_nearest([10.5, 10.5, 10.5]), Some(&"far"));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn ray_hits_only_crossed_leaves() {
             let items = vec![(aabb([0.0, -1.0, -1.0], [1.0, 1.0, 1.0]), "hit"), (aabb([0.0, 10.0, 10.0], [1.0, 11.0, 11.0]), "miss")];
             let bvh = Bvh::build(items);
@@ -238,7 +238,7 @@ pub mod spatial {
             assert_eq!(hits, vec![&"hit"]);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn aabb_overlap_finds_intersecting_leaves() {
             let items = vec![(aabb([0.0, 0.0, 0.0], [1.0, 1.0, 1.0]), "overlap"), (aabb([5.0, 5.0, 5.0], [6.0, 6.0, 6.0]), "disjoint")];
             let bvh = Bvh::build(items);
@@ -247,7 +247,7 @@ pub mod spatial {
             assert_eq!(hits, vec![&"overlap"]);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn many_leaves_build_and_query_correctly() {
             let items: Vec<(Aabb, usize)> = (0..200).map(|i| (aabb([i as f64, 0.0, 0.0], [i as f64 + 0.5, 0.5, 0.5]), i)).collect();
             let bvh = Bvh::build(items);
@@ -483,7 +483,7 @@ mod tests {
         add_solid(body, shell, vec![], rec)
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn face_bvh_builds_over_tetrahedron_with_four_faces() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
@@ -498,7 +498,7 @@ mod tests {
         assert!(body.solid_faces(solid).contains(&near));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn edge_bvh_builds_six_edges_on_tetrahedron() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
@@ -509,7 +509,7 @@ mod tests {
         assert!(!hits.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn empty_solid_yields_empty_face_bvh_queries() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
@@ -521,7 +521,7 @@ mod tests {
         assert!(bvh.query_nearest([0.5, 0.5, 0.5]).is_none());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn missing_solid_returns_kernel_error() {
         let body = Body::new();
         let bogus = SolidId::from_raw(9, 9);

@@ -243,7 +243,7 @@ impl PlantLoop {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mixer_blends_by_mass_flow() {
         let nodes = vec![FluidNode { id: 0, temperature_c: 10.0, humidity_ratio: 0.005, pressure_pa: 101_325.0, mass_flow_kg_s: 1.0 }, FluidNode { id: 1, temperature_c: 30.0, humidity_ratio: 0.015, pressure_pa: 101_325.0, mass_flow_kg_s: 1.0 }];
         let mixer = Mixer { id: 0, inlets: vec![0, 1], outlet: 2 };
@@ -252,7 +252,7 @@ mod tests {
         assert!((out.mass_flow_kg_s - 2.0).abs() < 1e-9);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn splitter_preserves_mass() {
         let inlet = FluidNode { id: 0, temperature_c: 20.0, humidity_ratio: 0.01, pressure_pa: 101_325.0, mass_flow_kg_s: 2.0 };
         let splitter = Splitter { id: 0, inlet: 0, outlets: vec![(1, 0.6), (2, 0.4)] };
@@ -261,7 +261,7 @@ mod tests {
         assert!((m_sum - 2.0).abs() < 1e-9);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn valid_topology_passes() {
         let nodes = vec![FluidNode::new(0), FluidNode::new(1)];
         let branches = vec![Branch { id: 0, inlet: 0, outlet: 1, component: BranchComponent::Bypass }];
@@ -269,7 +269,7 @@ mod tests {
         assert!(!diag.has_fatal());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn branch_with_invalid_node_index_is_fatal() {
         let nodes = vec![FluidNode::new(0)];
         let branches = vec![Branch { id: 0, inlet: 0, outlet: 5, component: BranchComponent::Bypass }];
@@ -277,7 +277,7 @@ mod tests {
         assert!(diag.has_fatal());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn branch_with_identical_inlet_outlet_is_severe() {
         let nodes = vec![FluidNode::new(0), FluidNode::new(1)];
         let branches = vec![Branch { id: 0, inlet: 0, outlet: 0, component: BranchComponent::Bypass }];
@@ -286,7 +286,7 @@ mod tests {
         assert_eq!(diag.messages.len(), 1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn splitter_fraction_mismatch_warns() {
         let nodes = vec![FluidNode::new(0), FluidNode::new(1), FluidNode::new(2)];
         let splitters = vec![Splitter { id: 0, inlet: 0, outlets: vec![(1, 0.3), (2, 0.3)] }];
@@ -294,7 +294,7 @@ mod tests {
         assert_eq!(diag.messages.len(), 1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn splitter_invalid_inlet_is_fatal() {
         let nodes = vec![FluidNode::new(0)];
         let splitters = vec![Splitter { id: 0, inlet: 9, outlets: vec![(0, 1.0)] }];
@@ -302,7 +302,7 @@ mod tests {
         assert!(diag.has_fatal());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mixer_invalid_inlet_and_outlet_are_fatal() {
         let nodes = vec![FluidNode::new(0)];
         let mixers = vec![Mixer { id: 0, inlets: vec![9], outlet: 8 }];
@@ -311,7 +311,7 @@ mod tests {
         assert_eq!(diag.messages.len(), 2);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mixer_blend_with_zero_flow_returns_default_node() {
         let nodes = [FluidNode { id: 0, temperature_c: 10.0, humidity_ratio: 0.005, pressure_pa: 101_325.0, mass_flow_kg_s: 0.0 }];
         let mixer = Mixer { id: 0, inlets: vec![0], outlet: 7 };
@@ -320,7 +320,7 @@ mod tests {
         assert_eq!(out.mass_flow_kg_s, 0.0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn air_loop_validate_flags_invalid_zone_outlet() {
         let loop_topo = AirLoop {
             id: 0,
@@ -340,7 +340,7 @@ mod tests {
         assert!(!diag.messages.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn plant_loop_validate_delegates_to_validate_topology() {
         let loop_topo = PlantLoop {
             id: 0,
@@ -358,7 +358,7 @@ mod tests {
         assert!(!loop_topo.validate().has_fatal());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn branch_pressure_drop_for_each_component_kind() {
         let inlet = FluidNode { id: 0, temperature_c: 60.0, humidity_ratio: 0.008, pressure_pa: 200_000.0, mass_flow_kg_s: 1.0 };
         let outlet = FluidNode { id: 1, temperature_c: 40.0, humidity_ratio: 0.008, pressure_pa: 150_000.0, mass_flow_kg_s: 1.0 };

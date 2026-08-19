@@ -90,7 +90,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn maps_pixels_and_metadata_to_png() {
         let semio = sample_semio();
         let png = semio_framework_plugin::resolve_ready(SemioImageToPng::serialize(&semio)).expect("serialize");
@@ -104,7 +104,7 @@ mod tests {
     /// 🧪️ Real round trip: semio → (this leaf) → `PngSnapshot` → (png's own real codec) → bytes →
     /// (png's own real codec) → `PngSnapshot` — proves the serializer produces a genuinely
     /// encodable/decodable PNG, not just a plausible-looking struct.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn real_byte_round_trip_through_png_codec() {
         let semio = sample_semio();
         let png = semio_framework_plugin::resolve_ready(SemioImageToPng::serialize(&semio)).expect("serialize");

@@ -34,7 +34,7 @@ impl protocol::Inference<Ifc2x3Snapshot> for Ifc2x3Inference {
 /// 🌱 Defined in terms of `infer` (not derived) — keeps the law correct regardless of whether
 /// `Ifc2x3Snapshot::default()`'s `document` ever stops being empty.
 impl Default for Ifc2x3Inference {
-    async fn default() -> Self {
+    fn default() -> Self {
         <Self as protocol::Inference<Ifc2x3Snapshot>>::infer(&Ifc2x3Snapshot::default())
     }
 }
@@ -87,13 +87,13 @@ mod tests {
     use super::*;
     use protocol::Inference;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = Ifc2x3Snapshot::default();
         assert_eq!(Ifc2x3Inference::infer(&snapshot), Ifc2x3Inference::infer(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(Ifc2x3Inference::infer(&Ifc2x3Snapshot::default()), Ifc2x3Inference::default());
     }

@@ -426,7 +426,7 @@ mod tests {
         sdf.contains(p, 1e-6)
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn unit_square_loop_uv_center() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
@@ -446,7 +446,7 @@ mod tests {
         assert!(point_in_loop(&body, face, outer, uv, 1e-6).unwrap());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn box_inside_outside_boundary() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
@@ -464,7 +464,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn box_matches_measure_ray_parity() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
@@ -475,7 +475,7 @@ mod tests {
         assert_eq!(c, measure_to_engine(m));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn box_oracle_sdf_inside_outside() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
@@ -486,7 +486,7 @@ mod tests {
         let _ = ClosedFormMass::box_volume(Pnt3::new(1.0, 1.0, 1.0));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn sphere_samples_vs_oracle_sdf() {
         let mut body = Body::new();
         let r = 1.5;
@@ -505,7 +505,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn cylinder_oracle_outside_sample() {
         let mut body = Body::new();
         let radius = 1.0;
@@ -518,7 +518,7 @@ mod tests {
         assert_classify(&body, solid, outside, PointClassification::Outside);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn face_uv_interior_point_on_box_face() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();

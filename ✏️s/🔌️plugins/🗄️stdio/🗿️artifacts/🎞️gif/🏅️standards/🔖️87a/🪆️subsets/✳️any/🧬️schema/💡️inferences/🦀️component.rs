@@ -35,7 +35,7 @@ impl protocol::Inference<GifSnapshot> for GifInference {
 /// structurally" trick as `AddInference`'s hand-written `Default` in
 /// `📡️spr/🎮️command/🦀️component.rs`.
 impl Default for GifInference {
-    async fn default() -> Self {
+    fn default() -> Self {
         <Self as protocol::Inference<GifSnapshot>>::infer(&GifSnapshot::default())
     }
 }
@@ -85,13 +85,13 @@ mod tests {
     use super::*;
     use protocol::Inference;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = GifSnapshot::default();
         assert_eq!(GifInference::infer(&snapshot), GifInference::infer(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(GifInference::infer(&GifSnapshot::default()), GifInference::default());
     }

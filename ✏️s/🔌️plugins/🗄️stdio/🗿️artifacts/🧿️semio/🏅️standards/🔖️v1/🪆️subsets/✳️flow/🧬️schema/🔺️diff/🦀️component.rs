@@ -765,7 +765,7 @@ mod tests {
     }
 
     //#region 🔖️BetweenRoundtripLaw
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn between_roundtrip_law() {
         let a = sweep_a();
         let b = sweep_b();
@@ -781,7 +781,7 @@ mod tests {
     /// 🎯️ THE acceptance criterion: `sweep_a`/`sweep_b` differ in every mutable field, including
     /// each collection flavor (removed/modified/added) at both the top level (nodes/edges) and the
     /// nested level (a node's own `params`).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn field_sweep() {
         let a = sweep_a();
         let b = sweep_b();
@@ -826,7 +826,7 @@ mod tests {
         absorbed
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_law() {
         // Canonical: Insert+Remove(other) -> both survive independently (name-keyed absorb has no
         // index-transport interaction between an unrelated insert and an unrelated removal).
@@ -907,7 +907,7 @@ mod tests {
     //#endregion 🔖️AbsorbLaw
 
     //#region 🔖️DiffCodecTextBinaryRoundtripLaw
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn diff_codec_text_binary_roundtrip_law() {
         let a = sweep_a();
         let b = sweep_b();
@@ -933,7 +933,7 @@ mod tests {
 
     // Keep the shared engine's per-collection edge codecs exercised directly too (guards against
     // silent drift between the hand-rolled value codecs above and `🧰️triples`'s generic shape).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn node_and_edge_value_codecs_round_trip() {
         let n = node("n1", "k", "L", vec![("a", "1"), ("b", "2")], 3.5, -1.25);
         assert_eq!(dec_node(&enc_node(&n)).unwrap(), n);

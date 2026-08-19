@@ -424,7 +424,7 @@ pub mod curve_curve {
     mod tests {
         use super::*;
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn perpendicular_lines_meet_at_origin() {
             let a = Curve3::Line { origin: Pnt3::new(-1.0, 0.0, 0.0), dir: Vec3::new(1.0, 0.0, 0.0) };
             let b = Curve3::Line { origin: Pnt3::new(0.0, -1.0, 0.0), dir: Vec3::new(0.0, 1.0, 0.0) };
@@ -435,7 +435,7 @@ pub mod curve_curve {
             assert!((hits[0].t_b - 1.0).abs() < 1e-9);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn unit_circle_with_diameter_line() {
             let circle = Curve3::Circle { frame: Frame3::WORLD, radius: 1.0 };
             let line = Curve3::Line { origin: Pnt3::new(0.0, 0.0, 0.0), dir: Vec3::new(1.0, 0.0, 0.0) };
@@ -452,7 +452,7 @@ pub mod curve_curve {
             }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn line_circle_order_preserves_parameters() {
             let circle = Curve3::Circle { frame: Frame3::WORLD, radius: 1.0 };
             let line = Curve3::Line { origin: Pnt3::new(-2.0, 0.0, 0.0), dir: Vec3::new(1.0, 0.0, 0.0) };
@@ -469,7 +469,7 @@ pub mod curve_curve {
         mod quick {
             use super::*;
 
-            #[test]
+            #[semio_framework_async_macros::async_test]
             async fn skew_lines_do_not_intersect() {
                 let a = Curve3::Line { origin: Pnt3::new(0.0, 0.0, 0.0), dir: Vec3::X };
                 let b = Curve3::Line { origin: Pnt3::new(0.0, 1.0, 1.0), dir: Vec3::Y };
@@ -782,7 +782,7 @@ pub mod curve_surface {
     mod tests {
         use super::*;
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn line_pierces_plane_z0() {
             let curve = Curve3::Line { origin: Pnt3::new(0.0, 0.0, -1.0), dir: Vec3::new(0.0, 0.0, 1.0) };
             let surface = Surface::Plane { frame: Frame3::WORLD };
@@ -794,7 +794,7 @@ pub mod curve_surface {
             assert!(hits[0].v.abs() < 1e-9);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn line_through_sphere() {
             let curve = Curve3::Line { origin: Pnt3::new(-2.0, 0.0, 0.0), dir: Vec3::new(1.0, 0.0, 0.0) };
             let surface = Surface::Sphere { frame: Frame3::WORLD, radius: 1.0 };
@@ -815,7 +815,7 @@ pub mod curve_surface {
             }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn line_through_cylinder() {
             let curve = Curve3::Line { origin: Pnt3::new(-2.0, 0.0, 1.0), dir: Vec3::new(1.0, 0.0, 0.0) };
             let surface = Surface::Cylinder { frame: Frame3::WORLD, radius: 1.0 };
@@ -831,7 +831,7 @@ pub mod curve_surface {
         mod quick {
             use super::*;
 
-            #[test]
+            #[semio_framework_async_macros::async_test]
             async fn parallel_line_misses_plane() {
                 let curve = Curve3::Line { origin: Pnt3::new(0.0, 0.0, 1.0), dir: Vec3::X };
                 let surface = Surface::Plane { frame: Frame3::WORLD };
@@ -839,7 +839,7 @@ pub mod curve_surface {
                 assert!(hits.is_empty());
             }
 
-            #[test]
+            #[semio_framework_async_macros::async_test]
             async fn circle_plane_equator() {
                 let curve = Curve3::Circle { frame: Frame3::WORLD, radius: 2.0 };
                 let surface = Surface::Plane { frame: Frame3::WORLD };
@@ -1122,7 +1122,7 @@ pub mod surface_surface {
     mod tests {
         use super::*;
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn orthogonal_planes_intersect_in_line() {
             let xy = Surface::Plane { frame: Frame3::WORLD };
             let xz = Surface::Plane { frame: Frame3::from_normal(Pnt3::new(0.0, 0.0, 0.0), Vec3::Y).unwrap() };
@@ -1143,7 +1143,7 @@ pub mod surface_surface {
             }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn parallel_planes_empty_or_tangent() {
             let a = Surface::Plane { frame: Frame3::WORLD };
             let b = Surface::Plane { frame: Frame3 { origin: Pnt3::new(0.0, 0.0, 2.0), ..Frame3::WORLD } };
@@ -1152,7 +1152,7 @@ pub mod surface_surface {
             assert!(matches!(intersect_surface_surface(&a, &c, 1e-8), Err(IntersectError::Tangent)));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn plane_cylinder_perpendicular_is_circle() {
             let plane = Surface::Plane { frame: Frame3 { origin: Pnt3::new(0.0, 0.0, 3.0), ..Frame3::WORLD } };
             let cyl = Surface::Cylinder { frame: Frame3::WORLD, radius: 2.0 };
@@ -1174,7 +1174,7 @@ pub mod surface_surface {
             }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn plane_cylinder_parallel_two_lines() {
             let plane = Surface::Plane { frame: Frame3::from_x_z(Pnt3::new(0.0, 0.0, 0.0), Vec3::Y, Vec3::X).unwrap() };
             let cyl = Surface::Cylinder { frame: Frame3::WORLD, radius: 2.0 };

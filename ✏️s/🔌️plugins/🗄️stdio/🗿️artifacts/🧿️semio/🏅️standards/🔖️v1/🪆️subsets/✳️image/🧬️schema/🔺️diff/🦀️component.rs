@@ -874,7 +874,7 @@ mod tests {
 
     /// 🧪️ Canonical absorb case 1: `InsertFrame(2,f)` then `RemoveFrame(0)` → `{removed:[0],
     /// added:[(1,f)]}`.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_insert_then_remove_before_shifts_index() {
         let f = frame(9, 4);
         let d1 = SemioImageFramesDiff { added: vec![IndexAdded { index: 2, item: f.clone() }], ..Default::default() };
@@ -886,7 +886,7 @@ mod tests {
     }
 
     /// 🧪️ Canonical absorb case 2: `InsertFrame(2,f)` then `InsertFrame(2,g)` → both survive.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_insert_insert_same_index_both_survive() {
         let f = frame(1, 4);
         let g = frame(2, 4);
@@ -898,7 +898,7 @@ mod tests {
 
     /// 🧪️ Canonical absorb case 3: `InsertFrame(1,f)` then `SetFrameDelay(1,42)` patches INTO the
     /// added payload.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_insert_then_set_field_patches_into_added() {
         let f = frame(1, 4);
         let d1 = SemioImageFramesDiff { added: vec![IndexAdded { index: 1, item: f.clone() }], ..Default::default() };
@@ -911,7 +911,7 @@ mod tests {
     }
 
     /// 🧪️ Canonical absorb case 4: Modify+Remove annihilates the modify.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_modify_then_remove_drops_modify() {
         let base = SemioImageSnapshot { frames: vec![frame(1, 4), frame(2, 4)], ..SemioImageSnapshot::default() };
         let mid = {
@@ -931,7 +931,7 @@ mod tests {
         assert_eq!(absorbed.removed, vec![1]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_law_holds_over_curated_ops() {
         let base = SemioImageSnapshot { frames: vec![frame(1, 4), frame(2, 4), frame(3, 4)], metadata: vec![SemioImageMetadataEntry { key: "a".into(), value: "1".into() }], ..SemioImageSnapshot::default() };
         let mid = {
@@ -954,7 +954,7 @@ mod tests {
         assert_eq!(d1.apply(&base).expect("apply must succeed for a well-formed fixture"), after);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn between_roundtrip_law() {
         let a = SemioImageSnapshot { width: 4, height: 4, frames: vec![frame(1, 16)], ..SemioImageSnapshot::default() };
         let b = SemioImageSnapshot { width: 4, height: 4, frames: vec![frame(1, 16), frame(2, 4)], colorspace: SemioColorspace::Grayscale, ..SemioImageSnapshot::default() };
@@ -965,7 +965,7 @@ mod tests {
         assert!(<SemioImageDiff as DiffAlgebra<SemioImageSnapshot>>::between(&a, &a).is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inverse_law() {
         let base = SemioImageSnapshot { frames: vec![frame(1, 4), frame(2, 4)], icc: Some(vec![1, 2]), ..SemioImageSnapshot::default() };
         let next = {
@@ -987,7 +987,7 @@ mod tests {
     /// field, including the `icc` tri-state exercising BOTH `Some(Some(_))` and `Some(None)`, and
     /// asymmetric collection lengths (a single same-direction `between()` shows removed XOR
     /// added, never both — split across both directions).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn field_sweep() {
         let sweep_a = SemioImageSnapshot {
             schema: STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA.into(),
@@ -1046,7 +1046,7 @@ mod tests {
     /// 🧪️ `DiffCodec` round-trip laws for the hand-rolled `SemioImageDiff` text/binary grammar —
     /// scalars, the `icc` tri-state, and both collection triples simultaneously via a real
     /// `between()` result.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn diff_codec_text_binary_roundtrip_law() {
         // 🌱 Reuses `demo_diff_cases()` (single source of truth, also feeds
         // `diff_grammar_conformance_law`/`protocol_walk_law` in `🎹️composer/🦀️component.rs`)

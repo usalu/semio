@@ -55,7 +55,7 @@ pub struct LowpolyArtifact {
 
 //#region 🔖️Conversions
 impl Default for LowpolyArtifact {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self {
             schema: crate::artifacts::lowpoly::LOWPOLY_DOCUMENT_SCHEMA.into(),
             objects: Vec::new(),
@@ -532,7 +532,7 @@ mod tests {
     use super::*;
     use crate::artifacts::lowpoly::empty_paint_pixels;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn default_snapshot_has_unit_box_object() {
         let projection = default_snapshot();
         assert_eq!(projection.schema, crate::artifacts::lowpoly::LOWPOLY_DOCUMENT_SCHEMA);
@@ -542,7 +542,7 @@ mod tests {
         assert_eq!(projection.objects[0].paint_layers.len(), 1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn default_unit_box_mesh_parses_and_has_faces() {
         let projection = default_snapshot();
         let workspace = default_mesh_workspace();
@@ -552,7 +552,7 @@ mod tests {
         assert!(mesh.vertex_count() >= 8, "unit box should expose eight vertices");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn projection_round_trips_paint_pixels_through_base64_json() {
         let mut projection = default_snapshot();
         projection.objects[0].paint_layers[0].pixels[0] = 7;
@@ -562,7 +562,7 @@ mod tests {
         assert_eq!(restored, projection);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn artifact_engine_apply_and_inverse_round_trip() {
         // 🩹 Was `protocol::ArtifactEngine`-based (that trait doesn't exist anywhere in the
         // codebase — a stale reference predating 26/08/12/SEMANTIC-MUTATIONS-OVERHAUL — and
@@ -585,7 +585,7 @@ mod tests {
         assert_eq!(state.objects[0].name, "Unit Box");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn pixel_runs_from_diff_captures_only_changed_bytes() {
         let mut before = vec![0u8; 16];
         let mut after = before.clone();
@@ -604,7 +604,7 @@ mod tests {
         assert!(pixel_runs_from_diff(&before, &after).is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn composite_layer_pixels_skips_invisible_layers() {
         let mut layer = LowpolyPaintLayer::new("Hidden");
         layer.visible = false;
@@ -613,7 +613,7 @@ mod tests {
         assert_eq!(&out[0..4], &[0, 0, 0, 0]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn composite_layer_pixels_blends_partial_opacity_over_transparent_base() {
         let mut layer = LowpolyPaintLayer::new("Half");
         layer.opacity = 0.5;
@@ -622,7 +622,7 @@ mod tests {
         assert_eq!(&out[0..4], &[200, 100, 50, 128]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn composite_layer_pixels_blends_stacked_opaque_and_translucent_layers() {
         let base = LowpolyPaintLayer { name: "Base".into(), visible: true, opacity: 1.0, blend_mode: "normal".into(), pixels: vec![255, 0, 0, 255] };
         let top = LowpolyPaintLayer { name: "Top".into(), visible: true, opacity: 0.5, blend_mode: "normal".into(), pixels: vec![0, 0, 255, 255] };
@@ -630,7 +630,7 @@ mod tests {
         assert_eq!(&out[0..4], &[128, 0, 128, 255]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn stamp_brush_eraser_reduces_alpha_at_center() {
         let mut pixels = empty_paint_pixels();
         stamp_brush(&mut pixels, 0.5, 0.5, 4.0, [0, 0, 0, 0], 1.0, 1.0, true);
@@ -639,7 +639,7 @@ mod tests {
         assert!(pixels[center + 3] < 255);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn flood_fill_only_affects_contiguous_matching_region() {
         let mut pixels = empty_paint_pixels();
         let size = LOWPOLY_PAINT_TEXTURE_SIZE;
@@ -716,7 +716,7 @@ mod export_concrete_forest_mesh_tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn export_concrete_forest_left_lowpoly_mesh_json() {
         if std::env::var("EXPORT_LOWPOLY_FOREST_MESH").ok().as_deref() != Some("1") {
             return;

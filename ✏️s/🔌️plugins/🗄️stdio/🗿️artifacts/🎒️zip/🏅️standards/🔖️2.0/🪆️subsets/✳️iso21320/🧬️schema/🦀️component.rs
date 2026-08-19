@@ -93,7 +93,7 @@ pub mod derived_construction {
     mod tests {
         use super::*;
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn typed_constructors_build_clean() {
             let snapshot = ZipIso21320BuilderConstruction::new().with_stored_entry("a.txt", b"hello".to_vec()).with_deflate_entry("b.txt", b"world, compressed".to_vec()).with_comment("archive").build().expect("conforming construction must build");
             assert_eq!(snapshot.entries.len(), 2);
@@ -261,44 +261,44 @@ pub mod derived_analysis {
             ZipCentralEntryHeader { name: name.into(), flags, version_needed }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn conforming_snapshot_has_no_diagnostics() {
             let snapshot = ZipSnapshot { entries: vec![entry("a.txt")], ..ZipSnapshot::default() };
             let diagnostics = check_iso21320_conformance(&snapshot);
             assert!(diagnostics.is_empty(), "got {diagnostics:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn encrypted_entry_is_hard() {
             let diagnostics = check_iso21320_entry_headers(&[header("secret.bin", FLAG_ENCRYPTED, 20)]);
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_ENCRYPTED && d.severity == Severity::Error), "got {diagnostics:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn strong_encryption_bit_is_hard() {
             let diagnostics = check_iso21320_entry_headers(&[header("strong.bin", FLAG_STRONG_ENCRYPTION, 20)]);
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_STRONG_ENCRYPTION && d.severity == Severity::Error), "got {diagnostics:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn masked_local_header_bit_is_hard() {
             let diagnostics = check_iso21320_entry_headers(&[header("masked.bin", FLAG_MASKED_LOCAL_HEADERS, 20)]);
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_STRONG_ENCRYPTION && d.severity == Severity::Error), "got {diagnostics:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn data_descriptor_bit_is_soft() {
             let diagnostics = check_iso21320_entry_headers(&[header("streamed.bin", FLAG_DATA_DESCRIPTOR, 20)]);
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_DATA_DESCRIPTOR && d.severity == Severity::Warning), "got {diagnostics:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn high_version_needed_is_soft() {
             let diagnostics = check_iso21320_entry_headers(&[header("zip64.bin", 0, 63)]);
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_VERSION_NEEDED && d.severity == Severity::Warning), "got {diagnostics:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn version_needed_at_ceiling_is_clean() {
             assert!(check_iso21320_entry_headers(&[header("boundary.bin", 0, VERSION_NEEDED_SOFT_CEILING)]).is_empty());
         }

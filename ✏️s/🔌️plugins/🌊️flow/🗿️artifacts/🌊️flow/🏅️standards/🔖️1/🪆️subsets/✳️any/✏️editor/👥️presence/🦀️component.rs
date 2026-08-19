@@ -22,7 +22,7 @@ pub struct FlowPresence {
 }
 
 impl Default for FlowPresence {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self {
             preview_off_node_ids: Vec::new(),
             camera: CameraJson { x: 0.0, y: 0.0, zoom: 1.0 },

@@ -126,25 +126,25 @@ mod tests {
     //#endregion 🧸️Fixtures
 
     //#region 🧪️InferenceLaws
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = chain_snapshot();
         assert_eq!(JackInference::infer(&snapshot), JackInference::infer(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(JackInference::infer(&JackSnapshot::default()), JackInference::default());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_matches_compute_topology_directly() {
         let snapshot = chain_snapshot();
         let inferred = JackInference::infer(&snapshot);
         assert_eq!(inferred.topology, compute_topology(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_matches_compute_flat_position_directly() {
         let snapshot = chain_snapshot();
         let inferred = JackInference::infer(&snapshot);

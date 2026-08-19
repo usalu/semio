@@ -35,7 +35,7 @@ impl protocol::Inference<SequenceSnapshot> for SequenceInference {
 /// `Default` (all-zero fields) would disagree with `infer(&SequenceSnapshot::default())`. Computing
 /// it via `infer` instead keeps the law correct regardless of what the default snapshot contains.
 impl Default for SequenceInference {
-    async fn default() -> Self {
+    fn default() -> Self {
         <Self as protocol::Inference<SequenceSnapshot>>::infer(&SequenceSnapshot::default())
     }
 }
@@ -110,13 +110,13 @@ mod tests {
     //#endregion 🧸️Fixtures
 
     //#region 🧪️InferenceLaws
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = sample_snapshot();
         assert_eq!(SequenceInference::infer(&snapshot), SequenceInference::infer(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(SequenceInference::infer(&SequenceSnapshot::default()), SequenceInference::default());
     }

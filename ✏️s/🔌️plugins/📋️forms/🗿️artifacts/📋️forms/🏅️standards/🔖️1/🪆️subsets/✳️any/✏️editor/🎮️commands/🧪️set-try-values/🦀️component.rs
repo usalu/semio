@@ -36,7 +36,7 @@ mod tests {
         dispatch(app, FormsCommand::SetActiveExample(crate::editor::forms::commands::set_active_example::SetActiveExample { example_id: example_id.into() }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn try_wizard_gates_navigation_and_reports_inline_errors() {
         let mut app = forms_app();
         seed_example(&mut app, "default");
@@ -49,7 +49,7 @@ mod tests {
         assert!(json.contains("forms-try.back"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn try_wizard_emits_slider_unit_and_number_bounds() {
         let mut app = forms_app();
         seed_example(&mut app, "onboarding");
@@ -62,7 +62,7 @@ mod tests {
         assert!(second_json.contains(r#""unit":"%""#));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_try_values_updates_config() {
         let mut app = forms_app();
         seed_example(&mut app, "default");
@@ -71,7 +71,7 @@ mod tests {
         assert!(json.contains("Ada"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn wizard_step_navigation() {
         let mut app = forms_app();
         seed_example(&mut app, "onboarding");
@@ -82,7 +82,7 @@ mod tests {
         assert!(render(&mut app, FORMS_PLAY_BODY_TRY).contains("Step 1 / 3"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn conditional_visibility_hides_team_size() {
         let mut app = forms_app();
         seed_example(&mut app, "onboarding");
@@ -93,7 +93,7 @@ mod tests {
         assert_eq!(crate::artifacts::forms::schema::visible_questions(advanced, &values).len(), 1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn renders_try_wizard() {
         let mut app = forms_app();
         seed_example(&mut app, "default");

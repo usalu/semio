@@ -170,26 +170,26 @@ async fn info(id: &str, name: &str, summary: &str, inputs: Vec<ChannelSpec>, out
     OperatorInfo { id: id.into(), extension: "dictionary".into(), name: name.into(), abbreviation: name.into(), icon: "emoji:📚️".into(), summary: summary.into(), inputs, outputs: vec![output], ..Default::default() }
 }
 
-async fn register_simple(registry: &mut Registry, info: OperatorInfo, operation: Box<dyn Operator>, schemas: Vec<&str>, produces: &[&str]) {
-    registry.register_operator(info, vec![OperatorImpl { schemas: schemas.into_iter().map(str::to_string).collect(), operator: operation }], produces);
+async fn register_simple<O: Operator + 'static>(registry: &mut Registry, info: OperatorInfo, operation: O, schemas: Vec<&str>, produces: &[&str]) {
+    registry.register_operator(info, vec![OperatorImpl { schemas: schemas.into_iter().map(str::to_string).collect(), operator: Box::new(operation) }], produces);
 }
 
 // #endregion 🔖️Helpers
 
 /// 📦️ Registers all dictionary operators.
 pub async fn register(registry: &mut Registry) {
-    register_simple(registry, info("dictionary.pack", "Pack", "Wraps input as a dictionary", vec![ChannelSpec::wildcard()], ChannelSpec::named("D", "Dic", "dictionary", "PackedDictionary")), Box::new(Pack), vec![], &["dictionary"]);
+    register_simple(registry, info("dictionary.pack", "Pack", "Wraps input as a dictionary", vec![ChannelSpec::wildcard()], ChannelSpec::named("D", "Dic", "dictionary", "PackedDictionary")), Pack, vec![], &["dictionary"]);
     register_simple(
         registry,
         info("dictionary.unpack", "Unpack", "Forwards a dictionary", vec![dict_channel("dictionary", "dictionary.unpack")], ChannelSpec::named("D", "Dic", "dictionary", "UnpackedDictionary")),
-        Box::new(Unpack),
+        Unpack,
         vec!["dictionary"],
         &["dictionary"],
     );
     register_simple(
         registry,
         info("dictionary.get", "Get", "Reads a value by key", vec![dict_channel("dictionary", "dictionary.get"), text_channel("key", "dictionary.get")], ChannelSpec::named("V", "Val", "value", "DictionaryValue")),
-        Box::new(Get),
+        Get,
         vec!["dictionary", "text"],
         &["value"],
     );
@@ -202,35 +202,35 @@ pub async fn register(registry: &mut Registry) {
             vec![dict_channel("dictionary", "dictionary.set"), text_channel("key", "dictionary.set"), ChannelSpec::any("value")],
             ChannelSpec::named("D", "Dic", "dictionary", "UpdatedDictionary"),
         ),
-        Box::new(Set),
+        Set,
         vec![],
         &["dictionary"],
     );
     register_simple(
         registry,
         info("dictionary.remove", "Remove", "Removes a key", vec![dict_channel("dictionary", "dictionary.remove"), text_channel("key", "dictionary.remove")], ChannelSpec::named("D", "Dic", "dictionary", "ReducedDictionary")),
-        Box::new(Remove),
+        Remove,
         vec!["dictionary", "text"],
         &["dictionary"],
     );
     register_simple(
         registry,
         info("dictionary.has", "Has", "Checks whether a key exists", vec![dict_channel("dictionary", "dictionary.has"), text_channel("key", "dictionary.has")], ChannelSpec::named("E", "Exs", "exists", "KeyExists")),
-        Box::new(Has),
+        Has,
         vec!["dictionary", "text"],
         &["boolean"],
     );
     register_simple(
         registry,
         info("dictionary.keys", "Keys", "Lists keys as comma-separated text", vec![dict_channel("dictionary", "dictionary.keys")], ChannelSpec::named("K", "Key", "keys", "DictionaryKeys")),
-        Box::new(Keys),
+        Keys,
         vec!["dictionary"],
         &["text"],
     );
     register_simple(
         registry,
         info("dictionary.size", "Size", "Reports the number of keys", vec![dict_channel("dictionary", "dictionary.size")], ChannelSpec::named("C", "Cnt", "count", "DictionaryCount")),
-        Box::new(Size),
+        Size,
         vec!["dictionary"],
         &["number"],
     );
@@ -271,7 +271,7 @@ mod tests {
         Dictionary::with_schema("dictionary").insert("number", Value::Dictionary(number_dictionary(3.0))).insert("text", Value::Dictionary(text_dictionary("hi".into())))
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn get_reads_value() {
         let mut reg = Registry::new();
         register(&mut reg);
@@ -281,7 +281,7 @@ mod tests {
         assert_eq!(value.schema(), Some("number"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_inserts_key() {
         let mut reg = Registry::new();
         register(&mut reg);
@@ -291,7 +291,7 @@ mod tests {
         assert!(dictionary.get("text").is_some());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn merge_combines_dicts() {
         let mut reg = Registry::new();
         register(&mut reg);
@@ -305,13 +305,13 @@ mod tests {
         assert!(dictionary.get("b").is_some());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn manifest_lists_dictionary_operators() {
         let json = build_manifest_json("dictionary", "Dictionary", "0.1.0", &module_registry(), vec!["onStartup".into()], vec![], vec![FlowExtensionCommand { id: "dictionary.showHelp".into(), title: "Dictionary: Show Help".into() }], vec![]);
         assert!(json.contains("dictionary.get"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn evaluate_json_pack() {
         let out_json = evaluate_json(&module_registry(), "dictionary.pack", &serde_json::to_string(&sample_dict()).unwrap());
         let out: Dictionary = serde_json::from_str(&out_json).unwrap();

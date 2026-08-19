@@ -17,7 +17,7 @@ pub struct Gis2dPresence {
 }
 
 impl Default for Gis2dPresence {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { camera_json: r#"{"x":0,"y":0,"zoom":1}"#.into() }
     }
 }

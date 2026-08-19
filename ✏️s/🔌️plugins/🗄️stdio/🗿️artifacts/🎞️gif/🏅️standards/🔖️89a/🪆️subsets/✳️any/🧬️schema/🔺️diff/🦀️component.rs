@@ -1589,7 +1589,7 @@ mod tests {
 
     /// 🧪️ Canonical absorb case 1: `InsertFrame(2,f)` then `RemoveFrame(0)` →
     /// `{removed:[0], added:[(1,f)]}`.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_insert_then_remove_before_shifts_index() {
         let f = frame(9, 2, 2);
         let mut d1 = GifFramesDiff { added: vec![GifFrameAdded { index: 2, frame: f.clone() }], ..Default::default() };
@@ -1602,7 +1602,7 @@ mod tests {
 
     /// 🧪️ Canonical absorb case 2: `InsertFrame(2,f)` then `InsertFrame(2,g)` → BOTH survive as
     /// `added:[(2,g),(3,f)]` — the exact LWW-slot bug this recipe replaces.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_insert_insert_same_index_both_survive() {
         let f = frame(1, 2, 2);
         let g = frame(2, 2, 2);
@@ -1614,7 +1614,7 @@ mod tests {
 
     /// 🧪️ Canonical absorb case 3: `InsertFrame(1,f)` then `SetFrameDelay(1,42)` patches INTO the
     /// added payload — merged has only `added`, no separate `modified` entry.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_insert_then_set_field_patches_into_added() {
         let f = frame(1, 2, 2);
         let mut d1 = GifFramesDiff { added: vec![GifFrameAdded { index: 1, frame: f.clone() }], ..Default::default() };
@@ -1626,7 +1626,7 @@ mod tests {
         assert_eq!(d1.added[0].index, 1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_law_holds_over_curated_ops() {
         let base = GifSnapshot { frames: vec![frame(1, 2, 2), frame(2, 2, 2), frame(3, 2, 2)], loop_count: Some(0), ..GifSnapshot::default() };
         let mid = {
@@ -1649,7 +1649,7 @@ mod tests {
         assert_eq!(d1.apply(&base).unwrap(), after);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn between_roundtrip_law() {
         let a = GifSnapshot { width: 4, height: 4, frames: vec![frame(1, 4, 4)], ..GifSnapshot::default() };
         let b = GifSnapshot { width: 4, height: 4, frames: vec![frame(1, 4, 4), frame(2, 2, 2)], loop_count: Some(0), ..GifSnapshot::default() };
@@ -1660,7 +1660,7 @@ mod tests {
         assert!(<GifDiff as DiffAlgebra<GifSnapshot>>::between(&a, &a).is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inverse_law() {
         let base = GifSnapshot { frames: vec![frame(1, 2, 2), frame(2, 2, 2)], loop_count: Some(0), ..GifSnapshot::default() };
         let next = {
@@ -1683,7 +1683,7 @@ mod tests {
     /// field, incl. every tri-state exercising `Some(None)`, with asymmetric collection lengths
     /// (F1's structural trap: a single index-keyed `between()` call can show `removed` XOR
     /// `added`, never both — split across both directions, per `f1-closer-report.md` §4.4).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn field_sweep_covers_every_mutable_field() {
         let mut fa = frame(1, 2, 2);
         fa.transparent_index = Some(0);
@@ -1754,7 +1754,7 @@ mod tests {
     /// — exercises scalars, both tri-states (`gct`/`loop_count` at the top level, `lct`/
     /// `transparent_index`/`plain_text` inside a modified frame), and all three collection triples
     /// (`removed`/`modified`/`added`) simultaneously via a real `between()` result.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn diff_codec_text_binary_roundtrip_law() {
         let mut fa = frame(1, 2, 2);
         fa.transparent_index = Some(0);

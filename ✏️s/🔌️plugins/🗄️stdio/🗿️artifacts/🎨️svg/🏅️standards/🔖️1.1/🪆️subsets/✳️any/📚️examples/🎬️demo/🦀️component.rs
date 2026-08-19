@@ -15,7 +15,7 @@ pub async fn source() -> ExampleSource {
 #[cfg(test)]
 mod tests {
     use super::*;
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn demo_source_nonempty() {
         assert!(!PRIMARY_TEXT.is_empty());
         let _ = source();
@@ -24,7 +24,7 @@ mod tests {
     /// 🧪️ Ticket 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING's
     /// inference laws, exercised against this example's own real fixture (`PRIMARY_TEXT`,
     /// parsed through the real `ArtifactDsl` codec — not a hand-built stub).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         use crate::artifacts::svg::standards::v1_1::subsets::any::schema::inferences::SvgInference;
         use crate::artifacts::svg::SvgSnapshot;
@@ -33,7 +33,7 @@ mod tests {
         assert_eq!(SvgInference::infer(&snapshot), SvgInference::infer(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         use crate::artifacts::svg::standards::v1_1::subsets::any::schema::inferences::SvgInference;
         use crate::artifacts::svg::SvgSnapshot;

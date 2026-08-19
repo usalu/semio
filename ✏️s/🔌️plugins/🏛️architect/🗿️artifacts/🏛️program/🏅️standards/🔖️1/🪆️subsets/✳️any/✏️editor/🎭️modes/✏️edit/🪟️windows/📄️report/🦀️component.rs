@@ -71,14 +71,14 @@ mod tests {
     use crate::artifacts::program::sample_plugin;
     use crate::artifacts::program::standards::v1::subsets::any::schema::inferences::build_report;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn definition_declares_the_text_editor_surface_and_body_key() {
         let definition = definition();
         assert_eq!(definition.body_key, ARCHITECT_BODY_REPORT);
         assert!(matches!(definition.surface_kind, SurfaceKind::TextEditor));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn a_report_in_the_config_renders_its_section_headings() {
         let report = build_report(&sample_plugin(), ReportKind::ExecutiveSummary);
         let cfg = ArchitectConfig { active_report_json: serde_json::to_string(&report).expect("json"), ..ArchitectConfig::default() };
@@ -87,7 +87,7 @@ mod tests {
         assert!(json.contains("architect-report.section"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn no_report_renders_the_placeholder() {
         let json = serde_json::to_string(&render(&ArchitectConfig::default())).expect("json");
         assert!(json.contains("Run validation, analysis, or report"));

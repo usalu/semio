@@ -108,7 +108,7 @@ impl store::ArtifactPack for Puzzle5dSnapshot {
 //#endregion 🔖️HandcraftedArtifactCodecs
 
 impl Default for Puzzle5dSnapshot {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self {
             schema: PUZZLE_5D_SCHEMA.to_string(),
             domain: "architecture".to_string(),

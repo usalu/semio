@@ -232,7 +232,7 @@ mod tests {
     use protocol::Inference;
 
     //#region 🧪️InferenceLaws
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = GisTerrainSnapshot {
             exaggeration: 1.5,
@@ -242,7 +242,7 @@ mod tests {
         assert_eq!(GisTerrainInference::infer(&snapshot), GisTerrainInference::infer(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(GisTerrainInference::infer(&GisTerrainSnapshot::default()), GisTerrainInference::default());
     }
@@ -256,7 +256,7 @@ mod tests {
     /// different purposes (see `parse_descriptor`/`default_terrain_document`'s docs); this proves the
     /// scenery-data reader (`terrain_fixture_text`) still recovers the bundled fixture's pins/origin
     /// after the document-only conversion — i.e. converting the fixture to the DSL didn't lose data.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn terrain_fixture_text_recovers_bundled_scenery_data() {
         let descriptor = parse_descriptor(&GisTerrainSnapshot { exaggeration: 1.5, imported_features_json: String::new(), ..Default::default() });
         assert_eq!(descriptor.project_origin.lon, 5.5818);
@@ -266,7 +266,7 @@ mod tests {
     }
 
     /// 🔌️ `map:in`'s overlay layer renders as extra pins alongside the fixture's own two.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn imported_map_features_render_as_extra_pins() {
         let document = GisTerrainSnapshot { exaggeration: 1.5, imported_features_json: serde_json::json!({ "positions": [{ "id": "imported-1", "lon": 5.58, "lat": 50.60 }] }).to_string(), ..Default::default() };
         let descriptor = parse_descriptor(&document);

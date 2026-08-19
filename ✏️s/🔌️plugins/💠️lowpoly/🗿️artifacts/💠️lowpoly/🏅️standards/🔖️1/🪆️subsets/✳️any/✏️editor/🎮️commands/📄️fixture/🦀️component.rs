@@ -62,7 +62,7 @@ mod tests {
     /// history), not an `artifact_mutations` entry — driven directly through `handle` (not
     /// `dispatch`, which routes through `VcsArtifactApp` and never applies `effects` to its own
     /// store, that's the real host's job), same pattern as the already-migrated `shooting` sibling.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn import_snapshot_json_replaces_the_whole_document() {
         let mesh_json = crate::artifacts::lowpoly::schema::default_mesh_workspace()["obj-1"].clone();
         let replacement = crate::artifacts::lowpoly::snapshot_from_mesh_json(&mesh_json, "obj-x", "X");
@@ -81,7 +81,7 @@ mod tests {
         assert_eq!(loaded.objects[0].id, "obj-x");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_fixture_json_with_invalid_json_is_a_no_op() {
         let mut a = app();
         let before = a.snapshot().expect("projection");

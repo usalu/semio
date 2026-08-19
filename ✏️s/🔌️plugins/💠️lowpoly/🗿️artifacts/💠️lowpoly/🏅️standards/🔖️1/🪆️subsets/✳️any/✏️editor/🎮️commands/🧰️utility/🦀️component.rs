@@ -68,7 +68,7 @@ mod tests {
     use crate::editor::lowpoly::LowpolyCommand;
     use semio_framework_plugin::{testkit, PluginApp};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn active_utility_switch_emits_no_ops_and_no_history() {
         // 🧰️ Selecting a host-owned utility must never create an undoable edit.
         let mut a = app();

@@ -24,7 +24,7 @@ pub struct WiresTopology {
 }
 
 impl Default for WiresTopology {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { node_count: 0, edge_count: 0, component_count: 0, cycle_free: true }
     }
 }
@@ -101,7 +101,7 @@ mod tests {
         ])
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn a_tree_is_cycle_free_with_one_component() {
         let topology = compute_wires_topology(&board(&["a", "b", "c"], &[("a", "b"), ("b", "c")]));
         assert_eq!(topology.node_count, 3);
@@ -110,14 +110,14 @@ mod tests {
         assert!(topology.cycle_free);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn a_triangle_closes_a_cycle() {
         let topology = compute_wires_topology(&board(&["a", "b", "c"], &[("a", "b"), ("b", "c"), ("c", "a")]));
         assert!(!topology.cycle_free);
         assert_eq!(topology.component_count, 1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn disconnected_nodes_count_as_separate_components() {
         let topology = compute_wires_topology(&board(&["a", "b"], &[]));
         assert_eq!(topology.component_count, 2);

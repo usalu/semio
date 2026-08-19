@@ -94,7 +94,7 @@ impl ArtifactKindId {
     /// 🧵️ Parses and validates the canonical grammar, failing with a message that names which
     /// rule broke.
     pub async fn parse(s: &str) -> Result<Self, String> {
-        if !is_canonical_artifact_kind(s) {
+        if !is_canonical_artifact_kind(s).await {
             return Err(format!("artifact kind {s:?} is not canonical grammar `s.<plugin>.<artifact>` (three dot-separated ASCII segments, first literally `s`, the rest lowercase-kebab)"));
         }
         Ok(ArtifactKindId(s.to_string()))
@@ -134,7 +134,7 @@ pub async fn is_canonical_artifact_kind(kind: &str) -> bool {
     if segments.next().is_some() {
         return false;
     }
-    is_kebab_segment(plugin) && is_kebab_segment(artifact)
+    is_kebab_segment(plugin).await && is_kebab_segment(artifact).await
 }
 
 /// 🔡️ One canonical-grammar segment: non-empty lowercase-ASCII `[a-z0-9-]`, no leading/trailing
@@ -158,7 +158,7 @@ pub struct ArtifactRef {
 impl ArtifactRef {
     /// 🧵️ Canonical wire form: `"<artifact_id>!<kind>@<standard>/<subset>"`.
     pub async fn to_uri(&self) -> String {
-        format!("{}!{}", self.artifact_id, self.dialect.to_coordinate())
+        format!("{}!{}", self.artifact_id, self.dialect.to_coordinate().await)
     }
 
     /// 🧵️ Inverse of `to_uri`. Splits on the FIRST `!`.
@@ -167,7 +167,7 @@ impl ArtifactRef {
         if artifact_id.is_empty() {
             return Err(format!("artifact ref uri {s:?} has an empty artifact id"));
         }
-        let dialect = ArtifactDialect::parse_coordinate(coordinate)?;
+        let dialect = ArtifactDialect::parse_coordinate(coordinate).await?;
         Ok(ArtifactRef { artifact_id: artifact_id.to_string(), dialect })
     }
 }

@@ -502,13 +502,13 @@ mod tests {
         out
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn empty_snapshot_matches_schema() {
         let snapshot = empty_bmp_snapshot();
         assert_eq!(snapshot.schema, STDIO_BMP_DOCUMENT_SCHEMA);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn codec_round_trip() {
         let snap = empty_bmp_snapshot();
         let text = store::ArtifactDsl::print_dsl(&snap);
@@ -522,7 +522,7 @@ mod tests {
     //#region RowPadding
     /// 🔬 width=5 at 24bpp is 15 raw bytes/row, padded to 16 — a width that divides evenly would
     /// not catch a broken padding formula.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn row_bytes_padding_is_exact() {
         assert_eq!(row_bytes(5, 24), 16);
         assert_eq!(row_bytes(4, 24), 12);
@@ -538,7 +538,7 @@ mod tests {
     /// 🔬 Load-bearing regression: non-solid 6x4 checkerboard/gradient through real 24-bit
     /// BI_RGB encode+decode, width chosen so raw row bytes (18) is NOT a multiple of 4 —
     /// exercises row padding on both the encode and decode sides.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn gradient_checkerboard_24bit_round_trip() {
         let (w, h) = (6u32, 4u32);
         let pixels = gradient_checkerboard_rgba(w, h);
@@ -610,7 +610,7 @@ mod tests {
         out
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn indexed_4bit_palette_round_trip() {
         // 5x3 image (row_bytes(5,4) = 4, NOT equal to raw 5*4bits/8=2.5->3 bytes — exercises padding),
         // palette of 4 colors, non-trivial (non-solid) index pattern.
@@ -653,7 +653,7 @@ mod tests {
     //#region BitfieldsFixture
     /// 🧪 Hand-encodes a 16-bit `BI_BITFIELDS` (5-5-5) BMP and checks the classic "count
     /// trailing zeros then scale by mask bit-width" extraction is exact for known values.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn bitfields_16bit_555_round_trip() {
         let (w, h) = (4u32, 2u32);
         // masks: R=0x7C00 G=0x03E0 B=0x001F, no alpha
@@ -707,7 +707,7 @@ mod tests {
     }
     //#endregion BitfieldsFixture
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn sniff_rejects_non_bmp_bytes() {
         let err = decode_bmp(b"not a bmp at all").unwrap_err();
         assert!(err.contains("signature"));
@@ -719,7 +719,7 @@ mod tests {
     /// `colors_used`, `colors_important`, `image_size`), and pixels — while the DOCUMENTED
     /// EncodeScopeNote normalization (`header_size`→40, `planes`→1, `bits_per_pixel`→24,
     /// `compression`→0) is asserted explicitly rather than silently ignored.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn codec_retention_law() {
         let (w, h) = (6u32, 4u32);
         let pixels = gradient_checkerboard_rgba(w, h);
@@ -772,7 +772,7 @@ mod tests {
         /// files parse under the real dialect — independent of, and cheaper than, the two
         /// `recognize`/`walk_protocol` laws below (a parse failure here fails fast with a
         /// clearer message).
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn committed_facet_files_parse() {
             for (label, text) in [("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO)] {
                 let grammar = dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
@@ -789,7 +789,7 @@ mod tests {
         /// reconstruction `m5_handcrafted_grammar_conformance`'s own `dsl_body_from_fixture`
         /// uses, so this is a direct proof this artifact will pass that harness once
         /// graduated, not merely an analogue.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn grammar_conformance_law() {
             let grammar = dsl::parse_grammar(snapshot::text::COMPONENT_GRAMMAR_SEMIO).expect("parse snapshot grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
@@ -801,7 +801,7 @@ mod tests {
 
         /// ✅️ `ops_grammar_conformance_law`: the mutations grammar recognizes real `print_op`
         /// output for every `BmpMutation` variant (`mutations::demo_mutation_cases()`).
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn ops_grammar_conformance_law() {
             let grammar = dsl::parse_grammar(mutations::text::COMPONENT_GRAMMAR_SEMIO).expect("parse mutations grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
@@ -814,7 +814,7 @@ mod tests {
         /// ✅️ `diff_grammar_conformance_law`: the diff grammar recognizes real `print_diff`
         /// output for every representative `BmpDiff` (`diff::demo_diff_cases()`), incl. the
         /// empty diff and every collection-triple shape.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn diff_grammar_conformance_law() {
             let grammar = dsl::parse_grammar(diff::text::COMPONENT_GRAMMAR_SEMIO).expect("parse diff grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
@@ -829,7 +829,7 @@ mod tests {
         /// `m5_handcrafted_protocol_conformance` itself feeds `walk_protocol`), every demo
         /// mutation's `encode_op`, and every demo diff's `encode_diff` — asserting `consumed
         /// == bytes.len()`.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn protocol_walk_law() {
             let pack_spec = dsl::parse_protocol(snapshot::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
             let packed = store::ArtifactPack::encode_pack(&demo_bmp_snapshot());
@@ -858,7 +858,7 @@ mod tests {
         /// the pack twin — so the fixtures can never silently drift back to a fake again (the
         /// pre-this-wave committed fixture WAS a fake "hello" placeholder — see
         /// `demo_bmp_snapshot`'s own doc comment).
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn fixture_honesty_law() {
             const FIXTURE_DSL: &str = include_str!("../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
             const FIXTURE_PACK: &[u8] = include_bytes!("../📚️examples/🎬️demo/🖼️assets/🎒️example.pack.semio");
@@ -877,7 +877,7 @@ mod tests {
         /// ✅️ `schema_spec_registration_resolves`: `register_schema_specs` genuinely resolves
         /// both the snapshot AND diff schema ids through `dsl::registry::full_resolver()` once
         /// called (real `BmpSnapshot::__dsl_spec`/`BmpDiff::__dsl_diff_spec`, not fabricated).
-        #[test]
+        #[semio_framework_async_macros::async_test]
         #[cfg(not(target_arch = "wasm32"))]
         async fn schema_spec_registration_resolves() {
             use dsl::os_pack::cli::SchemaResolver;

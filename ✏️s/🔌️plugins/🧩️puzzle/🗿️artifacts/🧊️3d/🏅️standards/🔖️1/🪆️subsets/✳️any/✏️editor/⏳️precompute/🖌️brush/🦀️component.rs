@@ -524,7 +524,7 @@ async fn brush_object_id(fixture: &Fixture, payload: &BrushPlacePayload) -> Stri
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fill_distribution_excludes_zero_weight_vortices() {
         let catalogs = KindCatalogBundle {
             objects: vec![ObjectKind {
@@ -558,7 +558,7 @@ mod tests {
         assert_eq!(target_ordered[0].vortex_kind.as_deref(), Some("b-s"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn brush_placement_emits_attraction_with_id_and_directed_root() {
         let fixture = Fixture { attractions: vec![], objects: vec![], target_volumes: vec![] };
         let catalogs = KindCatalogBundle {
@@ -583,7 +583,7 @@ mod tests {
     }
 
     /// 🪪️ Regression: successive brush placements must mint distinct object ids when the fixture grows.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn successive_brush_placements_never_collide_on_object_id() {
         let catalogs = KindCatalogBundle {
             objects: vec![ObjectKind {
@@ -608,7 +608,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn vortex_port_shape_and_compatibility() {
         assert_eq!(puzzle3d_vortex_port_shape("foo circular bar"), Some("circular"));
         assert_eq!(puzzle3d_vortex_port_shape("foo rectangular bar"), Some("rectangular"));
@@ -618,7 +618,7 @@ mod tests {
         assert!(!puzzle3d_vortex_port_shapes_compatible("foo circular bar", "baz rectangular qux"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn single_letter_port_family_and_compatibility() {
         assert_eq!(puzzle3d_single_letter_port_family("a-socket"), Some('a'));
         assert_eq!(puzzle3d_single_letter_port_family("ab-socket"), None);
@@ -629,7 +629,7 @@ mod tests {
         assert!(!puzzle3d_single_letter_port_families_compatible("a-socket", "b-plug"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn resolve_cable_and_attraction_kind_defaults_and_lookup() {
         let catalogs = KindCatalogBundle {
             objects: vec![],
@@ -643,7 +643,7 @@ mod tests {
         assert_eq!(resolve_attraction_kind_for_cable("missing", &catalogs), "");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn compat_pair_matches_and_specificity_rank() {
         let rule = KindCompatEntry { source: "a".into(), target: "b".into(), bidirectional: false, important: false, specificity: None };
         assert!(compat_pair_matches(&rule, "a", "b"));
@@ -659,7 +659,7 @@ mod tests {
         assert_eq!(specificity_rank(None), 4);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn attraction_gesture_rule_applies_specificity_branches() {
         let catalogs = KindCatalogBundle {
             objects: vec![],
@@ -678,7 +678,7 @@ mod tests {
         assert!(!attraction_gesture_rule_applies(&rule_for("sv", "other", Some("general")), &attracting, &attracted, &catalogs));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn vortices_attraction_compatible_for_drag_branches() {
         let catalogs = KindCatalogBundle { objects: vec![], vortices: vec![], cables: vec![] };
         let a_circ = AttractionVortexContext { object_kind: None, vortex_kind: Some("x circular y".into()) };
@@ -701,7 +701,7 @@ mod tests {
         assert!(vortices_attraction_compatible_for_drag(&sv, &tv, &[low, important], &catalogs), "an important match among matched rules must keep it compatible");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn brush_stack_pair_helpers() {
         assert_eq!(brush_stack_vortex_base("column bottom"), Some("column"));
         assert_eq!(brush_stack_vortex_base("column top"), Some("column"));
@@ -716,7 +716,7 @@ mod tests {
         assert!(!brush_stack_mate_pair("x circular column bottom", "x rectangular column top"), "incompatible port shapes must reject even a stack mate pair");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn brush_candidate_rank_scores_kind_match_and_stack_and_tambour_rules() {
         let target = AttractionVortexContext { object_kind: Some("Host".into()), vortex_kind: Some("column top".into()) };
         let template = ObjectKindVortexTemplate { vortex_kind: Some("column bottom".into()), point: [0.0, 0.0, 0.0], direction: None , ..Default::default() };
@@ -733,7 +733,7 @@ mod tests {
         assert!(brush_candidate_rank(&cylindric, &capsule_template, &target_tambour) > 0, "cylindric tambour stacking onto a mid-tambour host should score positively");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn host_accepts_candidate_rule_branches() {
         let rules = BrushHostRules::default();
         let target = AttractionVortexContext { object_kind: Some("Tambour".into()), vortex_kind: Some("door tambour circular".into()) };
@@ -758,7 +758,7 @@ mod tests {
         assert!(host_accepts_candidate(&door_rule_off, &target, &door_ok, &non_capsule_template), "disabling door_tambour_requires_door_capsule accepts regardless of the source vortex kind");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn brush_placement_uses_host_orientation_branches() {
         let target = AttractionVortexContext { object_kind: Some("Host".into()), vortex_kind: Some("column top".into()) };
         assert!(!brush_placement_uses_host_orientation(&target, "column bottom", "Host"), "stack mate pairs never use host orientation");
@@ -767,7 +767,7 @@ mod tests {
         assert!(!brush_placement_uses_host_orientation(&target, "column top", "OtherKind"), "matching vortex kind but a different candidate kind rejects host orientation");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn resolve_object_kind_mesh_url_prefers_catalog_then_falls_back_to_fixture() {
         let catalogs = KindCatalogBundle { objects: vec![ObjectKind { id: "Kind".into(), representations: vec![ObjectKindRepresentation { id: "r0".into(), name: String::new(), url: "/catalog.glb".into(), mime: String::new(), tags: vec![], lod: None, description: String::new() }], scale: None, vortices: vec![] }], vortices: vec![], cables: vec![] };
         let fixture = Fixture { attractions: vec![], target_volumes: vec![], objects: vec![] };
@@ -783,7 +783,7 @@ mod tests {
         assert_eq!(resolve_object_kind_mesh_url("Missing", &empty_catalogs, &fixture_with_object), None);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn brush_compatible_candidates_filters_and_sorts() {
         let catalogs = KindCatalogBundle {
             objects: vec![
@@ -800,7 +800,7 @@ mod tests {
         assert_eq!(candidates[0].object_kind_id, "Match");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn brush_compatible_candidates_stack_target_only_matches_mates() {
         let catalogs = KindCatalogBundle {
             objects: vec![
@@ -816,7 +816,7 @@ mod tests {
         assert_eq!(candidates[0].object_kind_id, "Mate");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn blocked_vortex_full_ids_and_enumeration_excludes_them() {
         let attractions = vec![AttractionProps { id: "a1".into(), attracting: "host:v0".into(), attracted: "guest:v0".into(), gap: 0.0, shift: 0.0, rise: 0.0, rotation: 0.0, turn: 0.0, tilt: 0.0 , x: 0.0, y: 0.0}];
         let blocked = blocked_vortex_full_ids(&attractions);
@@ -855,13 +855,13 @@ mod tests {
         assert_eq!(targets[0].full_id, "free:v0");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn vortex_world_from_object_none_for_missing_index() {
         let object = FixtureObject { id: "o".into(), object_kind: None, anchor: Default::default(), mesh_url: None, origin: [1.0, 2.0, 3.0], orientation: None, scale: None, vortices: vec![], reveal_index: None };
         assert!(vortex_world_from_object(&object, 0).is_none());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn weight_lookup_helpers_default_to_one_or_gate_on_zero() {
         let mut weights = BrushKindWeights::default();
         weights.object_weights.insert("A".into(), 2.0);
@@ -876,7 +876,7 @@ mod tests {
         assert_eq!(fill_vortex_target_weight(&target, &weights), 0.0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn weighted_sample_without_replacement_edge_cases() {
         let items = vec![1, 2, 3];
         let mut rng = 42u32;
@@ -890,7 +890,7 @@ mod tests {
         assert_eq!(sorted, items, "every eligible item appears exactly once");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fill_rng_is_deterministic_for_a_given_seed() {
         let mut a = 123u32;
         let mut b = 123u32;
@@ -900,7 +900,7 @@ mod tests {
         assert_ne!(a, 123);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fill_candidate_diversity_score_rewards_distance_within_same_kind() {
         let candidate = BrushCompatibleCandidate { object_kind_id: "Kind".into(), source_vortex_index: 3 };
         assert_eq!(fill_candidate_diversity_score(&candidate, 0, Some("Other")), 0, "a different target object kind never scores");
@@ -908,7 +908,7 @@ mod tests {
         assert_eq!(fill_candidate_diversity_score(&candidate, 3, Some("Kind")), 1000);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn brush_preview_from_candidate_none_branches() {
         let catalogs = KindCatalogBundle {
             objects: vec![ObjectKind { id: "Kind".into(), representations: vec![ObjectKindRepresentation { id: "r0".into(), name: String::new(), url: "/mesh.glb".into(), mime: String::new(), tags: vec![], lod: None, description: String::new() }], scale: None, vortices: vec![ObjectKindVortexTemplate { vortex_kind: Some("sv".into()), point: [0.0, 0.0, 0.0], direction: None , ..Default::default() }] }],
@@ -938,7 +938,7 @@ mod tests {
         assert_eq!(preview.object_kind_id, "Kind");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn apply_brush_placement_to_fixture_rejects_missing_kind_template_or_mesh() {
         let fixture = Fixture { attractions: vec![], objects: vec![], target_volumes: vec![] };
         let catalogs = KindCatalogBundle {
@@ -957,7 +957,7 @@ mod tests {
         assert_eq!(apply_brush_placement_to_fixture(&fixture, &missing_mesh, &catalogs).objects.len(), 0, "no resolvable mesh url means the placement must be rejected");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn apply_brush_placement_to_fixture_rejects_duplicate_attraction_target() {
         let catalogs = KindCatalogBundle {
             objects: vec![ObjectKind { id: "Kind".into(), representations: vec![ObjectKindRepresentation { id: "r0".into(), name: String::new(), url: "/mesh.glb".into(), mime: String::new(), tags: vec![], lod: None, description: String::new() }], scale: None, vortices: vec![ObjectKindVortexTemplate { vortex_kind: Some("sv".into()), point: [0.0, 0.0, 0.0], direction: None , ..Default::default() }] }],

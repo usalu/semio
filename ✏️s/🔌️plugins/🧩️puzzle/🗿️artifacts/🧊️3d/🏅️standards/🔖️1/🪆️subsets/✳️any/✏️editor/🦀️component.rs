@@ -1949,7 +1949,7 @@ pub struct Puzzle3dPlayApp {
 }
 
 impl Default for Puzzle3dPlayApp {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self {
             precompute: std::cell::RefCell::new(Puzzle3dPrecomputeSession::new()),
             transform_drag_active: std::cell::RefCell::new(false),
@@ -2986,13 +2986,13 @@ mod tests {
     use semio_framework_plugin::{testkit as framework_testkit, PluginApp, FRAMEWORK_HISTORY_BODY_KEY};
 
     //#region 🔖️Operations
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn renders_world_scene() {
         let mut app = app();
         assert!(render_composite(&mut app).to_string().contains("world-3d"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn initial_snapshot_is_the_concrete_forest_fixture() {
         let app = app();
         assert_eq!(projection_of(&app).get("schema").and_then(|value| value.as_str()), Some(PUZZLE3D_FIXTURE_SCHEMA));
@@ -3002,13 +3002,13 @@ mod tests {
     /// 📦️ `Puzzle3dPlaySnapshot`'s pack encoding round-trips through the same `(RecordSpec,
     /// RecordValue)` pair its `parse_dsl`/`print_dsl` do (both delegate to the underlying
     /// `serde_json::Value` bridge impls), reusing the default concrete-forest fixture.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn puzzle3d_play_projection_pack_round_trips() {
         let app = app();
         semio_framework_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&app.snapshot().expect("projection"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn open_add_object_dialog_emits_the_open_dialog_effect_with_no_document_change() {
         let mut app = app();
         let before = object_count(&app);
@@ -3021,7 +3021,7 @@ mod tests {
         assert_eq!(object_count(&app), before, "opening the dialog does not mutate the document");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_active_example_swaps_the_document_and_undo_restores_it() {
         let mut app = app();
         let loaded = object_count(&app);
@@ -3034,7 +3034,7 @@ mod tests {
         assert_eq!(object_count(&app), 0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn nakagin_example_loads_via_operations() {
         let mut app = app();
         dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": PUZZLE3D_EXAMPLE_NAKAGIN })), None).expect("nakagin");
@@ -3043,7 +3043,7 @@ mod tests {
         assert!(projection.get("objects").and_then(|value| value.as_array()).is_some_and(|objects| !objects.is_empty()));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn document_and_inspector_panels_render() {
         let mut app = app();
         for body in [document::BODY_KEY, catalogue::BODY_KEY, inspection::BODY_KEY, settings_panel::BODY_KEY] {
@@ -3058,7 +3058,7 @@ mod tests {
     /// `Puzzle3dPlaySnapshot` (the `🔖️ValueBridge` `serde_json::Value` wrapper this app still uses)
     /// — since `Puzzle3dMutation`'s canonical `Mutation<Puzzle3dSnapshot>` impl (not its
     /// `Mutation<Value>` bridge impl) is what the CW7 law is about.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn command_envelope_round_trip_holds_for_an_applied_operation() {
         use crate::artifacts::puzzle3d::spr::Puzzle3dStore;
         use crate::artifacts::puzzle3d::{Puzzle3dObject as TypedObject, PUZZLE_3D_SCHEMA};
@@ -3079,7 +3079,7 @@ mod tests {
     /// selection to switch on any more (see that module's doc comment — `ArtifactApp::render` never
     /// gained an `InteractionView` parameter) and always falls through to the document summary now,
     /// selected or not — this proves that degraded floor instead of the since-unreachable steppers.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn selected_object_inspector_nests_origin_into_x_y_z_steppers() {
         let mut app = app_with_registry();
         let object_id = first_object_id(&app);
@@ -3098,7 +3098,7 @@ mod tests {
             .expect("origin.x")
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn patch_inspector_origin_axis_sets_absolute_value_and_preserves_other_axes() {
         let mut app = app();
         let object_id = first_object_id(&app);
@@ -3120,7 +3120,7 @@ mod tests {
         assert_eq!(origin[1].as_f64(), Some(before_y), "origin.y should be untouched by an origin.x edit");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn patch_inspector_origin_axis_delta_offsets_each_selected_object_from_its_own_current_value() {
         let mut app = app();
         let id_a = first_object_id(&app);
@@ -3141,7 +3141,7 @@ mod tests {
     /// `patchInspector`'s own `interaction.selection(vortex)` fallback (`commands::patch_inspector`) —
     /// a bare `field`/`value` patch (no `ids` arg) must resolve against whatever the `vortex` domain's
     /// `object` granularity currently holds.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inspector_field_actions_resolve_selection_without_embedding_ids() {
         let mut app = app_with_registry();
         let object_id = first_object_id(&app);
@@ -3152,13 +3152,13 @@ mod tests {
     //#endregion 🔖️Inspector
 
     //#region 🔖️Manifest
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn app_definition_has_the_main_world_window() {
         let definition = create_puzzle3d_app();
         assert!(definition.window_kinds.iter().any(|window| window.id == main::WINDOW_KIND_ID));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn app_definition_declares_the_add_object_dialog() {
         let definition = create_puzzle3d_app();
         let dialog = definition.dialogs.iter().find(|entry| entry.id == "addObject").expect("addObject dialog declared");
@@ -3168,7 +3168,7 @@ mod tests {
 
     /// 📌️ The four declared panel tabs are present (the framework injects its own tabs alongside, so
     /// this asserts presence, never a total count).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn app_definition_declares_its_four_panel_tabs() {
         let definition = create_puzzle3d_app();
         let body_keys: Vec<&str> = definition.panel_tabs.iter().filter_map(|tab| tab.body_key.as_deref()).collect();
@@ -3179,7 +3179,7 @@ mod tests {
 
     /// 🌉️ Every declared action must bridge through `command_from_action` and round-trip
     /// `command_id` via the shared framework harness.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn every_declared_action_bridges_to_a_command() {
         semio_framework_plugin::testkit::assert_declared_actions_bridge_to_commands::<EditorApp<Puzzle3dPlayApp>>(puzzle3d_manifest_for_testkit);
         assert!(Puzzle3dPlayApp::command_from_action("noSuchAction", None).is_err());
@@ -3189,7 +3189,7 @@ mod tests {
     /// by design, so they simply fall through the `None` branch below) round-trips through the
     /// macro-generated `Puzzle3dCommand::from_action`/`action_id` pair as well as the `ArtifactApp`
     /// bridge asserted above.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn every_declared_action_round_trips_through_the_command_enum() {
         let definition = create_puzzle3d_app();
         for action in definition.window_kinds.iter().flat_map(|window| window.actions.iter()) {
@@ -3202,7 +3202,7 @@ mod tests {
 
     /// 🗣️ B1: manifest text is baked into `AppDefinition`/`App` as `LocalizedLabel` and resolved
     /// directly via `.resolve(Terminology, Locale)` — no shell round-trip needed to assert on it.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn app_definition_labels_resolve_german_reuse_branded_for_aggregator() {
         use semio_framework_plugin::{Locale, Terminology};
         let definition = create_puzzle3d_app();
@@ -3245,7 +3245,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn app_definition_labels_stay_english_native_without_brand_locks() {
         use semio_framework_plugin::{Locale, Terminology};
         let definition = create_puzzle3d_app();
@@ -3258,7 +3258,7 @@ mod tests {
         assert_eq!(action("addObjectKind").label.resolve(terminology, locale), "Add Object");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn document_and_kinds_trees_use_german_reuse_section_labels() {
         let mut app = app();
         dispatch(&mut app, "setLocale", Some(&json!({ "value": "de" })), None).expect("setLocale");
@@ -3278,7 +3278,7 @@ mod tests {
         assert!(!measures_json.contains("\"Attractions\""), "select measures must not hardcode Attractions");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn main_window_utilities_lead_with_transform_without_select_tool_and_no_default_utility() {
         let definition = create_puzzle3d_app();
         let utility_ids: Vec<&str> = definition.utilities.iter().map(|utility| utility.id.as_str()).collect();
@@ -3294,7 +3294,7 @@ mod tests {
     }
 
     /// 🛠️ Fill is a mode-level tool (a whole-document generator), not a window utility.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn tool_registry_declares_fill_tool() {
         let definition = create_puzzle3d_app();
         let tool_ids: Vec<&str> = definition.tools.iter().map(|tool| tool.id.as_str()).collect();
@@ -3305,7 +3305,7 @@ mod tests {
     //#endregion 🔖️Manifest
 
     //#region 🔖️Suggestions
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn context_menu_at_selects_vortex_and_prepends_suggest_objects() {
         let mut app = app();
         let vortex = first_vortex_full_id(&app);
@@ -3318,7 +3318,7 @@ mod tests {
         assert!(menu_json.contains("deleteSelection"), "menu should include delete: {menu_json}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn context_menu_at_selects_target_volume_and_set_target_volume_flag_toggles_hidden() {
         let mut app = app();
         dispatch(&mut app, "addTargetVolume", Some(&json!({ "origin": [1.0, 2.0, 3.0] })), None).expect("addTargetVolume");
@@ -3336,7 +3336,7 @@ mod tests {
     /// 🗂️ Grouped-disclosure contract for the object-selection branch: the top-level menu stays
     /// scannable (leaves + groups + separator combined) and the destructive `deleteSelection` row is
     /// the last top-level entry (`organize_context_menu` inserts the separator ahead of it).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn context_menu_at_selects_object_groups_flags_and_keeps_delete_last() {
         let mut app = app();
         dispatch(&mut app, "addObjectKind", Some(&json!({ "objectKind": "Object", "origin": [1.0, 0.0, 0.0] })), None).expect("addObjectKind");
@@ -3350,7 +3350,7 @@ mod tests {
         assert_eq!(menu.last().and_then(|item| item.destructive), Some(true), "delete must be marked destructive: {menu_json}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn open_vortex_suggestions_opens_the_suggestion_popup() {
         let mut app = app();
         let vortex = first_vortex_full_id(&app);
@@ -3370,7 +3370,7 @@ mod tests {
         assert!(menu.get("windowId").and_then(Value::as_str).is_some_and(|id| !id.is_empty()), "suggestion menu is scoped to the opening window: {menu}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn open_vortex_suggestions_records_explicit_window_id() {
         let mut app = app();
         let vortex = first_vortex_full_id(&app);
@@ -3381,7 +3381,7 @@ mod tests {
         assert_eq!(menu.get("vortexFullId").and_then(Value::as_str), Some(vortex.as_str()));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn accept_suggestion_with_full_id_places_even_if_selection_was_cleared() {
         let mut app = app();
         let vortex = first_vortex_full_id(&app);
@@ -3396,7 +3396,7 @@ mod tests {
         assert!(interaction.get("suggestionMenu").is_none_or(|menu| menu.is_null()));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn close_vortex_suggestions_clears_the_menu() {
         let mut app = app();
         let vortex = first_vortex_full_id(&app);
@@ -3410,7 +3410,7 @@ mod tests {
     /// `world_brush_preview_json`, which reads `runtime.brush_candidate_index`) to the hovered
     /// candidate, so the UI can highlight it in 3D before the user clicks — without switching the
     /// host-owned active utility into brush mode.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn hover_suggestion_updates_the_brush_candidate_index_and_live_preview() {
         let mut app = app();
         let vortex = first_vortex_full_id(&app);
@@ -3437,7 +3437,7 @@ mod tests {
         assert!(preview.get("color").and_then(Value::as_str).is_some_and(|color| color.starts_with('#')), "hovered brush preview still carries color: {preview}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn accept_suggestion_appends_an_object_and_closes_the_menu() {
         let mut app = app();
         let object_count_before = object_count(&app);
@@ -3461,7 +3461,7 @@ mod tests {
 
     /// 🧹️ A failed place (unknown vortex) must still close the suggestion menu — otherwise
     /// `suggestionMenu.open` stays true and every split pane's regular context menu is gated shut.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn accept_suggestion_closes_menu_even_when_placement_fails() {
         // 🕹️ `hover_id` dispatches through the real `interactionHover` verb, which resolves the
         // `vortex` domain against `self.registry` — a plain `app()` carries no registry (see
@@ -3479,7 +3479,7 @@ mod tests {
         assert!(interaction.get("suggestionMenu").is_none_or(|menu| menu.is_null()), "failed accept must still dismiss the suggestion menu");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn close_vortex_suggestions_clears_sticky_hover() {
         let mut app = app_with_registry();
         let vortex = first_vortex_full_id(&app);
@@ -3492,7 +3492,7 @@ mod tests {
 
     /// 🧰️ Context-menu / Alt+right-click suggestions are a one-shot placement: opening and accepting
     /// must leave whatever host-owned utility was already active (e.g. transform) untouched.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn open_and_accept_vortex_suggestions_preserve_active_utility() {
         let mut app = app();
         dispatch(&mut app, SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": utilities::transform::UTILITY_ID })), Some(main::WINDOW_KIND_ID)).expect("activate transform");
@@ -3513,7 +3513,7 @@ mod tests {
     //#endregion 🔖️Suggestions
 
     //#region 🔖️WindowOptions
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn grid_window_options_control_one_visible_grid_spacing() {
         let mut app = app();
         dispatch(&mut app, "setGridVisible", Some(&json!({ "pressed": false })), None).expect("setGridVisible");
@@ -3530,7 +3530,7 @@ mod tests {
     /// 🪟️ Two window instances of the same kind (a split top/perspective pane pair) must never share
     /// window options — toggling grid visibility in one instance must leave every other instance's
     /// grid untouched, both in its measures chrome and in its own rendered scene.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn window_options_are_local_to_the_window_instance_not_shared_across_split_panes() {
         let mut app = app();
         let second_window = "puzzle3d-main-2";
@@ -3559,7 +3559,7 @@ mod tests {
 
     /// 🎥️ `setCamera`/`setProjection`/`setProjectionParam`/`focusSelection` moved off the document —
     /// they are View-kind and must never emit VCS operations, no matter what they mutate.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn camera_actions_are_view_actions_that_emit_no_artifact_mutations() {
         let app_definition = create_puzzle3d_app();
         for action_id in ["setCamera", "setProjection", "setProjectionParam", "focusSelection"] {
@@ -3575,7 +3575,7 @@ mod tests {
 
     /// 🪟️📷️ Orbiting one window instance's camera must never move any sibling instance's camera, and
     /// must never touch the shared document.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_camera_is_per_window_and_leaves_sibling_windows_and_the_document_untouched() {
         let mut app = app();
         let window_a = "puzzle3d-main-a";
@@ -3595,7 +3595,7 @@ mod tests {
         assert_eq!(camera_of(&render_window(&mut app, window_b)), camera_b_before, "window B's rendered camera must be unaffected by window A's setCamera");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn vortex_show_window_option_defaults_to_selected_and_switches_to_always() {
         let mut app = app();
         let all_vortex_ids = vortex_full_ids(&app);
@@ -3616,7 +3616,7 @@ mod tests {
         assert!(vortices_of(&render_composite(&mut app)).is_empty(), "switching back to Selected must hide idle vortices");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn vortex_direction_window_option_defaults_to_outwards_and_switches_to_inwards() {
         let mut app = app();
         let measures = app.window_measures();
@@ -3635,7 +3635,7 @@ mod tests {
         assert!(vortices_of(&render_composite(&mut app)).iter().all(|record| record.get("displayDirection").and_then(Value::as_str) == Some(PUZZLE3D_VORTEX_DIRECTION_INWARDS)));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn vortex_direction_option_is_local_to_the_window_instance() {
         let mut app = app();
         let second_window = "puzzle3d-main-2";
@@ -3654,7 +3654,7 @@ mod tests {
     //#endregion 🔖️WindowOptions
 
     //#region 🔖️Fill
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fill_build_tick_is_ignored_when_fill_tool_is_inactive() {
         // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: `handle_action_impl` now takes
         // an `InteractionView`, which no external crate can construct directly (its fields are
@@ -3686,7 +3686,7 @@ mod tests {
         assert_eq!(after, before, "stale or queued fill ticks must not advance planning after the Fill tool is deactivated");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fill_build_tick_only_plans_available_slider_range() {
         // 🐢️ `drive_precompute` is bounded to a small per-call budget (the fix for the UI-freeze bug:
         // a single action must never grind the whole precompute queue synchronously), so the build
@@ -3736,7 +3736,7 @@ mod tests {
         assert_eq!(object_count(&app), object_count_before, "moving the fill slider to zero must remove every generated object");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_fill_count_clamps_to_available_and_no_longer_dispatches_catch_up() {
         // 🔒️ Requesting more than is currently planned must clamp (never leave `runtime.fill_count`
         // and the applied document disagreeing), and `fillBuildTick` must never self-dispatch another
@@ -3761,7 +3761,7 @@ mod tests {
         );
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fill_render_reveals_the_full_available_plan_tagged_with_reveal_index() {
         // 🪣️ `render()` composes EVERY currently-planned piece (not just the committed `fill_count`),
         // each tagged `revealIndex` — the viewport applies its own live, main-thread cutoff to show or
@@ -3800,7 +3800,7 @@ mod tests {
 
     /// 🪣️ Fill count drives the shared document + reveal cutoff — split top/perspective panes must
     /// never disagree about which planned objects are visible after a slider commit on either pane.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fill_count_is_shared_across_split_panes_reveal_cutoffs_and_instances() {
         let mut app = app();
         let top = main::WINDOW_INSTANCE_TOP;
@@ -3837,7 +3837,7 @@ mod tests {
         assert_eq!(instance_count(&top_after), instance_count(&perspective_after));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn seeded_objects_omit_reveal_index_so_the_boot_cutoff_cannot_hide_them() {
         let mut app = app();
         let rendered = render_composite(&mut app);
@@ -3849,7 +3849,7 @@ mod tests {
         assert_eq!(interaction_of(&rendered).pointer("/revealCutoffs/puzzle3d-fill").and_then(Value::as_u64), Some(0), "the boot cutoff really is 0 — this is the value that hid every mesh while revealIndex serialized as null");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fill_count_measure_shows_planning_progress_while_precompute_incomplete() {
         let mut session = Puzzle3dPrecomputeSession::new();
         let scene = Puzzle3dScene { fixture: nakagin_fixture(), runtime: Puzzle3dRuntime::default(), active_utility: fill_tool::TOOL_ID.into() };
@@ -3869,7 +3869,7 @@ mod tests {
     //#endregion 🔖️Fill
 
     //#region 🔖️Distribution
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn puzzle3d_normalize_kind_weight_group_redistributes_siblings_proportionally() {
         let ids = vec!["a".to_string(), "b".to_string(), "c".to_string()];
         let mut weights = HashMap::from([("a".to_string(), 0.2), ("b".to_string(), 0.3), ("c".to_string(), 0.5)]);
@@ -3882,7 +3882,7 @@ mod tests {
         assert!((weights.get("c").copied().unwrap_or(0.0) - 0.5 * 0.5 / 0.8).abs() < 1e-9);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn puzzle3d_vortex_measure_exposes_joint_weight_scaled_by_object() {
         let object_ids = vec!["Object".to_string(), "Placed".to_string()];
         let vortex_ids = vec!["c-b".to_string(), "b-s".to_string()];
@@ -3912,7 +3912,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn puzzle3d_distribution_lists_global_vortices_and_joints_sum_to_one() {
         let fixture = nakagin_fixture();
         let object_ids = puzzle3d_kind_ids(&fixture, "objects");
@@ -3943,7 +3943,7 @@ mod tests {
         assert!((joint_sum - 1.0).abs() < 1e-6, "all nested joint percentages across objects must sum to 1, got {joint_sum}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn puzzle3d_object_weight_change_scales_joint_sampling_product() {
         let object_ids = vec!["Object".to_string(), "Placed".to_string()];
         let vortex_ids = vec!["c-b".to_string(), "b-s".to_string()];
@@ -3958,7 +3958,7 @@ mod tests {
     }
 
     /// 🚫️ Zero object-kind weight disables every vortex slider under that kind — anything × 0 is 0.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn zero_object_kind_weight_disables_joint_vortex_sliders() {
         let labels = puzzle3d_labels(&Puzzle3dConfig::default());
         let session = Puzzle3dPrecomputeSession::new();
@@ -4000,7 +4000,7 @@ mod tests {
 
     /// 🎯️ Fill tool measures expose count + nested distribution tree under the Fill toggle; the Volume
     /// Brush voxel dims live in a utility-options group in the window's own measures.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fill_and_brush_params_are_tagged_utility_options_not_engagement_controls() {
         let labels = puzzle3d_labels(&Puzzle3dConfig::default());
         let session = Puzzle3dPrecomputeSession::new();
@@ -4065,7 +4065,7 @@ mod tests {
     //#endregion 🔖️Distribution
 
     //#region 🔖️UiScope
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fill_build_tick_is_a_view_action_with_narrow_ui_scope() {
         let definition = create_puzzle3d_app();
         let def = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|entry| entry.id == "fillBuildTick").expect("fillBuildTick declared");
@@ -4087,7 +4087,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_fill_count_declares_narrow_ui_scope() {
         let mut app = app();
         dispatch(&mut app, SET_ACTIVE_TOOL_ACTION_ID, Some(&json!({ "toolId": fill_tool::TOOL_ID })), None).expect("select fill tool");
@@ -4106,7 +4106,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_object_kind_weight_declares_fill_options_ui_scope() {
         let mut app = app();
         dispatch(&mut app, SET_ACTIVE_TOOL_ACTION_ID, Some(&json!({ "toolId": fill_tool::TOOL_ID })), None).expect("select fill tool");
@@ -4135,7 +4135,7 @@ mod tests {
     //#endregion 🔖️UiScope
 
     //#region 🔖️Utilities
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_object_kind_honors_drop_origin() {
         let mut app = app();
         let before = object_count(&app);
@@ -4149,7 +4149,7 @@ mod tests {
         assert_eq!(origin.get(2).and_then(Value::as_f64), Some(0.0));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_object_kind_materializes_the_declared_kind_default() {
         // 📝️ P1 arg form: firing addObjectKind with no args must materialize the declared `objectKind`
         // default and emit the object-add operation under registry enforcement.
@@ -4164,7 +4164,7 @@ mod tests {
         assert_eq!(kind, Some("Object"), "the declared objectKind default was materialized host-side");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_active_utility_emits_no_ops_and_no_history_entry() {
         // 🧰️ Switching utilities is the framework-injected View action: no document operations, no undo
         // entry, no re-emitted utility-switch effect (the command IS the direct switch).
@@ -4176,7 +4176,7 @@ mod tests {
         assert_eq!(projection_of(&app), before, "utility switching does not mutate the document");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn engagement_exposes_no_utility_switch_options() {
         // 🧰️ select/brush/fill switching lives only on the framework utility bar; the engagement HUD
         // must not duplicate it as options.
@@ -4185,7 +4185,7 @@ mod tests {
         assert!(engagement.options.is_none(), "the puzzle3d engagement must not re-expose utility switching as options");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn transform_engagement_does_not_block_background_deselect() {
         let scene = Puzzle3dScene { fixture: default_fixture(), runtime: Puzzle3dRuntime::default(), active_utility: utilities::transform::UTILITY_ID.into() };
         assert_eq!(main::engagement(&scene, &Puzzle3dLabels::NATIVE_EN).session_active, Some(false));
@@ -4197,7 +4197,7 @@ mod tests {
     /// command is deleted — selection now goes exclusively through the framework's `interactionSelect`
     /// verb (`select_id`), which is view-only by construction (`dispatch_interaction_action` never
     /// touches `self.store`). Proves the `vortex` domain wiring reaches that same guarantee.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn world_select_emits_no_artifact_mutations() {
         let mut app = app_with_registry();
         let before = projection_of(&app);
@@ -4212,7 +4212,7 @@ mod tests {
     /// more (see that function's doc comment) and always emits an empty `ids: []` now — the real
     /// selection is verified below via `VcsArtifactApp::interaction_state()` instead, the framework's
     /// own sanctioned test-visible source of truth.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn world_pick_keeps_instances_geometry_json_stable() {
         let mut app = app_with_registry();
         let instances_before = instances_of(&render_composite(&mut app));
@@ -4223,7 +4223,7 @@ mod tests {
         assert_eq!(app.interaction_state().selection.get(PUZZLE3D_INTERACTION_DOMAIN).map(|selection| selection.ids.clone()), Some(vec![object_id]));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn world_pick_null_clears_without_reselecting_first_object() {
         let mut app = app_with_registry();
         let object_id = first_object_id(&app);
@@ -4241,7 +4241,7 @@ mod tests {
     /// function's doc) — "never select a locked object" is now entirely a host click→pick
     /// translation concern, not reachable from this crate. Proves the Rust-side floor instead: the
     /// `vortex` domain has no lock awareness, so selecting a locked object's id still succeeds.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn world_pick_locked_object_clears_like_background() {
         let mut app = app_with_registry();
         let object_id = first_object_id(&app);
@@ -4262,7 +4262,7 @@ mod tests {
     /// both deleted — selection/hover are framework-owned now). `render` has no `InteractionView` to
     /// check against (see `object_vortices_visible`'s doc comment), so `Selected` mode degrades to
     /// "never reveal" until that framework gap closes — this now proves that degraded floor instead.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn world_vortices_stay_hidden_in_selected_mode_pending_the_render_interaction_gap() {
         let mut app = app();
         let all_vortex_ids = vortex_full_ids(&app);
@@ -4278,7 +4278,7 @@ mod tests {
     /// granularity inherently replaces the whole prior selection — verified against
     /// `interaction_state()` (the render-time `selectionJson`/`vorticesJson` fields carry no live ids
     /// any more, per `world_selection_json`'s known-gap doc comment).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn world_pick_object_replaces_vortex_selection() {
         let mut app = app_with_registry();
         let vortex = first_vortex_full_id(&app);
@@ -4290,7 +4290,7 @@ mod tests {
         assert_eq!(selection.ids, vec![object_id]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn world_vortex_select_clears_object_selection() {
         let mut app = app_with_registry();
         let object_id = first_object_id(&app);
@@ -4309,7 +4309,7 @@ mod tests {
     /// explicitly on every dispatch (the host decides per click — e.g. a held modifier key — never
     /// defaulted from stored state). Proves the underlying `merge: "invertive"` primitive still
     /// toggles a second target back into the selection instead.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn world_vortex_click_replaces_until_invertive_mode_is_selected() {
         let mut app = app_with_registry();
         let vortices = vortex_full_ids(&app);
@@ -4333,7 +4333,7 @@ mod tests {
     /// function's doc comment) and always degrades to `false`. `transformMode`/`gumballConfig` never
     /// depended on selection (only on the active utility, per-window), so those stay meaningfully
     /// tested; the selection setup and the once-`true` gumball assertion are gone.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn gumball_active_only_for_transform_utilities_with_object_selection() {
         let mut app = app_with_registry();
         let object_id = first_object_id(&app);
@@ -4355,12 +4355,12 @@ mod tests {
         assert!(brush_selection.get("transformMode").is_none());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM known gap: `gumballActive` no
     /// longer proves anything per-window (always `false` — see the sibling test's doc comment above);
     /// `transformMode` never depended on selection, only on each window instance's own
     /// `active_utility_by_window_id`, so it stays the meaningful per-window-isolation proof here.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn transform_utility_is_local_to_the_window_instance_not_shared_across_split_panes() {
         let mut app = app();
         let top = main::WINDOW_INSTANCE_TOP;
@@ -4373,7 +4373,7 @@ mod tests {
         assert!(perspective_selection.get("transformMode").is_none(), "perspective pane must not inherit top pane's transform utility");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn transform_utility_options_expose_move_and_rotate_flags() {
         let labels = puzzle3d_labels(&Puzzle3dConfig::default());
         let session = Puzzle3dPrecomputeSession::new();
@@ -4402,7 +4402,7 @@ mod tests {
             .unwrap_or_default()
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn gumball_translate_drag_coalesces_into_one_edit() {
         // 🌀️ Unbracketed translate ticks still coalesce via AmendLast (compat path without transformBegin).
         let mut app = app();
@@ -4419,7 +4419,7 @@ mod tests {
         assert_eq!(object_origin(&app, &object_id), start, "one undo restores the whole coalesced gumball drag");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn gumball_transform_session_commits_once_on_end() {
         // 🧲️ Scratch-commit: mid-drag ticks emit ZERO operations; transformEnd commits ONE edit from
         // base→scratch. Incremental host deltas accumulate on scratch — 1 then 5 → final +6.
@@ -4458,13 +4458,13 @@ mod tests {
     /// `transform_scratch` only, never a `Puzzle3dMutation` — exercised directly against
     /// `Puzzle3dPlayApp` (bypassing the `VcsArtifactApp` wrapper, which has no accessor into the
     /// inner app) since `transform_drag_tick` is the natural per-tick gesture handler.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn gesture_preview_is_none_without_an_active_transform_drag() {
         let app = Puzzle3dPlayApp::default();
         assert!(app.gesture_preview().is_none(), "no live gumball drag, nothing to preview");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn gesture_preview_reflects_the_live_gumball_drag_and_clears_on_commit() {
         let app = Puzzle3dPlayApp::default();
         let fixture = default_fixture();
@@ -4491,7 +4491,7 @@ mod tests {
         assert!(app.gesture_preview().is_none(), "the drag ended: nothing left to preview, and the commit above already carried the real operation");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn gesture_preview_is_a_pure_read_never_mutating_the_transform_scratch() {
         let app = Puzzle3dPlayApp::default();
         let fixture = default_fixture();
@@ -4512,7 +4512,7 @@ mod tests {
     /// `Puzzle3dPlayApp::import_media` must normalize `objectKinds` → `objects` / `vortexKinds` →
     /// `vortices` and, after applying the returned operations, land that object kind inside
     /// `meta.kind_catalogs.objects` (and the vortex kind inside `.vortices`).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn kit_in_import_media_upserts_object_and_vortex_kinds_into_meta_kind_catalogs() {
         let app = Puzzle3dPlayApp::default();
         let projection = Puzzle3dPlayApp::initial_snapshot();
@@ -4558,7 +4558,7 @@ mod tests {
 
     /// 🔁️ Re-importing the SAME fragment (a second producer edge, or a redelivered message on a
     /// `multiplicity: Many` port) must upsert idempotently — no duplicate rows.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn kit_in_import_media_is_idempotent_on_repeated_delivery() {
         let app = Puzzle3dPlayApp::default();
         let projection = Puzzle3dPlayApp::initial_snapshot();
@@ -4587,7 +4587,7 @@ mod tests {
         assert_eq!(objects.iter().filter(|entry| entry.get("id").and_then(Value::as_str) == Some("capsule")).count(), 1, "repeated delivery of the same fragment must upsert, never duplicate");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn kit_in_port_is_declared_on_the_app_io() {
         let app = Puzzle3dPlayApp::default();
         let io = Puzzle3dPlayApp::io().expect("puzzle3d declares an AppIo");
@@ -4602,7 +4602,7 @@ mod tests {
     /// 🧪️ Definitional convergence proof: two instances on one backbone make DISJOINT object edits and,
     /// after exchanging operations, both converge to contain BOTH objects — impossible under
     /// whole-document `setSnapshot` snapshots, which would clobber one side.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn two_instances_converge_disjoint_object_edits_via_backbone() {
         use store::MemoryBackbone;
         let mut instance_a = app();

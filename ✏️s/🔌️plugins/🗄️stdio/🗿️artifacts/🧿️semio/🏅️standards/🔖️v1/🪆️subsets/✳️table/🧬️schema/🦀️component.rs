@@ -20,7 +20,7 @@ pub struct SemioTableArtifact {
 }
 
 impl Default for SemioTableArtifact {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self::from_snapshot(SemioTableSnapshot::default())
     }
 }
@@ -139,7 +139,7 @@ pub mod derived_construction {
         use super::*;
         use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValue;
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn typed_constructors_build_a_populated_snapshot() {
             let snapshot = SemioTableBuilderConstruction::new().add_column("label", SemioTableCellKind::Str).add_row(SemioTableRow { cells: vec![SemioValue::Str { value: "hello".into() }] }).build().expect("build");
             assert_eq!(snapshot.columns.len(), 1);

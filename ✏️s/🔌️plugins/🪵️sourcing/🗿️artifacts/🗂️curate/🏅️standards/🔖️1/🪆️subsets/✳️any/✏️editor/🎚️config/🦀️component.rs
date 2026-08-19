@@ -101,7 +101,7 @@ async fn default_contributions_json() -> String {
 }
 
 impl Default for SourcingCurateConfig {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { filters: Filters::default(), locale: "en-US".into(), contributions_json: default_contributions_json() }
     }
 }
@@ -252,7 +252,7 @@ mod tests {
     use super::*;
     use crate::artifacts::curate::SortDirection;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn sourcing_curate_config_default_matches_the_prior_document_defaults() {
         let config = SourcingCurateConfig::default();
         assert_eq!(config.filters, Filters::default());
@@ -285,7 +285,7 @@ mod tests {
         forward
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn config_mutations_round_trip_every_variant() {
         let config = sample_config();
         round_trip(&config, &SourcingCurateConfigMutation::SetFilterQuery { value: "kvh".into() });
@@ -299,7 +299,7 @@ mod tests {
         assert_eq!(snapshot, SourcingCurateConfig::default());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn config_op_text_round_trips_every_variant() {
         store::os_store::test_support::assert_op_text_binary_equivalence(&SourcingCurateConfigMutation::Snapshot { config: sample_config() });
         store::os_store::test_support::assert_op_text_binary_equivalence(&SourcingCurateConfigMutation::SetFilterQuery { value: "kvh".into() });

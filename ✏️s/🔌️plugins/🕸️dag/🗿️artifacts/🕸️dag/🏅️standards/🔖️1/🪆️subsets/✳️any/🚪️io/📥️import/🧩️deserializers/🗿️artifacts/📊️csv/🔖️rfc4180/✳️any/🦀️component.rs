@@ -23,7 +23,7 @@ pub struct CsvIntoDag;
 impl Deserializer<DagSnapshot> for CsvIntoDag {
     const FROM: Dialect = CSV_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    async fn deserialize(payload: &IoPayload) -> IoResult<DagSnapshot> {
+    fn deserialize(payload: &IoPayload) -> IoResult<DagSnapshot> {
         let IoPayload::Binary(bytes) = payload else {
             return Err(IoError { message: "CsvIntoDag: expected a binary csv payload".to_string(), diagnostics: Vec::new() });
         };

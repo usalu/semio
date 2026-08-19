@@ -27,7 +27,7 @@ pub struct TxtArtifact {
 
 //#region 🔖️Conversions
 impl Default for TxtArtifact {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self::from_snapshot(TxtSnapshot::default())
     }
 }
@@ -214,18 +214,18 @@ pub mod derived_analysis {
     mod tests {
         use super::*;
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn sniff_text_source_is_high() {
             assert_eq!(TxtAnalyzerAnalysis::sniff(&AnalyzeSource::Text("anything at all")), IoConfidence::High);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn sniff_binary_with_nul_bytes_is_low_or_medium_not_high() {
             let bytes: &[u8] = b"\x00\x01\x02binary garbage\x00";
             assert_ne!(TxtAnalyzerAnalysis::sniff(&AnalyzeSource::Binary(bytes)), IoConfidence::High);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn sniff_invalid_utf8_binary_is_low() {
             let bytes: &[u8] = &[0xff, 0xfe, 0xfd];
             assert_eq!(TxtAnalyzerAnalysis::sniff(&AnalyzeSource::Binary(bytes)), IoConfidence::Low);
@@ -269,13 +269,13 @@ mod tests {
     use super::*;
     use crate::artifacts::txt::{TxtDiff, TxtMutation, STDIO_TXT_DOCUMENT_SCHEMA};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn empty_snapshot_matches_schema() {
         let snapshot = empty_txt_snapshot();
         assert_eq!(snapshot.schema, STDIO_TXT_DOCUMENT_SCHEMA);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn codec_round_trip() {
         let snap = empty_txt_snapshot();
         let text = store::ArtifactDsl::print_dsl(&snap);
@@ -286,7 +286,7 @@ mod tests {
         assert_eq!(decoded, snap);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn nontrivial_multiline_unicode_round_trip() {
         let body = "Hello, \u{4e16}\u{754c}!\nLine two with an emoji \u{1f389}.\nTab\there.\n".to_string();
         let snap = TxtSnapshot::from_body(&body);
@@ -306,7 +306,7 @@ mod tests {
     /// `store::semio_format::wrap_text` (outside this artifact's ownership boundary) unwraps
     /// via `body.trim_start()`, which is documented-lossy for a body starting with its own
     /// newline -- pre-existing framework behavior, not something this diff/mutation wave owns.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn codec_retention_law() {
         for body in ["a\nb\nc\n", "a\r\nb\r\nc", "", "\n", "just one line, no newline"] {
             let snap = TxtSnapshot::from_body(body);
@@ -355,7 +355,7 @@ mod tests {
     /// `removed` (`a` is now the "longer" side) — between the two directions every kind of line
     /// change the diff type can express is proven, exactly matching what `between_roundtrip_law`
     /// already checks in both directions anyway.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn field_sweep_covers_every_mutable_field() {
         use protocol::os_spr::command::DiffAlgebra;
         use protocol::MutationDiff;
@@ -388,7 +388,7 @@ mod tests {
     /// whole body) recognizes the genuine `print_dsl` output, envelope-id-normalized the same way
     /// `dsl::fixture_sweep::m5_handcrafted_grammar_conformance::dsl_body_from_fixture` feeds the
     /// Recognizer (mirrored here so this law does not depend on the framework's own harness).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn grammar_conformance_law() {
         let grammar_text = crate::artifacts::txt::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO;
         let grammar = dsl::parse_grammar(grammar_text).expect("parse snapshot grammar");
@@ -409,7 +409,7 @@ mod tests {
     /// own law) — snapshot's Pack facet walks the post-`unwrap_binary` payload of a genuine
     /// `encode_pack` call; mutations' Spr facet walks a genuine `encode_op` frame; diff's own
     /// protocol facet walks a genuine `encode_diff` frame.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn protocol_walk_law() {
         // Pack (snapshot binary facet).
         let snap = demo_txt_snapshot();
@@ -438,7 +438,7 @@ mod tests {
     /// 🧪️ P2-P3: fixture honesty — the committed `.dsl.semio`/`.pack.semio` fixtures are
     /// genuinely `print_dsl`/`encode_pack` output of the SAME demo snapshot, round-tripping both
     /// ways (never allowed to silently drift again).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fixture_honesty_law() {
         let demo = demo_txt_snapshot();
         assert_eq!(<TxtSnapshot as store::ArtifactDsl>::parse_dsl(crate::artifacts::txt::examples::demo::PRIMARY_TEXT).unwrap(), demo);
@@ -455,7 +455,7 @@ mod tests {
     /// 🧪️ P2-P3: every committed grammar/protocol file for this standard genuinely parses under
     /// `dsl::parse_grammar`/`dsl::parse_protocol` — this artifact's own early warning, independent
     /// of the eventual repo-wide policy gate.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn committed_grammar_and_protocol_files_parse() {
         let g1 = dsl::parse_grammar(crate::artifacts::txt::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO);
         assert!(g1.is_ok(), "snapshot grammar must parse: {g1:?}");
@@ -473,7 +473,7 @@ mod tests {
 
     /// 🧪️ P2-P3: `register_schema_spec` genuinely resolves both the document and diff schema ids
     /// through `dsl::registry::full_resolver()` once `register()` has run.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     #[cfg(not(target_arch = "wasm32"))]
     async fn schema_spec_registration_resolves() {
         use dsl::os_pack::cli::SchemaResolver;

@@ -71,7 +71,7 @@ pub enum SemioValue {
 }
 
 impl Default for SemioValue {
-    async fn default() -> Self {
+    fn default() -> Self {
         SemioValue::Null
     }
 }
@@ -109,7 +109,7 @@ pub struct SemioValueSnapshot {
 }
 
 impl Default for SemioValueSnapshot {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { schema: STDIO_SEMIOVALUE_DOCUMENT_SCHEMA.into(), root: SemioValue::default(), nodes: Vec::new() }
     }
 }
@@ -225,7 +225,7 @@ pub(crate) async fn demo_semio_value_snapshot() -> SemioValueSnapshot {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn json_pack_round_trips() {
         let snap = demo_semio_value_snapshot();
         let bytes = <SemioValueSnapshot as store::ArtifactPack>::encode_pack(&snap);
@@ -233,7 +233,7 @@ mod tests {
         assert_eq!(snap, back);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dsl_text_round_trips() {
         let snap = demo_semio_value_snapshot();
         let text = <SemioValueSnapshot as store::ArtifactDsl>::print_dsl(&snap);
@@ -245,7 +245,7 @@ mod tests {
     /// (an arbitrary-precision int lexeme and a trailing-zero float lexeme — both would silently
     /// corrupt if either variant were ever routed through `i64`/`f64`) plus the `Ref`/graph shape
     /// surviving intact.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn codec_retention_law_preserves_lexemes_bytes_and_graph_shape() {
         let snap = SemioValueSnapshot {
             schema: STDIO_SEMIOVALUE_DOCUMENT_SCHEMA.into(),

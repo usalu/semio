@@ -19,7 +19,7 @@ pub struct ZipIntoForms;
 impl Deserializer<FormsSnapshot> for ZipIntoForms {
     const FROM: Dialect = ZIP_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    async fn deserialize(_payload: &IoPayload) -> IoResult<FormsSnapshot> {
+    fn deserialize(_payload: &IoPayload) -> IoResult<FormsSnapshot> {
         Err(IoError { message: "ZipIntoForms: not implemented".to_string(), diagnostics: Vec::new() })
     }
 }

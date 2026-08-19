@@ -179,7 +179,7 @@ mod tests {
         (model, tb.build().unwrap(), adj)
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn initial_counts_match_full_domain_supporter_popcounts() {
         let (model, topo, adj) = checkerboard(3);
         let mut domains = DomainStore::new_full(3, model.weights());
@@ -196,7 +196,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn propagation_forces_alternation_after_one_pin() {
         let (model, topo, _adj) = checkerboard(4);
         let mut domains = DomainStore::new_full(4, model.weights());
@@ -213,7 +213,7 @@ mod tests {
         engine.debug_assert_consistent(&model, &topo, &domains);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn odd_cycle_pin_propagates_to_wipeout() {
         let mut b = ModelBuilder::new();
         let black = b.add_pattern(1.0);
@@ -271,7 +271,7 @@ mod tests {
     /// twice for a single logical removal — over-pruning patterns that still had support. Applying
     /// a batch of removals up front (one `propagate` call with the whole worklist) must give
     /// exactly the same result as applying them one at a time (one `propagate` call each).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn sequential_and_batch_seed_application_agree() {
         let mut rng = geometry::random::Rng::from_seed(4040);
         for trial in 0..100 {
@@ -359,7 +359,7 @@ mod tests {
         /// on a malformed one (e.g. a self-inverse relation with an asymmetric table, which
         /// `oracle::testgen::random_model` can produce) would compare two *different*, each
         /// internally-valid, propagation strengths rather than testing for a real disagreement.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn ac3_and_ac4_reach_identical_fixed_points_on_random_instances() {
             let mut rng = geometry::random::Rng::from_seed(4040);
             for trial in 0..300 {

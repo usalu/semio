@@ -91,19 +91,19 @@ pub mod derived_construction {
             PptxSnapshot { opc, ..PptxSnapshot::default() }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn empty_builder_has_no_office_document_relationship_and_fails_build() {
             let err = PptxTransitionalBuilderConstruction::empty().build().expect_err("an empty package has no officeDocument relationship, must fail build()");
             assert!(err.iter().any(|d| d.code.0 == crate::artifacts::pptx::standards::v_ecma_376::subsets::transitional::schema::CODE_MAIN_NS));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn conforming_transitional_snapshot_builds_clean() {
             let snapshot = PptxTransitionalBuilderConstruction::from_snapshot(transitional_snapshot()).build().expect("conforming Transitional snapshot must build");
             assert!(snapshot.opc.part_bytes("ppt/presentation.xml").is_some());
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn hard_violation_injected_via_raw_mutate_still_fails_build() {
             let mut violating = transitional_snapshot();
             violating.opc.set_part("ppt/slides/slide1.xml", "application/vnd.openxmlformats-officedocument.presentationml.slide+xml", b"<p:sld xmlns:p=\"http://purl.oclc.org/ooxml/presentationml/main\"/>".to_vec());
@@ -254,13 +254,13 @@ pub mod derived_analysis {
             PptxSnapshot { opc, ..PptxSnapshot::default() }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn conforming_transitional_snapshot_reports_nothing() {
             let diagnostics = check_transitional_conformance(&transitional_snapshot());
             assert!(diagnostics.is_empty(), "got {diagnostics:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn strict_main_ns_on_root_part_is_hard() {
             let mut snapshot = transitional_snapshot();
             let strict_xml = TRANSITIONAL_PRESENTATION_XML.replace(TRANSITIONAL_MAIN_NS, "http://purl.oclc.org/ooxml/presentationml/main");
@@ -269,7 +269,7 @@ pub mod derived_analysis {
             assert!(diagnostics.iter().any(|d| d.severity == Severity::Error), "got {diagnostics:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn strict_namespace_anywhere_in_package_is_hard() {
             let mut snapshot = transitional_snapshot();
             snapshot.opc.set_part("ppt/slides/slide1.xml", "application/vnd.openxmlformats-officedocument.presentationml.slide+xml", b"<p:sld xmlns:p=\"http://purl.oclc.org/ooxml/presentationml/main\"/>".to_vec());
@@ -277,7 +277,7 @@ pub mod derived_analysis {
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_STRICT_NS_PRESENT && d.severity == Severity::Error), "got {diagnostics:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn strict_relationship_base_is_hard() {
             let mut snapshot = transitional_snapshot();
             snapshot.opc.set_part("ppt/slides/slide1.xml", "application/vnd.openxmlformats-officedocument.presentationml.slide+xml", b"<p:sld/>".to_vec());
@@ -286,7 +286,7 @@ pub mod derived_analysis {
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_STRICT_NS_PRESENT && d.severity == Severity::Error), "got {diagnostics:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn explicit_strict_conformance_attribute_is_soft() {
             let mut snapshot = transitional_snapshot();
             let with_conformance = TRANSITIONAL_PRESENTATION_XML.replace("<p:presentation ", "<p:presentation conformance=\"strict\" ");
@@ -296,7 +296,7 @@ pub mod derived_analysis {
             assert!(diagnostics.iter().all(|d| d.severity != Severity::Error), "got {diagnostics:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn missing_office_document_relationship_is_hard() {
             let snapshot = PptxSnapshot::default();
             let diagnostics = check_transitional_conformance(&snapshot);

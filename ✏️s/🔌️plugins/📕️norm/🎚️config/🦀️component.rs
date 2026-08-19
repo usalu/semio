@@ -186,19 +186,19 @@ impl Mutation<NormConfig> for NormConfigMutation {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn norm_config_dsl_round_trips() {
         store::os_store::test_support::assert_dsl_round_trip(&NormConfig::default());
         store::os_store::test_support::assert_dsl_round_trip(&NormConfig { selected_check_index: Some(3) });
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn norm_config_dsl_pack_equivalence() {
         store::os_store::test_support::assert_dsl_pack_equivalence(&NormConfig::default());
         store::os_store::test_support::assert_dsl_pack_equivalence(&NormConfig { selected_check_index: Some(7) });
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn norm_config_operation_snapshot_is_a_real_inverse() {
         let base = NormConfig { selected_check_index: Some(1) };
         let op = NormConfigMutation::SetSelectedCheckIndex { index: Some(5) };
@@ -210,7 +210,7 @@ mod tests {
         assert_eq!(restored, base);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn norm_config_operation_op_text_round_trips() {
         store::os_store::test_support::assert_op_line_round_trip(&NormConfigMutation::SetSelectedCheckIndex { index: Some(2) });
         store::os_store::test_support::assert_op_line_round_trip(&NormConfigMutation::SetSelectedCheckIndex { index: None });
@@ -219,7 +219,7 @@ mod tests {
 
     /// 🧷️ Pins the config operations' exact pre-migration wire bytes (from the ticket's
     /// `🧪️wire-baseline-before.txt`) — `NormConfig` moved file but must not move format.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn config_mutations_keep_their_pre_migration_bytes() {
         let hex = |op: &NormConfigMutation| protocol::OpBinary::encode_op(op).expect("encode").iter().map(|byte| format!("{byte:02x}")).collect::<String>();
         assert_eq!(hex(&NormConfigMutation::Snapshot { config: NormConfig::default() }), "01000001000e0d00");

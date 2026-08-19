@@ -17,7 +17,7 @@ pub struct VcsIntoZip;
 impl Serializer<VcsSnapshot> for VcsIntoZip {
     const INTO: Dialect = ZIP_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    async fn serialize(from: &VcsSnapshot) -> IoResult<IoPayload> {
+    fn serialize(from: &VcsSnapshot) -> IoResult<IoPayload> {
         let value = serde_json::to_value(from).map_err(|error| IoError { message: format!("VcsIntoZip: {error}"), diagnostics: Vec::new() })?;
         let zip: ZipSnapshot = serde_json::from_value(value).map_err(|error| IoError { message: format!("VcsIntoZip: {error}"), diagnostics: Vec::new() })?;
         Ok(IoOutcome::clean(IoPayload::Binary(<ZipSnapshot as store::ArtifactPack>::encode_pack(&zip))))

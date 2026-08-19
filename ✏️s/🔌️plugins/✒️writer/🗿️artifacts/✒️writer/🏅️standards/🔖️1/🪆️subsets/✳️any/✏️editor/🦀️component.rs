@@ -536,7 +536,7 @@ mod tests {
         serde_json::to_value(app.context_menu(&request)).unwrap_or(Value::Null)
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn jack_completions_use_example_fixture() {
         let json = crate::artifacts::writer::standards::v1::subsets::any::schema::jack_completions_json("RETURN a.", 9).unwrap_or_default();
         assert!(!json.is_empty());
@@ -546,7 +546,7 @@ mod tests {
     /// 🏷️ Every declared manifest action id must be reachable as exactly one command row (`setEditorSetting`
     /// legitimately covers three rows — see the `app_commands!` doc comment above), and every row's wire
     /// keyword must be distinct — the cross-cutting invariant `app_commands!` is there to hold.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn command_surface_has_the_expected_row_count_and_distinct_wire_keywords() {
         let commands = every_command();
         assert_eq!(commands.len(), 20, "every WriterCommand row must be covered by every_command()");
@@ -557,7 +557,7 @@ mod tests {
     }
 
     /// ⚖️ LAW: text and binary are two projections of the same command, for every single row.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn every_command_round_trips_through_text_and_binary() {
         for command in every_command() {
             store::os_store::test_support::assert_op_text_binary_equivalence(&command);
@@ -567,7 +567,7 @@ mod tests {
     /// ⚖️ LAW: the leading token of every printed op line is the row's `dsl` wire keyword — what a
     /// missing `#[dsl(keyword = ..)]` on a payload struct silently breaks (the record prints with no
     /// keyword at all and no longer parses).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn every_printed_op_line_starts_with_the_rows_declared_wire_keyword() {
         let expectations: Vec<(&str, WriterCommand)> = vec![
             ("text-edit", WriterCommand::TextEdit(text_edit::TextEdit { text: "x".into() })),
@@ -633,7 +633,7 @@ mod tests {
     /// `🧪️wire-baseline-before.txt`, row 22 — rows 15/16 (`ast-hover`/`text-hover`) dissolved into the
     /// framework's own `ast` interaction domain and no longer exist as writer commands). A regression
     /// here is a real format break, not a test-fixture mismatch.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn optional_field_rows_keep_their_pre_migration_bytes() {
         let cases: [(WriterCommand, &str, &str); 1] = [(WriterCommand::EngagementSubmit(engagement_submit::EngagementSubmit { value: None }), "engagement-submit engagement-submit", "01120000")];
         for (command, text, hex) in cases {
@@ -645,7 +645,7 @@ mod tests {
     //#endregion 🔖️CommandSurface
 
     //#region 🔖️ManifestSanity
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn the_manifest_stitches_every_taxonomy_node() {
         let json = serde_json::to_string(&create_writer_app()).expect("app definition json");
         assert!(json.contains(WRITER_PLAY_WINDOW_KIND), "window kind missing from the manifest: {json}");
@@ -667,7 +667,7 @@ mod tests {
     /// 🕹️ The `ast` domain is declared `HierarchyProvider::Topology`, transitive on both hover and
     /// selection, and scoped to writer's one window kind — the manifest side of THE TRANSITIVE
     /// TEMPLATE (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn ast_interaction_domain_is_declared_topology_and_transitive_on_the_main_window() {
         let definition = create_writer_app();
         let ast = definition.interactions.iter().find(|interaction| interaction.id == "ast").expect("ast interaction domain declared");
@@ -680,7 +680,7 @@ mod tests {
 
     /// 🌳️ `interaction_topology` walks the jack AST's own `children` into `TopologyNode.parent` links —
     /// root has no parent, every child's parent is its syntactic parent's id.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn interaction_topology_walks_the_jack_ast_into_parent_links() {
         let document = crate::artifacts::writer::dsl::jack_example_document();
         let config = WriterConfig::default();
@@ -697,7 +697,7 @@ mod tests {
 
     /// 🌱️ A non-jack document has no AST to select — an empty topology, matching `Flat`-vs-empty
     /// pruning semantics: every stale `ast` selection id gets pruned for a document with no AST.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn interaction_topology_is_empty_for_non_jack_documents() {
         let document = crate::artifacts::writer::schema::empty_writer_snapshot();
         let config = WriterConfig::default();
@@ -710,7 +710,7 @@ mod tests {
     //#endregion 🔖️Interaction
 
     //#region 🔖️PortTests
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn writer_io_declares_the_extra_text_out_port() {
         let io = writer_io();
         let ports = io.all_ports();
@@ -721,7 +721,7 @@ mod tests {
         assert_eq!(text_out.multiplicity, semio_framework_plugin::PortMultiplicity::Many);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn export_media_text_out_projects_the_document_as_a_chapter() {
         let app = WriterPlayApp;
         let document = crate::artifacts::writer::dsl::jack_example_document();
@@ -735,7 +735,7 @@ mod tests {
         assert_eq!(payload.language_id, document.language_id);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn export_media_rejects_unknown_ports() {
         let app = WriterPlayApp;
         let document = crate::artifacts::writer::schema::empty_writer_snapshot();
@@ -749,7 +749,7 @@ mod tests {
     /// 🗂️ GROUPED-PROGRESSIVELY-DISCLOSED-CONTEXT-MENUS: the writer text-editor context menu stays a
     /// shallow, disclosed list (top-level verbs + a handful of taxonomy groups) rather than a flat wall
     /// of rows, and the destructive `cut` row stays the trailing item.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn context_menu_is_grouped_and_keeps_cut_last_and_destructive() {
         let app = WriterPlayApp;
         let document = crate::artifacts::writer::dsl::jack_example_document();
@@ -776,7 +776,7 @@ mod tests {
         assert_eq!(items.last().and_then(|item| item.destructive), Some(true), "trailing writer-cut must be marked destructive: {items:?}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn context_menu_via_the_registry_still_starts_with_select_token() {
         let mut app = new_app_with_registry();
         let menu = context_menu_items(&mut app, Some(semio_framework_plugin::ContextMenuSurfaceTarget { surface_id: "writer.play".into(), kind: "textEditor".into(), hits: vec![], selection: vec![], text: None }));
@@ -785,7 +785,7 @@ mod tests {
     //#endregion 🔖️ContextMenu
 
     //#region 🔖️CrossCutting
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
         use crate::editor::writer::testkit::{new_app, render};
         let mut app = new_app();
@@ -796,13 +796,13 @@ mod tests {
     /// trait default correctly returns `None`; whole-document replace goes through
     /// `reset_document_effect` instead, exercised by `📚️examples/🎬️demo-session`'s own command
     /// tests and by `commands::text`'s `set_active_example`/`open_document` tests.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn whole_document_operation_stays_the_trait_default_none() {
         let replacement = jack_snapshot();
         assert_eq!(WriterPlayApp::whole_document_operation(replacement), None);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn window_engagements_expose_format_lint_placeholder() {
         let mut app = testkit::new_app();
         let engagements = app.window_engagements();
@@ -812,7 +812,7 @@ mod tests {
         assert_eq!(main.possible_engagements.as_ref().map(|v| v.len()), Some(3));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn window_engagements_include_format_and_lint_possible_engagements() {
         let mut app = testkit::new_app();
         let engagements = app.window_engagements();
@@ -825,7 +825,7 @@ mod tests {
     /// 🗣️ Cross-cutting locale check across every rendering surface (inspection, catalogue,
     /// engagements, measures) at once — narrower per-node locale tests live beside each node, but this
     /// is the integration-level guarantee that locale threads through the whole app consistently.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn writer_labels_resolve_native_english_by_default_across_every_surface() {
         let mut app = testkit::new_app();
         let inspection = app.render(WRITER_PLAY_BODY_INSPECTION, None, &semio_framework_plugin::ViewModel::default()).expect("render");
@@ -847,7 +847,7 @@ mod tests {
         assert!(!measures_json.contains("Schriftgröße"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn writer_labels_resolve_german_locale_across_every_surface() {
         let mut app = testkit::new_app();
         app.dispatch_typed(WriterCommand::SetLocale(set_locale::SetLocale { value: "de".into() }), &semio_framework_plugin::testkit::meta("local")).expect("set locale");

@@ -27,7 +27,7 @@ pub async fn decode(bytes: &[u8]) -> Result<Puzzle5dSnapshot, PackError> {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn pack_round_trips_representative_document() {
         let document = Puzzle5dSnapshot::default();
         semio_framework_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&document);
@@ -40,7 +40,7 @@ mod tests {
     /// `Puzzle5dMutation`'s `Edit` round-trips through `protocol::MutationEnvelope`s beside this
     /// file's existing dsl/pack round-trip law (same pattern as `dag`'s own
     /// `command_envelope_round_trip_holds_for_an_applied_operation`).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn command_envelope_round_trip_holds_for_an_applied_operation() {
         use crate::artifacts::puzzle5d::op::Puzzle5dMutation;
         use crate::artifacts::puzzle5d::spr::Puzzle5dStore;

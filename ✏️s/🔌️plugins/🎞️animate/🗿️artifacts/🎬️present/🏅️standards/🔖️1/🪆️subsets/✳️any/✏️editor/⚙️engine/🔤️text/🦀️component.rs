@@ -137,20 +137,20 @@ pub mod color {
     mod tests {
         use super::*;
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn lerp_midpoint_is_average() {
             let c = Color::BLACK.lerp(Color::WHITE, 0.5);
             assert!((c.r - 0.5).abs() < 1e-9);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn gradient_samples_stops() {
             let g = Gradient::new(vec![(0.0, Color::RED), (1.0, Color::BLUE)]);
             let mid = g.sample(0.5);
             assert!(mid.r > 0.0 && mid.b > 0.0);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn hex_parses_six_and_eight_digit_forms() {
             let rgb = Color::hex("#ff0000");
             assert!((rgb.r - 1.0).abs() < 1e-9);
@@ -160,13 +160,13 @@ pub mod color {
             assert!((rgba.a - 128.0 / 255.0).abs() < 1e-9);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn hex_falls_back_to_black_on_invalid_length() {
             let bad = Color::hex("#abc");
             assert_eq!(bad, Color::BLACK);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn named_color_covers_aliases_and_hex_fallback() {
             assert_eq!(named_color("WHITE"), Color::WHITE);
             assert_eq!(named_color("grey"), Color::GRAY);
@@ -179,7 +179,7 @@ pub mod color {
             assert_eq!(named_color("ff00ff"), Color::hex("ff00ff"));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn gradient_edge_cases() {
             let empty = Gradient::new(vec![]);
             assert_eq!(empty.sample(0.5), Color::WHITE);
@@ -191,14 +191,14 @@ pub mod color {
             assert_eq!(g.sample(1.0), Color::BLUE);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn gradient_new_sorts_unordered_stops() {
             let g = Gradient::new(vec![(1.0, Color::BLUE), (0.0, Color::RED)]);
             assert_eq!(g.stops[0].0, 0.0);
             assert_eq!(g.stops[1].0, 1.0);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn with_alpha_and_to_array_roundtrip() {
             let c = Color::rgb(0.2, 0.4, 0.6).with_alpha(0.5);
             assert_eq!(c.to_array(), [0.2, 0.4, 0.6, 0.5]);
@@ -490,7 +490,10 @@ pub mod text {
     /// engine" leg of the isolation. Returns `None` if either the render or the stdio parse fails
     /// (Typst's compiled SVG is expected to already be well-formed; a parse failure here would be
     /// a real bug, not a normal-flow case, so callers fall back the same way a render failure does).
-    async fn render_markup_to_svg_snapshot(renderer: &dyn TextRenderer, markup: &str) -> Option<semio_s_plugin_stdio::artifacts::svg::SvgSnapshot> {
+    // 🔀️ R11 "exactly one impl" case: `TextRenderer` has a single implementor (`TypstTextRenderer`), so
+    // the trait-object parameter is dropped for the concrete type instead of routed through
+    // `dyn_enum_close!` (an enum of one variant is worse than none — see 📓️terra-dedyn-fleet-animate-report.md).
+    async fn render_markup_to_svg_snapshot(renderer: &TypstTextRenderer, markup: &str) -> Option<semio_s_plugin_stdio::artifacts::svg::SvgSnapshot> {
         use semio_s_plugin_stdio::artifacts::svg::schema::snapshot::parse_svg_xml;
         let svg_text = renderer.render_svg(markup)?;
         let doc = parse_svg_xml(&svg_text).ok()?;
@@ -503,7 +506,7 @@ pub mod text {
     /// CSS resolution that stdio's structural svg codec deliberately does not attempt — a
     /// rendering concern, not a duplicated codec), but that string is now stdio-validated first
     /// instead of Typst's raw, unchecked output.
-    async fn typst_markup_to_validated_svg(renderer: &dyn TextRenderer, markup: &str) -> String {
+    async fn typst_markup_to_validated_svg(renderer: &TypstTextRenderer, markup: &str) -> String {
         use semio_s_plugin_stdio::artifacts::svg::schema::snapshot::write_svg_xml;
         match render_markup_to_svg_snapshot(renderer, markup) {
             Some(snapshot) => write_svg_xml(&snapshot.doc),
@@ -526,29 +529,29 @@ pub mod text {
             fonts: &'a [Font],
         }
         impl World for AnimateTypstWorld<'_> {
-            async fn library(&self) -> &LazyHash<Library> {
+            fn library(&self) -> &LazyHash<Library> {
                 self.library
             }
-            async fn book(&self) -> &LazyHash<FontBook> {
+            fn book(&self) -> &LazyHash<FontBook> {
                 self.book
             }
-            async fn main(&self) -> FileId {
+            fn main(&self) -> FileId {
                 self.main
             }
-            async fn source(&self, id: FileId) -> typst::diag::FileResult<Source> {
+            fn source(&self, id: FileId) -> typst::diag::FileResult<Source> {
                 if id == self.main {
                     Ok(self.source.clone())
                 } else {
                     Err(typst::diag::FileError::NotFound(PathBuf::from("animate.typ")))
                 }
             }
-            async fn file(&self, _id: FileId) -> typst::diag::FileResult<Bytes> {
+            fn file(&self, _id: FileId) -> typst::diag::FileResult<Bytes> {
                 Err(typst::diag::FileError::NotFound(PathBuf::from("animate.bin")))
             }
-            async fn font(&self, index: usize) -> Option<Font> {
+            fn font(&self, index: usize) -> Option<Font> {
                 self.fonts.get(index).cloned()
             }
-            async fn today(&self, _offset: Option<i64>) -> Option<Datetime> {
+            fn today(&self, _offset: Option<i64>) -> Option<Datetime> {
                 None
             }
         }
@@ -574,27 +577,27 @@ pub mod text {
     mod tests {
         use super::*;
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn typst_plain_text_compiles() {
             let svg = typst_markup_to_svg(&wrap_text("hello", 24.0));
             assert!(svg.is_some());
             assert!(svg.unwrap().contains("svg"));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn math_text_builds_vobject() {
             let m = MathText::new("x^2", Color::WHITE);
             assert!(!m.latex.is_empty());
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn decimal_number_lerps() {
             let mut d = DecimalNumber::new(0.0, 2, Color::WHITE);
             d.lerp_value(10.0, 0.5, Color::WHITE);
             assert!((d.value - 5.0).abs() < 1e-9);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn text_wrappers_build() {
             let i = Integer::new(42, Color::WHITE);
             assert_eq!(i.value, 42);

@@ -409,7 +409,7 @@ mod tests {
     use protocol::command::DiffAlgebra;
 
     //#region 🔖️MutationDiffLaw
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mutation_diff_law() {
         let base = base_snapshot();
         for m in demo_mutation_cases() {
@@ -426,7 +426,7 @@ mod tests {
     //#endregion 🔖️MutationDiffLaw
 
     //#region 🔖️InverseLaw
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inverse_law() {
         let base = base_snapshot();
         for m in demo_mutation_cases() {
@@ -446,7 +446,7 @@ mod tests {
     //#endregion 🔖️InverseLaw
 
     //#region 🔖️AbsorbLaw
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_law() {
         let base = base_snapshot();
 
@@ -523,7 +523,7 @@ mod tests {
     //#endregion 🔖️AbsorbLaw
 
     //#region 🔖️BetweenRoundtripLaw
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn between_roundtrip_law() {
         let a = sweep_a();
         let b = sweep_b();
@@ -534,7 +534,7 @@ mod tests {
     //#endregion 🔖️BetweenRoundtripLaw
 
     //#region 🔖️FieldSweep
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn field_sweep_every_mutable_field_changes() {
         let a = sweep_a();
         let b = sweep_b();
@@ -593,7 +593,7 @@ mod tests {
     /// impls over the `dsl::DslOps`-derived `DslVariants` — ticket `f6-recon-report.md` §2/§3;
     /// `demo_mutation_cases()` already covers every variant, incl. `SetSnapshot`'s whole nested
     /// `ObjSnapshot` tree and every index-/name-keyed leaf payload type).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_text_binary_roundtrip_law() {
         for m in demo_mutation_cases() {
             let printed = m.print_op();

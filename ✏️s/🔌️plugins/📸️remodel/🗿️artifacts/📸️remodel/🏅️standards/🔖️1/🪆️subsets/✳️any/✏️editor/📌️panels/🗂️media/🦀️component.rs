@@ -45,7 +45,7 @@ mod tests {
     use crate::editor::remodel::commands::import_frame_payload::testkit_import_checker_stream;
     use crate::editor::remodel::testkit::{app, render as render_body};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn the_media_panel_lists_every_imported_stream() {
         let mut app = app();
         testkit_import_checker_stream(&mut app, 2);

@@ -32,7 +32,7 @@ mod tests {
     use crate::editor::gis2d::testkit::{app, dispatch, main_window_measures, render};
     use crate::editor::gis2d::Gis2dCommand;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn gis2d_labels_resolve_native_by_default() {
         let mut app = app();
         let json = render(&mut app, GIS2D_PLAY_BODY_INSPECTION);
@@ -44,7 +44,7 @@ mod tests {
 
     /// 🗣️ Locale is `cfg.locale`, set via the typed `SetLocale` config command — no `ViewModel`-pushed
     /// locale anywhere.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn gis2d_labels_translate_inspector_and_layers_in_german() {
         let mut app = app();
         let result = dispatch(&mut app, Gis2dCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }));

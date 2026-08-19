@@ -199,7 +199,7 @@ mod tests {
     // #endregion 🔖️Fixtures
 
     // #region 🔖️BuildModel
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn build_model_reports_dangling_material() {
         let mut doc = simply_supported_beam_doc();
         doc.materials.clear();
@@ -207,7 +207,7 @@ mod tests {
         assert!(err.to_string().contains("material"), "unexpected error: {err}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn build_model_reports_dangling_section() {
         let mut doc = simply_supported_beam_doc();
         doc.sections.clear();
@@ -215,7 +215,7 @@ mod tests {
         assert!(err.to_string().contains("section"), "unexpected error: {err}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn build_model_reports_dangling_node() {
         let mut doc = simply_supported_beam_doc();
         doc.nodes.clear();
@@ -225,21 +225,21 @@ mod tests {
     // #endregion 🔖️BuildModel
 
     // #region 🔖️Regions
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn build_model_meshes_region_and_solves() {
         let doc = rectangle_region_doc();
         let result = fem2d_solve(&doc, "self").expect("region solves");
         assert!(result.checks.residual_norm < 1e-6, "residual {}", result.checks.residual_norm);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn region_with_hole_meshes_and_solves() {
         let doc = rectangle_with_hole_region_doc();
         let result = fem2d_solve(&doc, "self").expect("region with hole solves");
         assert!(result.checks.residual_norm < 1e-6, "residual {}", result.checks.residual_norm);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn area_load_on_region_produces_reactions() {
         let mut doc = rectangle_region_doc();
         doc.load_cases = vec![FemLoadCase { id: "pressure".into(), name: "pressure".into(), loads: vec![FemLoad::Area { id: "a1".into(), region_id: "r1".into(), pressure: 5000.0 }], self_weight: false }];
@@ -254,7 +254,7 @@ mod tests {
     // #endregion 🔖️Regions
 
     // #region 🔖️SelfWeight
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn self_weight_case_produces_nonzero_reactions() {
         let mut doc = simply_supported_beam_doc();
         doc.load_cases = vec![FemLoadCase { id: "self".into(), name: "self weight".into(), loads: vec![], self_weight: true }];
@@ -273,7 +273,7 @@ mod tests {
     /// residual on, now checked for the exact expected total instead. This also guards against
     /// double-counting: `fem2d_solve_all` must NOT also apply the lumped `self_weight_nodal_loads`
     /// translation (that helper is exclusive to `build_model`/`fem2d_solve` — see its doc comment).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn region_self_weight_via_solve_all_matches_total_mass_times_gravity() {
         let doc = rectangle_region_doc();
         let results = fem2d_solve_all(&doc).expect("region self-weight solves via solve_all");
@@ -286,7 +286,7 @@ mod tests {
     // #endregion 🔖️SelfWeight
 
     // #region 🔖️SolveAll
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fem2d_solve_all_returns_case_and_combination_results() {
         let mut doc = simply_supported_beam_doc();
         doc.load_cases.push(FemLoadCase { id: "live".into(), name: "live".into(), loads: vec![FemLoad::Nodal { id: "l2".into(), node_id: "n1".into(), dof: FemDof::Ty, value: -2000.0 }], self_weight: false });
@@ -314,7 +314,7 @@ mod tests {
     // #endregion 🔖️SolveAll
 
     // #region 🔖️AnalyticalBenchmark
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn simply_supported_beam_matches_analytical_udl_solution() {
         let doc = simply_supported_beam_doc();
         let result = fem2d_solve(&doc, "dead").expect("solves");
@@ -331,7 +331,7 @@ mod tests {
         assert!((midspan.m - 45000.0).abs() / 45000.0 < 0.01, "midspan moment {} not near 45000", midspan.m);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn two_span_beam_matches_analytical_midspan_deflection_and_moment() {
         let doc = simply_supported_beam_two_span_doc();
         let result = fem2d_solve(&doc, "dead").expect("solves");
@@ -354,7 +354,7 @@ mod tests {
     // #endregion 🔖️AnalyticalBenchmark
 
     // #region 🔖️Truss
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn truss_is_in_equilibrium_with_finite_bar_forces() {
         let doc = truss_doc();
         let result = fem2d_solve(&doc, "dead").expect("solves");
@@ -370,7 +370,7 @@ mod tests {
     // #endregion 🔖️Truss
 
     // #region 🔖️UnknownCase
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn unknown_load_case_returns_descriptive_error() {
         let doc = simply_supported_beam_doc();
         let err = fem2d_solve(&doc, "missing").unwrap_err();
@@ -379,7 +379,7 @@ mod tests {
     // #endregion 🔖️UnknownCase
 
     // #region 🔖️ExampleFixture
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn example_fixture_parses_and_solves() {
         use store::ArtifactDsl;
         let doc: Fem2dSnapshot = Fem2dSnapshot::parse_dsl(crate::artifacts::fem2d::dsl::FEM2D_EXAMPLE_TEXT).expect("example fixture parses");

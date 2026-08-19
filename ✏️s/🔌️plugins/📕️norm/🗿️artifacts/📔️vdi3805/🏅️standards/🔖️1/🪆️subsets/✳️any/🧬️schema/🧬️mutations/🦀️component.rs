@@ -158,7 +158,7 @@ mod tests {
         forward
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn update_manufacturer_file_round_trips() {
         let base = Vdi3805Snapshot::default();
         let mut new_file = base.manufacturer_file.clone();
@@ -168,7 +168,7 @@ mod tests {
         assert_eq!(after.manufacturer_file.manufacturer, "ACME");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn change_correction_as_of_and_strict_mode_round_trip() {
         let base = Vdi3805Snapshot::default();
         let correction = Vdi3805Mutation::ChangeCorrectionAsOf(change_correction_as_of::mutation::ChangeCorrectionAsOf { new_correction_as_of: crate::artifacts::vdi3805::EditionId::new(2025, 3) });
@@ -180,7 +180,7 @@ mod tests {
         assert!(after.strict_mode);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn update_limits_round_trips() {
         let base = Vdi3805Snapshot::default();
         let new_limits = crate::artifacts::vdi3805::SecurityLimits { max_file_bytes: 1, max_records: 2, max_field_length: 3, max_nesting_depth: 4 };
@@ -189,7 +189,7 @@ mod tests {
         assert_eq!(after.limits, new_limits);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn change_and_remove_edition_profile_round_trip() {
         let base = Vdi3805Snapshot::default();
         let change = Vdi3805Mutation::ChangeEditionProfile(change_edition_profile::mutation::ChangeEditionProfile { sheet: "8".into(), new_choice: crate::artifacts::vdi3805::EditionProfileChoice::Legacy });
@@ -201,7 +201,7 @@ mod tests {
         assert!(!after_remove.edition_profile.contains_key("8"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn change_edition_profile_undo_of_a_fresh_sheet_is_remove() {
         let base = Vdi3805Snapshot::default();
         let change = Vdi3805Mutation::ChangeEditionProfile(change_edition_profile::mutation::ChangeEditionProfile { sheet: "fresh".into(), new_choice: crate::artifacts::vdi3805::EditionProfileChoice::Current });
@@ -209,7 +209,7 @@ mod tests {
         assert_eq!(undo, vec![Vdi3805Mutation::RemoveEditionProfile(remove_edition_profile::mutation::RemoveEditionProfile { sheet: "fresh".into() })]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_rename_replace_configuration_delete_product_round_trip() {
         let base = Vdi3805Snapshot::default();
         let product = CatalogueProduct {
@@ -250,14 +250,14 @@ mod tests {
         assert!(!after_delete.index.entries.iter().any(|e| e.product_id == "VLV-50-001"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn delete_product_of_a_missing_id_has_an_empty_inverse() {
         let base = Vdi3805Snapshot::default();
         let delete = Vdi3805Mutation::DeleteProduct(delete_product::mutation::DeleteProduct { id: "nope".into() });
         assert!(delete.inverse(&base).is_empty(), "deleting an absent id has nothing to undo");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn geometry_lifecycle_round_trips() {
         let base = Vdi3805Snapshot::default();
         let geometry = crate::artifacts::vdi3805::ParametricGeometry { id: "geom.new".into(), bbox: crate::artifacts::vdi3805::BoundingBox::from_size(1.0, 1.0, 1.0), connections: Vec::new(), parameters: BTreeMap::new() };
@@ -291,7 +291,7 @@ mod tests {
         assert_eq!(undo.len(), 1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn curve_lifecycle_round_trips() {
         let base = Vdi3805Snapshot::default();
         let curve = crate::artifacts::vdi3805::CharacteristicCurve {
@@ -314,7 +314,7 @@ mod tests {
         assert!(!after_delete.curves.contains_key("curve.kvs"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn semantic_kinds_cover_every_variant() {
         assert_eq!(Vdi3805Mutation::kinds().len(), 19);
         let mutation = Vdi3805Mutation::ChangeStrictMode(change_strict_mode::mutation::ChangeStrictMode { new_strict_mode: true });

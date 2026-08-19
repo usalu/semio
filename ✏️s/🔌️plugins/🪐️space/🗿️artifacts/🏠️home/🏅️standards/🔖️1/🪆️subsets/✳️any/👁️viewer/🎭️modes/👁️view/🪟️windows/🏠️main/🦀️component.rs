@@ -80,20 +80,20 @@ mod tests {
         crate::HomeSpaceRow { id: "sp-1".into(), name: "Fabrication".into(), kind: "studio".into(), visibility: "public".into(), members: "2".into(), updated: "1000".into(), origin: "hub" }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn definition_declares_the_table_surface_and_body_key() {
         let definition = definition();
         assert_eq!(definition.body_key, S_HOME_VIEW_BODY);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn empty_rows_render_the_empty_message_not_a_zero_row_table() {
         let json = serde_json::to_string(&render_rows(&[], &HomeTableLabels::NATIVE_EN)).expect("render json");
         assert!(json.contains("No studios yet."));
         assert!(!json.contains("framework.window.table"), "empty rows must not render the table scene at all: {json}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn a_row_renders_without_the_actions_column() {
         let json = serde_json::to_string(&render_rows(&[one_hub_row()], &HomeTableLabels::NATIVE_EN)).expect("render json");
         assert!(json.contains("Fabrication"));
@@ -104,7 +104,7 @@ mod tests {
 
     /// 🆔️ Contract §C0: even the read-only viewer's rows must carry `data-row-id="space:<id>"` — a
     /// viewer just never attaches row-scoped action buttons to it.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn a_row_stamps_the_space_row_id() {
         let UiNode::ComponentScene(node) = render_rows(&[one_hub_row()], &HomeTableLabels::NATIVE_EN) else { panic!("expected ComponentScene") };
         let scene = node.table.expect("table scene");
@@ -113,14 +113,14 @@ mod tests {
         assert!(rows[0].get("actions").is_none(), "the viewer never carries a row actions cell: {:?}", rows[0]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn german_locale_labels_resolve() {
         let json = serde_json::to_string(&render_rows(&[one_hub_row()], &HomeTableLabels::NATIVE_DE)).expect("render json");
         assert!(json.contains("Aktualisiert"));
         assert!(json.contains("Herkunft"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn render_with_a_folded_space_renders_a_table_row() {
         let event = store::os_directory::DirectoryEvent {
             seq: 1,

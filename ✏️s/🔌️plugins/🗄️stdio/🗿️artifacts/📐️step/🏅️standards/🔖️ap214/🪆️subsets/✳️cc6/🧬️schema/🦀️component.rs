@@ -84,13 +84,13 @@ pub mod derived_construction {
             })
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn conforming_construction_builds() {
             let snapshot = StepCc6BuilderConstruction::from_snapshot(conforming_snapshot()).build().expect("conforming construction must build");
             assert!(crate::artifacts::step::standards::v_ap214::engine::ladder::has_product_definition_chain(&snapshot.to_part21_document()));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn top_of_ladder_representation_injected_via_raw_mutate_still_builds() {
             // CC6 is the top rung -- ADVANCED_BREP_SHAPE_REPRESENTATION (rung 6) is never a
             // violation here, however it entered the snapshot; this documents that invariant
@@ -204,14 +204,14 @@ pub mod derived_analysis {
             }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn conforming_document_reports_no_diagnostics() {
             let snapshot = StepSnapshot::from_part21_document(base_doc());
             let diagnostics = check_cc6_conformance(&snapshot);
             assert!(diagnostics.is_empty(), "got {diagnostics:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn missing_file_schema_is_hard() {
             let mut doc = base_doc();
             doc.header.file_schema = vec![];
@@ -220,7 +220,7 @@ pub mod derived_analysis {
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_FILE_SCHEMA && d.severity == Severity::Error), "got {diagnostics:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn missing_product_chain_is_soft() {
             let mut doc = base_doc();
             doc.instances.clear();
@@ -229,7 +229,7 @@ pub mod derived_analysis {
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_PRODUCT_CHAIN && d.severity == Severity::Warning), "got {diagnostics:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn representation_at_max_rung_is_clean() {
             let mut doc = base_doc();
             doc.instances.push(Part21Instance { id: 4, entities: vec![("ADVANCED_BREP_SHAPE_REPRESENTATION".into(), vec![])] });
@@ -238,7 +238,7 @@ pub mod derived_analysis {
             assert!(diagnostics.iter().all(|d| d.code.0 != CODE_LADDER), "got {diagnostics:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn top_of_ladder_has_no_representation_that_can_exceed_it() {
             // CC6 is the top rung -- every real *_SHAPE_REPRESENTATION subtype classifies at <= 6, so
             // there is no honest "above" fixture; this documents that invariant rather than fabricating one.

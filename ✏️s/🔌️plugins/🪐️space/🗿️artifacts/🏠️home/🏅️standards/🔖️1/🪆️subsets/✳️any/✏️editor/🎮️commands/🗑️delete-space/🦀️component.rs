@@ -47,7 +47,7 @@ mod tests {
         handle(&payload, &doc, &cfg).expect("handle")
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn unconfirmed_delete_emits_the_confirm_dialog_and_never_the_command() {
         let emit = dispatch(DeleteSpace { space_id: "sp-1".into(), confirmed: false });
         assert_eq!(emit.effects.len(), 1);
@@ -62,7 +62,7 @@ mod tests {
         assert!(!emit.effects.iter().any(|e| matches!(e, Effect::ReplayShellCommand { .. })), "the confirm dialog must be emitted BEFORE any command");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn confirmed_delete_emits_the_replay_shell_command() {
         let emit = dispatch(DeleteSpace { space_id: "sp-1".into(), confirmed: true });
         let (action_id, args) = emit

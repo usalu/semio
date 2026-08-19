@@ -59,7 +59,7 @@ struct FieldAttrs {
     dir: bool,
 }
 
-fn parse_container_attrs(input: &DeriveInput) -> ContainerAttrs {
+async fn parse_container_attrs(input: &DeriveInput) -> ContainerAttrs {
     let mut out = ContainerAttrs::default();
     for attr in &input.attrs {
         if !attr.path().is_ident("dsl") {
@@ -85,7 +85,7 @@ fn parse_container_attrs(input: &DeriveInput) -> ContainerAttrs {
     out
 }
 
-fn parse_field_attrs(attrs: &[syn::Attribute]) -> FieldAttrs {
+async fn parse_field_attrs(attrs: &[syn::Attribute]) -> FieldAttrs {
     let mut out = FieldAttrs::default();
     for attr in attrs {
         if !attr.path().is_ident("dsl") {
@@ -180,7 +180,7 @@ enum FieldKind {
 /// Without this, `Option<T>`/`Vec<T>`/`Box<T>`/`BTreeMap<..>` fields declared through such a wrapping
 /// macro silently fall through to plain `FieldKind::Scalar` instead of being classified as
 /// optional/list/map, since the wrapper hides the outer `Path` segment from a bare `matches!`.
-fn strip_groups(ty: &Type) -> &Type {
+async fn strip_groups(ty: &Type) -> &Type {
     let mut ty = ty;
     while let Type::Group(group) = ty {
         ty = &group.elem;
@@ -188,7 +188,7 @@ fn strip_groups(ty: &Type) -> &Type {
     ty
 }
 
-fn inner_of(ty: &Type, wrapper: &str) -> Option<Type> {
+async fn inner_of(ty: &Type, wrapper: &str) -> Option<Type> {
     let Type::Path(path) = strip_groups(ty) else { return None };
     let segment = path.path.segments.last()?;
     if segment.ident != wrapper {
@@ -201,14 +201,14 @@ fn inner_of(ty: &Type, wrapper: &str) -> Option<Type> {
     })
 }
 
-fn is_vec_u8(ty: &Type) -> bool {
+async fn is_vec_u8(ty: &Type) -> bool {
     inner_of(ty, "Vec").is_some_and(|inner| matches!(strip_groups(&inner), Type::Path(p) if p.path.is_ident("u8")))
 }
 
 /// @emoji 🗺️ Extracts `V` from `BTreeMap<String, V>` — `None` for any other type, including a
 /// `BTreeMap` keyed by something other than `String` (the engine's `Shape::Map` is string-keyed
 /// only, matching every hand-rolled `{ key=value }` grammar it replaces).
-fn btreemap_string_value(ty: &Type) -> Option<Type> {
+async fn btreemap_string_value(ty: &Type) -> Option<Type> {
     let Type::Path(path) = strip_groups(ty) else { return None };
     let segment = path.path.segments.last()?;
     if segment.ident != "BTreeMap" {
@@ -227,7 +227,7 @@ fn btreemap_string_value(ty: &Type) -> Option<Type> {
     matches!(strip_groups(key), Type::Path(p) if p.path.is_ident("String")).then(|| (*value).clone())
 }
 
-fn classify_field(ty: &Type, attrs: &FieldAttrs) -> (FieldKind, Type) {
+async fn classify_field(ty: &Type, attrs: &FieldAttrs) -> (FieldKind, Type) {
     if let Some(inner) = inner_of(ty, "Option") {
         if attrs.statements {
             return (FieldKind::OptionStatements(Box::new(inner.clone())), inner);
@@ -293,7 +293,7 @@ struct FieldPlan {
     dir: bool,
 }
 
-fn plan_fields(fields: &Fields) -> Vec<FieldPlan> {
+async fn plan_fields(fields: &Fields) -> Vec<FieldPlan> {
     let mut positional_counter: u16 = 0;
     let mut out = Vec::new();
     for (index, field) in fields.iter().enumerate() {
@@ -335,7 +335,7 @@ fn plan_fields(fields: &Fields) -> Vec<FieldPlan> {
 /// @emoji 🏗️ Builds the three code fragments shared by `DslRecord`/`DslArtifact`/`DslOps` variant
 /// bodies: the `RecordSpec` field-spec expressions, the struct→`RecordValue` conversion, and the
 /// `RecordValue`→struct conversion.
-fn record_codegen(fields: &Fields) -> (Vec<proc_macro2::TokenStream>, Vec<proc_macro2::TokenStream>, Vec<proc_macro2::TokenStream>, Vec<syn::Ident>) {
+async fn record_codegen(fields: &Fields) -> (Vec<proc_macro2::TokenStream>, Vec<proc_macro2::TokenStream>, Vec<proc_macro2::TokenStream>, Vec<syn::Ident>) {
     let plans = plan_fields(fields);
     let mut spec_exprs = Vec::new();
     let mut to_value_stmts = Vec::new();
@@ -597,28 +597,28 @@ pub fn derive_dsl_record(input: TokenStream) -> TokenStream {
 
     let expanded = quote! {
         impl #name {
-            pub fn __dsl_spec() -> ::dsl::RecordSpec {
+            pub async fn __dsl_spec() -> ::dsl::RecordSpec {
                 ::dsl::RecordSpec::new_owned(#keyword_expr, #layout_expr, vec![ #(#spec_exprs),* ])
             }
-            pub fn __dsl_to_record(&self) -> ::dsl::RecordValue {
+            pub async fn __dsl_to_record(&self) -> ::dsl::RecordValue {
                 let mut record = ::dsl::RecordValue::default();
                 #(#to_value_stmts)*
                 record
             }
-            pub fn __dsl_from_record(record: &::dsl::RecordValue) -> Result<Self, ::dsl::TextError> {
+            pub async fn __dsl_from_record(record: &::dsl::RecordValue) -> Result<Self, ::dsl::TextError> {
                 #(#from_value_stmts)*
                 Ok(Self { #(#field_idents),* })
             }
         }
 
         impl ::dsl::DslField for #name {
-            fn shape() -> ::dsl::Shape {
+            async fn shape() -> ::dsl::Shape {
                 ::dsl::Shape::Record(Self::__dsl_spec)
             }
-            fn to_value(&self) -> ::dsl::FieldValue {
+            async fn to_value(&self) -> ::dsl::FieldValue {
                 ::dsl::FieldValue::Record(self.__dsl_to_record())
             }
-            fn from_value(value: &::dsl::FieldValue) -> Result<Self, String> {
+            async fn from_value(value: &::dsl::FieldValue) -> Result<Self, String> {
                 match value {
                     ::dsl::FieldValue::Record(record) => Self::__dsl_from_record(record).map_err(|e| e.message),
                     other => Err(format!("expected Record, found {other:?}")),
@@ -667,15 +667,15 @@ pub fn derive_dsl_document(input: TokenStream) -> TokenStream {
 
     let expanded = quote! {
         impl #name {
-            pub fn __dsl_spec() -> ::dsl::RecordSpec {
+            pub async fn __dsl_spec() -> ::dsl::RecordSpec {
                 ::dsl::RecordSpec::new_owned(#keyword_expr, #layout_expr, vec![ #(#spec_exprs),* ])
             }
-            pub fn __dsl_to_record(&self) -> ::dsl::RecordValue {
+            pub async fn __dsl_to_record(&self) -> ::dsl::RecordValue {
                 let mut record = ::dsl::RecordValue::default();
                 #(#to_value_stmts)*
                 record
             }
-            pub fn __dsl_from_record(record: &::dsl::RecordValue) -> Result<Self, ::store::TextError> {
+            pub async fn __dsl_from_record(record: &::dsl::RecordValue) -> Result<Self, ::store::TextError> {
                 #(#from_value_stmts)*
                 Ok(Self { #(#field_idents),* })
             }
@@ -687,13 +687,13 @@ pub fn derive_dsl_document(input: TokenStream) -> TokenStream {
         // A document type can also be nested as an ordinary field (e.g. a "whole document
         // snapshot" operation variant), so it needs `DslField` too, not just `store::ArtifactDsl`.
         impl ::dsl::DslField for #name {
-            fn shape() -> ::dsl::Shape {
+            async fn shape() -> ::dsl::Shape {
                 ::dsl::Shape::Record(Self::__dsl_spec)
             }
-            fn to_value(&self) -> ::dsl::FieldValue {
+            async fn to_value(&self) -> ::dsl::FieldValue {
                 ::dsl::FieldValue::Record(self.__dsl_to_record())
             }
-            fn from_value(value: &::dsl::FieldValue) -> Result<Self, String> {
+            async fn from_value(value: &::dsl::FieldValue) -> Result<Self, String> {
                 match value {
                     ::dsl::FieldValue::Record(record) => Self::__dsl_from_record(record).map_err(|e| e.message),
                     other => Err(format!("expected Record, found {other:?}")),
@@ -737,32 +737,32 @@ pub fn derive_dsl_diff(input: TokenStream) -> TokenStream {
 
     let expanded = quote! {
         impl #name {
-            pub fn __dsl_diff_spec() -> ::dsl::RecordSpec {
+            pub async fn __dsl_diff_spec() -> ::dsl::RecordSpec {
                 ::dsl::RecordSpec::new_owned(#keyword_expr, #layout_expr, vec![ #(#spec_exprs),* ])
             }
-            pub fn __dsl_diff_to_record(&self) -> ::dsl::RecordValue {
+            pub async fn __dsl_diff_to_record(&self) -> ::dsl::RecordValue {
                 let mut record = ::dsl::RecordValue::default();
                 #(#to_value_stmts)*
                 record
             }
-            pub fn __dsl_diff_from_record(record: &::dsl::RecordValue) -> Result<Self, ::dsl::TextError> {
+            pub async fn __dsl_diff_from_record(record: &::dsl::RecordValue) -> Result<Self, ::dsl::TextError> {
                 #(#from_value_stmts)*
                 Ok(Self { #(#field_idents),* })
             }
         }
 
         impl ::semio_framework_os_kernel::DiffCodec for #name {
-            fn print_diff(&self) -> String {
+            async fn print_diff(&self) -> String {
                 ::dsl::print(&self.__dsl_diff_to_record(), &Self::__dsl_diff_spec(), ::dsl::JoinMode::Inline)
             }
-            fn parse_diff(line: &str) -> Result<Self, ::dsl::TextError> {
+            async fn parse_diff(line: &str) -> Result<Self, ::dsl::TextError> {
                 let record = ::dsl::parse(line, &Self::__dsl_diff_spec(), &::dsl::ParseOptions { limits: ::dsl::Limits::default(), mode: ::dsl::SourceMode::Inline })?;
                 Self::__dsl_diff_from_record(&record)
             }
-            fn encode_diff(&self) -> Result<Vec<u8>, ::semio_framework_os_kernel::ProtocolError> {
+            async fn encode_diff(&self) -> Result<Vec<u8>, ::semio_framework_os_kernel::ProtocolError> {
                 ::store::pack_rt::encode_document(&Self::__dsl_diff_spec(), &self.__dsl_diff_to_record(), &::store::PackEncodeOptions::default()).map_err(::semio_framework_os_kernel::ProtocolError::from)
             }
-            fn decode_diff(bytes: &[u8]) -> Result<Self, ::semio_framework_os_kernel::ProtocolError> {
+            async fn decode_diff(bytes: &[u8]) -> Result<Self, ::semio_framework_os_kernel::ProtocolError> {
                 let (record, _report) = ::store::pack_rt::decode_document(bytes, &Self::__dsl_diff_spec(), &::store::PackDecodeOptions::default()).map_err(::semio_framework_os_kernel::ProtocolError::from)?;
                 Self::__dsl_diff_from_record(&record).map_err(|error| ::semio_framework_os_kernel::ProtocolError::Malformed { what: "diff record", offset: 0, detail: error.to_string() })
             }
@@ -799,13 +799,13 @@ pub fn derive_dsl_scalar(input: TokenStream) -> TokenStream {
 
     let expanded = quote! {
         impl ::dsl::DslField for #name {
-            fn shape() -> ::dsl::Shape {
+            async fn shape() -> ::dsl::Shape {
                 ::dsl::Shape::Enum(vec![ #(#variant_tags),* ])
             }
-            fn to_value(&self) -> ::dsl::FieldValue {
+            async fn to_value(&self) -> ::dsl::FieldValue {
                 ::dsl::FieldValue::Enum(match self { #(#match_to_ordinal),* })
             }
-            fn from_value(value: &::dsl::FieldValue) -> Result<Self, String> {
+            async fn from_value(value: &::dsl::FieldValue) -> Result<Self, String> {
                 match value {
                     ::dsl::FieldValue::Enum(ordinal) => match *ordinal {
                         #(#match_from_ordinal,)*
@@ -824,7 +824,7 @@ pub fn derive_dsl_scalar(input: TokenStream) -> TokenStream {
 /// @emoji 🌿️ Builds the `impl ::dsl::DslVariants for #name` block shared by `DslEnum` (data-only
 /// tagged enums, e.g. a recursive block tree) and `DslOps` (operation enums, which additionally get
 /// `store::OpText` on top of this same `DslVariants` foundation).
-fn dsl_variants_codegen(name: &syn::Ident, data: &syn::DataEnum) -> proc_macro2::TokenStream {
+async fn dsl_variants_codegen(name: &syn::Ident, data: &syn::DataEnum) -> proc_macro2::TokenStream {
     let mut variants_exprs = Vec::new();
     let mut to_named_arms = Vec::new();
     let mut from_named_arms = Vec::new();
@@ -896,13 +896,13 @@ fn dsl_variants_codegen(name: &syn::Ident, data: &syn::DataEnum) -> proc_macro2:
 
     quote! {
         impl ::dsl::DslVariants for #name {
-            fn variants() -> Vec<(String, fn() -> ::dsl::RecordSpec)> {
+            async fn variants() -> Vec<(String, fn() -> ::dsl::RecordSpec)> {
                 vec![ #(#variants_exprs),* ]
             }
-            fn to_named_record(&self) -> (String, ::dsl::RecordValue) {
+            async fn to_named_record(&self) -> (String, ::dsl::RecordValue) {
                 match self { #(#to_named_arms),* }
             }
-            fn from_named_record(keyword: &str, record: &::dsl::RecordValue) -> Result<Self, ::dsl::TextError> {
+            async fn from_named_record(keyword: &str, record: &::dsl::RecordValue) -> Result<Self, ::dsl::TextError> {
                 match keyword {
                     #(#from_named_arms,)*
                     other => Err(::dsl::__rt::field_error(format!("unknown keyword '{other}'"))),
@@ -954,7 +954,7 @@ struct MutationsAttrs {
     schema: Option<String>,
 }
 
-fn parse_mutations_attrs(input: &DeriveInput) -> MutationsAttrs {
+async fn parse_mutations_attrs(input: &DeriveInput) -> MutationsAttrs {
     let mut out = MutationsAttrs::default();
     for attr in &input.attrs {
         if !attr.path().is_ident("mutations") {
@@ -1076,29 +1076,29 @@ pub fn derive_mutations(input: TokenStream) -> TokenStream {
 
         impl ::semio_framework_os_kernel::Mutation<#snapshot_ty> for #name {
             type Diff = #diff_ty;
-            fn diff(&self, base: &#snapshot_ty) -> ::semio_framework_os_kernel::MutationOutcome<Self::Diff> {
+            async fn diff(&self, base: &#snapshot_ty) -> ::semio_framework_os_kernel::MutationOutcome<Self::Diff> {
                 match self { #(#diff_arms),* }
             }
-            fn inverse(&self, base: &#snapshot_ty) -> Vec<Self> {
+            async fn inverse(&self, base: &#snapshot_ty) -> Vec<Self> {
                 match self { #(#inverse_arms),* }
             }
-            fn foreign_steps(&self, base: &#snapshot_ty) -> Vec<::semio_framework_os_kernel::ForeignStep> {
+            async fn foreign_steps(&self, base: &#snapshot_ty) -> Vec<::semio_framework_os_kernel::ForeignStep> {
                 match self { #(#foreign_steps_arms),* }
             }
         }
 
         impl ::semio_framework_os_kernel::SemanticMutation<#snapshot_ty> for #name {
-            fn kinds() -> &'static [::semio_framework_os_kernel::SemanticDescriptor] {
+            async fn kinds() -> &'static [::semio_framework_os_kernel::SemanticDescriptor] {
                 const KINDS: &[::semio_framework_os_kernel::SemanticDescriptor] = &[ #(#kind_consts),* ];
                 KINDS
             }
-            fn semantics(&self) -> &'static ::semio_framework_os_kernel::SemanticDescriptor {
+            async fn semantics(&self) -> &'static ::semio_framework_os_kernel::SemanticDescriptor {
                 match self { #(#semantics_arms),* }
             }
-            fn label(&self) -> String {
+            async fn label(&self) -> String {
                 match self { #(#label_arms),* }
             }
-            fn target(&self) -> Vec<String> {
+            async fn target(&self) -> Vec<String> {
                 match self { #(#target_arms),* }
             }
         }
@@ -1122,7 +1122,7 @@ struct CompositeAttrs {
     op: Option<Type>,
 }
 
-fn parse_composite_attrs(input: &DeriveInput) -> CompositeAttrs {
+async fn parse_composite_attrs(input: &DeriveInput) -> CompositeAttrs {
     let mut out = CompositeAttrs::default();
     for attr in &input.attrs {
         if !attr.path().is_ident("composite") {
@@ -1171,19 +1171,19 @@ pub fn derive_composite_mutation(input: TokenStream) -> TokenStream {
 
         impl ::semio_framework_os_kernel::MutationKind<#snapshot_ty, #op_ty> for #name {
             const SEMANTICS: ::semio_framework_os_kernel::SemanticDescriptor = <#name as ::semio_framework_os_kernel::CompositeMutationKind<#snapshot_ty, #op_ty>>::SEMANTICS;
-            fn diff(&self, base: &#snapshot_ty) -> ::semio_framework_os_kernel::MutationOutcome<<#op_ty as ::semio_framework_os_kernel::Mutation<#snapshot_ty>>::Diff> {
+            async fn diff(&self, base: &#snapshot_ty) -> ::semio_framework_os_kernel::MutationOutcome<<#op_ty as ::semio_framework_os_kernel::Mutation<#snapshot_ty>>::Diff> {
                 ::semio_framework_os_kernel::fold_plan_diff(self, base)
             }
-            fn inverse(&self, base: &#snapshot_ty) -> Vec<#op_ty> {
+            async fn inverse(&self, base: &#snapshot_ty) -> Vec<#op_ty> {
                 ::semio_framework_os_kernel::fold_plan_inverse(self, base)
             }
-            fn label(&self) -> String {
+            async fn label(&self) -> String {
                 ::semio_framework_os_kernel::CompositeMutationKind::label(self)
             }
-            fn target(&self) -> Vec<String> {
+            async fn target(&self) -> Vec<String> {
                 ::semio_framework_os_kernel::CompositeMutationKind::target(self)
             }
-            fn foreign_steps(&self, base: &#snapshot_ty) -> Vec<::semio_framework_os_kernel::ForeignStep> {
+            async fn foreign_steps(&self, base: &#snapshot_ty) -> Vec<::semio_framework_os_kernel::ForeignStep> {
                 ::semio_framework_os_kernel::plan_foreign_steps(self, base)
             }
         }
@@ -1198,7 +1198,7 @@ pub fn derive_composite_mutation(input: TokenStream) -> TokenStream {
 /// this whenever no explicit `#[dsl(key = "...")]` override is given, for variant keywords,
 /// record field keys, and `DslScalar` variant tags alike, so `SetCamera` -> `set-camera`,
 /// `airtightness_n50` -> `airtightness-n50`, `HTTPServer` -> `http-server`.
-fn to_kebab(name: &str) -> String {
+async fn to_kebab(name: &str) -> String {
     let chars: Vec<char> = name.chars().collect();
     let mut out = String::with_capacity(name.len() + 4);
     for (i, &c) in chars.iter().enumerate() {
@@ -1234,7 +1234,7 @@ fn to_kebab(name: &str) -> String {
 /// @emoji 🏗️ Like the `to_value` half of `record_codegen`, but reading from bare local bindings
 /// (`ident`) instead of `self.ident` — what a `match self { Variant { fields... } => ... }` arm
 /// needs, since enum variant fields aren't reached through `self.field` syntax.
-fn record_codegen_to_value_from_bindings(fields: &Fields) -> Vec<proc_macro2::TokenStream> {
+async fn record_codegen_to_value_from_bindings(fields: &Fields) -> Vec<proc_macro2::TokenStream> {
     let plans = plan_fields(fields);
     plans
         .iter()

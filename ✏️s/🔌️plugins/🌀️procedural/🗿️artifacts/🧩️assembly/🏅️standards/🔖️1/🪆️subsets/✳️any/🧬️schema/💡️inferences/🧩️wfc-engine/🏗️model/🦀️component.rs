@@ -388,20 +388,20 @@ mod tests {
         b.compile().unwrap()
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn compile_rejects_empty_pattern_universe() {
         let b = ModelBuilder::new();
         assert_eq!(b.compile().unwrap_err(), ModelError::EmptyPatternUniverse);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn compile_rejects_invalid_weight() {
         let mut b = ModelBuilder::new();
         b.add_pattern(-1.0);
         assert!(matches!(b.compile().unwrap_err(), ModelError::InvalidWeight { .. }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn allowed_and_supporters_are_transposes() {
         let m = checkerboard_model();
         let adj = RelationId(0);
@@ -413,13 +413,13 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn validate_passes_on_mirrored_model() {
         let m = checkerboard_model();
         assert!(m.validate().is_ok());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn validate_fails_on_asymmetric_declaration() {
         let mut b = ModelBuilder::new();
         let a = b.add_pattern(1.0);
@@ -430,7 +430,7 @@ mod tests {
         assert!(matches!(m.validate().unwrap_err(), ModelError::AsymmetricInverse { .. }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn deny_wins_over_allow_regardless_of_order() {
         let mut b = ModelBuilder::new();
         let a = b.add_pattern(1.0);
@@ -442,7 +442,7 @@ mod tests {
         assert!(!m.allowed(r, a).get(c));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fingerprint_is_deterministic_and_sensitive() {
         let m1 = checkerboard_model();
         let m2 = checkerboard_model();
@@ -458,7 +458,7 @@ mod tests {
         assert_ne!(m1.fingerprint(), m3.fingerprint());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn lint_flags_unconstrained_and_unsupported() {
         let mut b = ModelBuilder::new();
         let a = b.add_pattern(1.0);
@@ -475,7 +475,7 @@ mod tests {
         assert!(findings.iter().any(|f| matches!(f, LintFinding::UnsupportedPattern { pattern, relation } if *pattern == c && *relation == starved)));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn stats_report_sane_values() {
         let m = checkerboard_model();
         let stats = m.stats();
@@ -486,7 +486,7 @@ mod tests {
         assert_eq!(stats.weight_max, 1.0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn tags_are_interned_and_deduplicated() {
         let mut b = ModelBuilder::new();
         let p = b.add_pattern(1.0);

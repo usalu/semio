@@ -159,7 +159,7 @@ mod tests {
         forward
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn node_create_and_delete_round_trip() {
         let base = Fem2dSnapshot::default();
         let node = FemNode { id: "n1".into(), x: 1.0, y: 2.0 };
@@ -168,7 +168,7 @@ mod tests {
         round_trip(&after_create, &Fem2dMutation::DeleteNode(delete_node::mutation::DeleteNode { id: node.id }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn element_create_replace_and_delete_round_trip() {
         let base = simply_supported_beam_doc();
         let updated = FemElement::Beam { id: "e1".into(), start: "n1".into(), end: "n2".into(), material_id: "steel".into(), section_id: "ipe300".into() };
@@ -179,7 +179,7 @@ mod tests {
         round_trip(&after_create, &Fem2dMutation::DeleteElement(delete_element::mutation::DeleteElement { id: "e2".into() }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn material_create_replace_and_delete_round_trip() {
         let base = simply_supported_beam_doc();
         let replaced = FemMaterial { id: "steel".into(), name: "Steel Updated".into(), e: 200e9, nu: 0.3, rho: 7900.0 };
@@ -187,7 +187,7 @@ mod tests {
         round_trip(&after_replace, &Fem2dMutation::DeleteMaterial(delete_material::mutation::DeleteMaterial { id: "steel".into() }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn section_create_replace_and_delete_round_trip() {
         let base = simply_supported_beam_doc();
         let replaced = FemSection { id: "ipe300".into(), name: "IPE300 Updated".into(), area: 0.01, iy: 1e-4 };
@@ -195,7 +195,7 @@ mod tests {
         round_trip(&after_replace, &Fem2dMutation::DeleteSection(delete_section::mutation::DeleteSection { id: "ipe300".into() }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn support_create_replace_and_delete_round_trip() {
         let base = simply_supported_beam_doc();
         let replaced = FemSupport { id: "s1".into(), node_id: "n1".into(), fixed: vec![FemDof::Ty] };
@@ -208,7 +208,7 @@ mod tests {
         round_trip(&base, &Fem2dMutation::DeleteSupport(delete_support::mutation::DeleteSupport { id: "s2".into() }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn region_create_replace_and_delete_round_trip() {
         let base = rectangle_region_doc();
         let updated = FemRegion { id: "r1".into(), name: "slab v2".into(), outline: vec![[0.0, 0.0], [5.0, 0.0], [5.0, 2.0], [0.0, 2.0]], holes: vec![], thickness: 0.03, material_id: "steel".into(), mesh_size: 0.5 };
@@ -217,7 +217,7 @@ mod tests {
         round_trip(&after_replace, &Fem2dMutation::DeleteRegion(delete_region::mutation::DeleteRegion { id: "r1".into() }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn load_case_create_and_delete_round_trip() {
         let base = simply_supported_beam_doc();
         let load_case = FemLoadCase { id: "wind".into(), name: "Wind Load".into(), loads: vec![], self_weight: false };
@@ -225,7 +225,7 @@ mod tests {
         round_trip(&after_create, &Fem2dMutation::DeleteLoadCase(delete_load_case::mutation::DeleteLoadCase { id: "wind".into() }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_load_and_remove_load_round_trip() {
         let base = simply_supported_beam_doc();
         let load = FemLoad::MemberUdl { id: "l2".into(), element_id: "e1".into(), wx: 0.0, wy: -900.0 };
@@ -234,13 +234,13 @@ mod tests {
         round_trip(&after_add, &Fem2dMutation::RemoveLoad(remove_load::mutation::RemoveLoad { case_id: "dead".into(), load_id: load_id(&load).to_string() }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn change_load_case_self_weight_round_trips() {
         let base = simply_supported_beam_doc();
         round_trip(&base, &Fem2dMutation::ChangeLoadCaseSelfWeight(change_load_case_self_weight::mutation::ChangeLoadCaseSelfWeight { case_id: "dead".into(), new_self_weight: true }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn combination_create_and_delete_round_trip() {
         let mut base = simply_supported_beam_doc();
         base.combinations.push(FemCombination { id: "uls".into(), name: "ULS".into(), terms: vec![FemCombinationTerm { case_id: "dead".into(), factor: 1.35 }] });
@@ -249,14 +249,14 @@ mod tests {
         round_trip(&after_create, &Fem2dMutation::DeleteCombination(delete_combination::mutation::DeleteCombination { id: "sls".into() }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn analysis_settings_update_round_trips() {
         let base = simply_supported_beam_doc();
         let settings = FemAnalysisSettings { modal_count: 5, buckling_count: 2, deformation_scale: 25.0 };
         round_trip(&base, &Fem2dMutation::UpdateAnalysisSettings(update_analysis_settings::mutation::UpdateAnalysisSettings { settings }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn missing_target_inverse_and_diff_are_no_ops() {
         let base = Fem2dSnapshot::default();
         assert!(Fem2dMutation::DeleteNode(delete_node::mutation::DeleteNode { id: "ghost".into() }).inverse(&base).is_empty());
@@ -267,7 +267,7 @@ mod tests {
     // #endregion 🔖️OpRoundTrip
 
     // #region 🔖️OpText
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fem2d_op_text_round_trips_every_variant() {
         semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem2dMutation::CreateNode(create_node::mutation::CreateNode { node: FemNode { id: "n1".into(), x: 1.0, y: 2.0 } }));
         semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem2dMutation::DeleteNode(delete_node::mutation::DeleteNode { id: "n1".into() }));
@@ -311,7 +311,7 @@ mod tests {
     // #endregion 🔖️OpText
 
     // #region 🔖️MutationLaws
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mutation_law_create_node_inverse_and_diff_absorb() {
         let base = Fem2dSnapshot::default();
         let mutation = Fem2dMutation::CreateNode(create_node::mutation::CreateNode { node: FemNode { id: "n1".into(), x: 1.0, y: 2.0 } });
@@ -322,14 +322,14 @@ mod tests {
         protocol::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mutation_law_replace_material_inverse() {
         let base = simply_supported_beam_doc();
         let mutation = Fem2dMutation::ReplaceMaterial(replace_material::mutation::ReplaceMaterial { id: "steel".into(), new_material: FemMaterial { id: "steel".into(), name: "Steel 2".into(), e: 200e9, nu: 0.3, rho: 7900.0 } });
         protocol::testkit::assert_mutation_inverse_law(&base, &mutation);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mutation_law_add_load_inverse_and_diff_absorb() {
         let base = simply_supported_beam_doc();
         let mutation = Fem2dMutation::AddLoad(add_load::mutation::AddLoad { case_id: "dead".into(), load: Box::new(FemLoad::Area { id: "l9".into(), region_id: "r1".into(), pressure: 400.0 }) });
@@ -340,7 +340,7 @@ mod tests {
         protocol::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn every_mutation_registers_a_semantic_descriptor() {
         register_fem2d_mutation_descriptors();
         let kinds = <Fem2dMutation as protocol::SemanticMutation<Fem2dSnapshot>>::kinds();
@@ -355,7 +355,7 @@ mod tests {
     /// ✅️ §C2/fan-out-recipe laws (`26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS`):
     /// one `assert_missing_target_is_error`/Fatal check per verb family this facet implements
     /// (create/delete/replace/add/remove/change).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_node_duplicate_id_is_fatal() {
         let base = simply_supported_beam_doc();
         let existing_id = base.nodes.first().unwrap().id.clone();
@@ -364,37 +364,37 @@ mod tests {
         assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_support_missing_node_is_error() {
         let base = Fem2dSnapshot::default();
         protocol::testkit::assert_missing_target_is_error(&base, &Fem2dMutation::CreateSupport(create_support::mutation::CreateSupport { support: FemSupport { id: "s1".into(), node_id: "ghost".into(), fixed: vec![] } }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn delete_node_missing_target_is_error() {
         let base = Fem2dSnapshot::default();
         protocol::testkit::assert_missing_target_is_error(&base, &Fem2dMutation::DeleteNode(delete_node::mutation::DeleteNode { id: "ghost".into() }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn replace_material_missing_target_is_error() {
         let base = simply_supported_beam_doc();
         protocol::testkit::assert_missing_target_is_error(&base, &Fem2dMutation::ReplaceMaterial(replace_material::mutation::ReplaceMaterial { id: "ghost".into(), new_material: FemMaterial { id: "ghost".into(), name: "x".into(), e: 1.0, nu: 0.3, rho: 1.0 } }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_load_missing_target_is_error() {
         let base = simply_supported_beam_doc();
         protocol::testkit::assert_missing_target_is_error(&base, &Fem2dMutation::AddLoad(add_load::mutation::AddLoad { case_id: "ghost".into(), load: Box::new(FemLoad::Nodal { id: "l1".into(), node_id: "n1".into(), dof: FemDof::Ty, value: 1.0 }) }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn remove_load_missing_target_is_error() {
         let base = simply_supported_beam_doc();
         protocol::testkit::assert_missing_target_is_error(&base, &Fem2dMutation::RemoveLoad(remove_load::mutation::RemoveLoad { case_id: "ghost".into(), load_id: "ghost".into() }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn change_load_case_self_weight_missing_target_is_error() {
         let base = simply_supported_beam_doc();
         protocol::testkit::assert_missing_target_is_error(&base, &Fem2dMutation::ChangeLoadCaseSelfWeight(change_load_case_self_weight::mutation::ChangeLoadCaseSelfWeight { case_id: "ghost".into(), new_self_weight: true }));
@@ -407,7 +407,7 @@ mod tests {
 mod semio_grammar_conformance {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn component_grammar_semio_is_grammar_dialect() {
         let g = ::dsl::parse_grammar(COMPONENT_GRAMMAR_SEMIO).expect("parse grammar.semio");
         assert_eq!(g.dialect, ::dsl::SemioDialect::Grammar);

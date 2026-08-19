@@ -110,7 +110,7 @@ pub mod derived_composition {
             store::semio_format::wrap_binary(&envelope, &raw)
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn conforming_builder_snapshot_composes_and_stamps_strict() {
             let snapshot = XlsxStrictBuilder::new(XlsxWorkbook::default()).build().expect("conforming strict construction must build");
             let bytes = conforming_pack_bytes(&snapshot);
@@ -119,7 +119,7 @@ pub mod derived_composition {
             assert!(composed.diagnostics.iter().all(|d| d.severity != Severity::Error), "no hard diagnostics expected: {:?}", composed.diagnostics);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn transitional_shaped_document_fails_compose_with_real_diagnostic() {
             let snapshot = crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::io::export::serializers::build_minimal_xlsx(XlsxWorkbook::default());
             let bytes = <XlsxSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
@@ -128,7 +128,7 @@ pub mod derived_composition {
             assert!(err.diagnostics.iter().any(|d| d.code.0 == CODE_NAMESPACE_MISMATCH && d.severity == Severity::Error), "got {:?}", err.diagnostics);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn subset_validator_recheck_flags_hard_diagnostics_on_the_wire_payload() {
             // Documented writer scope cut (module doc comment): `encode_pack` -> `encode_xlsx` ->
             // `regenerate_workbook_parts` always re-emits Transitional-shaped bytes, so a round trip

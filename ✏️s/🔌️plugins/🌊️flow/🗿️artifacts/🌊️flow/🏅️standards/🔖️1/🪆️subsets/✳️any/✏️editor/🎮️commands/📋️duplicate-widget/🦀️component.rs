@@ -62,7 +62,7 @@ mod tests {
     use crate::editor::flow::testkit::{dispatch, flow_app};
     use crate::editor::flow::FlowCommand;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn duplicate_widget_grows_widgets_and_synapses_and_leaves_the_source_untouched() {
         let mut app = flow_app();
         let before_widgets = app.snapshot().expect("snapshot").to_fixture().widgets.len();
@@ -79,7 +79,7 @@ mod tests {
         assert!(after.synapses.iter().any(|synapse| synapse.from == "slider" && synapse.to == "slider-copy"), "copy must be wired to its source");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn duplicate_widget_of_an_unknown_id_is_a_no_operation() {
         let mut app = flow_app();
         let before = app.snapshot().expect("snapshot").to_fixture().widgets.len();
@@ -88,7 +88,7 @@ mod tests {
         assert_eq!(app.snapshot().expect("snapshot").to_fixture().widgets.len(), before);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn duplicate_widget_twice_mints_distinct_ids() {
         let mut app = flow_app();
         dispatch(&mut app, FlowCommand::DuplicateWidget(DuplicateWidget { widget_id: "slider".into() }));

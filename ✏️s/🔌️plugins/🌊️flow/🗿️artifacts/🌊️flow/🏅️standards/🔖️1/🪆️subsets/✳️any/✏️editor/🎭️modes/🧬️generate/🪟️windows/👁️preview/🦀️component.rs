@@ -48,7 +48,7 @@ mod tests {
     use super::*;
     use crate::editor::flow::testkit::{flow_app, render as render_body};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn the_preview_renders_a_text_editor_surface() {
         let mut app = flow_app();
         assert!(render_body(&mut app, FLOW_PLAY_BODY_GENERATE_PREVIEW).contains("text-editor"));

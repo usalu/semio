@@ -37,7 +37,7 @@ async fn b64(bytes: &[u8]) -> String {
 impl Deserializer<NoteSnapshot> for PngIntoNote {
     const FROM: Dialect = PNG_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    async fn deserialize(payload: &IoPayload) -> IoResult<NoteSnapshot> {
+    fn deserialize(payload: &IoPayload) -> IoResult<NoteSnapshot> {
         let IoPayload::Binary(bytes) = payload else {
             return Err(IoError { message: "PngIntoNote: expected a binary png payload".to_string(), diagnostics: Vec::new() });
         };

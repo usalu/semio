@@ -78,7 +78,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn deserialize_derives_real_cumulative_delay_as_step_scalar_keyframes() {
         let anim = semio_framework_plugin::resolve_ready(SemioAnimationFromGif::deserialize(&real_world_gif())).expect("deserialize");
         assert_eq!(anim.timelines.len(), 1);
@@ -92,7 +92,7 @@ mod tests {
         assert_eq!(ch.keyframes[2].value, AnimValue::Scalar { value: 2.0 });
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn zero_frames_yields_zero_timelines() {
         let mut gif = real_world_gif();
         gif.frames.clear();

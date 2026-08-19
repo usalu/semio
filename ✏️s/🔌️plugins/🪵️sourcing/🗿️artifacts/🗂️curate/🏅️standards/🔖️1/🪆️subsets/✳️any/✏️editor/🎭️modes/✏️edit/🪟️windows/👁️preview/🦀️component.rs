@@ -65,7 +65,7 @@ mod tests {
     /// 🧬️ Direct unit coverage for `render`'s own id-lookup logic — the app-level call site always
     /// passes an empty slice (see the `selected_ids` doc comment above) until a future wave threads
     /// interaction into `render`.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn preview_renders_selected_mesh_id() {
         let document = crate::artifacts::curate::schema::default_document();
         let object_id = crate::artifacts::curate::stock_of(&document)[0].id.clone();
@@ -77,7 +77,7 @@ mod tests {
         assert_eq!(meshes[0]["id"].as_str(), Some(object_id.as_str()));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn preview_shows_placeholder_without_selection() {
         let document = crate::artifacts::curate::schema::default_document();
         let node = render(&document, &[], crate::editor::sourcing::terminology::sourcing_curate_labels(&SourcingCurateConfig::default()));
@@ -85,14 +85,14 @@ mod tests {
         assert!(json.contains("No selection"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn definition_declares_the_world3d_surface_and_body_key() {
         let def = definition();
         assert_eq!(def.body_key, SOURCING_CURATE_BODY_PREVIEW);
         assert!(matches!(def.surface_kind, SurfaceKind::World3d));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn renders_via_the_app() {
         let mut app = new_app();
         // `render` carries no `InteractionView` yet, so the app-level render always shows the placeholder.

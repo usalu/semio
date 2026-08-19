@@ -292,7 +292,7 @@ pub async fn puzzle2d_document_delta_operations(before: &Value, after: &Value) -
 pub struct Puzzle2dPlaySnapshot(pub Value);
 
 impl PartialEq for Puzzle2dPlaySnapshot {
-    async fn eq(&self, other: &Self) -> bool {
+    fn eq(&self, other: &Self) -> bool {
         store::pack_rt::json_values_equal(&self.0, &other.0)
     }
 }
@@ -373,7 +373,7 @@ mod tests {
     use protocol::SemanticMutation;
     use serde_json::json;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn puzzle2d_delta_ops_are_granular_and_round_trip() {
         let before = json!({ "schema": PUZZLE_2D_SCHEMA, "nodes": [{ "id": "n1", "anchor": "fixed", "x": 0.0, "y": 0.0, "handles": [] }, { "id": "n2", "anchor": "fixed", "x": 10.0, "y": 0.0, "handles": [] }], "edges": [] });
         let after = json!({ "schema": PUZZLE_2D_SCHEMA, "nodes": [{ "id": "n2", "anchor": "fixed", "x": 99.0, "y": 0.0, "handles": [] }, { "id": "n3", "anchor": "fixed", "x": 1.0, "y": 0.0, "handles": [] }], "edges": [] });
@@ -397,7 +397,7 @@ mod tests {
         assert_eq!(forward, canonical(&before), "backwards operations must restore the pre-edit document");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn sparse_node_without_anchor_still_emits_create_node() {
         let before = json!({ "schema": PUZZLE_2D_SCHEMA, "nodes": [], "edges": [] });
         let after = json!({
@@ -410,7 +410,7 @@ mod tests {
     }
 
     //#region 🔖️MutationLaws
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_delete_node_inverse_law() {
         use crate::artifacts::puzzle2d::{schema::empty_puzzle2d_snapshot, Puzzle2dNode};
         let base = empty_puzzle2d_snapshot();
@@ -420,7 +420,7 @@ mod tests {
         assert_mutation_inverse_law(&with_node, &delete_node("n1".into()));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn move_node_inverse_and_absorb_law() {
         use crate::artifacts::puzzle2d::{schema::empty_puzzle2d_snapshot, Puzzle2dNode};
         let base = empty_puzzle2d_snapshot();
@@ -433,7 +433,7 @@ mod tests {
         assert_mutation_diff_absorb_law(&with_node, d1, d2);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn node_field_mutations_inverse_law() {
         use crate::artifacts::puzzle2d::{schema::empty_puzzle2d_snapshot, Puzzle2dHandle, Puzzle2dNode, Puzzle2dNodeAnchor};
         let base = empty_puzzle2d_snapshot();
@@ -453,7 +453,7 @@ mod tests {
         assert_mutation_inverse_law(&with_node, &replace_node_handle("n1".into(), "h1".into(), Puzzle2dHandle { id: "h1".into(), angle: 1.5, ..Default::default() }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn connect_disconnect_handles_inverse_law() {
         use crate::artifacts::puzzle2d::{schema::empty_puzzle2d_snapshot, Puzzle2dHandle, Puzzle2dNode};
         let base = empty_puzzle2d_snapshot();
@@ -472,7 +472,7 @@ mod tests {
         assert_mutation_inverse_law(&connected, &change_edge_locked("e1".into(), Some(true)));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn delete_node_severs_and_reconnects_edges() {
         use crate::artifacts::puzzle2d::{schema::empty_puzzle2d_snapshot, Puzzle2dHandle, Puzzle2dNode};
         let base = empty_puzzle2d_snapshot();
@@ -489,7 +489,7 @@ mod tests {
         assert_mutation_inverse_law(&projection, &removed);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn meta_mutations_inverse_law() {
         use crate::artifacts::puzzle2d::{schema::empty_puzzle2d_snapshot, Puzzle2dCompatSpecificity, Puzzle2dKindCatalogs};
         let base = empty_puzzle2d_snapshot();
@@ -500,7 +500,7 @@ mod tests {
         assert_mutation_inverse_law(&base, &replace_kind_catalogs(Some(Puzzle2dKindCatalogs::default())));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dispatch_registers_semantic_descriptors() {
         register_puzzle2d_mutation_descriptors();
         for kind in Puzzle2dMutation::kinds() {
@@ -515,7 +515,7 @@ mod tests {
     // `📓️w3-f-block-puzzle-report.md` for the `assert_outcome_policy_matrix` pending-helper note.
     use protocol::testkit::{assert_fatal_never_applies, assert_missing_target_is_error};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn missing_target_is_error_per_verb_family() {
         use crate::artifacts::puzzle2d::schema::empty_puzzle2d_snapshot;
         let base = empty_puzzle2d_snapshot();
@@ -527,7 +527,7 @@ mod tests {
         assert_missing_target_is_error(&base, &disconnect_handles("missing".into())); // disconnect/unbind
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_duplicate_id_is_fatal_and_never_applies() {
         use crate::artifacts::puzzle2d::{schema::empty_puzzle2d_snapshot, Puzzle2dNode};
         let mut base = empty_puzzle2d_snapshot();

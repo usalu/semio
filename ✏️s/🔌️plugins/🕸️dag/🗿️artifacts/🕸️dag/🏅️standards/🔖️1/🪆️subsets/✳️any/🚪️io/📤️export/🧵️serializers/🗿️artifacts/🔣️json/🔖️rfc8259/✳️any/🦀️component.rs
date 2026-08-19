@@ -21,7 +21,7 @@ pub struct DagIntoJson;
 impl Serializer<DagSnapshot> for DagIntoJson {
     const INTO: Dialect = JSON_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Exact;
-    async fn serialize(from: &DagSnapshot) -> IoResult<IoPayload> {
+    fn serialize(from: &DagSnapshot) -> IoResult<IoPayload> {
         let json = serialize(from).map_err(|error| IoError { message: format!("DagIntoJson: {error}"), diagnostics: Vec::new() })?;
         Ok(IoOutcome::clean(IoPayload::Binary(<JsonSnapshot as store::ArtifactPack>::encode_pack(&json))))
     }

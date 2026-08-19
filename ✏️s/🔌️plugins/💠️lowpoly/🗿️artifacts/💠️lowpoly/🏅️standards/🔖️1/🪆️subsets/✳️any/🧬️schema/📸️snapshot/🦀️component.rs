@@ -24,7 +24,7 @@ pub struct LowpolySnapshot {
 }
 
 impl Default for LowpolySnapshot {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { schema: LOWPOLY_DOCUMENT_SCHEMA.into(), objects: Vec::new() }
     }
 }

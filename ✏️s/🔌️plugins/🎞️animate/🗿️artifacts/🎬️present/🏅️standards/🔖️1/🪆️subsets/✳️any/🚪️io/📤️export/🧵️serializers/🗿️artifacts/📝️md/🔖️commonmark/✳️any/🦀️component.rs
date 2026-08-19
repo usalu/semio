@@ -19,7 +19,7 @@ pub struct PresentIntoMd;
 impl Serializer<PresentSnapshot> for PresentIntoMd {
     const INTO: Dialect = MD_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Canonical;
-    async fn serialize(from: &PresentSnapshot) -> IoResult<IoPayload> {
+    fn serialize(from: &PresentSnapshot) -> IoResult<IoPayload> {
         let text = <PresentSnapshot as store::ArtifactDsl>::print_dsl(from);
         let md = MdSnapshot { schema: STDIO_MD_DOCUMENT_SCHEMA.into(), blocks: vec![MdBlock::Paragraph { inlines: vec![MdInline::Text { text }] }] };
         Ok(IoOutcome::clean(IoPayload::Binary(<MdSnapshot as store::ArtifactPack>::encode_pack(&md))))

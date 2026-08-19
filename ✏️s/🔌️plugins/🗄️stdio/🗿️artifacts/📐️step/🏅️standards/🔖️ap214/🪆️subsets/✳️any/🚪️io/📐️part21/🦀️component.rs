@@ -50,13 +50,13 @@ impl Part21Decimal {
 }
 
 impl From<f64> for Part21Decimal {
-    async fn from(value: f64) -> Self {
+    fn from(value: f64) -> Self {
         Self::from_f64(value)
     }
 }
 
 impl fmt::Display for Part21Decimal {
-    async fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         if self.negative {
             f.write_char('-')?;
         }
@@ -240,7 +240,7 @@ pub enum Part21Error {
 }
 
 impl fmt::Display for Part21Error {
-    async fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Part21Error::UnexpectedEof { at, expected } => write!(f, "part21: unexpected end of input at char {at}, expected {expected}"),
             Part21Error::UnexpectedChar { at, found, expected } => write!(f, "part21: unexpected char {found:?} at {at}, expected {expected}"),
@@ -655,7 +655,7 @@ pub struct Part21WriteOptions {
 }
 
 impl Default for Part21WriteOptions {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { line_ending: "\n", blank_after_header: false, blank_before_data: false, blank_before_terminator: false, space_after_instance_equals: false }
     }
 }
@@ -665,14 +665,26 @@ pub trait Part21Preamble {
     async fn write_preamble(&self, out: &mut String, line_ending: &str);
 }
 
+/// 🈳️ Zero-sized stand-in preamble type (O1 — R11(a): `write_part21_with`'s preamble is a
+/// borrowed-reference parameter, trivially generic; `write_part21` still needs SOME concrete type to
+/// instantiate that generic with when it passes `None`, and picking a real implementor — e.g. ifc's
+/// `Ifc2x3EdmPreamble` — would make this generic `step` module depend downward on a specific format
+/// built on top of it). Never constructed; `write_preamble` is unreachable by construction.
+struct NoPreamble;
+
+impl Part21Preamble for NoPreamble {
+    async fn write_preamble(&self, _out: &mut String, _line_ending: &str) {}
+}
+
 /// 📤️ Regenerates valid Part-21 text from the generic graph — round-trip losslessness is
 /// the writer's job; it never re-derives STEP/IFC semantics.
 pub async fn write_part21(doc: &Part21Document) -> String {
-    write_part21_with(doc, Part21WriteOptions::default(), None)
+    write_part21_with::<NoPreamble>(doc, Part21WriteOptions::default(), None)
 }
 
-/// 📤️ Regenerates Part-21 with a standard-selected deterministic layout and typed preamble.
-pub async fn write_part21_with(doc: &Part21Document, options: Part21WriteOptions, preamble: Option<&dyn Part21Preamble>) -> String {
+/// 📤️ Regenerates Part-21 with a standard-selected deterministic layout and typed preamble. Generic
+/// over the preamble implementor (O1 — R11(a): borrowed-reference parameter, trivially generic).
+pub async fn write_part21_with<P: Part21Preamble>(doc: &Part21Document, options: Part21WriteOptions, preamble: Option<&P>) -> String {
     let eol = options.line_ending;
     let mut out = format!("ISO-10303-21;{eol}HEADER;{eol}");
     if options.blank_after_header {
@@ -823,7 +835,7 @@ mod tests {
 
     const FIXTURE: &str = "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION((''),'2;1');\nFILE_NAME('semio.step','2026-08-10T00:00:00',('Ueli'),('semio'),'semio','','');\nFILE_SCHEMA(('AUTOMOTIVE_DESIGN'));\nENDSEC;\nDATA;\n#1=CARTESIAN_POINT('',(0.,0.,0.));\n#2=CARTESIAN_POINT('',(10.,0.,0.));\n#3=CARTESIAN_POINT('',(10.,10.,0.));\n#4=DIRECTION('',(0.,0.,1.));\n#5=VERTEX_POINT('',#1);\n#6=VERTEX_POINT('',#2);\n#7=VERTEX_POINT('',#3);\n#8=EDGE_CURVE('',#5,#6,#20,.T.);\n#9=EDGE_CURVE('',#6,#7,#21,.T.);\n#10=EDGE_CURVE('',#7,#5,#22,.T.);\n#20=LINE('',#1,#30);\n#21=LINE('',#2,#31);\n#22=LINE('',#3,#32);\n#30=VECTOR('',#4,1.);\n#31=VECTOR('',#4,1.);\n#32=VECTOR('',#4,1.);\n#11=ORIENTED_EDGE('',*,*,#8,.T.);\n#12=ORIENTED_EDGE('',*,*,#9,.T.);\n#13=ORIENTED_EDGE('',*,*,#10,.T.);\n#14=EDGE_LOOP('',(#11,#12,#13));\n#15=FACE_OUTER_BOUND('',#14,.T.);\n#16=PLANE('',#40);\n#40=AXIS2_PLACEMENT_3D('',#1,#4,$);\n#17=ADVANCED_FACE('',(#15),#16,.T.);\n#18=CLOSED_SHELL('',(#17));\n#19=MANIFOLD_SOLID_BREP('',#18);\nENDSEC;\nEND-ISO-10303-21;\n";
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn round_trip_parse_serialize_reparse() {
         let doc = parse_part21(FIXTURE).expect("parse fixture");
         assert!(!doc.instances.is_empty());
@@ -833,7 +845,7 @@ mod tests {
         assert_eq!(doc, reparsed, "round trip must be lossless at the graph level");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn instance_count_and_types_preserved() {
         let doc = parse_part21(FIXTURE).expect("parse");
         assert_eq!(doc.instances.len(), 26);
@@ -844,7 +856,7 @@ mod tests {
         assert!(matches!(args[3], Part21Value::Unset));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn oriented_edge_derived_attrs_are_star() {
         let doc = parse_part21(FIXTURE).expect("parse");
         let oe = doc.instance(11).expect("oriented edge");
@@ -853,7 +865,7 @@ mod tests {
         assert_eq!(args[2], Part21Value::Derived);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn complex_instance_keeps_every_type() {
         let text =
             "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION((''),'2;1');\nFILE_NAME('','',(''),(''),'','','');\nFILE_SCHEMA(('IFC4'));\nENDSEC;\nDATA;\n#1=(IFCQUANTITYAREA($,$,$,10.5,$)IFCPHYSICALSIMPLEQUANTITY($,$,$,$));\nENDSEC;\nEND-ISO-10303-21;\n";
@@ -866,7 +878,7 @@ mod tests {
         assert_eq!(parse_part21(&round).expect("reparse"), doc);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn typed_value_wrapper_round_trips() {
         let text = "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION((''),'2;1');\nFILE_NAME('','',(''),(''),'','','');\nFILE_SCHEMA(('IFC4'));\nENDSEC;\nDATA;\n#1=IFCPROPERTYSINGLEVALUE('Height',$,IFCLENGTHMEASURE(3000.),$);\nENDSEC;\nEND-ISO-10303-21;\n";
         let doc = parse_part21(text).expect("parse");
@@ -877,7 +889,7 @@ mod tests {
         assert_eq!(parse_part21(&write_part21(&doc)).unwrap(), doc);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn string_escapes_round_trip() {
         for raw in ["it's a test", "unicode: \u{20AC} \u{4E2D}\u{6587}", "back\\slash", "", "plain"] {
             let text = format!("ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION((''),'2;1');\nFILE_NAME('','',(''),(''),'','','');\nFILE_SCHEMA(('X'));\nENDSEC;\nDATA;\n#1=LABEL('{}');\nENDSEC;\nEND-ISO-10303-21;\n", escape_part21_string(raw));
@@ -887,21 +899,21 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn doubled_quote_escape() {
         let text = "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION((''),'2;1');\nFILE_NAME('','',(''),(''),'','','');\nFILE_SCHEMA(('X'));\nENDSEC;\nDATA;\n#1=LABEL('it''s here');\nENDSEC;\nEND-ISO-10303-21;\n";
         let doc = parse_part21(text).expect("parse");
         assert_eq!(doc.instance(1).unwrap().entity("LABEL").unwrap()[0].as_str(), Some("it's here"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn unicode_x2_escape() {
         let text = "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION((''),'2;1');\nFILE_NAME('','',(''),(''),'','','');\nFILE_SCHEMA(('X'));\nENDSEC;\nDATA;\n#1=LABEL('\\X2\\4E2D6587\\X0\\');\nENDSEC;\nEND-ISO-10303-21;\n";
         let doc = parse_part21(text).expect("parse");
         assert_eq!(doc.instance(1).unwrap().entity("LABEL").unwrap()[0].as_str(), Some("中文"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn unset_and_derived_values() {
         let text = "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION((''),'2;1');\nFILE_NAME('','',(''),(''),'','','');\nFILE_SCHEMA(('X'));\nENDSEC;\nDATA;\n#1=THING($,*,1);\nENDSEC;\nEND-ISO-10303-21;\n";
         let doc = parse_part21(text).expect("parse");
@@ -911,7 +923,7 @@ mod tests {
         assert_eq!(args[2], Part21Value::Int(1));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn nested_lists_round_trip() {
         let text = "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION((''),'2;1');\nFILE_NAME('','',(''),(''),'','','');\nFILE_SCHEMA(('X'));\nENDSEC;\nDATA;\n#1=MATRIX(((1.,0.),(0.,1.)));\nENDSEC;\nEND-ISO-10303-21;\n";
         let doc = parse_part21(text).expect("parse");
@@ -922,7 +934,7 @@ mod tests {
         assert_eq!(parse_part21(&write_part21(&doc)).unwrap(), doc);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn malformed_input_is_typed_error_not_fabrication() {
         let bad = "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION((''),'2;1');\nFILE_NAME('','',(''),(''),'','','');\nFILE_SCHEMA(('X'));\nENDSEC;\nDATA;\n#1=THING(;\nENDSEC;\nEND-ISO-10303-21;\n";
         assert!(parse_part21(bad).is_err());

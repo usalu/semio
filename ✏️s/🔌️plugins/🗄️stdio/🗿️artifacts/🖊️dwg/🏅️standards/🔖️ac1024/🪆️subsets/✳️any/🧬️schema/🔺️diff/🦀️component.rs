@@ -219,7 +219,7 @@ mod tests {
     use super::*;
 
     /// 🧪️ Logical diff text and binary codecs retain every field.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn diff_codec_text_binary_roundtrip_law() {
         use protocol::DiffCodec;
         for d in demo_diff_cases() {

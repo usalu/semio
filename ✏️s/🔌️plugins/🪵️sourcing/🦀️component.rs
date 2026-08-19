@@ -36,7 +36,7 @@ pub async fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyEr
 mod surface_tests {
     /// 👁️✏️ Editor and viewer must share the exact same `Dialect` — both surfaces address the same
     /// artifact coordinate, only the role differs (contract §2.5).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn editor_and_viewer_share_the_same_dialect() {
         semio_framework_plugin::testkit::assert_editor_and_viewer_share_dialect::<crate::editor::sourcing::SourcingCurateApp, crate::viewer::sourcing::SourcingViewer>();
     }
@@ -44,7 +44,7 @@ mod surface_tests {
     /// 👁️ Structural + runtime proof the viewer can never mutate the document or draft store
     /// (contract §2.2/§2.5) — dispatches `SourcingViewCommand::default()` through the full
     /// `VcsArtifactApp<ViewerApp<SourcingViewer>>` runtime path.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn viewer_never_mutates() {
         semio_framework_plugin::testkit::assert_viewer_never_mutates::<crate::viewer::sourcing::SourcingViewer>();
     }

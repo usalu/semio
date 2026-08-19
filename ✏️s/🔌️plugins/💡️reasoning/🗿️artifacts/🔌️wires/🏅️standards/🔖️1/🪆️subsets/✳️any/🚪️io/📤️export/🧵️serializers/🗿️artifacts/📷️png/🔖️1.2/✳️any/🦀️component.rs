@@ -19,7 +19,7 @@ pub struct WiresIntoPng;
 impl Serializer<WiresSnapshot> for WiresIntoPng {
     const INTO: Dialect = PNG_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    async fn serialize(_from: &WiresSnapshot) -> IoResult<IoPayload> {
+    fn serialize(_from: &WiresSnapshot) -> IoResult<IoPayload> {
         Err(IoError { message: "png export not yet implemented".to_string(), diagnostics: Vec::new() })
     }
 }

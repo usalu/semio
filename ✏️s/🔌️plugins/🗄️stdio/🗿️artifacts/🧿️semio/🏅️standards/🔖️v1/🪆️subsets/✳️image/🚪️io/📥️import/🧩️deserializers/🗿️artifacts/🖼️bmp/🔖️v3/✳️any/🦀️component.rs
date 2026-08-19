@@ -74,7 +74,7 @@ mod tests {
         BmpSnapshot { width: 2, height: 1, bits_per_pixel: 24, row_order: BmpRowOrder::BottomUp, x_pixels_per_meter: 2835, y_pixels_per_meter: 2835, pixels: vec![255, 0, 0, 255, 0, 255, 0, 255], ..BmpSnapshot::default() }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn maps_pixels_and_resolution() {
         let semio = semio_framework_plugin::resolve_ready(SemioImageFromBmp::deserialize(&sample_bmp())).expect("deserialize");
         assert_eq!(semio.width, 2);

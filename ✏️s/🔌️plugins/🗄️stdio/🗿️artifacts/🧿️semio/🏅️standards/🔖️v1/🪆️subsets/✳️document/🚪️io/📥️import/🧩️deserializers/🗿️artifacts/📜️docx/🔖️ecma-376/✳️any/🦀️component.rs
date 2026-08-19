@@ -98,7 +98,7 @@ mod tests {
         )
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn maps_styles_paragraphs_and_tables() {
         let semio = semio_framework_plugin::resolve_ready(SemioDocumentFromDocx::deserialize(&sample_docx())).expect("deserialize");
         assert_eq!(semio.styles.len(), 2);

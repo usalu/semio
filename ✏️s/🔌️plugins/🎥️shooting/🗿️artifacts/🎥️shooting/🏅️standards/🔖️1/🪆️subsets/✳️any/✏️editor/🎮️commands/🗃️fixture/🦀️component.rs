@@ -111,7 +111,7 @@ mod tests {
     /// `artifact_mutations` entry — driven directly through `handle` (not `dispatch`, which routes
     /// through `VcsArtifactApp` and never applies `effects` to its own store, that's the real host's
     /// job), same as the already-migrated `fem2d` sibling's `commands::example` tests.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn reset_snapshot_restores_default_snapshot() {
         use semio_framework_plugin::Effect;
         let mut app = shooting_app();
@@ -131,7 +131,7 @@ mod tests {
         assert_eq!(restored.shots.len(), 2);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn load_request_declares_the_import_snapshot_json_import_action() {
         use semio_framework_plugin::Effect;
         let mut app = shooting_app();

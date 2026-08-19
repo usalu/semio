@@ -88,7 +88,7 @@ impl store::ArtifactPack for Puzzle2dSnapshot {
 //#endregion 🔖️HandcraftedArtifactCodecs
 
 impl Default for Puzzle2dSnapshot {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self {
             schema: PUZZLE_2D_SCHEMA.to_string(),
             camera: Default::default(),

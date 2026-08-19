@@ -50,37 +50,37 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dsl_round_trip_rewrite_rule_state() {
         assert_dsl_round_trip(&sample_rule_state());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn nakagin_label_core_example_dsl_round_trips() {
         let document = parse_dsl(NAKAGIN_LABEL_CORE_EXAMPLE_TEXT).expect("parse nakagin label-core example");
         assert_dsl_round_trip(&document);
         assert_dsl_pack_equivalence(&document);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn rewrite_rule_state_parse_dsl_errors_on_unknown_keyword() {
         let err = RewriteSnapshot::parse_dsl("bogus line").unwrap_err();
         assert!(err.message.contains("expected"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn rewrite_rule_state_parse_dsl_errors_on_malformed_binding() {
         assert!(RewriteSnapshot::parse_dsl("binding onlykey").is_err());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn rewrite_rule_state_parse_dsl_errors_on_malformed_layout() {
         assert!(RewriteSnapshot::parse_dsl("layout a").is_err());
         assert!(RewriteSnapshot::parse_dsl("layout a notanumber 2").is_err());
         assert!(RewriteSnapshot::parse_dsl("layout a 1 notanumber").is_err());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn rewrite_rule_state_parse_dsl_valid_binding_and_layout_lines() {
         let mut original = RewriteSnapshot { before_fixture_json: "{}".into(), lhs_json: "{}".into(), rhs_json: "{}".into(), ..Default::default() };
         original.parameter_bindings.insert("label".to_string(), PropertyValue::String("hi".into()));
@@ -90,7 +90,7 @@ mod tests {
         assert_eq!(state.rule_layout.get("a"), Some(&LayoutPoint { x: 1.0, y: 2.0 }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn rewrite_rule_state_parse_dsl_errors_on_malformed_quoted_blob() {
         assert!(RewriteSnapshot::parse_dsl("before nope").is_err());
         assert!(RewriteSnapshot::parse_dsl("before \"abc").is_err());
@@ -98,7 +98,7 @@ mod tests {
         assert!(RewriteSnapshot::parse_dsl(r#"before "a\"#).is_err());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn quote_blob_round_trips_backslashes_and_quotes() {
         let mut state = sample_rule_state();
         state.before_fixture_json = "a\\b\"c\nd".to_string();

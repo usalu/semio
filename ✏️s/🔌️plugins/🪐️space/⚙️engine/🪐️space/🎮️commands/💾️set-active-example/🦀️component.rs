@@ -29,7 +29,7 @@ mod tests {
     use crate::engine::space::SpaceCommand;
     use semio_framework_os::empty_workflow_snapshot;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn space_command_op_text_round_trips_every_variant() {
         store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::SetActiveExample(SetActiveExample { example_id: "demo".into() }));
         store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::ExportStudioPack(crate::engine::space::commands::export_studio_pack::ExportStudioPack {}));
@@ -39,11 +39,14 @@ mod tests {
         store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::OpenSpace(crate::engine::space::commands::open_space::OpenSpace { space_id: "demo".into() }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn open_studio_loads_created_empty_catalog_studio() {
         use semio_framework_os::{create_os_space, MemoryBackbonePort, SpaceKind, SpaceRole, SpaceUser, SpaceVisibility};
         use std::sync::Arc;
-        let port: Arc<dyn semio_framework_os::OsBackbonePort> = Arc::new(MemoryBackbonePort::new());
+        // 🧬️ O1 — concrete `store::BackbonePorts`, not `dyn OsBackbonePort`: `create_os_space` and
+        // `register_studio_port_for_test` both take `Arc<dyn OsBackbonePort>` BY VALUE, so
+        // `Arc<BackbonePorts>` unsizes at each call site.
+        let port: Arc<store::BackbonePorts> = Arc::new(store::BackbonePorts::Memory(MemoryBackbonePort::default()));
         let owner = SpaceUser { id: "tester".into(), name: "Tester".into(), avatar: None, role: SpaceRole::Author };
         let entry = create_os_space("Opened Empty", SpaceKind::Atelier, SpaceVisibility::Private, owner, port.clone()).expect("create");
         crate::register_studio_port_for_test(&entry.id, port);
@@ -56,7 +59,7 @@ mod tests {
         assert!(!emit.effects.iter().any(|effect| matches!(effect, Effect::Navigate { .. })));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn open_studio_unknown_id_returns_not_found() {
         let empty = empty_workflow_snapshot();
         let config = SpaceConfig::default();
@@ -78,7 +81,7 @@ mod tests {
         (parsed.snapshot, id)
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn open_studio_demo_explicit_loads_demo_fixture() {
         let empty = empty_workflow_snapshot();
         let config = SpaceConfig::default();
@@ -88,7 +91,7 @@ mod tests {
         assert!(!projection.graph.nodes.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn open_studio_loads_ephemeral_created_studio() {
         use crate::editor::home::commands::create_studio;
         use semio_framework_plugin::{ArtifactEditor, ArtifactView, ConfigView, HistoryView};
@@ -116,7 +119,7 @@ mod tests {
     }
 
     /// 🌉️ Exercises BOTH apps together (Home's `createStudio` followed by Space's `openSpace`).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_space_navigates_without_download_and_opens_empty() {
         use crate::editor::home::commands::create_studio;
         use semio_framework_plugin::{ArtifactEditor, ArtifactView, ConfigView, HistoryView};

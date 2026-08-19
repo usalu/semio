@@ -56,13 +56,13 @@ mod tests {
     use crate::artifacts::remodel::mint_and_stash_mesh;
     use semio_framework::MeshData;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn empty_mesh_yields_a_zero_bounds() {
         let bounds = compute_remodel_bounds(&RemodelSnapshot::default());
         assert_eq!(bounds, RemodelBounds::default());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn a_single_triangle_bounds_and_counts_exactly() {
         let mut snapshot = RemodelSnapshot::default();
         snapshot.results.mesh.mesh = mint_and_stash_mesh(MeshData { positions: vec![-1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 2.0, 0.0], indices: vec![0, 1, 2], ..MeshData::default() });
@@ -73,7 +73,7 @@ mod tests {
         assert_eq!(bounds.face_count, 1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn bounds_is_deterministic() {
         let mut snapshot = RemodelSnapshot::default();
         snapshot.results.mesh.mesh = mint_and_stash_mesh(MeshData { positions: vec![0.0, 0.0, 0.0, 1.0, 1.0, 1.0], ..MeshData::default() });

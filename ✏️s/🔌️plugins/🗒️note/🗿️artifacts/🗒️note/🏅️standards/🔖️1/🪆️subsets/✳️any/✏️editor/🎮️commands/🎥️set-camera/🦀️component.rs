@@ -31,7 +31,7 @@ mod tests {
     /// 🎥️ `setCamera`/`setCameraZoom` are config-only — they must never emit a `NoteMutation` (no VCS
     /// edit, no undo entry on the document store) and instead write into `cfg.camera`, which the
     /// composite scene's `documentJson.camera` then reflects.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_camera_writes_config_and_emits_no_artifact_mutations() {
         let mut app = note_app();
         let before = app.snapshot().expect("snapshot");
@@ -43,7 +43,7 @@ mod tests {
         assert!(json.contains(r#"\"x\":4.0"#), "composite scene camera reflects config state: {json}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_camera_zoom_updates_zoom_and_keeps_pan_via_config() {
         let mut app = note_app();
         dispatch(&mut app, NoteCommand::SetCamera(SetCamera { camera: NoteCamera { x: 4.0, y: 5.0, zoom: 1.0 } }));
@@ -56,7 +56,7 @@ mod tests {
 
     /// 🎥️ Dragging the viewport camera through several ticks must never create a VCS edit/undo step on
     /// the DOCUMENT store at all.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn camera_drag_never_creates_a_document_undo_step() {
         use semio_framework_plugin::PluginApp;
 

@@ -101,7 +101,7 @@ impl store::ArtifactPack for Fem2dConfig {
 
 
 impl Default for Fem2dConfig {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { result_source_id: None, result_mode: "static".into(), result_mode_index: 0, camera: FemCamera::default(), locale: "en-US".into() }
     }
 }
@@ -240,7 +240,7 @@ impl Mutation<Fem2dConfig> for Fem2dConfigMutation {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fem2d_config_default_is_static_display_with_default_camera_and_locale() {
         let config = Fem2dConfig::default();
         assert_eq!(config.result_mode, "static");
@@ -252,7 +252,7 @@ mod tests {
 
     /// 🧮️ `Fem2dConfig`'s `MutationDiff` is a whole-record replace, mirroring `ShootingConfig`'s
     /// identical B1 pilot pattern: `apply` ignores `base` entirely.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fem2d_config_operation_diff_is_a_whole_record_replace() {
         let base = Fem2dConfig::default();
         let mut replacement = Fem2dConfig::default();
@@ -266,7 +266,7 @@ mod tests {
         assert_eq!(absorbed, replacement);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn config_operation_backwards_always_restores_the_pre_operation_snapshot() {
         let base = Fem2dConfig::default();
         let camera = FemCamera { x: 1.0, y: 2.0, zoom: 3.0 };
@@ -278,7 +278,7 @@ mod tests {
         assert_eq!(backwards[0].diff(&next).diff(), &base);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_result_display_config_operation_round_trips() {
         let base = Fem2dConfig::default();
         let op = Fem2dConfigMutation::SetResultDisplay { source_id: Some("dead".into()), mode: "modal".into(), mode_index: 2 };
@@ -288,7 +288,7 @@ mod tests {
         assert_eq!(next.result_mode_index, 2);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_locale_config_operation_round_trips() {
         let base = Fem2dConfig::default();
         let op = Fem2dConfigMutation::SetLocale { value: "de-DE".into() };
@@ -296,7 +296,7 @@ mod tests {
         assert_eq!(next.locale, "de-DE");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fem2d_config_operation_text_round_trips_every_variant() {
         semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem2dConfigMutation::Snapshot { config: Fem2dConfig::default() });
         semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem2dConfigMutation::SetResultDisplay { source_id: Some("dead".into()), mode: "modal".into(), mode_index: 1 });

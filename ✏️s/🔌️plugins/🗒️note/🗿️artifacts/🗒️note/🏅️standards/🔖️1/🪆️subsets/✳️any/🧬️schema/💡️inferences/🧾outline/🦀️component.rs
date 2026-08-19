@@ -82,7 +82,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn outline_flattens_group_children_in_document_order() {
         let group = NoteBlockNode::Group { id: "g".into(), name: "Group".into(), x: 0.0, y: 0.0, width: 1.0, height: 1.0, rotation: 0.0, visible: true, locked: false, children: vec![text_block("t1", "Child", "hi")] };
         let snapshot = NoteSnapshot { blocks: vec![group], ..NoteSnapshot::default() };
@@ -91,14 +91,14 @@ mod tests {
         assert_eq!(outline.block_count, 2);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn outline_counts_words_across_text_blocks_only() {
         let snapshot = NoteSnapshot { blocks: vec![text_block("t1", "A", "one two three")], ..NoteSnapshot::default() };
         let outline = NoteOutline::compute(&snapshot);
         assert_eq!(outline.word_count, 3);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn empty_blocks_produce_an_empty_outline() {
         let outline = NoteOutline::compute(&NoteSnapshot::default());
         assert!(outline.section_outline.is_empty());
@@ -106,7 +106,7 @@ mod tests {
         assert_eq!(outline.word_count, 0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn outline_is_deterministic() {
         let snapshot = NoteSnapshot { blocks: vec![text_block("t1", "A", "hello world")], ..NoteSnapshot::default() };
         assert_eq!(NoteOutline::compute(&snapshot), NoteOutline::compute(&snapshot));

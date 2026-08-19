@@ -157,7 +157,7 @@ mod tests {
         forward
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn every_demo_variant_round_trips() {
         let base = fixture();
         for m in demo_mutation_cases() {
@@ -165,7 +165,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_delete_layer_round_trip() {
         let base = fixture();
         let new_layer = DrawLayer { id: "l1".into(), name: "new".into(), visible: true, root: DrawNode::default() };
@@ -179,7 +179,7 @@ mod tests {
         assert!(after_delete.layers.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn delete_layer_of_an_absent_id_has_an_empty_inverse() {
         let base = fixture();
         let delete = SemioDrawingMutation::DeleteLayer(delete_layer::mutation::DeleteLayer { id: "missing".into() });
@@ -187,7 +187,7 @@ mod tests {
         assert_eq!(delete.diff(&base).diff().apply(&base).expect("apply must succeed for a well-formed fixture"), base);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_delete_node_round_trip() {
         let base = fixture();
         let root_path = NodePath { layer: 0, path: vec![] };
@@ -202,7 +202,7 @@ mod tests {
         let _ = round_trip(&base, &delete);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn move_and_drag_nodes_round_trip() {
         let base = fixture();
         let text_path = NodePath { layer: 0, path: vec![0] };
@@ -221,7 +221,7 @@ mod tests {
         let _ = round_trip(&base, &drag);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn rotate_and_scale_round_trip() {
         let base = fixture();
         let root_path = NodePath { layer: 0, path: vec![] };
@@ -231,7 +231,7 @@ mod tests {
         let _ = round_trip(&base, &scale_m);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn reorder_nodes_round_trips() {
         let base = fixture();
         let root_path = NodePath { layer: 0, path: vec![] };
@@ -242,7 +242,7 @@ mod tests {
         assert_eq!(after_children[2], base_children[0]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn group_and_ungroup_round_trip() {
         let base = fixture();
         let root_path = NodePath { layer: 0, path: vec![] };
@@ -257,7 +257,7 @@ mod tests {
         let _ = round_trip(&base, &ungroup_m);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn group_refuses_non_contiguous_indices() {
         let base = fixture();
         let root_path = NodePath { layer: 0, path: vec![] };
@@ -266,7 +266,7 @@ mod tests {
         assert_eq!(m.diff(&base).diff().apply(&base).expect("apply must succeed for a well-formed fixture"), base);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn flatten_and_unflatten_round_trip() {
         let base = fixture();
         let root_path = NodePath { layer: 0, path: vec![] };
@@ -277,7 +277,7 @@ mod tests {
         assert!(children.iter().all(|c| !matches!(c, DrawNode::Group { .. })), "no descendant groups remain");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn flatten_refuses_a_non_identity_descendant_group() {
         let mut base = fixture();
         let DrawNode::Group { children, .. } = &mut base.layers[0].root else { panic!() };
@@ -289,7 +289,7 @@ mod tests {
         assert_eq!(m.diff(&base).diff().apply(&base).expect("apply must succeed for a well-formed fixture"), base);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn replace_path_round_trips() {
         let base = fixture();
         let m = SemioDrawingMutation::ReplacePath(replace_path::mutation::ReplacePath { at: NodePath { layer: 0, path: vec![1] }, new_segments: vec![PathSegment::Close] });
@@ -299,7 +299,7 @@ mod tests {
         assert_eq!(segments, &vec![PathSegment::Close]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn replace_fill_and_change_stroke_round_trip() {
         let base = fixture();
         let fill_m = SemioDrawingMutation::ReplaceFill(replace_fill::mutation::ReplaceFill { style_name: "s1".into(), new_fill: None });
@@ -322,7 +322,7 @@ mod tests {
         assert_eq!(absent_m.diff(&base).diff().apply(&base).expect("apply must succeed for a well-formed fixture"), base);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn semantic_kinds_cover_every_declared_variant() {
         assert_eq!(SemioDrawingMutation::kinds().len(), 17);
         let mutation = SemioDrawingMutation::DeleteLayer(delete_layer::mutation::DeleteLayer { id: "l0".into() });

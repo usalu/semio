@@ -77,12 +77,14 @@ impl AnchoredSyntax {
     /// 🔎️ Confirms an anchor retains exactly the source range it claims.
     pub async fn validate(&self) -> Result<(), CodecFailure> {
         if self.anchor.trim().is_empty() {
-            return Err(CodecFailure::error("io.codec.empty-anchor", "source anchor is empty"));
+            return Err(CodecFailure::error("io.codec.empty-anchor", "source anchor is empty").await);
         }
-        self.span.validate().map_err(|error| CodecFailure::error("io.codec.invalid-source-span", format!("invalid anchor {:?}: {error:?}", self.anchor)))?;
+        if let Err(error) = self.span.validate().await {
+            return Err(CodecFailure::error("io.codec.invalid-source-span", format!("invalid anchor {:?}: {error:?}", self.anchor)).await);
+        }
         let width = self.span.byte_end - self.span.byte_start;
         if width != self.bytes.len() as u64 {
-            return Err(CodecFailure::error("io.codec.anchor-width", format!("anchor {:?} has {} bytes for source width {width}", self.anchor, self.bytes.len())));
+            return Err(CodecFailure::error("io.codec.anchor-width", format!("anchor {:?} has {} bytes for source width {width}", self.anchor, self.bytes.len())).await);
         }
         Ok(())
     }
@@ -109,19 +111,19 @@ impl<T> ArtifactCodecResult<T> {
         let mut anchors = std::collections::BTreeSet::new();
         for anchor in &self.anchors {
             if !anchors.insert(anchor.anchor.clone()) {
-                return Err(CodecFailure::error("io.codec.duplicate-anchor", format!("duplicate anchor {:?}", anchor.anchor)));
+                return Err(CodecFailure::error("io.codec.duplicate-anchor", format!("duplicate anchor {:?}", anchor.anchor)).await);
             }
-            anchor.validate()?;
+            anchor.validate().await?;
         }
         let mut opaque_extensions = std::collections::BTreeSet::new();
         for extension in &self.opaque_extensions {
             if extension.kind.trim().is_empty() {
-                return Err(CodecFailure::error("io.codec.empty-opaque-kind", "opaque extension kind is empty"));
+                return Err(CodecFailure::error("io.codec.empty-opaque-kind", "opaque extension kind is empty").await);
             }
-            extension.source.validate()?;
+            extension.source.validate().await?;
             let key = (extension.kind.as_str(), extension.source.anchor.as_str(), extension.source.span.byte_start, extension.source.span.byte_end);
             if !opaque_extensions.insert(key) {
-                return Err(CodecFailure::error("io.codec.duplicate-opaque-extension", format!("duplicate opaque extension {:?} at {:?}", extension.kind, extension.source.anchor)));
+                return Err(CodecFailure::error("io.codec.duplicate-opaque-extension", format!("duplicate opaque extension {:?} at {:?}", extension.kind, extension.source.anchor)).await);
             }
         }
         Ok(())
@@ -142,15 +144,15 @@ impl<T> ArtifactCodecResult<T> {
 
     /// 🧭️ Verifies the representation promise attached to a completed codec result.
     pub async fn validate_representation(&self, representation: CodecRepresentation) -> Result<(), CodecFailure> {
-        self.validate_lossless()?;
+        self.validate_lossless().await?;
         if representation == CodecRepresentation::Canonical {
             let mut canonical = self.anchors.iter().collect::<Vec<_>>();
             canonical.sort_by_key(|anchor| (anchor.anchor.as_str(), anchor.span.byte_start, anchor.span.byte_end));
             if canonical != self.anchors.iter().collect::<Vec<_>>() {
-                return Err(CodecFailure::error("io.codec.noncanonical-anchors", "canonical result anchors are not deterministically ordered"));
+                return Err(CodecFailure::error("io.codec.noncanonical-anchors", "canonical result anchors are not deterministically ordered").await);
             }
-            if self.canonical_opaque_extensions() != self.opaque_extensions.iter().collect::<Vec<_>>() {
-                return Err(CodecFailure::error("io.codec.noncanonical-opaque-extensions", "canonical opaque extensions are not deterministically ordered"));
+            if self.canonical_opaque_extensions().await != self.opaque_extensions.iter().collect::<Vec<_>>() {
+                return Err(CodecFailure::error("io.codec.noncanonical-opaque-extensions", "canonical opaque extensions are not deterministically ordered").await);
             }
         }
         Ok(())
@@ -212,8 +214,10 @@ pub enum CodecRepresentation {
 pub struct CancellationToken(std::sync::Arc<std::sync::atomic::AtomicBool>);
 
 impl CancellationToken {
+    // 🚫️async: E1 pure accessor consumed by external-trait impls (`Default::default` on
+    // `DecodePolicy`/`EncodePolicy`, whose signature is fixed by the `Default` trait) — see R9.
     /// 🌱️ Creates an active cancellation token.
-    pub async fn new() -> Self {
+    pub fn new() -> Self {
         Self::default()
     }
 
@@ -304,41 +308,41 @@ impl CodecBudget {
 
     /// 🛑️ Fails immediately when the caller has cancelled this operation.
     pub async fn ensure_active(&self) -> Result<(), CodecFailure> {
-        if self.cancellation.is_cancelled() {
-            return Err(CodecFailure::error("io.codec.cancelled", "codec operation cancelled"));
+        if self.cancellation.is_cancelled().await {
+            return Err(CodecFailure::error("io.codec.cancelled", "codec operation cancelled").await);
         }
         Ok(())
     }
 
     /// 📥️ Charges streaming input bytes before retaining or processing them.
     pub async fn charge_read(&mut self, bytes: u64) -> Result<(), CodecFailure> {
-        self.ensure_active()?;
-        Self::charge(&mut self.consumption.read_bytes, bytes, self.limits.max_read_bytes, "read-bytes")
+        self.ensure_active().await?;
+        Self::charge(&mut self.consumption.read_bytes, bytes, self.limits.max_read_bytes, "read-bytes").await
     }
 
     /// 📤️ Charges output bytes before a host sink accepts them.
     pub async fn charge_write(&mut self, bytes: u64) -> Result<(), CodecFailure> {
-        self.ensure_active()?;
-        Self::charge(&mut self.consumption.written_bytes, bytes, self.limits.max_written_bytes, "written-bytes")
+        self.ensure_active().await?;
+        Self::charge(&mut self.consumption.written_bytes, bytes, self.limits.max_written_bytes, "written-bytes").await
     }
 
     /// ⚙️ Charges deterministic implementation work units.
     pub async fn charge_work(&mut self, units: u64) -> Result<(), CodecFailure> {
-        self.ensure_active()?;
-        Self::charge(&mut self.consumption.work_units, units, self.limits.max_work_units, "work-units")
+        self.ensure_active().await?;
+        Self::charge(&mut self.consumption.work_units, units, self.limits.max_work_units, "work-units").await
     }
 
     /// 🧱️ Charges a logical allocation before allocating externally supplied data.
     pub async fn charge_allocation(&mut self, allocations: u64) -> Result<(), CodecFailure> {
-        self.ensure_active()?;
-        Self::charge(&mut self.consumption.allocations, allocations, self.limits.max_allocations, "allocations")
+        self.ensure_active().await?;
+        Self::charge(&mut self.consumption.allocations, allocations, self.limits.max_allocations, "allocations").await
     }
 
     /// 🪆️ Enters a bounded parser or encoder recursion frame.
     pub async fn enter_recursion(&mut self) -> Result<(), CodecFailure> {
-        self.ensure_active()?;
+        self.ensure_active().await?;
         if self.consumption.recursion_depth >= self.limits.max_recursion_depth {
-            return Err(CodecFailure::error("io.codec.recursion-exhausted", format!("recursion budget {} exhausted", self.limits.max_recursion_depth)));
+            return Err(CodecFailure::error("io.codec.recursion-exhausted", format!("recursion budget {} exhausted", self.limits.max_recursion_depth)).await);
         }
         self.consumption.recursion_depth += 1;
         self.consumption.peak_recursion_depth = self.consumption.peak_recursion_depth.max(self.consumption.recursion_depth);
@@ -347,15 +351,21 @@ impl CodecBudget {
 
     /// 🪆️ Leaves one parser or encoder recursion frame.
     pub async fn leave_recursion(&mut self) -> Result<(), CodecFailure> {
-        self.ensure_active()?;
-        self.consumption.recursion_depth = self.consumption.recursion_depth.checked_sub(1).ok_or_else(|| CodecFailure::error("io.codec.recursion-underflow", "codec left a recursion frame it did not enter"))?;
+        self.ensure_active().await?;
+        match self.consumption.recursion_depth.checked_sub(1) {
+            Some(depth) => self.consumption.recursion_depth = depth,
+            None => return Err(CodecFailure::error("io.codec.recursion-underflow", "codec left a recursion frame it did not enter").await),
+        }
         Ok(())
     }
 
     async fn charge(used: &mut u64, increment: u64, limit: u64, resource: &str) -> Result<(), CodecFailure> {
-        let next = used.checked_add(increment).ok_or_else(|| CodecFailure::error("io.codec.budget-overflow", format!("{resource} counter overflow")))?;
+        let next = match used.checked_add(increment) {
+            Some(next) => next,
+            None => return Err(CodecFailure::error("io.codec.budget-overflow", format!("{resource} counter overflow")).await),
+        };
         if next > limit {
-            return Err(CodecFailure::error("io.codec.budget-exhausted", format!("{resource} budget {limit} exhausted by request for {increment}")));
+            return Err(CodecFailure::error("io.codec.budget-exhausted", format!("{resource} budget {limit} exhausted by request for {increment}")).await);
         }
         *used = next;
         Ok(())
@@ -363,95 +373,115 @@ impl CodecBudget {
 }
 
 /// 🔍️ Decode invocation state; codecs charge it instead of owning hidden global limits.
+/// 🧬️ Generic over the host-owned resolver `R` — `ResourceResolver` is an open host-extension
+/// point with no closed implementor set, so `📌️important.md` R11 de-dyns its holder with a
+/// generic parameter instead of `Arc<dyn ResourceResolver>`.
 #[derive(Clone)]
-pub struct DecodeContext {
+pub struct DecodeContext<R: ResourceResolver> {
     pub policy: DecodePolicy,
     pub budget: CodecBudget,
-    resolver: Option<std::sync::Arc<dyn ResourceResolver>>,
+    resolver: Option<std::sync::Arc<R>>,
 }
 
-impl DecodeContext {
+impl<R: ResourceResolver> DecodeContext<R> {
     /// 🌱️ Starts one decode invocation.
     pub async fn new(policy: DecodePolicy) -> Self {
         let budget = CodecBudget::new(policy.limits.clone(), policy.cancellation.clone());
-        Self { policy, budget, resolver: None }
+        Self { policy, budget: budget.await, resolver: None }
     }
 
     /// 🔗️ Starts one decode invocation with the host-owned external resource resolver.
-    pub async fn with_resolver(policy: DecodePolicy, resolver: std::sync::Arc<dyn ResourceResolver>) -> Self {
+    pub async fn with_resolver(policy: DecodePolicy, resolver: std::sync::Arc<R>) -> Self {
         let budget = CodecBudget::new(policy.limits.clone(), policy.cancellation.clone());
-        Self { policy, budget, resolver: Some(resolver) }
+        Self { policy, budget: budget.await, resolver: Some(resolver) }
     }
 
-    /// 🌊️ Creates the only codec-facing bounded view over a payload source.
-    pub async fn source<'source>(&'source mut self, source: &'source mut dyn PayloadSource) -> CodecResult<BoundedPayloadSource<'source>> {
-        source.span().validate().map_err(|error| CodecFailure::error("io.codec.invalid-source-span", format!("invalid payload source span: {error:?}")))?;
-        self.budget.ensure_active()?;
-        Ok(CodecOutput { value: BoundedPayloadSource { source, context: self }, diagnostics: Vec::new() })
+    /// 🌊️ Creates the only codec-facing bounded view over a payload source. `S` is trivially
+    /// generic (R11 part a) — no runtime-chosen implementor lives at this call site.
+    pub async fn source<'source, S: PayloadSource>(&'source mut self, source: &'source mut S) -> CodecResult<BoundedPayloadSource<'source, S>> {
+        if let Err(error) = source.span().await.validate().await {
+            return Err(CodecFailure::error("io.codec.invalid-source-span", format!("invalid payload source span: {error:?}")).await);
+        }
+        self.budget.ensure_active().await?;
+        Ok(CodecOutput { value: BoundedPayloadSource { source, budget: &mut self.budget, policy: &self.policy }, diagnostics: Vec::new() })
     }
 
-    /// 🔗️ Resolves one external source exclusively through the host-owned resolver.
-    pub async fn resolve<'context>(&'context mut self, request: &ResourceRequest) -> CodecResult<ResolvedPayloadSource<'context>> {
-        self.budget.ensure_active()?;
-        let resolver = self.resolver.clone().ok_or_else(|| CodecFailure::error("io.codec.resource-resolver-unavailable", "decode context has no resource resolver"))?;
-        let resolved = resolver.resolve_decode(request)?;
-        resolved.value.span().validate().map_err(|error| CodecFailure::error("io.codec.invalid-source-span", format!("invalid resolved payload source span: {error:?}")))?;
-        Ok(CodecOutput { value: ResolvedPayloadSource { source: resolved.value, context: self }, diagnostics: resolved.diagnostics })
+    /// 🔗️ Resolves one external source exclusively through the host-owned resolver. The resolved
+    /// source's concrete type is the resolver's own `Self::Source` associated type (R11 part b) —
+    /// the openness lives at the resolver implementor, never boxed here.
+    pub async fn resolve<'context>(&'context mut self, request: &ResourceRequest) -> CodecResult<ResolvedPayloadSource<'context, R::Source>> {
+        self.budget.ensure_active().await?;
+        let resolver = match self.resolver.clone() {
+            Some(resolver) => resolver,
+            None => return Err(CodecFailure::error("io.codec.resource-resolver-unavailable", "decode context has no resource resolver").await),
+        };
+        let resolved = resolver.resolve_decode(request).await?;
+        if let Err(error) = resolved.value.span().await.validate().await {
+            return Err(CodecFailure::error("io.codec.invalid-source-span", format!("invalid resolved payload source span: {error:?}")).await);
+        }
+        Ok(CodecOutput { value: ResolvedPayloadSource { source: resolved.value, budget: &mut self.budget, policy: &self.policy }, diagnostics: resolved.diagnostics })
     }
 
     /// ✅️ Finalizes a decode result only when its requested representation is valid.
     pub async fn finalize_result<T>(&mut self, mut result: ArtifactCodecResult<T>) -> CodecResult<ArtifactCodecResult<T>> {
-        self.budget.charge_work(1)?;
+        self.budget.charge_work(1).await?;
         if self.policy.representation == CodecRepresentation::Canonical {
-            result.canonicalize();
+            result.canonicalize().await;
         }
-        result.validate_representation(self.policy.representation)?;
+        result.validate_representation(self.policy.representation).await?;
         Ok(CodecOutput { value: result, diagnostics: Vec::new() })
     }
 }
 
 /// 🔍️ Encode invocation state; codecs charge it instead of owning hidden global limits.
+/// 🧬️ Generic over the host-owned resolver `R` — see `DecodeContext`'s doc comment and
+/// `📌️important.md` R11.
 #[derive(Clone)]
-pub struct EncodeContext {
+pub struct EncodeContext<R: ResourceResolver> {
     pub policy: EncodePolicy,
     pub budget: CodecBudget,
-    resolver: Option<std::sync::Arc<dyn ResourceResolver>>,
+    resolver: Option<std::sync::Arc<R>>,
 }
 
-impl EncodeContext {
+impl<R: ResourceResolver> EncodeContext<R> {
     /// 🌱️ Starts one encode invocation.
     pub async fn new(policy: EncodePolicy) -> Self {
         let budget = CodecBudget::new(policy.limits.clone(), policy.cancellation.clone());
-        Self { policy, budget, resolver: None }
+        Self { policy, budget: budget.await, resolver: None }
     }
 
     /// 🔗️ Starts one encode invocation with the host-owned external resource resolver.
-    pub async fn with_resolver(policy: EncodePolicy, resolver: std::sync::Arc<dyn ResourceResolver>) -> Self {
+    pub async fn with_resolver(policy: EncodePolicy, resolver: std::sync::Arc<R>) -> Self {
         let budget = CodecBudget::new(policy.limits.clone(), policy.cancellation.clone());
-        Self { policy, budget, resolver: Some(resolver) }
+        Self { policy, budget: budget.await, resolver: Some(resolver) }
     }
 
-    /// 🚰️ Creates the only codec-facing bounded view over a payload sink.
-    pub async fn sink<'sink>(&'sink mut self, sink: &'sink mut dyn PayloadSink) -> CodecResult<BoundedPayloadSink<'sink>> {
-        self.budget.ensure_active()?;
-        Ok(CodecOutput { value: BoundedPayloadSink { sink, context: self }, diagnostics: Vec::new() })
+    /// 🚰️ Creates the only codec-facing bounded view over a payload sink. `S` is trivially
+    /// generic (R11 part a).
+    pub async fn sink<'sink, S: PayloadSink>(&'sink mut self, sink: &'sink mut S) -> CodecResult<BoundedPayloadSink<'sink, S>> {
+        self.budget.ensure_active().await?;
+        Ok(CodecOutput { value: BoundedPayloadSink { sink, budget: &mut self.budget }, diagnostics: Vec::new() })
     }
 
-    /// 🔗️ Resolves one host-owned encoded resource destination.
-    pub async fn resolve<'context>(&'context mut self, request: &ResourceRequest) -> CodecResult<ResolvedPayloadSink<'context>> {
-        self.budget.ensure_active()?;
-        let resolver = self.resolver.clone().ok_or_else(|| CodecFailure::error("io.codec.resource-resolver-unavailable", "encode context has no resource resolver"))?;
-        let resolved = resolver.resolve_encode(request)?;
-        Ok(CodecOutput { value: ResolvedPayloadSink { sink: resolved.value, context: self }, diagnostics: resolved.diagnostics })
+    /// 🔗️ Resolves one host-owned encoded resource destination. The resolved sink's concrete
+    /// type is the resolver's own `Self::Sink` associated type (R11 part b).
+    pub async fn resolve<'context>(&'context mut self, request: &ResourceRequest) -> CodecResult<ResolvedPayloadSink<'context, R::Sink>> {
+        self.budget.ensure_active().await?;
+        let resolver = match self.resolver.clone() {
+            Some(resolver) => resolver,
+            None => return Err(CodecFailure::error("io.codec.resource-resolver-unavailable", "encode context has no resource resolver").await),
+        };
+        let resolved = resolver.resolve_encode(request).await?;
+        Ok(CodecOutput { value: ResolvedPayloadSink { sink: resolved.value, budget: &mut self.budget }, diagnostics: resolved.diagnostics })
     }
 
     /// ✅️ Finalizes an encode result only when host policy has made it canonical or lossless-valid.
     pub async fn finalize_result<T>(&mut self, mut result: ArtifactCodecResult<T>) -> CodecResult<ArtifactCodecResult<T>> {
-        self.budget.charge_work(1)?;
+        self.budget.charge_work(1).await?;
         if self.policy.representation == CodecRepresentation::Canonical {
-            result.canonicalize();
+            result.canonicalize().await;
         }
-        result.validate_representation(self.policy.representation)?;
+        result.validate_representation(self.policy.representation).await?;
         Ok(CodecOutput { value: result, diagnostics: Vec::new() })
     }
 }
@@ -472,11 +502,17 @@ pub trait RandomAccessPayload: Send + Sync {
     async fn read_at(&self, offset: u64, output: &mut [u8]) -> CodecResult<usize>;
 }
 
-/// 🌊️ A forward-only source which may additionally expose random access.
+/// 🌊️ A forward-only source which may additionally expose random access. `RandomAccess` is an
+/// associated type rather than `Option<&dyn RandomAccessPayload>` (`📌️important.md` R11 part b —
+/// the return position of a default trait method needs the associated type at the OWNING trait,
+/// which `dyn_enum_close!` cannot annotate here). Implementors that never support random access
+/// still declare it (any `RandomAccessPayload` works — the default body never constructs one).
 pub trait PayloadSource: Send {
+    type RandomAccess: RandomAccessPayload;
+
     async fn span(&self) -> SourceSpan;
     async fn read_chunk(&mut self, output: &mut [u8]) -> CodecResult<usize>;
-    async fn random_access(&self) -> Option<&dyn RandomAccessPayload> {
+    async fn random_access(&self) -> Option<&Self::RandomAccess> {
         None
     }
 }
@@ -493,182 +529,209 @@ pub struct ResourceRequest {
     pub expected_media_type: Option<String>,
 }
 
-/// 🧭️ Resolves a resource into the common streaming/random-access source contract.
+/// 🧭️ Resolves a resource into the common streaming/random-access source contract. `Source`/`Sink`
+/// push the runtime choice to the implementor (`📌️important.md` R11 part b): a resolver that
+/// genuinely needs to hand back several different source kinds declares its own closed enum over
+/// them — generated with `dyn_enum_close!` if it wants to — and names that enum here. Nothing in
+/// this trait is boxed or `dyn`.
 pub trait ResourceResolver: Send + Sync {
-    async fn resolve_decode(&self, request: &ResourceRequest) -> CodecResult<Box<dyn PayloadSource>>;
-    async fn resolve_encode(&self, request: &ResourceRequest) -> CodecResult<Box<dyn PayloadSink>>;
+    type Source: PayloadSource;
+    type Sink: PayloadSink;
+
+    async fn resolve_decode(&self, request: &ResourceRequest) -> CodecResult<Self::Source>;
+    async fn resolve_encode(&self, request: &ResourceRequest) -> CodecResult<Self::Sink>;
 }
 
-/// 🔒️ Host-owned bounded random-access view exposed to codecs.
-pub struct BoundedRandomAccessPayload<'a> {
-    source: &'a dyn RandomAccessPayload,
-    context: &'a mut DecodeContext,
+/// 🔒️ Host-owned bounded random-access view exposed to codecs. Borrows the invocation's budget
+/// and policy directly rather than the whole `DecodeContext`, so this stays non-generic over the
+/// resolver `R` even though `DecodeContext<R>` is generic (`📌️important.md` R11) — only `A`, the
+/// trivially-generic source type (R11 part a), needs naming here.
+pub struct BoundedRandomAccessPayload<'a, A: RandomAccessPayload> {
+    source: &'a A,
+    budget: &'a mut CodecBudget,
+    policy: &'a DecodePolicy,
 }
 
-impl BoundedRandomAccessPayload<'_> {
+impl<A: RandomAccessPayload> BoundedRandomAccessPayload<'_, A> {
     /// 📏️ Reads the declared resource length while checking cancellation.
     pub async fn len(&mut self) -> CodecResult<u64> {
-        self.context.budget.ensure_active()?;
-        self.context.budget.charge_work(1)?;
-        self.source.len()
+        self.budget.ensure_active().await?;
+        self.budget.charge_work(1).await?;
+        self.source.len().await
     }
 
     /// 🎯️ Reads at one exact offset without letting codecs bypass read/work limits.
     pub async fn read_at(&mut self, offset: u64, output: &mut [u8]) -> CodecResult<usize> {
-        let allowed = self.permitted(output.len())?;
-        let result = self.source.read_at(offset, &mut output[..allowed])?;
-        self.charge_result(result.value, allowed)
+        let allowed = self.permitted(output.len()).await?;
+        let result = self.source.read_at(offset, &mut output[..allowed]).await?;
+        self.charge_result(result.value, allowed).await
     }
 
     async fn permitted(&mut self, requested: usize) -> Result<usize, CodecFailure> {
-        self.context.budget.ensure_active()?;
-        self.context.budget.charge_work(1)?;
-        let remaining = self.context.policy.limits.max_read_bytes.saturating_sub(self.context.budget.consumption().read_bytes);
+        self.budget.ensure_active().await?;
+        self.budget.charge_work(1).await?;
+        let remaining = self.policy.limits.max_read_bytes.saturating_sub(self.budget.consumption().await.read_bytes);
         let permitted = if remaining > usize::MAX as u64 { requested } else { requested.min(remaining as usize) };
         if requested > 0 && permitted == 0 {
-            return Err(CodecFailure::error("io.codec.budget-exhausted", "read-bytes budget exhausted"));
+            return Err(CodecFailure::error("io.codec.budget-exhausted", "read-bytes budget exhausted").await);
         }
         Ok(permitted)
     }
 
     async fn charge_result(&mut self, read: usize, permitted: usize) -> CodecResult<usize> {
         if read > permitted {
-            return Err(CodecFailure::error("io.codec.source-overread", format!("payload source returned {read} bytes after being limited to {permitted}")));
+            return Err(CodecFailure::error("io.codec.source-overread", format!("payload source returned {read} bytes after being limited to {permitted}")).await);
         }
-        self.context.budget.charge_read(read as u64)?;
+        self.budget.charge_read(read as u64).await?;
         Ok(CodecOutput { value: read, diagnostics: Vec::new() })
     }
 }
 
-/// 🔒️ Host-owned bounded streaming view exposed to codecs.
-pub struct BoundedPayloadSource<'a> {
-    source: &'a mut dyn PayloadSource,
-    context: &'a mut DecodeContext,
+/// 🔒️ Host-owned bounded streaming view exposed to codecs. Generic over `S: PayloadSource`
+/// (R11 part a) and, like `BoundedRandomAccessPayload`, non-generic over the resolver `R`.
+pub struct BoundedPayloadSource<'a, S: PayloadSource> {
+    source: &'a mut S,
+    budget: &'a mut CodecBudget,
+    policy: &'a DecodePolicy,
 }
 
-impl BoundedPayloadSource<'_> {
+impl<S: PayloadSource> BoundedPayloadSource<'_, S> {
     /// 📥️ Reads one bounded streaming chunk and charges its actual retained bytes.
     pub async fn read_chunk(&mut self, output: &mut [u8]) -> CodecResult<usize> {
-        let allowed = self.permitted(output.len())?;
-        let result = self.source.read_chunk(&mut output[..allowed])?;
-        self.charge_result(result.value, allowed)
+        let allowed = self.permitted(output.len()).await?;
+        let result = self.source.read_chunk(&mut output[..allowed]).await?;
+        self.charge_result(result.value, allowed).await
     }
 
     /// 🎯️ Opens a bounded random-access view when the source supports it.
-    pub async fn random_access(&mut self) -> Option<BoundedRandomAccessPayload<'_>> {
-        let source = self.source.random_access()?;
-        Some(BoundedRandomAccessPayload { source, context: self.context })
+    pub async fn random_access(&mut self) -> Option<BoundedRandomAccessPayload<'_, S::RandomAccess>> {
+        let source = self.source.random_access().await?;
+        Some(BoundedRandomAccessPayload { source, budget: self.budget, policy: self.policy })
     }
 
     async fn permitted(&mut self, requested: usize) -> Result<usize, CodecFailure> {
-        self.context.budget.ensure_active()?;
-        self.context.budget.charge_work(1)?;
-        let remaining = self.context.policy.limits.max_read_bytes.saturating_sub(self.context.budget.consumption().read_bytes);
+        self.budget.ensure_active().await?;
+        self.budget.charge_work(1).await?;
+        let remaining = self.policy.limits.max_read_bytes.saturating_sub(self.budget.consumption().await.read_bytes);
         let permitted = if remaining > usize::MAX as u64 { requested } else { requested.min(remaining as usize) };
         if requested > 0 && permitted == 0 {
-            return Err(CodecFailure::error("io.codec.budget-exhausted", "read-bytes budget exhausted"));
+            return Err(CodecFailure::error("io.codec.budget-exhausted", "read-bytes budget exhausted").await);
         }
         Ok(permitted)
     }
 
     async fn charge_result(&mut self, read: usize, permitted: usize) -> CodecResult<usize> {
         if read > permitted {
-            return Err(CodecFailure::error("io.codec.source-overread", format!("payload source returned {read} bytes after being limited to {permitted}")));
+            return Err(CodecFailure::error("io.codec.source-overread", format!("payload source returned {read} bytes after being limited to {permitted}")).await);
         }
-        self.context.budget.charge_read(read as u64)?;
+        self.budget.charge_read(read as u64).await?;
         Ok(CodecOutput { value: read, diagnostics: Vec::new() })
     }
 }
 
 /// 🔒️ A resolver-owned source whose only codec-facing operations share this context's budget.
-pub struct ResolvedPayloadSource<'a> {
-    source: Box<dyn PayloadSource>,
-    context: &'a mut DecodeContext,
+/// `S` is the resolver's own `ResourceResolver::Source` associated type — the runtime choice made
+/// by the implementor, never a box (`📌️important.md` R11 part b).
+pub struct ResolvedPayloadSource<'a, S: PayloadSource> {
+    source: S,
+    budget: &'a mut CodecBudget,
+    policy: &'a DecodePolicy,
 }
 
-impl ResolvedPayloadSource<'_> {
+impl<S: PayloadSource> ResolvedPayloadSource<'_, S> {
     /// 📥️ Reads one bounded streaming chunk from a resolved source.
     pub async fn read_chunk(&mut self, output: &mut [u8]) -> CodecResult<usize> {
-        let allowed = self.permitted(output.len())?;
-        let result = self.source.read_chunk(&mut output[..allowed])?;
-        self.charge_result(result.value, allowed)
+        let allowed = self.permitted(output.len()).await?;
+        let result = self.source.read_chunk(&mut output[..allowed]).await?;
+        self.charge_result(result.value, allowed).await
     }
 
     /// 🎯️ Opens bounded random access when this resolved source supports it.
-    pub async fn random_access(&mut self) -> Option<BoundedRandomAccessPayload<'_>> {
-        Some(BoundedRandomAccessPayload { source: self.source.random_access()?, context: self.context })
+    pub async fn random_access(&mut self) -> Option<BoundedRandomAccessPayload<'_, S::RandomAccess>> {
+        let source = self.source.random_access().await?;
+        Some(BoundedRandomAccessPayload { source, budget: self.budget, policy: self.policy })
     }
 
     async fn permitted(&mut self, requested: usize) -> Result<usize, CodecFailure> {
-        self.context.budget.ensure_active()?;
-        self.context.budget.charge_work(1)?;
-        let remaining = self.context.policy.limits.max_read_bytes.saturating_sub(self.context.budget.consumption().read_bytes);
+        self.budget.ensure_active().await?;
+        self.budget.charge_work(1).await?;
+        let remaining = self.policy.limits.max_read_bytes.saturating_sub(self.budget.consumption().await.read_bytes);
         let permitted = if remaining > usize::MAX as u64 { requested } else { requested.min(remaining as usize) };
         if requested > 0 && permitted == 0 {
-            return Err(CodecFailure::error("io.codec.budget-exhausted", "read-bytes budget exhausted"));
+            return Err(CodecFailure::error("io.codec.budget-exhausted", "read-bytes budget exhausted").await);
         }
         Ok(permitted)
     }
 
     async fn charge_result(&mut self, read: usize, permitted: usize) -> CodecResult<usize> {
         if read > permitted {
-            return Err(CodecFailure::error("io.codec.source-overread", format!("payload source returned {read} bytes after being limited to {permitted}")));
+            return Err(CodecFailure::error("io.codec.source-overread", format!("payload source returned {read} bytes after being limited to {permitted}")).await);
         }
-        self.context.budget.charge_read(read as u64)?;
+        self.budget.charge_read(read as u64).await?;
         Ok(CodecOutput { value: read, diagnostics: Vec::new() })
     }
 }
 
-/// 🔒️ Host-owned bounded streaming sink exposed to codecs.
-pub struct BoundedPayloadSink<'a> {
-    sink: &'a mut dyn PayloadSink,
-    context: &'a mut EncodeContext,
+/// 🔒️ Host-owned bounded streaming sink exposed to codecs. Generic over `S: PayloadSink`
+/// (R11 part a); write_chunk never reads `policy`, so unlike the source side this only borrows
+/// the budget.
+pub struct BoundedPayloadSink<'a, S: PayloadSink> {
+    sink: &'a mut S,
+    budget: &'a mut CodecBudget,
 }
 
-impl BoundedPayloadSink<'_> {
+impl<S: PayloadSink> BoundedPayloadSink<'_, S> {
     /// 📤️ Writes one bounded chunk while charging work, allocation, and output bytes first.
     pub async fn write_chunk(&mut self, input: &[u8]) -> CodecResult<()> {
-        self.context.budget.charge_work(1)?;
-        self.context.budget.charge_allocation(input.len() as u64)?;
-        self.context.budget.charge_write(input.len() as u64)?;
-        self.sink.write_chunk(input)
+        self.budget.charge_work(1).await?;
+        self.budget.charge_allocation(input.len() as u64).await?;
+        self.budget.charge_write(input.len() as u64).await?;
+        self.sink.write_chunk(input).await
     }
 }
 
 /// 🔒️ A resolver-owned sink whose only codec-facing operation shares this context's budget.
-pub struct ResolvedPayloadSink<'a> {
-    sink: Box<dyn PayloadSink>,
-    context: &'a mut EncodeContext,
+/// `S` is the resolver's own `ResourceResolver::Sink` associated type (R11 part b).
+pub struct ResolvedPayloadSink<'a, S: PayloadSink> {
+    sink: S,
+    budget: &'a mut CodecBudget,
 }
 
-impl ResolvedPayloadSink<'_> {
+impl<S: PayloadSink> ResolvedPayloadSink<'_, S> {
     /// 📤️ Writes one budgeted chunk to a resolved destination.
     pub async fn write_chunk(&mut self, input: &[u8]) -> CodecResult<()> {
-        self.context.budget.charge_work(1)?;
-        self.context.budget.charge_allocation(input.len() as u64)?;
-        self.context.budget.charge_write(input.len() as u64)?;
-        self.sink.write_chunk(input)
+        self.budget.charge_work(1).await?;
+        self.budget.charge_allocation(input.len() as u64).await?;
+        self.budget.charge_write(input.len() as u64).await?;
+        self.sink.write_chunk(input).await
     }
 }
 //#endregion 🌊️Resources
 
 //#region 🧬️Codecs
 /// 📦️ Codec for a transport-level payload. It owns sniffing, bounded streaming, and output policy.
+/// `Source`/`Sink` name the concrete `BoundedPayloadSource`/`BoundedPayloadSink` type parameters
+/// this codec streams through (`📌️important.md` R11 part a — trivially generic, no boxing).
 pub trait PayloadCodec: Send + Sync {
     type Payload;
+    type Source: PayloadSource;
+    type Sink: PayloadSink;
 
-    async fn sniff(&self, source: &mut BoundedPayloadSource<'_>) -> CodecResult<PayloadSniff>;
-    async fn decode_payload(&self, source: &mut BoundedPayloadSource<'_>) -> CodecResult<Self::Payload>;
-    async fn encode_payload(&self, payload: &Self::Payload, sink: &mut BoundedPayloadSink<'_>) -> CodecResult<()>;
+    async fn sniff(&self, source: &mut BoundedPayloadSource<'_, Self::Source>) -> CodecResult<PayloadSniff>;
+    async fn decode_payload(&self, source: &mut BoundedPayloadSource<'_, Self::Source>) -> CodecResult<Self::Payload>;
+    async fn encode_payload(&self, payload: &Self::Payload, sink: &mut BoundedPayloadSink<'_, Self::Sink>) -> CodecResult<()>;
 }
 
 /// 🗿️ Semantic artifact codec layered over a transport `PayloadCodec` implementation.
+/// `decode_artifact`/`encode_artifact` are themselves generic over the resolver `R` (rather than
+/// the trait as a whole) — a codec body works with whichever resolver its caller supplies, it
+/// never needs to know the resolver's concrete type ahead of time (`📌️important.md` R11 part b).
 pub trait ArtifactCodec: PayloadCodec {
     type Artifact;
 
     async fn dialect(&self) -> &ArtifactDialect;
-    async fn decode_artifact(&self, payload: Self::Payload, context: &mut DecodeContext) -> CodecResult<Self::Artifact>;
-    async fn encode_artifact(&self, artifact: &Self::Artifact, context: &mut EncodeContext) -> CodecResult<Self::Payload>;
+    async fn decode_artifact<R: ResourceResolver>(&self, payload: Self::Payload, context: &mut DecodeContext<R>) -> CodecResult<Self::Artifact>;
+    async fn encode_artifact<R: ResourceResolver>(&self, artifact: &Self::Artifact, context: &mut EncodeContext<R>) -> CodecResult<Self::Payload>;
 }
 //#endregion 🧬️Codecs
 //#endregion 🔐️CodecContracts
@@ -957,7 +1020,7 @@ pub async fn preflight_composer_entries(entries: &'static [ComposerEntry]) -> Re
 /// 🔬️ Verifies independently declared static composers as one atomic candidate set.
 #[must_use]
 pub async fn preflight_composer_entry_refs(entries: &[&'static ComposerEntry]) -> Result<(), IoRegistryRegistrationError> {
-    let assembly = store::begin_artifact_assembly().map_err(|_| IoRegistryRegistrationError::Unavailable(IoRegistryUnavailable { registry: "artifact-assembly" }))?;
+    let assembly = store::begin_artifact_assembly().await.map_err(|_| IoRegistryRegistrationError::Unavailable(IoRegistryUnavailable { registry: "artifact-assembly" }))?;
     preflight_composer_entry_refs_in_assembly(&assembly, entries).await
 }
 
@@ -979,7 +1042,7 @@ pub async fn register_composer_entries(entries: &'static [ComposerEntry]) -> Res
 /// 📌️ Registers independently declared static composers as one all-or-nothing candidate set.
 #[must_use]
 pub async fn register_composer_entry_refs(entries: &[&'static ComposerEntry]) -> Result<(), IoRegistryRegistrationError> {
-    let assembly = store::begin_artifact_assembly().map_err(|_| IoRegistryRegistrationError::Unavailable(IoRegistryUnavailable { registry: "artifact-assembly" }))?;
+    let assembly = store::begin_artifact_assembly().await.map_err(|_| IoRegistryRegistrationError::Unavailable(IoRegistryUnavailable { registry: "artifact-assembly" }))?;
     register_composer_entry_refs_in_assembly(&assembly, entries).await
 }
 
@@ -1232,7 +1295,7 @@ async fn validate_subset_validators(registry: &BTreeMap<ArtifactDialect, &'stati
     for (dialect, entry) in &proposed {
         if let Some(existing) = registry.get(dialect) {
             if !same_subset_validator_entry(existing, entry).await {
-                return Err(SubsetValidatorRegistryError::Conflict(SubsetValidatorRegistryConflict { dialect: *dialect }));
+                return Err(SubsetValidatorRegistryError::Conflict(SubsetValidatorRegistryConflict { dialect: dialect.clone() }));
             }
         }
     }
@@ -1242,7 +1305,7 @@ async fn validate_subset_validators(registry: &BTreeMap<ArtifactDialect, &'stati
 /// 🔬️ Verifies subset-validator entries without changing their established owners.
 #[must_use]
 pub async fn preflight_subset_validators(entries: &[&'static SubsetValidatorEntry]) -> Result<(), SubsetValidatorRegistryError> {
-    let assembly = store::begin_artifact_assembly().map_err(|_| SubsetValidatorRegistryError::Unavailable(IoRegistryUnavailable { registry: "artifact-assembly" }))?;
+    let assembly = store::begin_artifact_assembly().await.map_err(|_| SubsetValidatorRegistryError::Unavailable(IoRegistryUnavailable { registry: "artifact-assembly" }))?;
     preflight_subset_validators_in_assembly(&assembly, entries).await
 }
 
@@ -1256,7 +1319,7 @@ pub async fn preflight_subset_validators_in_assembly(_assembly: &store::Artifact
 /// 📌️ Registers subset-validator entries only when the entire candidate set is conflict-free.
 #[must_use]
 pub async fn register_subset_validators(entries: &[&'static SubsetValidatorEntry]) -> Result<(), SubsetValidatorRegistryError> {
-    let assembly = store::begin_artifact_assembly().map_err(|_| SubsetValidatorRegistryError::Unavailable(IoRegistryUnavailable { registry: "artifact-assembly" }))?;
+    let assembly = store::begin_artifact_assembly().await.map_err(|_| SubsetValidatorRegistryError::Unavailable(IoRegistryUnavailable { registry: "artifact-assembly" }))?;
     register_subset_validators_in_assembly(&assembly, entries).await
 }
 
@@ -1681,7 +1744,7 @@ fn format_catalog() -> &'static RwLock<BTreeMap<String, FormatDescriptor>> {
 /// globally singular; equal duplicate rows are idempotent and never replace an established owner.
 #[must_use]
 pub async fn register_format_descriptors(descriptors: impl IntoIterator<Item = FormatDescriptor>) -> Result<(), FormatRegistryError> {
-    let assembly = store::begin_artifact_assembly().map_err(|_| FormatRegistryError::Unavailable(IoRegistryUnavailable { registry: "artifact-assembly" }))?;
+    let assembly = store::begin_artifact_assembly().await.map_err(|_| FormatRegistryError::Unavailable(IoRegistryUnavailable { registry: "artifact-assembly" }))?;
     register_format_descriptors_in_assembly(&assembly, descriptors).await
 }
 
@@ -1700,7 +1763,7 @@ pub async fn register_format_descriptors_in_assembly(_assembly: &store::Artifact
 /// 🔬️ Verifies format rows against the catalog without mutating their global ownership.
 #[must_use]
 pub async fn preflight_format_descriptors(rows: &[FormatDescriptor]) -> Result<(), FormatRegistryError> {
-    let assembly = store::begin_artifact_assembly().map_err(|_| FormatRegistryError::Unavailable(IoRegistryUnavailable { registry: "artifact-assembly" }))?;
+    let assembly = store::begin_artifact_assembly().await.map_err(|_| FormatRegistryError::Unavailable(IoRegistryUnavailable { registry: "artifact-assembly" }))?;
     preflight_format_descriptors_in_assembly(&assembly, rows).await
 }
 
@@ -1897,7 +1960,7 @@ impl std::error::Error for ArtifactAssemblyRegistryError {}
 /// fallible operation after the first registry mutation.
 #[must_use]
 pub async fn commit_artifact_assembly_registry_plan(assembly: &store::ArtifactAssemblyTransaction, plan: ArtifactAssemblyRegistryPlan) -> Result<(), ArtifactAssemblyRegistryError> {
-    let mut store_guards = store::acquire_artifact_assembly_store_registry_guards(assembly).map_err(ArtifactAssemblyRegistryError::Store)?;
+    let mut store_guards = store::acquire_artifact_assembly_store_registry_guards(assembly).await.map_err(ArtifactAssemblyRegistryError::Store)?;
     let mut composers = io_registry().await.write().map_err(|_| ArtifactAssemblyRegistryError::Composer(IoRegistryRegistrationError::Unavailable(IoRegistryUnavailable { registry: "io-composer" })))?;
     let mut subset_validators = subset_validator_registry().await.write().map_err(|_| ArtifactAssemblyRegistryError::SubsetValidator(SubsetValidatorRegistryError::Unavailable(IoRegistryUnavailable { registry: "subset-validator" })))?;
     let mut formats = format_catalog().write().map_err(|_| ArtifactAssemblyRegistryError::Format(FormatRegistryError::Unavailable(IoRegistryUnavailable { registry: "format-catalog" })))?;
@@ -1906,7 +1969,7 @@ pub async fn commit_artifact_assembly_registry_plan(assembly: &store::ArtifactAs
     validate_subset_validators(&subset_validators, &plan.subset_validators).await.map_err(ArtifactAssemblyRegistryError::SubsetValidator)?;
     let (proposed_formats, proposed_formats_by_kind) = index_format_descriptors(plan.format_descriptors.iter().cloned()).await.map_err(|error| ArtifactAssemblyRegistryError::Format(FormatRegistryError::Conflict(error)))?;
     validate_format_descriptors(&formats, &proposed_formats, &proposed_formats_by_kind).await.map_err(|error| ArtifactAssemblyRegistryError::Format(FormatRegistryError::Conflict(error)))?;
-    store::preflight_artifact_assembly_store_registry_guards(&store_guards, &plan.document_codecs, &plan.dialect_migrations).map_err(ArtifactAssemblyRegistryError::Store)?;
+    store::preflight_artifact_assembly_store_registry_guards(&store_guards, &plan.document_codecs, &plan.dialect_migrations).await.map_err(ArtifactAssemblyRegistryError::Store)?;
     for (key, entry) in proposed_composers {
         composers.entry(key).or_insert(entry);
     }
@@ -2102,13 +2165,13 @@ mod tests {
     async fn codec_budget_enforces_limits_and_shared_cancellation() {
         let cancellation = CancellationToken::new();
         let policy = DecodePolicy { representation: CodecRepresentation::Lossless, limits: CodecLimits { max_read_bytes: 4, max_written_bytes: 4, max_work_units: 2, max_allocations: 1, max_recursion_depth: 1 }, cancellation: cancellation.clone() };
-        let mut context = DecodeContext::new(policy);
+        let mut context = DecodeContext::<TestResolver>::new(policy).await;
         assert_eq!(context.policy.representation, CodecRepresentation::Lossless);
-        context.budget.charge_read(4).expect("limit edge is allowed");
-        assert!(context.budget.charge_work(3).is_err(), "work overrun must fail");
-        context.budget.charge_allocation(1).expect("allocation limit edge is allowed");
-        cancellation.cancel();
-        assert!(context.budget.charge_read(1).is_err(), "shared cancellation must stop later work");
+        context.budget.charge_read(4).await.expect("limit edge is allowed");
+        assert!(context.budget.charge_work(3).await.is_err(), "work overrun must fail");
+        context.budget.charge_allocation(1).await.expect("allocation limit edge is allowed");
+        cancellation.cancel().await;
+        assert!(context.budget.charge_read(1).await.is_err(), "shared cancellation must stop later work");
     }
 
     struct TestPayload {
@@ -2129,7 +2192,10 @@ mod tests {
         }
 
         async fn read_at(&self, offset: u64, output: &mut [u8]) -> CodecResult<usize> {
-            let start = usize::try_from(offset).map_err(|_| CodecFailure::error("test.offset", "offset does not fit usize"))?;
+            let start = match usize::try_from(offset) {
+                Ok(start) => start,
+                Err(_) => return Err(CodecFailure::error("test.offset", "offset does not fit usize").await),
+            };
             let available = match self.bytes.get(start..) {
                 Some(available) => available,
                 None => &[],
@@ -2141,6 +2207,8 @@ mod tests {
     }
 
     impl PayloadSource for TestPayload {
+        type RandomAccess = TestPayload;
+
         async fn span(&self) -> SourceSpan {
             self.span.clone()
         }
@@ -2153,7 +2221,7 @@ mod tests {
             Ok(CodecOutput { value: count, diagnostics: Vec::new() })
         }
 
-        async fn random_access(&self) -> Option<&dyn RandomAccessPayload> {
+        async fn random_access(&self) -> Option<&Self::RandomAccess> {
             Some(self)
         }
     }
@@ -2169,12 +2237,15 @@ mod tests {
     struct TestResolver;
 
     impl ResourceResolver for TestResolver {
-        async fn resolve_decode(&self, _request: &ResourceRequest) -> CodecResult<Box<dyn PayloadSource>> {
-            Ok(CodecOutput { value: Box::new(TestPayload::new(b"resolved", "resolver://decode")), diagnostics: Vec::new() })
+        type Source = TestPayload;
+        type Sink = TestSink;
+
+        async fn resolve_decode(&self, _request: &ResourceRequest) -> CodecResult<TestPayload> {
+            Ok(CodecOutput { value: TestPayload::new(b"resolved", "resolver://decode").await, diagnostics: Vec::new() })
         }
 
-        async fn resolve_encode(&self, _request: &ResourceRequest) -> CodecResult<Box<dyn PayloadSink>> {
-            Ok(CodecOutput { value: Box::new(TestSink), diagnostics: Vec::new() })
+        async fn resolve_encode(&self, _request: &ResourceRequest) -> CodecResult<TestSink> {
+            Ok(CodecOutput { value: TestSink, diagnostics: Vec::new() })
         }
     }
 
@@ -2182,24 +2253,24 @@ mod tests {
     async fn codec_context_bounds_streaming_random_access_recursion_and_resolved_resources() {
         let limits = CodecLimits { max_read_bytes: 4, max_written_bytes: 4, max_work_units: 16, max_allocations: 4, max_recursion_depth: 1 };
         let resolver = std::sync::Arc::new(TestResolver);
-        let mut decode = DecodeContext::with_resolver(DecodePolicy { representation: CodecRepresentation::Lossless, limits: limits.clone(), cancellation: CancellationToken::new() }, resolver.clone());
+        let mut decode = DecodeContext::with_resolver(DecodePolicy { representation: CodecRepresentation::Lossless, limits: limits.clone(), cancellation: CancellationToken::new() }, resolver.clone()).await;
         let request = ResourceRequest { locator: "resolver://document".to_string(), expected_media_type: None };
-        let mut source = decode.resolve(&request).expect("decode resource resolves").value;
+        let mut source = decode.resolve(&request).await.expect("decode resource resolves").value;
         let mut output = [0u8; 3];
-        assert_eq!(source.read_chunk(&mut output).expect("bounded stream read").value, 3);
-        let mut random = source.random_access().expect("random access is available");
-        assert_eq!(random.read_at(0, &mut [0u8; 2]).expect("remaining bounded random read").value, 1);
-        assert!(random.read_at(0, &mut [0u8; 1]).is_err(), "random access cannot bypass the shared read budget");
+        assert_eq!(source.read_chunk(&mut output).await.expect("bounded stream read").value, 3);
+        let mut random = source.random_access().await.expect("random access is available");
+        assert_eq!(random.read_at(0, &mut [0u8; 2]).await.expect("remaining bounded random read").value, 1);
+        assert!(random.read_at(0, &mut [0u8; 1]).await.is_err(), "random access cannot bypass the shared read budget");
         drop(random);
         drop(source);
-        decode.budget.enter_recursion().expect("first recursion frame");
-        assert!(decode.budget.enter_recursion().is_err(), "recursion limit is finite");
-        decode.budget.leave_recursion().expect("leave recursion frame");
+        decode.budget.enter_recursion().await.expect("first recursion frame");
+        assert!(decode.budget.enter_recursion().await.is_err(), "recursion limit is finite");
+        decode.budget.leave_recursion().await.expect("leave recursion frame");
 
-        let mut encode = EncodeContext::with_resolver(EncodePolicy { representation: CodecRepresentation::Canonical, limits, cancellation: CancellationToken::new() }, resolver);
-        let mut sink = encode.resolve(&request).expect("encode resource resolves").value;
-        sink.write_chunk(b"four").expect("bounded write");
-        assert!(sink.write_chunk(b"x").is_err(), "writes cannot bypass the output budget");
+        let mut encode = EncodeContext::with_resolver(EncodePolicy { representation: CodecRepresentation::Canonical, limits, cancellation: CancellationToken::new() }, resolver).await;
+        let mut sink = encode.resolve(&request).await.expect("encode resource resolves").value;
+        sink.write_chunk(b"four").await.expect("bounded write");
+        assert!(sink.write_chunk(b"x").await.is_err(), "writes cannot bypass the output budget");
     }
 
     #[test]
@@ -2208,15 +2279,15 @@ mod tests {
         let policy = DecodePolicy { representation: CodecRepresentation::Lossless, limits: CodecLimits::default(), cancellation: cancellation.clone() };
         let resolver = std::sync::Arc::new(TestResolver);
         let request = ResourceRequest { locator: "resolver://cancelled".to_string(), expected_media_type: None };
-        let mut context = DecodeContext::with_resolver(policy, resolver);
-        let mut source = context.resolve(&request).expect("resolve while active").value;
-        cancellation.cancel();
-        assert!(source.read_chunk(&mut [0u8; 1]).is_err(), "the resolved source must be cancellable after resolution");
+        let mut context = DecodeContext::with_resolver(policy, resolver).await;
+        let mut source = context.resolve(&request).await.expect("resolve while active").value;
+        cancellation.cancel().await;
+        assert!(source.read_chunk(&mut [0u8; 1]).await.is_err(), "the resolved source must be cancellable after resolution");
     }
 
     #[test]
     async fn wire_rejects_oversized_and_unbounded_dialect_inputs_before_interning() {
-        assert!(matches!(wire_decode_composed_artifact(&vec![b' '; MAX_IO_WIRE_BYTES + 1]), Err(IoWireError::Limit { operation: "composed-artifact", .. })));
+        assert!(matches!(wire_decode_composed_artifact(&vec![b' '; MAX_IO_WIRE_BYTES + 1]).await, Err(IoWireError::Limit { operation: "composed-artifact", .. })));
         let wire = WireComposedArtifact {
             dialect: ArtifactDialect { artifact_kind: "x".repeat(MAX_IO_WIRE_DIALECT_COMPONENT_BYTES + 1), standard: "1".into(), subset: "*".into() },
             payload: IoPayload::Text("payload".into()),
@@ -2224,13 +2295,13 @@ mod tests {
             confidence: Confidence::High,
         };
         let bytes = serde_json::to_vec(&wire).expect("wire fixture");
-        assert!(matches!(wire_decode_composed_artifact(&bytes), Err(IoWireError::Limit { operation: "composed-artifact", .. })));
+        assert!(matches!(wire_decode_composed_artifact(&bytes).await, Err(IoWireError::Limit { operation: "composed-artifact", .. })));
     }
 
     #[test]
     async fn codec_result_requires_valid_owned_spans_and_deterministic_opaque_order() {
         let invalid = SourceSpan { resource: String::new(), byte_start: 3, byte_end: 2, line: Some(1), column: None };
-        assert!(invalid.validate().is_err());
+        assert!(invalid.validate().await.is_err());
         let result = ArtifactCodecResult {
             semantic: (),
             anchors: vec![AnchoredSyntax { anchor: "root".to_string(), span: SourceSpan { resource: "memory://source".to_string(), byte_start: 0, byte_end: 2, line: Some(1), column: Some(1) }, bytes: b"ok".to_vec() }],
@@ -2245,12 +2316,12 @@ mod tests {
                 },
             ],
         };
-        result.validate_lossless().expect("owned anchored result is lossless-valid");
-        assert!(result.validate_representation(CodecRepresentation::Canonical).is_err(), "a canonical result cannot merely declare a canonical policy while retaining insertion order");
-        let mut context = EncodeContext::new(EncodePolicy::default());
-        let finalized = context.finalize_result(result).expect("host finalization canonicalizes an owned result").value;
-        assert_eq!(finalized.canonical_opaque_extensions().iter().map(|extension| extension.kind.as_str()).collect::<Vec<_>>(), vec!["a", "z"]);
-        finalized.validate_representation(CodecRepresentation::Canonical).expect("finalized canonical result is executable-policy-valid");
+        result.validate_lossless().await.expect("owned anchored result is lossless-valid");
+        assert!(result.validate_representation(CodecRepresentation::Canonical).await.is_err(), "a canonical result cannot merely declare a canonical policy while retaining insertion order");
+        let mut context = EncodeContext::<TestResolver>::new(EncodePolicy::default()).await;
+        let finalized = context.finalize_result(result).await.expect("host finalization canonicalizes an owned result").value;
+        assert_eq!(finalized.canonical_opaque_extensions().await.iter().map(|extension| extension.kind.as_str()).collect::<Vec<_>>(), vec!["a", "z"]);
+        finalized.validate_representation(CodecRepresentation::Canonical).await.expect("finalized canonical result is executable-policy-valid");
     }
 
     /// ✅️ Accept table for `is_canonical_artifact_kind`/`ArtifactKindId::parse`: exactly three
@@ -2283,8 +2354,8 @@ mod tests {
             ArtifactRef { artifact_id: "doc.v2-final.draft".to_string(), dialect: ArtifactDialect { artifact_kind: "s.norm.en-1994-1".to_string(), standard: "2024".to_string(), subset: "cc6".to_string() } },
         ];
         for artifact_ref in cases {
-            let uri = artifact_ref.to_uri();
-            let parsed = ArtifactRef::parse_uri(&uri).unwrap_or_else(|e| panic!("{uri:?} should round-trip: {e}"));
+            let uri = artifact_ref.to_uri().await;
+            let parsed = ArtifactRef::parse_uri(&uri).await.unwrap_or_else(|e| panic!("{uri:?} should round-trip: {e}"));
             assert_eq!(parsed, artifact_ref);
         }
     }
@@ -2293,15 +2364,15 @@ mod tests {
     #[test]
     async fn artifact_ref_to_uri_matches_expected_shape() {
         let artifact_ref = ArtifactRef { artifact_id: "abc123".to_string(), dialect: ArtifactDialect { artifact_kind: "s.stdio.gif".to_string(), standard: "87a".to_string(), subset: "*".to_string() } };
-        assert_eq!(artifact_ref.to_uri(), "abc123!s.stdio.gif@87a/*");
+        assert_eq!(artifact_ref.to_uri().await, "abc123!s.stdio.gif@87a/*");
     }
 
     /// ⚠️ `parse_uri` rejects a missing `!` and an empty artifact id, mirroring
     /// `parse_coordinate`'s own empty-component rejection.
     #[test]
     async fn artifact_ref_parse_uri_rejects_malformed_input() {
-        assert!(ArtifactRef::parse_uri("s.stdio.gif@87a/*").is_err(), "missing '!' should fail");
-        assert!(ArtifactRef::parse_uri("!s.stdio.gif@87a/*").is_err(), "empty artifact id should fail");
+        assert!(ArtifactRef::parse_uri("s.stdio.gif@87a/*").await.is_err(), "missing '!' should fail");
+        assert!(ArtifactRef::parse_uri("!s.stdio.gif@87a/*").await.is_err(), "empty artifact id should fail");
     }
 }
 //#endregion 🔖️Tests
@@ -2456,7 +2527,7 @@ pub mod io_mechanism {
     /// idempotent, mirroring `register_composer_entries`.
     #[must_use]
     pub async fn io_register(entries: &'static [IoEntry]) -> Result<(), IoRegistryError> {
-        let _assembly = store::begin_artifact_assembly().map_err(|_| IoRegistryError::Unavailable)?;
+        let _assembly = store::begin_artifact_assembly().await.map_err(|_| IoRegistryError::Unavailable)?;
         let proposed = build_proposed(&entries.iter().collect::<Vec<_>>()).await?;
         let mut registry = io_mechanism_registry().await.write().map_err(|_| IoRegistryError::Unavailable)?;
         validate_against(&registry, &proposed).await?;
@@ -2493,7 +2564,7 @@ pub mod io_mechanism {
     }
 
     async fn route_rank(route: &[&'static IoEntry]) -> (std::cmp::Reverse<u8>, usize, String) {
-        let min_fidelity = route.iter().map(|entry| entry.fidelity.rank()).min().unwrap_or(0);
+        let min_fidelity = route.iter().map(|entry| super::resolve_ready(entry.fidelity.rank())).min().unwrap_or(0);
         let joined = route.iter().map(|entry| super::resolve_ready(ArtifactDialect::from(entry.into).to_coordinate())).collect::<Vec<_>>().join(",");
         (std::cmp::Reverse(min_fidelity), route.len(), joined)
     }
@@ -2538,12 +2609,12 @@ pub mod io_mechanism {
         }
         ranked.sort_by(|a, b| a.0.cmp(&b.0));
         let best = ranked.into_iter().next().expect("candidates checked non-empty above").1;
-        let fidelity = rank_to_fidelity(best.iter().map(|entry| entry.fidelity.rank()).min().expect("a route has at least one hop")).await;
+        let fidelity = rank_to_fidelity(best.iter().map(|entry| super::resolve_ready(entry.fidelity.rank())).min().expect("a route has at least one hop")).await;
         let mut hops = Vec::with_capacity(best.len());
         for entry in &best {
             hops.push(descriptor_of(entry).await);
         }
-        Ok(IoOutcome::clean(IoRoute { hops, fidelity }))
+        Ok(IoOutcome::clean(IoRoute { hops, fidelity }).await)
     }
 
     /// 🌉️ `resolve_route` against the process-wide registry.
@@ -2585,7 +2656,7 @@ pub mod io_mechanism {
             .filter_map(|entry| entry.sniff.map(|sniff| (ArtifactDialect::from(entry.into), sniff(payload))))
             .filter(|(_, confidence)| *confidence != Confidence::None)
             .collect();
-        found.sort_by(|a, b| b.1.rank().cmp(&a.1.rank()).then_with(|| super::resolve_ready(a.0.to_coordinate()).cmp(&super::resolve_ready(b.0.to_coordinate()))));
+        found.sort_by(|a, b| super::resolve_ready(b.1.rank()).cmp(&super::resolve_ready(a.1.rank())).then_with(|| super::resolve_ready(a.0.to_coordinate()).cmp(&super::resolve_ready(b.0.to_coordinate()))));
         found
     }
 
@@ -2635,7 +2706,7 @@ pub mod io_mechanism {
             let IoPayload::Binary(bytes) = payload else {
                 return Err(IoError { message: "serializer_entry: expected a binary native payload".to_string(), diagnostics: Vec::new() });
             };
-            let value = S::decode_pack(bytes).map_err(|error| IoError { message: format!("native pack decode failed: {error}"), diagnostics: Vec::new() })?;
+            let value = super::resolve_ready(S::decode_pack(bytes)).map_err(|error| IoError { message: format!("native pack decode failed: {error}"), diagnostics: Vec::new() })?;
             super::resolve_ready(T::serialize(&value))
         }
         IoEntry { from: own, into: T::INTO, fidelity: T::FIDELITY, sniff: None, run: run::<S, T> }
@@ -2650,7 +2721,7 @@ pub mod io_mechanism {
             let IoPayload::Text(text) = payload else {
                 return Err(IoError { message: "serializer_entry_text: expected a text native payload".to_string(), diagnostics: Vec::new() });
             };
-            let value = S::parse_dsl(text).map_err(|error| IoError { message: format!("native dsl decode failed: {error}"), diagnostics: Vec::new() })?;
+            let value = super::resolve_ready(S::parse_dsl(text)).map_err(|error| IoError { message: format!("native dsl decode failed: {error}"), diagnostics: Vec::new() })?;
             super::resolve_ready(T::serialize(&value))
         }
         IoEntry { from: own, into: T::INTO, fidelity: T::FIDELITY, sniff: None, run: run::<S, T> }
@@ -2677,7 +2748,7 @@ pub mod io_mechanism {
             if let Some(conformance) = T::CONFORMANCE {
                 diagnostics.extend(conformance(&outcome.value));
             }
-            Ok(IoOutcome { value: IoPayload::Binary(outcome.value.encode_pack()), diagnostics })
+            Ok(IoOutcome { value: IoPayload::Binary(super::resolve_ready(outcome.value.encode_pack())), diagnostics })
         }
         IoEntry { from: T::FROM, into: own, fidelity: T::FIDELITY, sniff: Some(deserializer_sniff::<S, T>), run: run::<S, T> }
     }
@@ -2691,7 +2762,7 @@ pub mod io_mechanism {
             if let Some(conformance) = T::CONFORMANCE {
                 diagnostics.extend(conformance(&outcome.value));
             }
-            Ok(IoOutcome { value: IoPayload::Text(outcome.value.print_dsl()), diagnostics })
+            Ok(IoOutcome { value: IoPayload::Text(super::resolve_ready(outcome.value.print_dsl())), diagnostics })
         }
         IoEntry { from: T::FROM, into: own, fidelity: T::FIDELITY, sniff: Some(deserializer_sniff::<S, T>), run: run::<S, T> }
     }
@@ -2717,7 +2788,7 @@ pub mod io_mechanism {
         // 🚫️async: E4 fn-pointer slot — `IoEntry.run` is a bare `fn` pointer and this test double
         // never suspends, so it needs no `resolve_ready` wrapping either.
         fn passthrough(payload: &IoPayload) -> IoResult<IoPayload> {
-            Ok(IoOutcome::clean(payload.clone()))
+            Ok(super::super::resolve_ready(IoOutcome::clean(payload.clone())))
         }
 
         async fn key(from: Dialect, into: Dialect) -> EntryKey {
@@ -2845,7 +2916,7 @@ pub mod io_mechanism {
                     return Err(IoError { message: "expected text payload".to_string(), diagnostics: Vec::new() });
                 };
                 let value: serde_json::Value = serde_json::from_str(text).map_err(|error| IoError { message: error.to_string(), diagnostics: Vec::new() })?;
-                Ok(IoOutcome::clean(value))
+                Ok(IoOutcome::clean(value).await)
             }
         }
 

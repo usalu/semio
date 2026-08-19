@@ -212,7 +212,9 @@ semio_framework_plugin::derive_artifact_facets!(
 //#region 🔖️ComplianceHelpers
 /// 📐️ Pure EN 1990 compliance helpers (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) —
 /// relocated verbatim from the deleted `⚙️engine`. Combinations, partial-factor tables and the
-/// national-annex implementations are all pure over `ActionSet`/`&dyn NationalAnnex`, never over the
+/// national-annex implementations are all pure over `ActionSet`/`&impl NationalAnnex` (O1 de-dyn:
+/// generic over the closed `NationalAnnex` set — `NationalAnnexes` below for the runtime-chosen case),
+/// never over the
 /// whole `En1990Snapshot`; the snapshot-level composition (`evaluate`) lives in `💡️inferences`.
 /// `na_de`/`na_en` are depended on by several sibling EN 199x artifacts
 /// (`crate::artifacts::en199x::standards::v1::subsets::any::schema::na_de::NaDe`).
@@ -267,7 +269,7 @@ async fn psi_row_en(category: &str) -> PsiRow {
     }
 }
 
-pub async fn psi_for_category(annex: &dyn NationalAnnex, category: &str) -> PsiRow {
+pub async fn psi_for_category<A: NationalAnnex>(annex: &A, category: &str) -> PsiRow {
     if annex.choice() == AnnexChoice::De {
         psi_row_de(category)
     } else {
@@ -275,7 +277,7 @@ pub async fn psi_for_category(annex: &dyn NationalAnnex, category: &str) -> PsiR
     }
 }
 
-pub async fn psi_for_imposed(annex: &dyn NationalAnnex, category: ImposedCategory) -> PsiRow {
+pub async fn psi_for_imposed<A: NationalAnnex>(annex: &A, category: ImposedCategory) -> PsiRow {
     psi_for_category(annex, category.label())
 }
 // #endregion 🔖️PsiTables
@@ -381,6 +383,21 @@ impl NationalAnnex for NaEn {
 }
 // #endregion 🔖️NaEn
 
+// #region 🔖️NationalAnnexes
+// 🔀️ O1 de-dyn: closes the `NationalAnnex` set (`NaDe`/`NaEn`, the only two impls). Cross-module from
+// the trait's home (`crate::document`) — the closing macro is invoked BARE (never via an absolute
+// path, rustc#52234) but the captured dispatch macro it expands to needs bringing into scope
+// explicitly across the module boundary (see `📓️terra-dyn-enum-macro-report.md` finding 1).
+use crate::__semio_dispatch_NationalAnnex;
+use semio_framework_dispatch_macros::dyn_enum_close;
+dyn_enum_close! {
+    pub enum NationalAnnexes: NationalAnnex {
+        De(NaDe),
+        En(NaEn),
+    }
+}
+// #endregion 🔖️NationalAnnexes
+
 pub mod na_de {
     pub use super::NaDe;
 }
@@ -408,14 +425,14 @@ pub enum CombinationRule {
     SlsQuasiPermanent,
 }
 
-async fn gamma_for_situation(annex: &dyn NationalAnnex, situation: DesignSituation) -> (f64, f64) {
+async fn gamma_for_situation<A: NationalAnnex>(annex: &A, situation: DesignSituation) -> (f64, f64) {
     match situation {
         DesignSituation::Persistent | DesignSituation::Transient => (annex.gamma_g(), annex.gamma_q()),
         DesignSituation::Accidental | DesignSituation::Seismic => (1.0, 1.0),
     }
 }
 
-async fn xi_for_situation(annex: &dyn NationalAnnex, situation: DesignSituation) -> f64 {
+async fn xi_for_situation<A: NationalAnnex>(annex: &A, situation: DesignSituation) -> f64 {
     match situation {
         DesignSituation::Persistent | DesignSituation::Transient => annex.xi("permanent"),
         DesignSituation::Accidental => annex.xi("accidental"),
@@ -424,12 +441,12 @@ async fn xi_for_situation(annex: &dyn NationalAnnex, situation: DesignSituation)
 }
 
 /// 🧮️ ULS combination per EN 1990 Eq. 6.10: max(6.10a, 6.10b) surrogate as 6.10a.
-pub async fn combination_6_10(annex: &dyn NationalAnnex, actions: &ActionSet, leading: usize) -> f64 {
+pub async fn combination_6_10<A: NationalAnnex>(annex: &A, actions: &ActionSet, leading: usize) -> f64 {
     combination_6_10a(annex, actions, leading)
 }
 
 /// 🧮️ ULS combination per EN 1990 Eq. 6.10a: γ_G·G + γ_Q·Q + γ_Q·ψ_0·ΣQ.
-pub async fn combination_6_10a(annex: &dyn NationalAnnex, actions: &ActionSet, leading: usize) -> f64 {
+pub async fn combination_6_10a<A: NationalAnnex>(annex: &A, actions: &ActionSet, leading: usize) -> f64 {
     let mut sum = annex.gamma_g() * actions.g_k;
     for (i, (cat, q)) in actions.q_k.iter().enumerate() {
         let factor = if i == leading { annex.gamma_q() } else { annex.gamma_q() * annex.psi_0(cat) };
@@ -439,7 +456,7 @@ pub async fn combination_6_10a(annex: &dyn NationalAnnex, actions: &ActionSet, l
 }
 
 /// 🧮️ ULS combination per EN 1990 Eq. 6.10b: ξ·γ_G·G + γ_Q·Q + γ_Q·ψ_0·ΣQ.
-pub async fn combination_6_10b(annex: &dyn NationalAnnex, actions: &ActionSet, leading: usize) -> f64 {
+pub async fn combination_6_10b<A: NationalAnnex>(annex: &A, actions: &ActionSet, leading: usize) -> f64 {
     let xi = annex.xi("permanent");
     let mut sum = xi * annex.gamma_g() * actions.g_k;
     for (i, (cat, q)) in actions.q_k.iter().enumerate() {
@@ -450,7 +467,7 @@ pub async fn combination_6_10b(annex: &dyn NationalAnnex, actions: &ActionSet, l
 }
 
 /// 🧮️ ULS combination for a design situation with situation-specific γ factors.
-pub async fn combination_uls(annex: &dyn NationalAnnex, situation: DesignSituation, rule: CombinationRule, actions: &ActionSet, leading: usize) -> f64 {
+pub async fn combination_uls<A: NationalAnnex>(annex: &A, situation: DesignSituation, rule: CombinationRule, actions: &ActionSet, leading: usize) -> f64 {
     let (gamma_g, gamma_q) = gamma_for_situation(annex, situation);
     let xi = xi_for_situation(annex, situation);
     let g_factor = match rule {
@@ -466,7 +483,7 @@ pub async fn combination_uls(annex: &dyn NationalAnnex, situation: DesignSituati
 }
 
 /// 🧮️ SLS characteristic combination: G + Q + ψ_0·ΣQ.
-pub async fn combination_sls_char(annex: &dyn NationalAnnex, actions: &ActionSet, leading: usize) -> f64 {
+pub async fn combination_sls_char<A: NationalAnnex>(annex: &A, actions: &ActionSet, leading: usize) -> f64 {
     let mut sum = actions.g_k;
     for (i, (cat, q)) in actions.q_k.iter().enumerate() {
         let factor = if i == leading { 1.0 } else { annex.psi_0(cat) };
@@ -476,7 +493,7 @@ pub async fn combination_sls_char(annex: &dyn NationalAnnex, actions: &ActionSet
 }
 
 /// 🧮️ SLS frequent combination: G + ψ_1·Q_leading + ψ_2·ΣQ_accompanying.
-pub async fn combination_sls_frequent(annex: &dyn NationalAnnex, actions: &ActionSet, leading: usize) -> f64 {
+pub async fn combination_sls_frequent<A: NationalAnnex>(annex: &A, actions: &ActionSet, leading: usize) -> f64 {
     let mut sum = actions.g_k;
     for (i, (cat, q)) in actions.q_k.iter().enumerate() {
         let factor = if i == leading { annex.psi_1(cat) } else { annex.psi_2(cat) };
@@ -486,7 +503,7 @@ pub async fn combination_sls_frequent(annex: &dyn NationalAnnex, actions: &Actio
 }
 
 /// 🧮️ SLS quasi-permanent combination: G + ψ_2·ΣQ.
-pub async fn combination_sls_quasi_permanent(annex: &dyn NationalAnnex, actions: &ActionSet) -> f64 {
+pub async fn combination_sls_quasi_permanent<A: NationalAnnex>(annex: &A, actions: &ActionSet) -> f64 {
     let mut sum = actions.g_k;
     for (cat, q) in &actions.q_k {
         sum += annex.psi_2(cat) * q;
@@ -494,7 +511,7 @@ pub async fn combination_sls_quasi_permanent(annex: &dyn NationalAnnex, actions:
     sum
 }
 
-pub async fn combination_value(annex: &dyn NationalAnnex, rule: CombinationRule, actions: &ActionSet, leading: usize) -> f64 {
+pub async fn combination_value<A: NationalAnnex>(annex: &A, rule: CombinationRule, actions: &ActionSet, leading: usize) -> f64 {
     match rule {
         CombinationRule::Uls610 => combination_6_10(annex, actions, leading),
         CombinationRule::Uls610a => combination_6_10a(annex, actions, leading),
@@ -543,13 +560,13 @@ async fn message_for_rule(rule: CombinationRule, leading: usize) -> String {
 }
 
 /// ✅️ Check one combination against a resistance limit [kN].
-pub async fn check_combination(annex: &dyn NationalAnnex, situation: DesignSituation, rule: CombinationRule, actions: &ActionSet, leading: usize, resistance_kn: f64) -> CheckResult {
+pub async fn check_combination<A: NationalAnnex>(annex: &A, situation: DesignSituation, rule: CombinationRule, actions: &ActionSet, leading: usize, resistance_kn: f64) -> CheckResult {
     let ed = if matches!(rule, CombinationRule::Uls610 | CombinationRule::Uls610a | CombinationRule::Uls610b) { combination_uls(annex, situation, rule, actions, leading) } else { combination_value(annex, rule, actions, leading) };
     CheckResult::from_utilization(clause_for_rule(rule), Quantity::force_kn(ed), Quantity::force_kn(resistance_kn), message_for_rule(rule, leading), annex.choice())
 }
 
 /// ✅️ Run all relevant combinations for an action set in a design situation.
-pub async fn check_combination_set(annex: &dyn NationalAnnex, situation: DesignSituation, actions: &ActionSet, resistance_kn: f64) -> CheckReport {
+pub async fn check_combination_set<A: NationalAnnex>(annex: &A, situation: DesignSituation, actions: &ActionSet, resistance_kn: f64) -> CheckReport {
     let mut report = CheckReport::default();
     let n_leading = actions.q_k.len().max(1);
     for rule in rules_for_situation(situation, LimitState::Uls) {
@@ -579,7 +596,7 @@ pub async fn check_combination_set(annex: &dyn NationalAnnex, situation: DesignS
 }
 
 /// ✅️ Check design action against resistance (ULS).
-pub async fn check_uls_action(annex: &dyn NationalAnnex, actions: &ActionSet, leading: usize, resistance: f64) -> CheckResult {
+pub async fn check_uls_action<A: NationalAnnex>(annex: &A, actions: &ActionSet, leading: usize, resistance: f64) -> CheckResult {
     let ed = combination_6_10(annex, actions, leading);
     CheckResult::from_utilization(ClauseId::new("EN 1990", "§6.4", "6.10"), Quantity::force_kn(ed), Quantity::force_kn(resistance), "ULS design action", annex.choice())
 }
@@ -612,13 +629,13 @@ pub async fn check_reliability_index(beta: f64, consequence_class: u8) -> CheckR
 // #endregion 🔖️Reliability
 
 /// 🔁️ Append one design-situation's combination checks onto a shared report.
-pub async fn append_combination_set(report: &mut CheckReport, annex: &dyn NationalAnnex, situation: DesignSituation, actions: &ActionSet, resistance_kn: f64) {
+pub async fn append_combination_set<A: NationalAnnex>(report: &mut CheckReport, annex: &A, situation: DesignSituation, actions: &ActionSet, resistance_kn: f64) {
     let sub = check_combination_set(annex, situation, actions, resistance_kn);
     report.checks.extend(sub.checks);
 }
 
 /// 📋️ Run EN 1990 design basis checks across persistent, accidental, and seismic situations.
-pub async fn check_design_basis(annex: &dyn NationalAnnex, actions: &ActionSet, resistance_kn: f64, consequence_class: u8) -> CheckReport {
+pub async fn check_design_basis<A: NationalAnnex>(annex: &A, actions: &ActionSet, resistance_kn: f64, consequence_class: u8) -> CheckReport {
     let mut report = CheckReport::default();
     append_combination_set(&mut report, annex, DesignSituation::Persistent, actions, resistance_kn);
     append_combination_set(&mut report, annex, DesignSituation::Accidental, actions, resistance_kn);
@@ -628,7 +645,7 @@ pub async fn check_design_basis(annex: &dyn NationalAnnex, actions: &ActionSet, 
 }
 
 /// 🧮️ Seismic combination per EN 1990 Eq. 6.12b: ΣG_k + A_Ed + Σψ_2·Q_k.
-pub async fn combination_6_12b(annex: &dyn NationalAnnex, actions: &ActionSet, seismic_a_ed_kn: f64) -> f64 {
+pub async fn combination_6_12b<A: NationalAnnex>(annex: &A, actions: &ActionSet, seismic_a_ed_kn: f64) -> f64 {
     let mut sum = actions.g_k + seismic_a_ed_kn;
     for (cat, q) in &actions.q_k {
         sum += annex.psi_2(cat) * q;
@@ -637,7 +654,7 @@ pub async fn combination_6_12b(annex: &dyn NationalAnnex, actions: &ActionSet, s
 }
 
 /// ✅️ Check the seismic design situation per EN 1990 Eq. 6.12b.
-pub async fn check_seismic_situation(annex: &dyn NationalAnnex, actions: &ActionSet, seismic_a_ed_kn: f64, resistance_kn: f64) -> CheckResult {
+pub async fn check_seismic_situation<A: NationalAnnex>(annex: &A, actions: &ActionSet, seismic_a_ed_kn: f64, resistance_kn: f64) -> CheckResult {
     let ed = combination_6_12b(annex, actions, seismic_a_ed_kn);
     CheckResult::from_utilization(ClauseId::new("EN 1990", "§6.4.3.4", "6.12b"), Quantity::force_kn(ed), Quantity::force_kn(resistance_kn), "seismic design situation", annex.choice())
 }
@@ -652,7 +669,7 @@ mod compliance_helpers_tests {
         ActionSet { g_k: 100.0, q_k: vec![("office".into(), 50.0), ("wind".into(), 30.0)] }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn de_na_combination_6_10() {
         let annex = NaDe;
         let actions = sample_actions();
@@ -662,7 +679,7 @@ mod compliance_helpers_tests {
         assert!(report.all_pass());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn de_combination_6_10a_numeric() {
         let annex = NaDe;
         let actions = sample_actions();
@@ -670,7 +687,7 @@ mod compliance_helpers_tests {
         assert!((ed - 237.0).abs() < 1e-9);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn de_combination_6_10b_numeric() {
         let annex = NaDe;
         let actions = sample_actions();
@@ -678,7 +695,7 @@ mod compliance_helpers_tests {
         assert!((ed - 216.75).abs() < 1e-9);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn en_combination_6_10a_differs_on_other_psi() {
         let de = NaDe;
         let en = NaEn;
@@ -690,7 +707,7 @@ mod compliance_helpers_tests {
         assert!(de_ed > en_ed);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn de_vs_en_congregation_psi_tables() {
         let de = NaDe;
         let en = NaEn;
@@ -713,7 +730,7 @@ mod compliance_helpers_tests {
         assert!((qp_en - 130.0).abs() < 1e-9);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn de_na_gamma_m_and_xi() {
         let annex = NaDe;
         assert!((annex.gamma_m("concrete") - 1.5).abs() < 1e-9);
@@ -723,7 +740,7 @@ mod compliance_helpers_tests {
         assert!((annex.xi("permanent") - 0.85).abs() < 1e-9);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn imposed_categories_a_to_h_de() {
         let annex = NaDe;
         for cat in [ImposedCategory::A, ImposedCategory::B, ImposedCategory::C, ImposedCategory::D, ImposedCategory::E, ImposedCategory::F, ImposedCategory::G, ImposedCategory::H] {
@@ -737,7 +754,7 @@ mod compliance_helpers_tests {
         assert!((annex.psi_0("storage") - 1.0).abs() < 1e-9);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn check_combination_set_covers_uls_and_sls() {
         let annex = NaDe;
         let actions = sample_actions();
@@ -749,7 +766,7 @@ mod compliance_helpers_tests {
         assert!(report.checks.iter().any(|c| c.clause.section == "6.17"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn accidental_situation_uses_unit_gamma() {
         let annex = NaDe;
         let actions = sample_actions();
@@ -759,7 +776,7 @@ mod compliance_helpers_tests {
         assert!((accidental - 168.0).abs() < 1e-9);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn check_design_basis_covers_all_situations() {
         let annex = NaDe;
         let actions = sample_actions();
@@ -770,7 +787,7 @@ mod compliance_helpers_tests {
         assert_eq!(report.checks.len(), persistent.checks.len() + accidental.checks.len() + seismic.checks.len() + 1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn seismic_combination_de_vs_en_diverge_on_other_psi_2() {
         let actions = ActionSet { g_k: 100.0, q_k: vec![("other".into(), 50.0)] };
         let de_ed = combination_6_12b(&NaDe, &actions, 40.0);

@@ -32,7 +32,7 @@ pub struct Procedural3dPresence {
 }
 
 impl Default for Procedural3dPresence {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self {
             camera: CameraJson { x: 0.0, y: 0.0, zoom: 1.0 },
             preview_camera: Procedural3dPreviewCamera::default(),

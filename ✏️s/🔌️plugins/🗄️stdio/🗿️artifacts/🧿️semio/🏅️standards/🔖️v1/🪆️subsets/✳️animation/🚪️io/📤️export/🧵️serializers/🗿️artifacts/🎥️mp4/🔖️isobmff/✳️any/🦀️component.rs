@@ -74,7 +74,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn serialize_builds_one_synthetic_track_with_real_derived_durations() {
         let mp4 = semio_framework_plugin::resolve_ready(SemioAnimationToMp4::serialize(&real_world_animation())).expect("serialize");
         assert_eq!(mp4.tracks.len(), 1);
@@ -85,7 +85,7 @@ mod tests {
         assert!(mp4.tracks[0].samples.iter().all(|s| s.data.is_empty()), "no fabricated frame bytes");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn empty_animation_serializes_to_zero_tracks() {
         let snap = SemioAnimationSnapshot { schema: STDIO_SEMIOANIMATION_DOCUMENT_SCHEMA.into(), timelines: Vec::new() };
         let mp4 = semio_framework_plugin::resolve_ready(SemioAnimationToMp4::serialize(&snap)).expect("serialize");

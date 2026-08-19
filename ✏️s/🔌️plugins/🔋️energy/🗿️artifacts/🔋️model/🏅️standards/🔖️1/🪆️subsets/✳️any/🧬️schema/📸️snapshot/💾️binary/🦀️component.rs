@@ -24,7 +24,7 @@ pub async fn decode(bytes: &[u8]) -> Result<EnergyModelSnapshot, PackError> {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn pack_round_trips_and_agrees_with_dsl() {
         let document = crate::artifacts::model::dsl::parse_dsl(
             crate::artifacts::model::dsl::SEMIO_ENERGY_MODEL_EXAMPLE_TEXT,

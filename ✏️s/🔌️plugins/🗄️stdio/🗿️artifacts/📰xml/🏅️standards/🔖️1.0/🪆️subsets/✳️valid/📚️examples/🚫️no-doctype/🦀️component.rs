@@ -21,7 +21,7 @@ mod tests {
     use crate::artifacts::xml::standards::v1_0::subsets::valid::schema::check_valid_conformance;
     use dsl::Severity;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn negative_asset_is_well_formed_but_not_valid() {
         assert!(!PRIMARY_TEXT.is_empty());
         let snapshot = <XmlSnapshot as store::ArtifactDsl>::parse_dsl(PRIMARY_TEXT).expect("well-formed");

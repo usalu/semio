@@ -77,7 +77,7 @@ async fn iter_riff(data: &[u8]) -> impl Iterator<Item = Result<RiffEntry<'_>, St
     }
     impl<'a> Iterator for It<'a> {
         type Item = Result<RiffEntry<'a>, String>;
-        async fn next(&mut self) -> Option<Self::Item> {
+        fn next(&mut self) -> Option<Self::Item> {
             if self.pos + 8 > self.data.len() {
                 return None;
             }
@@ -472,7 +472,7 @@ mod codec_tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn sniff_recognizes_real_riff_avi_magic() {
         let bytes = encode_avi(&synthetic_snapshot());
         assert!(sniff_real_bytes(&bytes));
@@ -483,7 +483,7 @@ mod codec_tests {
         assert!(!sniff_real_bytes(&wave));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn decode_encode_decode_round_trips_synthetic_snapshot() {
         let snap = synthetic_snapshot();
         let bytes = encode_avi(&snap);
@@ -491,7 +491,7 @@ mod codec_tests {
         assert_eq!(back, snap);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn audio_stream_round_trips_via_wave_format() {
         let mut snap = synthetic_snapshot();
         snap.streams.push(AviStream {
@@ -523,7 +523,7 @@ mod codec_tests {
         assert_eq!(back, snap);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn no_idx1_still_round_trips() {
         let mut snap = synthetic_snapshot();
         snap.idx1_present = false;
@@ -537,7 +537,7 @@ mod codec_tests {
     /// see `fixtures/avi/NOTES.md`): 732 bytes, 16×16 MJPG, 3 `00dc` frames, real `idx1`.
     const REAL_EXAMPLE_AVI: &[u8] = include_bytes!("../📚️examples/🎬️demo/🖼️assets/📼️example.avi");
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn codec_retention_law_decodes_the_real_fixture_with_expected_shape() {
         let snap = decode_avi(REAL_EXAMPLE_AVI).expect("decode the real fixture");
         assert_eq!(snap.main_header.width, 16);
@@ -560,7 +560,7 @@ mod codec_tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn codec_retention_law_round_trips_the_real_fixture_byte_identically() {
         // 🧪️ This fixture is simple enough (single stream, no untyped `hdrl` auxiliary fields
         // beyond what `AviMainHeader`/`AviStreamHeader`/`AviStreamFormat` fully type) that this

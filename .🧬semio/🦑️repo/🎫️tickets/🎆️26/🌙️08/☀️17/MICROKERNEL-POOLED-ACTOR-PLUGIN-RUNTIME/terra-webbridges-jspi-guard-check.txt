@@ -1,0 +1,8 @@
+=== node jspi-guard-check.mjs (plain node, JSPI unavailable) ===
+[posted] {"kind":"trap","actorId":"*","message":"semio shard worker: this browser/engine lacks JavaScript Promise Integration (JSPI) — WebAssembly.Suspending/WebAssembly.promising are required to run semio's async-lifted plugin components and there is no fallback. Chrome/Edge/Chromium-based browsers ship JSPI on by default; Firefox needs the javascript.options.wasm_js_promise_integration flag in about:config; Node.js needs --experimental-wasm-jspi."}
+[caught] Error semio shard worker: this browser/engine lacks JavaScript Promise Integration (JSPI) — WebAssembly.Suspending/WebAssembly.promising are required to run semio's async-lifted plugin components and there is no fallback. Chrome/Edge/Chromium-based browsers ship JSPI on by default; Firefox needs the javascript.options.wasm_js_promise_integration flag in about:config; Node.js needs --experimental-wasm-jspi.
+exit:3
+
+=== node --experimental-wasm-jspi jspi-guard-check.mjs (JSPI available) ===
+[caught] TypeError self.addEventListener is not a function
+exit:3

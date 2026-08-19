@@ -98,7 +98,7 @@ mod tests {
         Stencil3d::Face6.offsets().into_iter().zip(rels).collect()
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn from_coords_dedups_and_assigns_stable_first_seen_ids() {
         let volume = SparseVolume::from_coords([(0, 0, 0), (1, 0, 0), (0, 0, 0), (0, 1, 0)]);
         assert_eq!(volume.len(), 3);
@@ -109,7 +109,7 @@ mod tests {
         assert_eq!(volume.coord_of(NodeId(1)), (1, 0, 0));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn to_graph_topology_only_connects_occupied_neighbors() {
         let mut b = ModelBuilder::new();
         let rels = face6_relations(&mut b);
@@ -135,7 +135,7 @@ mod tests {
         assert_eq!(mid_neighbors, expected);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn empty_volume_builds_a_zero_node_topology() {
         let mut b = ModelBuilder::new();
         let rels = face6_relations(&mut b);
@@ -145,7 +145,7 @@ mod tests {
         assert_eq!(topo.node_count(), 0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn a_single_isolated_voxel_has_no_arcs() {
         let mut b = ModelBuilder::new();
         let rels = face6_relations(&mut b);
@@ -157,7 +157,7 @@ mod tests {
         assert!(neighbors.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn negative_coordinates_work_like_any_other_origin() {
         let mut b = ModelBuilder::new();
         let rels = face6_relations(&mut b);
@@ -170,7 +170,7 @@ mod tests {
         assert_eq!(neighbors, vec![b_node]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn sparse_graph_solves_through_the_ordinary_kernel() {
         use crate::wfc_engine::outcome::SolveOutcome;
         use crate::wfc_engine::search::{self, SearchConfig};

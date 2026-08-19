@@ -135,8 +135,8 @@ impl MachineCatalog for RoboticCatalog {
     }
 }
 
-pub async fn catalog() -> Box<dyn MachineCatalog> {
-    Box::new(RoboticCatalog)
+pub async fn catalog() -> RoboticCatalog {
+    RoboticCatalog
 }
 //#endregion 🔖️Catalog
 
@@ -169,7 +169,7 @@ semio_framework_plugin::extension_exports!(bundle);
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn every_machine_and_capability_id_is_unique() {
         let machines = RoboticCatalog.machines();
         let mut machine_ids: Vec<&str> = machines.iter().map(|machine| machine.id.as_str()).collect();
@@ -184,7 +184,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn every_recipe_and_rule_parameter_resolves() {
         for machine in RoboticCatalog.machines() {
             for capability in &machine.capabilities {
@@ -210,7 +210,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn machines_round_trip_json() {
         let machines = RoboticCatalog.machines();
         let json = serde_json::to_string(&machines).expect("serialize");
@@ -218,7 +218,7 @@ mod tests {
         assert_eq!(parsed, machines);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn catalog_has_robotic_identity() {
         let catalog = RoboticCatalog;
         assert_eq!(catalog.catalog_id(), "robotic");

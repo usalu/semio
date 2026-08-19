@@ -72,7 +72,7 @@ pub mod derived_construction {
     mod tests {
         use super::*;
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn pass_through_build_never_fails_on_conformance_grounds() {
             let snapshot = PdfXBuilderConstruction::empty().build().expect("no hard check exists at this schema; build must succeed");
             assert_eq!(snapshot.page.width, 612.0);
@@ -148,14 +148,14 @@ pub mod derived_analysis {
         use super::*;
         use crate::artifacts::pdf::standards::v1_4::subsets::any::schema::snapshot::PageDoc;
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn schema_gap_diagnostic_always_fires() {
             let snapshot = PdfSnapshot { page: PageDoc { width: 612.0, height: 792.0, text: "hello".into() }, ..PdfSnapshot::default() };
             let diagnostics = check_pdf_x_conformance(&snapshot);
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_SCHEMA_GAP && d.severity == Severity::Warning), "got {diagnostics:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn degenerate_page_size_is_flagged_soft() {
             let snapshot = PdfSnapshot { page: PageDoc { width: 0.0, height: 792.0, text: "x".into() }, ..PdfSnapshot::default() };
             let diagnostics = check_pdf_x_conformance(&snapshot);
@@ -163,7 +163,7 @@ pub mod derived_analysis {
             assert_eq!(diagnostics.len(), 2, "expected degenerate-page-size + schema-gap, got {diagnostics:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn positive_dimensions_skip_the_page_size_check() {
             let snapshot = PdfSnapshot { page: PageDoc { width: 612.0, height: 792.0, text: "x".into() }, ..PdfSnapshot::default() };
             let diagnostics = check_pdf_x_conformance(&snapshot);

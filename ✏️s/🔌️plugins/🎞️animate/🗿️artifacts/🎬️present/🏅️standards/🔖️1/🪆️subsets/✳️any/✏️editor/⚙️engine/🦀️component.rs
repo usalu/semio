@@ -237,7 +237,7 @@ pub mod compiler {
         use crate::artifacts::present::default_present_snapshot;
         use crate::artifacts::present::schema::{populate_tile_drafts_from_grid, FigureTileGridSeedSpec};
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn compile_present_site_writes_static_bundle() {
             let deck = default_present_snapshot();
             let (source, _) = crate::artifacts::present::present_working_scene(&deck);
@@ -259,7 +259,7 @@ pub mod compiler {
             let _ = fs::remove_dir_all(&output);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn compile_scene_to_assets_writes_mp4() {
             let output = std::env::temp_dir().join(format!("animate-scene-assets-{}", std::process::id()));
             let _ = fs::remove_dir_all(&output);
@@ -341,7 +341,7 @@ pub mod slide {
     mod tests {
         use super::*;
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn present_scene_counts_slides() {
             let scene = PresentScene {
                 schema: PRESENT_SCENE_SCHEMA.into(),

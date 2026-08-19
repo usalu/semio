@@ -34,7 +34,7 @@ mod tests {
         (empty_note_snapshot(), semio_framework_plugin::HistoryView::empty())
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_fixture_json_replaces_document() {
         let (snapshot, history) = empty_view();
         let doc = ArtifactView::new(&snapshot, &history);
@@ -50,7 +50,7 @@ mod tests {
         assert_eq!(loaded.blocks.len(), 1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_active_example_loads_semio_blocks() {
         let (snapshot, history) = empty_view();
         let doc = ArtifactView::new(&snapshot, &history);

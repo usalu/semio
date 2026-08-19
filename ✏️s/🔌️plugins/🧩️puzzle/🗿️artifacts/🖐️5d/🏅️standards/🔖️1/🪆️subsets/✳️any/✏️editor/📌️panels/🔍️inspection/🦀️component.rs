@@ -53,7 +53,7 @@ mod tests {
     use super::*;
     use crate::editor::puzzle5d::testkit::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn empty_selection_renders_the_document_summary() {
         let mut app = app();
         assert!(render_body(&mut app, BODY_KEY).contains("puzzle5d-play-inspector.empty"));

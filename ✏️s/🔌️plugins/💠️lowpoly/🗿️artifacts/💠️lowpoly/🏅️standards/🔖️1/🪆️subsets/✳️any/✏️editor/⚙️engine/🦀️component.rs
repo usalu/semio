@@ -388,14 +388,14 @@ mod tests {
     use super::*;
     use crate::artifacts::lowpoly::schema::{default_mesh_workspace, default_snapshot};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn document_loads_meshes() {
         let doc = LowpolyDocument::new(default_snapshot(), default_mesh_workspace()).unwrap();
         assert_eq!(doc.meshes.len(), 1);
         assert!(doc.meshes[0].face_count() > 0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn active_mesh_tessellates() {
         let doc = LowpolyDocument::new(default_snapshot(), default_mesh_workspace()).unwrap();
         let transfer = doc.active_mesh().unwrap().tessellate().unwrap();
@@ -403,7 +403,7 @@ mod tests {
         assert!(!transfer.indices.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_primitive_box() {
         let mut doc = LowpolyDocument::new(default_snapshot(), default_mesh_workspace()).unwrap();
         let id = doc.add_primitive("box").unwrap();
@@ -411,7 +411,7 @@ mod tests {
         assert_eq!(doc.meshes.len(), 2);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn tessellate_all_returns_every_object() {
         let mut doc = LowpolyDocument::new(default_snapshot(), default_mesh_workspace()).unwrap();
         let _ = doc.add_primitive("box").unwrap();
@@ -420,7 +420,7 @@ mod tests {
         assert_eq!(items.len(), 2);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn projection_json_embeds_paint_pixels_as_base64() {
         let doc = LowpolyDocument::new(default_snapshot(), default_mesh_workspace()).unwrap();
         let json = serde_json::to_string(&doc.snapshot).unwrap();
@@ -429,14 +429,14 @@ mod tests {
         assert!(!json.contains("255,255,255"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn default_snapshot_mesh_has_unwrapped_uvs() {
         let doc = LowpolyDocument::new(default_snapshot(), default_mesh_workspace()).unwrap();
         let transfer = doc.active_mesh().unwrap().tessellate().unwrap();
         assert!(transfer.uvs.iter().any(|uv| *uv > 0.0));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn paint_stroke_writes_pixels() {
         let mut doc = LowpolyDocument::new(default_snapshot(), default_mesh_workspace()).unwrap();
         let object_id = doc.active_object_id.clone();
@@ -448,7 +448,7 @@ mod tests {
     }
 
     //#region 🔖️ComputeSessionCoverage
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_primitive_supports_every_known_kind() {
         let mut doc = LowpolyDocument::new(default_snapshot(), default_mesh_workspace()).unwrap();
         for kind in ["plane", "cylinder", "cone", "ico_sphere"] {
@@ -459,20 +459,20 @@ mod tests {
         assert_eq!(doc.snapshot().objects.len(), 5);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_primitive_unknown_kind_errors() {
         let mut doc = LowpolyDocument::new(default_snapshot(), default_mesh_workspace()).unwrap();
         let result = doc.add_primitive("teapot");
         assert!(matches!(result, Err(LowpolyCoreError::UnknownPrimitive(kind)) if kind == "teapot"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn object_index_errors_for_unknown_id() {
         let doc = LowpolyDocument::new(default_snapshot(), default_mesh_workspace()).unwrap();
         assert!(matches!(doc.object_index("missing"), Err(LowpolyCoreError::ObjectNotFound)));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn ensure_paint_layer_errors_for_unknown_object_and_out_of_range_index() {
         let mut doc = LowpolyDocument::new(default_snapshot(), default_mesh_workspace()).unwrap();
         let object_id = doc.active_object_id().to_string();
@@ -480,27 +480,27 @@ mod tests {
         assert!(matches!(doc.ensure_paint_layer(&object_id, 99), Err(LowpolyCoreError::LayerIndexOutOfRange)));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn layer_pixels_errors_for_out_of_range_index() {
         let doc = LowpolyDocument::new(default_snapshot(), default_mesh_workspace()).unwrap();
         let object_id = doc.active_object_id().to_string();
         assert!(matches!(doc.layer_pixels(&object_id, 5), Err(LowpolyCoreError::LayerIndexOutOfRange)));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn active_mesh_errors_when_active_object_id_is_unknown() {
         let doc = LowpolyDocument::with_context(default_snapshot(), "does-not-exist".into(), LowpolySelection::default(), default_mesh_workspace()).unwrap();
         assert!(matches!(doc.active_mesh(), Err(LowpolyCoreError::NoActiveObject)));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mesh_at_returns_none_past_object_count() {
         let doc = LowpolyDocument::new(default_snapshot(), default_mesh_workspace()).unwrap();
         assert!(doc.mesh_at(0).is_some());
         assert!(doc.mesh_at(99).is_none());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn sync_meshes_to_snapshot_writes_back_mesh_json() {
         let mut doc = LowpolyDocument::new(default_snapshot(), default_mesh_workspace()).unwrap();
         doc.add_primitive("box").unwrap();
@@ -512,14 +512,14 @@ mod tests {
         assert_ne!(doc.mesh_workspace().get(&object_id).cloned(), before);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn normalize_selection_mode_maps_object_to_mesh_and_passes_through_others() {
         assert_eq!(LowpolyDocument::normalize_selection_mode("object"), "mesh");
         assert_eq!(LowpolyDocument::normalize_selection_mode("face"), "face");
         assert_eq!(LowpolyDocument::normalize_selection_mode("vertex"), "vertex");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn apply_selection_normalizes_mode_and_stores_ids() {
         let mut doc = LowpolyDocument::new(default_snapshot(), default_mesh_workspace()).unwrap();
         doc.apply_selection("object", vec![3, 4]);
@@ -527,7 +527,7 @@ mod tests {
         assert_eq!(doc.selection().ids, vec![3, 4]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn selected_ids_are_empty_when_selection_mode_mismatches() {
         let mut doc = LowpolyDocument::new(default_snapshot(), default_mesh_workspace()).unwrap();
         doc.apply_selection("face", vec![1, 2]);
@@ -536,7 +536,7 @@ mod tests {
         assert_eq!(doc.selected_face_ids().len(), 2);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn selection_vertex_ids_face_mode_dedupes_shared_vertices() {
         let mut doc = LowpolyDocument::new(default_snapshot(), default_mesh_workspace()).unwrap();
         doc.add_primitive("box").unwrap();
@@ -554,7 +554,7 @@ mod tests {
         assert_eq!(verts.into_iter().map(|v| v.0).collect::<Vec<_>>(), expected);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn selection_vertex_ids_edge_mode_returns_endpoints() {
         let mut doc = LowpolyDocument::new(default_snapshot(), default_mesh_workspace()).unwrap();
         doc.add_primitive("box").unwrap();
@@ -565,13 +565,13 @@ mod tests {
         assert_eq!(verts, vec![v0, v1]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn selection_vertex_ids_mesh_mode_is_empty() {
         let doc = LowpolyDocument::new(default_snapshot(), default_mesh_workspace()).unwrap();
         assert!(doc.selection_vertex_ids().unwrap().is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn selection_transform_pivot_mesh_mode_averages_all_vertices() {
         let mut doc = LowpolyDocument::new(default_snapshot(), default_mesh_workspace()).unwrap();
         doc.add_primitive("box").unwrap();
@@ -588,7 +588,7 @@ mod tests {
         assert!((pivot.z() - expected.z()).abs() < 1e-5);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn selection_transform_pivot_vertex_mode_averages_selected_vertices() {
         let mut doc = LowpolyDocument::new(default_snapshot(), default_mesh_workspace()).unwrap();
         doc.add_primitive("box").unwrap();
@@ -601,7 +601,7 @@ mod tests {
         assert!((pivot.x() - expected.x()).abs() < 1e-5);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn selection_transform_pivot_empty_vertex_selection_is_origin() {
         let mut doc = LowpolyDocument::new(default_snapshot(), default_mesh_workspace()).unwrap();
         doc.apply_selection("vertex", vec![]);
@@ -609,7 +609,7 @@ mod tests {
         assert_eq!((pivot.x(), pivot.y(), pivot.z()), (0.0, 0.0, 0.0));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn ensure_all_paint_buffers_adds_missing_layer_and_fixes_wrong_size() {
         let mut projection = default_snapshot();
         projection.objects[0].paint_layers.clear();
@@ -621,7 +621,7 @@ mod tests {
         assert_eq!(doc.snapshot().objects[0].paint_layers[0].pixels.len(), LOWPOLY_PAINT_TEXTURE_SIZE * LOWPOLY_PAINT_TEXTURE_SIZE * 4);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fill_bucket_and_sample_pixel_reflect_new_color() {
         let mut doc = LowpolyDocument::new(default_snapshot(), default_mesh_workspace()).unwrap();
         let object_id = doc.active_object_id().to_string();

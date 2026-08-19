@@ -34,7 +34,7 @@ impl Inference<HtmlSnapshot> for HtmlInference {
 /// default snapshot, breaking `inference_default_law`. Defining default as "infer the default
 /// snapshot" makes the two definitionally equal.
 impl Default for HtmlInference {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self::infer(&HtmlSnapshot::default())
     }
 }
@@ -82,13 +82,13 @@ mod tests {
     use super::*;
     use protocol::Inference;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = HtmlSnapshot::default();
         assert_eq!(HtmlInference::infer(&snapshot), HtmlInference::infer(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(HtmlInference::infer(&HtmlSnapshot::default()), HtmlInference::default());
     }

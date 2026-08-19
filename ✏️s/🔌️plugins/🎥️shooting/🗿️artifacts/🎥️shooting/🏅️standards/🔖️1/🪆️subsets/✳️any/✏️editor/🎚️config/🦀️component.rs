@@ -116,7 +116,7 @@ impl store::ArtifactPack for ShootingConfig {
 
 
 impl Default for ShootingConfig {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self {
             default_shot_format: "png".into(),
             default_shot_shape: "rectangle".into(),
@@ -282,7 +282,7 @@ impl Mutation<ShootingConfig> for ShootingConfigMutation {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn shooting_config_default_matches_the_existing_action_arg_sticky_defaults() {
         let config = ShootingConfig::default();
         assert_eq!(config.default_shot_format, "png");
@@ -291,7 +291,7 @@ mod tests {
     }
 
     /// 🎞️ A fixture exercising every field — the dsl/pack round-trip law for `ShootingConfig`.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn shooting_config_dsl_pack_round_trip() {
         let config = ShootingConfig {
             selected_shot_ids: vec!["s1".into()],
@@ -306,7 +306,7 @@ mod tests {
         store::os_store::test_support::assert_dsl_pack_equivalence(&config);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn shooting_config_operation_text_binary_round_trips_every_variant() {
         store::os_store::test_support::assert_op_line_round_trip(&ShootingConfigMutation::Snapshot { config: ShootingConfig { selected_shot_ids: vec!["s1".into()], locale: "de-DE".into(), ..ShootingConfig::default() } });
         store::os_store::test_support::assert_op_line_round_trip(&ShootingConfigMutation::SetShotSelection { shot_ids: vec!["s1".into(), "s2".into()] });
@@ -319,7 +319,7 @@ mod tests {
         store::os_store::test_support::assert_op_line_round_trip(&ShootingConfigMutation::SetDefaults { shot_format: "svg".into(), shot_shape: "ellipse".into(), asset_format: "glb".into() });
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn shooting_config_operation_backwards_restores_the_pre_operation_snapshot() {
         let base = ShootingConfig { selected_shot_ids: vec!["s1".into()], locale: "en-US".into(), ..ShootingConfig::default() };
         let operation = ShootingConfigMutation::SetShotSelection { shot_ids: vec!["s2".into()] };

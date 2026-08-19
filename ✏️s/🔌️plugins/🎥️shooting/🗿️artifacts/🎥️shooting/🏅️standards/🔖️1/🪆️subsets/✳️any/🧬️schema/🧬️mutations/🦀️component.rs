@@ -118,7 +118,7 @@ mod tests {
     }
 
     //#region 📦assets
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn assets_create_rename_change_url_delete_round_trip() {
         let snapshot = crate::artifacts::shooting::empty_shooting_snapshot();
         let create = ShootingMutation::CreateAsset(super::super::create_asset::mutation::CreateAsset { asset: sample_asset("a1"), index: Some(0) });
@@ -138,7 +138,7 @@ mod tests {
         assert!(deleted.assets.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn reorder_assets_round_trips() {
         let mut snapshot = crate::artifacts::shooting::empty_shooting_snapshot();
         snapshot.assets = vec![sample_asset("a1"), sample_asset("a2"), sample_asset("a3")];
@@ -147,7 +147,7 @@ mod tests {
         assert_eq!(reordered.assets.iter().map(|a| a.id.clone()).collect::<Vec<_>>(), vec!["a2", "a3", "a1"]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn delete_asset_of_a_missing_id_has_an_empty_inverse() {
         let snapshot = crate::artifacts::shooting::empty_shooting_snapshot();
         let delete = ShootingMutation::DeleteAsset(super::super::delete_asset::mutation::DeleteAsset { id: "nope".into() });
@@ -156,7 +156,7 @@ mod tests {
     //#endregion 📦assets
 
     //#region ↔️🔄↕️transforms
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn drag_rotate_scale_assets_round_trip() {
         let mut snapshot = crate::artifacts::shooting::empty_shooting_snapshot();
         let mut asset = sample_asset("a1");
@@ -181,7 +181,7 @@ mod tests {
     //#endregion ↔️🔄↕️transforms
 
     //#region 📸shots
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn shots_create_rename_resize_reformat_reshape_delete_round_trip() {
         let snapshot = crate::artifacts::shooting::empty_shooting_snapshot();
         let create = ShootingMutation::CreateShot(super::super::create_shot::mutation::CreateShot { shot: sample_shot("s1"), index: Some(0) });
@@ -213,7 +213,7 @@ mod tests {
         assert!(deleted.shots.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn reorder_shots_round_trips() {
         let mut snapshot = crate::artifacts::shooting::empty_shooting_snapshot();
         snapshot.shots = vec![sample_shot("s1"), sample_shot("s2")];
@@ -224,7 +224,7 @@ mod tests {
     //#endregion 📸shots
 
     //#region 🎥saved-cameras / 📷shot-camera
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn saved_cameras_create_rename_replace_view_reorder_delete_round_trip() {
         let snapshot = crate::artifacts::shooting::empty_shooting_snapshot();
         let create = ShootingMutation::CreateSavedCamera(super::super::create_saved_camera::mutation::CreateSavedCamera { saved_camera: ShootingSavedCamera { id: "cam1".into(), label: "Hero".into(), camera: ShootingCamera::default() }, index: Some(0) });
@@ -244,7 +244,7 @@ mod tests {
         assert!(deleted.saved_cameras.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn replace_shot_camera_is_a_no_op_when_shot_has_no_saved_camera() {
         // 🎥️ The free/live viewport camera is session-only runtime state now (never a document
         // field) — `ReplaceShotCamera` against a shot with no saved-camera reference has nothing to patch.
@@ -256,7 +256,7 @@ mod tests {
         assert_eq!(next, snapshot, "no saved camera referenced by the shot means no document change");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn replace_shot_camera_patches_the_saved_camera_it_references() {
         let mut snapshot = crate::artifacts::shooting::empty_shooting_snapshot();
         snapshot.saved_cameras.push(ShootingSavedCamera { id: "cam1".into(), label: "A".into(), camera: ShootingCamera::default() });
@@ -272,7 +272,7 @@ mod tests {
     //#endregion 🎥saved-cameras / 📷shot-camera
 
     //#region 🎯📌active-selection
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_active_shot_and_asset_round_trip() {
         let mut snapshot = crate::artifacts::shooting::empty_shooting_snapshot();
         snapshot.shots.push(sample_shot("s1"));
@@ -287,7 +287,7 @@ mod tests {
     //#endregion 🎯📌active-selection
 
     //#region ☀️scene
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn scene_field_mutations_round_trip() {
         let snapshot = crate::artifacts::shooting::empty_shooting_snapshot();
         let next = round_trip(&snapshot, &ShootingMutation::ChangeSceneSunEnabled(super::super::change_scene_sun_enabled::mutation::ChangeSceneSunEnabled { new_enabled: true }));
@@ -308,7 +308,7 @@ mod tests {
     //#endregion ☀️scene
 
     //#region 🗣️OpText
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn shooting_op_text_round_trips_every_variant() {
         let asset = sample_asset("a1");
         store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::CreateAsset(super::super::create_asset::mutation::CreateAsset { asset: asset.clone(), index: Some(0) }));
@@ -358,7 +358,7 @@ mod tests {
     /// added by the Wave 0 mechanism pass) against the three most structurally distinct new kinds:
     /// an id-keyed collection create/delete pair, a bulk bulk-bulk transform, and a document-root
     /// scalar setter.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_asset_obeys_the_inverse_and_absorb_laws() {
         let base = representative_snapshot();
         let create = ShootingMutation::CreateAsset(super::super::create_asset::mutation::CreateAsset { asset: sample_asset("a9"), index: None });
@@ -369,14 +369,14 @@ mod tests {
         protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn drag_assets_obeys_the_inverse_law() {
         let base = representative_snapshot();
         let drag = ShootingMutation::DragAssets(super::super::drag_assets::mutation::DragAssets { asset_ids: vec!["a1".into()], dx: 4.0, dy: -1.0, dz: 0.5 });
         protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &drag);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_active_shot_obeys_the_inverse_law() {
         let base = representative_snapshot();
         let set = ShootingMutation::SetActiveShot(super::super::set_active_shot::mutation::SetActiveShot { shot_id: Some("s2".into()) });
@@ -388,7 +388,7 @@ mod tests {
     /// ✅️ §C2/fan-out-recipe laws (`26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS`):
     /// one `assert_missing_target_is_error`/Fatal check per verb family this facet implements
     /// (create/delete/rename/change/reorder/drag-rotate-scale/replace/set).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_asset_duplicate_id_is_fatal() {
         let base = representative_snapshot();
         let outcome = ShootingMutation::CreateAsset(super::super::create_asset::mutation::CreateAsset { asset: sample_asset("a1"), index: None }).diff(&base);
@@ -396,37 +396,37 @@ mod tests {
         assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn delete_asset_missing_target_is_error() {
         let base = representative_snapshot();
         assert_missing_target_is_error(&base, &ShootingMutation::DeleteAsset(super::super::delete_asset::mutation::DeleteAsset { id: "ghost".into() }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn rename_asset_missing_target_is_error() {
         let base = representative_snapshot();
         assert_missing_target_is_error(&base, &ShootingMutation::RenameAsset(super::super::rename_asset::mutation::RenameAsset { id: "ghost".into(), new_name: "x".into() }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn change_asset_url_missing_target_is_error() {
         let base = representative_snapshot();
         assert_missing_target_is_error(&base, &ShootingMutation::ChangeAssetUrl(super::super::change_asset_url::mutation::ChangeAssetUrl { id: "ghost".into(), new_url: "/x.glb".into() }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn reorder_assets_missing_target_is_error() {
         let base = representative_snapshot();
         assert_missing_target_is_error(&base, &ShootingMutation::ReorderAssets(super::super::reorder_assets::mutation::ReorderAssets { id: "ghost".into(), to_index: 0 }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn drag_assets_missing_target_is_error() {
         let base = representative_snapshot();
         assert_missing_target_is_error(&base, &ShootingMutation::DragAssets(super::super::drag_assets::mutation::DragAssets { asset_ids: vec!["ghost".into()], dx: 1.0, dy: 1.0, dz: 1.0 }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn scale_assets_non_finite_is_fatal() {
         let base = representative_snapshot();
         let outcome = ShootingMutation::ScaleAssets(super::super::scale_assets::mutation::ScaleAssets { asset_ids: vec!["a1".into()], sx: f64::NAN, sy: 1.0, sz: 1.0 }).diff(&base);
@@ -434,7 +434,7 @@ mod tests {
         assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn rotate_assets_non_finite_is_fatal() {
         let base = representative_snapshot();
         let outcome = ShootingMutation::RotateAssets(super::super::rotate_assets::mutation::RotateAssets { asset_ids: vec!["a1".into()], ax: f64::NAN, ay: 0.0, az: 1.0, angle: 1.0 }).diff(&base);
@@ -442,19 +442,19 @@ mod tests {
         assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn replace_saved_camera_view_missing_target_is_error() {
         let base = representative_snapshot();
         assert_missing_target_is_error(&base, &ShootingMutation::ReplaceSavedCameraView(super::super::replace_saved_camera_view::mutation::ReplaceSavedCameraView { id: "ghost".into(), new_camera: ShootingCamera::default() }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_active_shot_missing_target_is_error() {
         let base = representative_snapshot();
         assert_missing_target_is_error(&base, &ShootingMutation::SetActiveShot(super::super::set_active_shot::mutation::SetActiveShot { shot_id: Some("ghost".into()) }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_shot_duplicate_id_is_fatal() {
         let base = representative_snapshot();
         let outcome = ShootingMutation::CreateShot(super::super::create_shot::mutation::CreateShot { shot: sample_shot("s1"), index: None }).diff(&base);
@@ -462,13 +462,13 @@ mod tests {
         assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn delete_shot_missing_target_is_error() {
         let base = representative_snapshot();
         assert_missing_target_is_error(&base, &ShootingMutation::DeleteShot(super::super::delete_shot::mutation::DeleteShot { id: "ghost".into() }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn change_shot_width_missing_target_is_error() {
         let base = representative_snapshot();
         assert_missing_target_is_error(&base, &ShootingMutation::ChangeShotWidth(super::super::change_shot_width::mutation::ChangeShotWidth { id: "ghost".into(), new_width: 100 }));

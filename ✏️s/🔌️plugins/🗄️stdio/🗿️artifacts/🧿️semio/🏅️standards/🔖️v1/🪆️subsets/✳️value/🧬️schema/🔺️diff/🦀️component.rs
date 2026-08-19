@@ -94,7 +94,7 @@ pub enum SemioValueDiff {
 /// for the same reason. No enum variant here is fieldless, so `#[derive(Default)]` (which requires
 /// a unit `#[default]` variant) is not usable — hand-rolled instead.
 impl Default for SemioValueDiff {
-    async fn default() -> Self {
+    fn default() -> Self {
         SemioValueDiff::Replace { value: SemioValue::default() }
     }
 }
@@ -1295,7 +1295,7 @@ mod tests {
     }
 
     //#region between_roundtrip_law
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn between_roundtrip_law_scalars_and_kind_change() {
         let cases = [
             (SemioValue::Null, SemioValue::Bool { value: true }),
@@ -1314,7 +1314,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn between_roundtrip_law_nested_collections_and_graph() {
         let a = snap(mapv(vec![("tags", listv(vec![strv("x"), strv("y")])), ("n", intv("1"))]), vec![node("n1", strv("hello"))]);
         let b = snap(mapv(vec![("tags", listv(vec![strv("x"), strv("z"), strv("w")])), ("n", intv("2")), ("extra", refv("n1"))]), vec![node("n1", strv("world")), node("n2", intv("9"))]);
@@ -1322,7 +1322,7 @@ mod tests {
         assert_eq!(SemioValueTreeDiff::between(&b, &a).apply(&b).expect("apply must succeed for a well-formed fixture"), a);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn between_self_is_empty() {
         let a = snap(mapv(vec![("x", intv("1"))]), vec![node("n1", strv("v"))]);
         assert!(SemioValueTreeDiff::between(&a, &a).is_empty());
@@ -1330,7 +1330,7 @@ mod tests {
     //#endregion between_roundtrip_law
 
     //#region inverse_law
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inverse_law_diff_level() {
         let a = snap(mapv(vec![("x", intv("1")), ("y", listv(vec![intv("1"), intv("2")]))]), vec![node("n1", strv("a"))]);
         let b = snap(mapv(vec![("x", intv("2")), ("z", strv("new"))]), vec![node("n1", strv("b")), node("n2", intv("5"))]);
@@ -1350,7 +1350,7 @@ mod tests {
         SemioValueTreeDiff { root: Some(SemioValueDiff::List { diff: d }), nodes: None }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_list_insert_then_remove_before() {
         // base = [a,b,c]; d1 = Insert(2,f) -> mid=[a,b,f,c]; d2 = Remove(0) -> after=[b,f,c].
         let base = snap(listv(vec![strv("a"), strv("b"), strv("c")]), vec![]);
@@ -1370,7 +1370,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_list_insert_insert_same_index_both_survive() {
         let base = snap(listv(vec![strv("a"), strv("b")]), vec![]);
         let d1 = list_diff(IndexedTripleDiff { added: vec![IndexAdded { index: 2, item: strv("f") }], ..Default::default() });
@@ -1386,7 +1386,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_list_insert_then_remove_of_same_added_item_cancels() {
         let base = snap(listv(vec![strv("a")]), vec![]);
         let d1 = list_diff(IndexedTripleDiff { added: vec![IndexAdded { index: 1, item: strv("f") }], ..Default::default() });
@@ -1399,7 +1399,7 @@ mod tests {
         assert!(combined.is_empty(), "cancelling insert+remove must coalesce to an empty diff");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_list_add_then_setfield_patches_added_payload() {
         let base = snap(listv(vec![]), vec![]);
         let d1 = list_diff(IndexedTripleDiff { added: vec![IndexAdded { index: 0, item: mapv(vec![("x", intv("1"))]) }], ..Default::default() });
@@ -1422,7 +1422,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_list_modify_then_remove_drops_pending_patch() {
         let base = snap(listv(vec![intv("1"), intv("2")]), vec![]);
         let d1 = list_diff(IndexedTripleDiff { modified: vec![IndexModified { index: 0, diff: SemioValueDiff::Int { lexeme: "9".into() } }], ..Default::default() });
@@ -1441,7 +1441,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_list_associativity() {
         let s0 = snap(listv(vec![intv("1"), intv("2"), intv("3")]), vec![]);
         let s1 = snap(listv(vec![intv("1"), intv("9"), intv("3")]), vec![]);
@@ -1467,7 +1467,7 @@ mod tests {
     //#endregion absorb_law canonical cases (list/index-keyed)
 
     //#region absorb_law canonical cases (map/name-keyed)
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_map_add_then_setfield_patches_added_payload() {
         let base = snap(mapv(vec![]), vec![]);
         let mid = snap(mapv(vec![("config", mapv(vec![]))]), vec![]);
@@ -1487,7 +1487,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_map_modify_then_remove_drops_pending_patch() {
         let base = snap(mapv(vec![("a", intv("1")), ("b", intv("2"))]), vec![]);
         let mid = snap(mapv(vec![("a", intv("9")), ("b", intv("2"))]), vec![]);
@@ -1506,7 +1506,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_map_insert_insert_both_survive() {
         let base = snap(mapv(vec![("a", intv("1"))]), vec![]);
         let mid = snap(mapv(vec![("a", intv("1")), ("f", intv("2"))]), vec![]);
@@ -1522,7 +1522,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_map_insert_then_remove_of_same_added_item_cancels() {
         let base = snap(mapv(vec![("a", intv("1"))]), vec![]);
         let mid = snap(mapv(vec![("a", intv("1")), ("f", intv("2"))]), vec![]);
@@ -1535,7 +1535,7 @@ mod tests {
         assert!(combined.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_map_associativity() {
         let s0 = snap(mapv(vec![("a", intv("1"))]), vec![]);
         let s1 = snap(mapv(vec![("a", intv("1")), ("b", intv("2"))]), vec![]);
@@ -1561,7 +1561,7 @@ mod tests {
     //#endregion absorb_law canonical cases (map/name-keyed)
 
     //#region absorb_law canonical cases (nodes graph / id-keyed)
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_nodes_add_then_setfield_patches_added_payload() {
         let base = snap(SemioValue::Null, vec![]);
         let mid = snap(SemioValue::Null, vec![node("n1", mapv(vec![]))]);
@@ -1581,7 +1581,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_nodes_modify_then_remove_drops_pending_patch() {
         let base = snap(SemioValue::Null, vec![node("a", intv("1")), node("b", intv("2"))]);
         let mid = snap(SemioValue::Null, vec![node("a", intv("9")), node("b", intv("2"))]);
@@ -1600,7 +1600,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_nodes_associativity() {
         let s0 = snap(SemioValue::Null, vec![node("a", intv("1"))]);
         let s1 = snap(SemioValue::Null, vec![node("a", intv("1")), node("b", intv("2"))]);
@@ -1666,7 +1666,7 @@ mod tests {
         )
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn field_sweep_between_roundtrips_both_directions() {
         let (a, b) = (sweep_a(), sweep_b());
         assert_eq!(SemioValueTreeDiff::between(&a, &b).apply(&a).expect("apply must succeed for a well-formed fixture"), b);
@@ -1674,7 +1674,7 @@ mod tests {
         assert!(SemioValueTreeDiff::between(&a, &a).is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn field_sweep_every_field_present_in_diff() {
         let (a, b) = (sweep_a(), sweep_b());
         let diff = SemioValueTreeDiff::between(&a, &b);
@@ -1727,7 +1727,7 @@ mod tests {
     /// 🧪️ diff_codec_text_binary_roundtrip_law: exercises every `SemioValueDiff` variant (incl.
     /// the `Replace` kind-change fallback), nested list/map/nodes-graph collection triples, and
     /// the empty (`None`/`None`) diff.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn diff_codec_text_binary_roundtrip_law() {
         use protocol::DiffCodec;
 

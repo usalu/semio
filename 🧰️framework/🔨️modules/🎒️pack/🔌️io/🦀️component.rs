@@ -47,12 +47,17 @@ mod native {
         }
     }
 
+    // 🧮️ `PackSource`/`PackSink` (owned by `semio-framework-replication`, not this packet) are
+    // already plain-AFIT `async` traits — see `📓️terra-pack-finish-report.md`
+    // §"pure-computation-made-async: the recipe". These impls do genuinely-blocking `std::fs`
+    // I/O in an `async fn` body (no `.await` inside): that mirrors the crate's existing idiom of
+    // spawning a dedicated thread for blocking work rather than pretending file I/O suspends.
     impl PackSource for FilePackSource {
-        fn len(&self) -> u64 {
+        async fn len(&self) -> u64 {
             self.len
         }
 
-        fn read_at(&self, offset: u64, buf: &mut [u8]) -> Result<usize, PackError> {
+        async fn read_at(&self, offset: u64, buf: &mut [u8]) -> Result<usize, PackError> {
             if offset > self.len {
                 return Err(PackError::Truncated(offset));
             }
@@ -93,17 +98,17 @@ mod native {
     }
 
     impl PackSink for FilePackSink {
-        fn write_all(&mut self, bytes: &[u8]) -> Result<(), PackError> {
+        async fn write_all(&mut self, bytes: &[u8]) -> Result<(), PackError> {
             self.file.write_all(bytes).map_err(io_err)?;
             self.position += bytes.len() as u64;
             Ok(())
         }
 
-        fn position(&self) -> u64 {
+        async fn position(&self) -> u64 {
             self.position
         }
 
-        fn flush(&mut self) -> Result<(), PackError> {
+        async fn flush(&mut self) -> Result<(), PackError> {
             self.file.flush().map_err(io_err)?;
             self.file.sync_all().map_err(io_err)
         }
@@ -145,26 +150,26 @@ mod native {
 
     impl StreamingPackWriter {
         /// @emoji 🚀️ Creates `path` and writes the 32-byte header.
-        pub fn create(path: &Path, options: &WriteOptions) -> Result<Self, PackError> {
+        pub async fn create(path: &Path, options: &WriteOptions) -> Result<Self, PackError> {
             let sink = FilePackSink::create(path)?;
-            let inner = PackWriter::begin(sink, options)?;
+            let inner = PackWriter::begin(sink, options).await?;
             Ok(Self { inner })
         }
 
         /// @emoji 🖇️ Frames, compresses, CRCs, and flushes one segment to disk.
-        pub fn write_segment(&mut self, kind: u8, payload: &[u8]) -> Result<(), PackError> {
-            self.inner.write_segment(kind, payload)
+        pub async fn write_segment(&mut self, kind: u8, payload: &[u8]) -> Result<(), PackError> {
+            self.inner.write_segment(kind, payload).await
         }
 
         /// @emoji 🧱️ Writes and flushes one chunk segment, returning its `ChunkId`.
-        pub fn write_chunk(&mut self, payload: &[u8]) -> Result<ChunkId, PackError> {
-            self.inner.write_chunk(payload)
+        pub async fn write_chunk(&mut self, payload: &[u8]) -> Result<ChunkId, PackError> {
+            self.inner.write_chunk(payload).await
         }
 
         /// @emoji 🏁️ Writes the chunk table, manifest, end marker, and footer, `fsync`s (via
         /// `FilePackSink::flush`, called internally by `PackWriter::finish`), and closes the file.
-        pub fn finish(self, manifest: &Manifest) -> Result<(), PackError> {
-            self.inner.finish(manifest)?;
+        pub async fn finish(self, manifest: &Manifest) -> Result<(), PackError> {
+            self.inner.finish(manifest).await?;
             Ok(())
         }
     }
@@ -174,9 +179,9 @@ mod native {
     /// @emoji 🩺️ Opens `path` and forward-scans it via `crate::format::recover` — for use when a
     /// file's footer fails to parse/validate and the caller wants to salvage whatever valid
     /// segments precede the corruption.
-    pub fn recover_file(path: &Path, limits: &PackLimits) -> Result<RecoveryReport, PackError> {
+    pub async fn recover_file(path: &Path, limits: &PackLimits) -> Result<RecoveryReport, PackError> {
         let source = FilePackSource::open(path)?;
-        crate::format::recover(&source, limits)
+        crate::format::recover(&source, limits).await
     }
     //#endregion 🔖️Recover
 
@@ -200,45 +205,45 @@ mod native {
         }
 
         //#region 🔖️File
-        #[test]
-        fn file_source_sink_write_then_read_back() {
+        #[semio_framework_async_macros::async_test]
+        async fn file_source_sink_write_then_read_back() {
             let dir = scratch_dir("file_rw");
             let path = dir.join("blob.bin");
             let payload = b"hello pack_io world, this is a test payload";
 
             let mut sink = FilePackSink::create(&path).unwrap();
-            assert_eq!(sink.position(), 0);
-            sink.write_all(&payload[..10]).unwrap();
-            assert_eq!(sink.position(), 10);
-            sink.write_all(&payload[10..]).unwrap();
-            assert_eq!(sink.position(), payload.len() as u64);
-            sink.flush().unwrap();
+            assert_eq!(sink.position().await, 0);
+            sink.write_all(&payload[..10]).await.unwrap();
+            assert_eq!(sink.position().await, 10);
+            sink.write_all(&payload[10..]).await.unwrap();
+            assert_eq!(sink.position().await, payload.len() as u64);
+            sink.flush().await.unwrap();
             drop(sink);
 
             let source = FilePackSource::open(&path).unwrap();
-            assert_eq!(PackSource::len(&source), payload.len() as u64);
-            assert!(!source.is_empty());
+            assert_eq!(PackSource::len(&source).await, payload.len() as u64);
+            assert!(!source.is_empty().await);
 
             let mut buf = vec![0u8; payload.len()];
-            let n = source.read_at(0, &mut buf).unwrap();
+            let n = source.read_at(0, &mut buf).await.unwrap();
             assert_eq!(n, payload.len());
             assert_eq!(&buf, payload);
 
             let mut mid = [0u8; 5];
-            let n = source.read_at(6, &mut mid).unwrap();
+            let n = source.read_at(6, &mut mid).await.unwrap();
             assert_eq!(n, 5);
             assert_eq!(&mid, &payload[6..11]);
 
             let mut exact = vec![0u8; payload.len()];
-            source.read_exact_at(0, &mut exact).unwrap();
+            source.read_exact_at(0, &mut exact).await.unwrap();
             assert_eq!(exact, payload);
 
             let mut past_end = [0u8; 4];
-            let result = source.read_at(1_000_000, &mut past_end);
+            let result = source.read_at(1_000_000, &mut past_end).await;
             assert!(matches!(result, Err(PackError::Truncated(1_000_000))));
 
             let mut short = [0u8; 100];
-            let n = source.read_at((payload.len() - 3) as u64, &mut short).unwrap();
+            let n = source.read_at((payload.len() - 3) as u64, &mut short).await.unwrap();
             assert_eq!(n, 3);
             assert_eq!(&short[..3], &payload[payload.len() - 3..]);
         }
@@ -291,9 +296,9 @@ mod native {
         /// @emoji 📏️ Wire length of a non-compressed segment frame (`kind, flags, seg_len varint,
         /// payload, crc32`) — mirrors `pack_format`'s private `encode_segment` for `CodecId(0)`,
         /// used here only to compute a valid `doc_span.len` for a hand-built `Manifest`.
-        fn uncompressed_segment_wire_len(payload_len: usize) -> u64 {
+        async fn uncompressed_segment_wire_len(payload_len: usize) -> u64 {
             let mut len_bytes = Vec::new();
-            crate::write_varint_u64(&mut len_bytes, payload_len as u64);
+            crate::write_varint_u64(&mut len_bytes, payload_len as u64).await;
             (1 + 1 + len_bytes.len() + payload_len + 4) as u64
         }
 
@@ -301,23 +306,23 @@ mod native {
             WriteOptions { required_flags: 0, optional_flags: crate::format::OPTIONAL_STREAMED, codec: CodecId(0) }
         }
 
-        #[test]
-        fn streaming_writer_full_session_multiple_segments_and_a_chunk_round_trips() {
+        #[semio_framework_async_macros::async_test]
+        async fn streaming_writer_full_session_multiple_segments_and_a_chunk_round_trips() {
             let dir = scratch_dir("stream_session");
             let path = dir.join("session.spk");
             let doc_payload = b"the streamed document body";
             let chunk_payload = b"a chunk of blob bytes carried alongside the document";
             let schema_payload = b"an extra schema segment written after the chunk";
 
-            let mut writer = StreamingPackWriter::create(&path, &no_compression_options()).unwrap();
-            writer.write_segment(KIND_DOCUMENT, doc_payload).unwrap();
-            let chunk_id = writer.write_chunk(chunk_payload).unwrap();
-            writer.write_segment(KIND_SCHEMA, schema_payload).unwrap();
+            let mut writer = StreamingPackWriter::create(&path, &no_compression_options()).await.unwrap();
+            writer.write_segment(KIND_DOCUMENT, doc_payload).await.unwrap();
+            let chunk_id = writer.write_chunk(chunk_payload).await.unwrap();
+            writer.write_segment(KIND_SCHEMA, schema_payload).await.unwrap();
 
             let manifest = Manifest {
                 schema_name: String::new(),
                 schema_hash: [0u8; 32],
-                doc_span: ByteRange { offset: crate::format::HEADER_SIZE as u64, len: uncompressed_segment_wire_len(doc_payload.len()) },
+                doc_span: ByteRange { offset: crate::format::HEADER_SIZE as u64, len: uncompressed_segment_wire_len(doc_payload.len()).await },
                 doc_frame_count: 1,
                 symbols_span: ByteRange { offset: 0, len: 0 },
                 chunk_table_span: ByteRange { offset: 0, len: 0 },
@@ -327,47 +332,47 @@ mod native {
                 chunk_count: 0,
                 symbol_count: 0,
             };
-            writer.finish(&manifest).unwrap();
+            writer.finish(&manifest).await.unwrap();
 
             let source = FilePackSource::open(&path).unwrap();
             let limits = PackLimits::default();
-            let pack_file = crate::format::PackFile::open_manifest(source, &limits, VerificationLevel::Standard).unwrap();
+            let pack_file = crate::format::PackFile::open_manifest(source, &limits, VerificationLevel::Standard).await.unwrap();
 
             let loaded_manifest = pack_file.manifest().unwrap();
             assert_eq!(loaded_manifest.doc_frame_count, 1);
             assert_eq!(loaded_manifest.uncompressed_body_len, doc_payload.len() as u64);
             assert_eq!(pack_file.chunk_count(), 1);
 
-            let read_chunk = pack_file.read_chunk(chunk_id, VerificationLevel::Full).unwrap();
+            let read_chunk = pack_file.read_chunk(chunk_id, VerificationLevel::Full).await.unwrap();
             assert_eq!(read_chunk, chunk_payload);
 
             // `Full` verification also cross-checks the concatenated document body against the
             // footer's blake3 content hash, proving StreamingPackWriter's running hash matches.
-            let body = pack_file.body_bytes(VerificationLevel::Full).unwrap();
+            let body = pack_file.body_bytes(VerificationLevel::Full).await.unwrap();
             assert_eq!(body, doc_payload);
 
             // Forward-scan recovery should independently see every segment this session wrote:
             // document, chunk, schema, chunk table, manifest, end.
-            let report = recover_file(&path, &limits).unwrap();
+            let report = recover_file(&path, &limits).await.unwrap();
             assert_eq!(report.segments_recovered, 6);
             assert!(report.manifest.is_some());
         }
         //#endregion 🔖️Stream
 
         //#region 🔖️Recover
-        fn build_valid_session_file(dir: &Path, name: &str) -> std::path::PathBuf {
+        async fn build_valid_session_file(dir: &Path, name: &str) -> std::path::PathBuf {
             let path = dir.join(name);
             let doc_payload = b"recoverable document body";
             let chunk_payload = b"recoverable chunk payload";
 
-            let mut writer = StreamingPackWriter::create(&path, &no_compression_options()).unwrap();
-            writer.write_segment(KIND_DOCUMENT, doc_payload).unwrap();
-            writer.write_chunk(chunk_payload).unwrap();
+            let mut writer = StreamingPackWriter::create(&path, &no_compression_options()).await.unwrap();
+            writer.write_segment(KIND_DOCUMENT, doc_payload).await.unwrap();
+            writer.write_chunk(chunk_payload).await.unwrap();
 
             let manifest = Manifest {
                 schema_name: String::new(),
                 schema_hash: [0u8; 32],
-                doc_span: ByteRange { offset: crate::format::HEADER_SIZE as u64, len: uncompressed_segment_wire_len(doc_payload.len()) },
+                doc_span: ByteRange { offset: crate::format::HEADER_SIZE as u64, len: uncompressed_segment_wire_len(doc_payload.len()).await },
                 doc_frame_count: 1,
                 symbols_span: ByteRange { offset: 0, len: 0 },
                 chunk_table_span: ByteRange { offset: 0, len: 0 },
@@ -377,14 +382,14 @@ mod native {
                 chunk_count: 0,
                 symbol_count: 0,
             };
-            writer.finish(&manifest).unwrap();
+            writer.finish(&manifest).await.unwrap();
             path
         }
 
-        #[test]
-        fn recover_file_with_footer_stripped_still_recovers_every_body_segment() {
+        #[semio_framework_async_macros::async_test]
+        async fn recover_file_with_footer_stripped_still_recovers_every_body_segment() {
             let dir = scratch_dir("recover_no_footer");
-            let path = build_valid_session_file(&dir, "truncated_footer.spk");
+            let path = build_valid_session_file(&dir, "truncated_footer.spk").await;
             let limits = PackLimits::default();
 
             let full_len = std::fs::metadata(&path).unwrap().len();
@@ -394,19 +399,19 @@ mod native {
 
             // Superblock open must fail (no valid footer) — this is the scenario recover_file is for.
             let source = FilePackSource::open(&path).unwrap();
-            assert!(crate::format::PackFile::open_superblock(source, &limits).is_err());
+            assert!(crate::format::PackFile::open_superblock(source, &limits).await.is_err());
 
-            let report = recover_file(&path, &limits).unwrap();
+            let report = recover_file(&path, &limits).await.unwrap();
             // document, chunk, chunk_table (since one chunk was written), manifest, end.
             assert_eq!(report.segments_recovered, 5);
             assert!(report.bytes_recovered > 0);
             assert!(report.manifest.is_some());
         }
 
-        #[test]
-        fn recover_file_truncated_mid_segment_recovers_a_strict_prefix_without_panicking() {
+        #[semio_framework_async_macros::async_test]
+        async fn recover_file_truncated_mid_segment_recovers_a_strict_prefix_without_panicking() {
             let dir = scratch_dir("recover_mid_segment");
-            let path = build_valid_session_file(&dir, "truncated_mid.spk");
+            let path = build_valid_session_file(&dir, "truncated_mid.spk").await;
             let limits = PackLimits::default();
 
             let full_len = std::fs::metadata(&path).unwrap().len();
@@ -417,7 +422,7 @@ mod native {
             file.set_len(cut_len).unwrap();
             drop(file);
 
-            let report = recover_file(&path, &limits).unwrap();
+            let report = recover_file(&path, &limits).await.unwrap();
             // Fewer than the full 5 segments (document, chunk, chunk_table, manifest, end) since
             // the trailing bytes of the last segment are gone; recovery must stop cleanly there,
             // never panic, and never report more than what a full session would produce.
@@ -425,13 +430,13 @@ mod native {
             assert!(report.segments_recovered >= 1);
         }
 
-        #[test]
-        fn recover_file_on_a_file_too_short_for_a_header_errors_never_panics() {
+        #[semio_framework_async_macros::async_test]
+        async fn recover_file_on_a_file_too_short_for_a_header_errors_never_panics() {
             let dir = scratch_dir("recover_too_short");
             let path = dir.join("empty.spk");
             std::fs::write(&path, b"short").unwrap();
             let limits = PackLimits::default();
-            let result = recover_file(&path, &limits);
+            let result = recover_file(&path, &limits).await;
             assert!(matches!(result, Err(PackError::Truncated(_))));
         }
         //#endregion 🔖️Recover

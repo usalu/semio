@@ -30,7 +30,7 @@ mod tests {
     use crate::editor::space_index::{testkit, SpaceIndexCommand};
     
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn request_delete_opens_the_confirm_dialog_without_mutating() {
         let mut app = testkit::new_app();
         app.dispatch_typed(SpaceIndexCommand::CreateArtifact(create_artifact::CreateArtifact { name: "First".into(), kind_id: "draw".into(), now_ms: 1, actor: "user:1".into() }), &semio_framework_plugin::testkit::meta("local")).expect("create artifact");
@@ -49,7 +49,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn request_delete_of_a_missing_row_faults() {
         let mut app = testkit::new_app();
         let error = app.dispatch_typed(SpaceIndexCommand::RequestDeleteArtifact(RequestDeleteArtifact { id: "ghost".into() }), &semio_framework_plugin::testkit::meta("local")).expect_err("missing row must fault");

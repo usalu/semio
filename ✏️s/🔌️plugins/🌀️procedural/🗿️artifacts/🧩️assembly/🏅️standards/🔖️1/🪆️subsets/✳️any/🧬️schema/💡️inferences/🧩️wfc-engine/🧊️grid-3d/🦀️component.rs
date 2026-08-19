@@ -312,21 +312,21 @@ impl Topology for Grid3dTopology {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn face6_edge18_vertex26_offset_counts() {
         assert_eq!(Stencil3d::Face6.offsets().len(), 6);
         assert_eq!(Stencil3d::Edge18.offsets().len(), 18);
         assert_eq!(Stencil3d::Vertex26.offsets().len(), 26);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn all_built_in_stencils_validate() {
         Stencil3d::Face6.validate().unwrap();
         Stencil3d::Edge18.validate().unwrap();
         Stencil3d::Vertex26.validate().unwrap();
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn node_at_and_coords_roundtrip() {
         let mut b = ModelBuilder::new();
         b.add_pattern(1.0);
@@ -337,7 +337,7 @@ mod tests {
         assert_eq!(topo.node_at(3, 0, 0), None);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn open_boundary_corner_has_three_neighbors() {
         let mut b = ModelBuilder::new();
         b.add_pattern(1.0);
@@ -349,7 +349,7 @@ mod tests {
         assert_eq!(out.len(), 3);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn wrap_boundary_connects_all_axes() {
         let mut b = ModelBuilder::new();
         b.add_pattern(1.0);
@@ -361,7 +361,7 @@ mod tests {
         assert_eq!(out.len(), 6);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mask_excludes_inactive_voxels() {
         let mut b = ModelBuilder::new();
         b.add_pattern(1.0);
@@ -376,7 +376,7 @@ mod tests {
         assert_eq!(topo.inactive_cells(), vec![NodeId(13)]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn in_arc_matches_out_arc_on_open_boundary() {
         let mut b = ModelBuilder::new();
         b.add_pattern(1.0);

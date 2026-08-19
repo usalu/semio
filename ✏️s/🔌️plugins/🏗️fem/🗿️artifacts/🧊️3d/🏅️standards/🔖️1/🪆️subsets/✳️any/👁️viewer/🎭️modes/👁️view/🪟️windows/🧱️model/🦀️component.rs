@@ -230,12 +230,12 @@ pub async fn render(doc: &Fem3dSnapshot) -> UiNode {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn quat_z_to_identity_for_parallel_direction() {
         assert_eq!(quat_z_to([0.0, 0.0, 1.0]), [0.0, 0.0, 0.0, 1.0]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn renders_a_scene_node_for_the_bundled_example() {
         let document = crate::artifacts::fem3d::dsl::parse_dsl(crate::artifacts::fem3d::dsl::FEM3D_EXAMPLE_TEXT).expect("example fixture parses");
         let json = serde_json::to_string(&render(&document)).expect("render json");

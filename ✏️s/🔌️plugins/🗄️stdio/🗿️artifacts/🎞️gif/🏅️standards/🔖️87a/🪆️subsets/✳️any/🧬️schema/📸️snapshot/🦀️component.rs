@@ -98,7 +98,7 @@ pub struct GifSnapshot {
 }
 
 impl Default for GifSnapshot {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { schema: STDIO_GIF_DOCUMENT_SCHEMA.into(), width: 0, height: 0, gct: None, background_color_index: 0, pixel_aspect_ratio: 0, images: Vec::new() }
     }
 }

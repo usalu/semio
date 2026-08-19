@@ -62,7 +62,7 @@ pub struct ShootingArtifact {
 
 //#region 🔖️Conversions
 impl Default for ShootingArtifact {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self {
             schema: crate::artifacts::shooting::SHOOTING_DOCUMENT_SCHEMA.into(),
             assets: Vec::new(),
@@ -527,7 +527,7 @@ mod tests {
     use super::*;
     use crate::artifacts::shooting::SHOOTING_DOCUMENT_SCHEMA;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn default_example_fixture_parses() {
         let snapshot = default_snapshot();
         assert_eq!(snapshot.schema, SHOOTING_DOCUMENT_SCHEMA);
@@ -535,7 +535,7 @@ mod tests {
         assert!(!snapshot.assets.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn scene_svg_embeds_active_asset_name_and_shot_shape() {
         let snapshot = default_snapshot();
         let (svg, width, height) = shooting_scene_svg(&snapshot).expect("scene svg via the semio/drawing stdio bridge");
@@ -553,7 +553,7 @@ mod tests {
 
     /// 🌉️ Exercises the ellipse branch the default fixture (shape "rectangle") never hits —
     /// confirms `shooting_shape_path_segments` really emits the two-arc ellipse technique.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn ellipse_shot_shape_renders_via_svg_arc_commands() {
         let mut snapshot = default_snapshot();
         let shot_id = snapshot.active_shot_id.clone();
@@ -567,7 +567,7 @@ mod tests {
         assert!(!svg.contains("<rect") && !svg.contains("<ellipse"), "no raw <rect>/<ellipse> element, only <path>");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn export_svg_uses_scene_render_not_title_card() {
         let snapshot = default_snapshot();
         let document = serde_json::to_value(&snapshot).unwrap();
@@ -580,7 +580,7 @@ mod tests {
     /// 🎥️ The camera used to be reframed to the DWG extent here; now that it's session-only runtime
     /// state (never a document field), the import hook has no channel back into it — this asserts the
     /// surviving intent: import still succeeds and stays schema-valid for a non-trivial extent.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dwg_import_stays_schema_valid_for_a_non_trivial_extent() {
         let drawing = semio_s_plugin_stdio::artifacts::dwg::DwgDrawing { extmin: [0.0, 0.0, 0.0], extmax: [100.0, 200.0, 0.0], ..Default::default() };
         let document = shooting_document_json_from_dwg(&drawing).expect("dwg import never errors");
@@ -589,7 +589,7 @@ mod tests {
         assert!(!snapshot.shots.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dwg_import_never_errors_on_empty_drawing() {
         let drawing = semio_s_plugin_stdio::artifacts::dwg::DwgDrawing::default();
         let document = shooting_document_json_from_dwg(&drawing).expect("dwg import never errors on empty drawing");
@@ -597,7 +597,7 @@ mod tests {
         assert_eq!(snapshot.schema, SHOOTING_DOCUMENT_SCHEMA);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn transparent_background_predicate_covers_empty_and_literal_transparent() {
         assert!(is_transparent_shooting_background(""));
         assert!(is_transparent_shooting_background("transparent"));

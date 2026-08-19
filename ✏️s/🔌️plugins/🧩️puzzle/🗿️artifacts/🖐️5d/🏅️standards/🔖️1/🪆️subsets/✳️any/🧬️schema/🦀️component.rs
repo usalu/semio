@@ -53,7 +53,7 @@ pub struct Puzzle5dArtifact {
 
 //#region 🔖️Conversions
 impl Default for Puzzle5dArtifact {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self::from_snapshot(Puzzle5dSnapshot::default())
     }
 }
@@ -327,7 +327,7 @@ pub async fn next_id<'a>(existing: impl Iterator<Item = &'a str>, prefix: &str) 
 mod engine_relocation_tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn puzzle5d_grip_kinds_compatible_reads_manifest_rows() {
         assert!(puzzle5d_grip_kinds_compatible("port", "port"));
         assert!(puzzle5d_grip_kinds_compatible("vortex", "vortex"));

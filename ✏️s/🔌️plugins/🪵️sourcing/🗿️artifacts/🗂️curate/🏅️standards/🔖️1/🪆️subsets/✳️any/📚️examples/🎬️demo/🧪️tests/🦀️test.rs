@@ -1,11 +1,11 @@
-#[test]
+#[semio_framework_async_macros::async_test]
 async fn primary_asset_is_nonempty() {
     let text = include_str!("../🖼️assets/🗣️example.dsl.semio");
     assert!(text.len() > 8);
 }
 
 //#region 🧪️InferenceLaws
-#[test]
+#[semio_framework_async_macros::async_test]
 async fn inference_determinism_law() {
     use protocol::Inference;
     let text = include_str!("../🖼️assets/🗣️example.dsl.semio");
@@ -14,7 +14,7 @@ async fn inference_determinism_law() {
     assert_eq!(inference, crate::artifacts::curate::standards::v1::subsets::any::schema::inferences::CurateInference::infer(&snapshot));
 }
 
-#[test]
+#[semio_framework_async_macros::async_test]
 async fn inference_default_law() {
     use protocol::Inference;
     assert_eq!(
@@ -23,7 +23,7 @@ async fn inference_default_law() {
     );
 }
 
-#[test]
+#[semio_framework_async_macros::async_test]
 async fn entries_census_the_demo_fixtures_stock_catalog() {
     use protocol::Inference;
     let text = include_str!("../🖼️assets/🗣️example.dsl.semio");

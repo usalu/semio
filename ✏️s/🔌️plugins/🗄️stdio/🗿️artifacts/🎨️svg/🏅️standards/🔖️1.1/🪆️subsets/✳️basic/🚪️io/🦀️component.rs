@@ -98,7 +98,7 @@ pub mod derived_composition {
         use semio_framework_plugin::AnalyzeSource;
         use semio_framework_plugin::ArtifactBuilder as _;
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn conforming_document_composes_and_stamps_basic() {
             let text = r#"<svg xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="10" height="10"/></svg>"#;
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Text(text) }];
@@ -113,7 +113,7 @@ pub mod derived_composition {
             }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn blocklisted_filter_primitive_fails_compose_with_real_diagnostic() {
             let text = r#"<svg xmlns="http://www.w3.org/2000/svg"><filter id="f1"><feTurbulence/></filter></svg>"#;
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Text(text) }];
@@ -121,7 +121,7 @@ pub mod derived_composition {
             assert!(err.diagnostics.iter().any(|d| d.code.0 == CODE_FILTER_PRIMITIVE && d.severity == Severity::Error), "got {:?}", err.diagnostics);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn subset_validator_recheck_flags_no_hard_issue_on_a_clean_builder_document() {
             let snapshot = SvgBasicBuilder::empty().build().expect("empty document builds clean");
             let bytes = <SvgSnapshot as store::ArtifactPack>::encode_pack(&snapshot);

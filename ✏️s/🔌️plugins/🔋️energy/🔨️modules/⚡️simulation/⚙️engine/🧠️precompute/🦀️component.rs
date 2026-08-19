@@ -145,7 +145,7 @@ mod tests {
     use super::*;
     use crate::model::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn precompute_builds_surface_ctf() {
         let model = crate::sim::test_model_single_zone();
         let pre = PrecomputedModel::build(&model, 60, 60);
@@ -153,14 +153,14 @@ mod tests {
         assert!(pre.zone_geometry.contains_key(&EntityId(1)));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn surface_incidence_is_zero_for_unknown_surface() {
         let model = crate::sim::test_model_single_zone();
         let pre = PrecomputedModel::build(&model, 60, 60);
         assert_eq!(pre.surface_incidence(EntityId(999), 45.0, 180.0), 0.0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn surface_incidence_matches_known_surface_normal() {
         let model = crate::sim::test_model_single_zone();
         let pre = PrecomputedModel::build(&model, 60, 60);
@@ -168,7 +168,7 @@ mod tests {
         assert!((-1.0..=1.0).contains(&incidence));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn solar_at_returns_altitude_and_azimuth() {
         let model = crate::sim::test_model_single_zone();
         let pre = PrecomputedModel::build(&model, 60, 60);
@@ -177,7 +177,7 @@ mod tests {
         assert!((0.0..360.0).contains(&az));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn thermostat_overrides_default_setpoints() {
         let mut model = crate::sim::test_model_single_zone();
         model.thermostats.push(Thermostat { id: EntityId(50), zone_id: EntityId(1), heating_setpoint_schedule_id: ScheduleId(1), cooling_setpoint_schedule_id: ScheduleId(1), heating_throttle_range_k: 3.0, cooling_throttle_range_k: 4.0 });
@@ -187,7 +187,7 @@ mod tests {
         assert!((sp.cooling_throttle_k - 4.0).abs() < 1e-9);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fenestration_precompute_derives_from_host_surface() {
         let mut model = crate::sim::test_model_single_zone();
         model.fenestrations.push(Fenestration { id: EntityId(40), name: "Win".into(), surface_id: EntityId(30), u_value_w_m2k: 2.0, shgc: 0.4, vlt: 0.6, area_m2: 2.0, frame_conductance_w_k: 0.0, divider_conductance_w_k: 0.0 });

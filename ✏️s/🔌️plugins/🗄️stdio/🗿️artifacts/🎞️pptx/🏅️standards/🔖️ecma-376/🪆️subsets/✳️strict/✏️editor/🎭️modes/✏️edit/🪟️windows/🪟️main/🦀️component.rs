@@ -47,14 +47,14 @@ mod tests {
     use super::*;
     use crate::artifacts::pptx::schema::snapshot::PptxSlide;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn definition_declares_a_document_window() {
         let def = definition();
         assert_eq!(def.id, WINDOW_KIND_ID);
         assert_eq!(def.body_key, BODY_KEY);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn render_emits_one_page_per_slide_joining_text_bearing_shapes() {
         let mut document = PptxSnapshot::default();
         document.presentation.slides.push(PptxSlide {

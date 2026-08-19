@@ -311,14 +311,14 @@ mod tests {
     use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3;
     use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::Vec3;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn arc_length_of_line_equals_euclidean_distance() {
         let l = Curve3::Line { origin: Pnt3::new(0.0, 0.0, 0.0), dir: Vec3::new(3.0, 4.0, 0.0) };
         let len = arc_length(&l, 0.0, 1.0, 1e-9);
         assert!((len - 5.0).abs() < 1e-6);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn arc_length_of_quarter_circle_matches_closed_form() {
         let frame = Frame3::from_normal(Pnt3::new(0.0, 0.0, 0.0), Vec3::Z).unwrap();
         let c = Curve3::Circle { frame, radius: 2.0 };
@@ -326,7 +326,7 @@ mod tests {
         assert!((len - std::f64::consts::PI).abs() < 1e-6); // quarter of 2*pi*r=4pi, i.e. pi
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn param_at_length_round_trips_with_arc_length() {
         let frame = Frame3::from_normal(Pnt3::new(0.0, 0.0, 0.0), Vec3::Z).unwrap();
         let c = Curve3::Circle { frame, radius: 3.0 };
@@ -337,7 +337,7 @@ mod tests {
         assert!((recomputed - target).abs() < 1e-6);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn closest_point_on_circle_matches_radial_projection() {
         let frame = Frame3::from_normal(Pnt3::new(0.0, 0.0, 0.0), Vec3::Z).unwrap();
         let c = Curve3::Circle { frame, radius: 2.0 };
@@ -348,7 +348,7 @@ mod tests {
         assert!(p.distance(Pnt3::new(2.0, 0.0, 0.0)) < 1e-6);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn closest_point_on_line_matches_perpendicular_foot() {
         let l = Curve3::Line { origin: Pnt3::new(0.0, 0.0, 0.0), dir: Vec3::new(1.0, 0.0, 0.0) };
         let target = Pnt3::new(5.0, 3.0, 0.0);
@@ -357,7 +357,7 @@ mod tests {
         assert!((dist - 3.0).abs() < 1e-6);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn all_extrema_finds_both_near_and_far_points_on_circle() {
         let frame = Frame3::from_normal(Pnt3::new(0.0, 0.0, 0.0), Vec3::Z).unwrap();
         let c = Curve3::Circle { frame, radius: 2.0 };
@@ -389,7 +389,7 @@ mod tests {
         params
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn interpolate_centripetal_passes_through_all_points() {
         let points = vec![Pnt3::new(0.0, 0.0, 0.0), Pnt3::new(1.0, 2.0, 0.0), Pnt3::new(3.0, 1.0, 0.0), Pnt3::new(4.0, 3.0, 1.0)];
         let curve = interpolate_centripetal(&points).unwrap();
@@ -408,7 +408,7 @@ mod tests {
         Pnt3::new(de_boor(&curve.knots, &hx, t) / w, de_boor(&curve.knots, &hy, t) / w, de_boor(&curve.knots, &hz, t) / w)
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn reverse_nurbs_reproduces_the_same_curve_reversed() {
         let l = Curve3::Line { origin: Pnt3::new(0.0, 0.0, 0.0), dir: Vec3::new(1.0, 1.0, 1.0) };
         let nurbs = l.to_nurbs((0.0, 4.0));
@@ -422,7 +422,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn split_nurbs_pieces_reproduce_the_original_curve() {
         let points = vec![Pnt3::new(0.0, 0.0, 0.0), Pnt3::new(1.0, 3.0, 0.0), Pnt3::new(3.0, -1.0, 1.0), Pnt3::new(5.0, 2.0, 2.0), Pnt3::new(6.0, 0.0, 0.0)];
         let curve = interpolate_centripetal(&points).unwrap();
@@ -448,7 +448,7 @@ mod tests {
     mod quick {
         use super::*;
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn closest_point_matches_brute_force_dense_sampling_oracle() {
             let mut rng = semio_framework_geometry::random::Rng::from_seed(61);
             for _ in 0..100 {

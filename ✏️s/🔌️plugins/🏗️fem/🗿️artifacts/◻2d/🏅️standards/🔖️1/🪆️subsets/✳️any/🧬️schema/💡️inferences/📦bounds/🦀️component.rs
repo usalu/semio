@@ -74,18 +74,18 @@ mod tests {
     //#endregion 🧸️Fixtures
 
     //#region 🧪️InferenceLaws
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = sample_snapshot();
         assert_eq!(compute_fem2d_bounds(&snapshot), compute_fem2d_bounds(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(compute_fem2d_bounds(&Fem2dSnapshot::default()), Fem2dBounds::default());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn bounds_matches_hand_built_node_extent() {
         let bounds = compute_fem2d_bounds(&sample_snapshot());
         assert_eq!(bounds.bounding_box.min, [-2.0, 1.0]);

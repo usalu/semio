@@ -25,7 +25,7 @@ mod tests {
     struct Contract {
         vectors: Vec<Vector>,
     }
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn canonical_vector_executes_forward_inverse_stale_and_path_laws() {
         let contract: Contract = serde_json::from_str(include_str!("🔣️component.json")).unwrap();
         let vector = &contract.vectors[0];

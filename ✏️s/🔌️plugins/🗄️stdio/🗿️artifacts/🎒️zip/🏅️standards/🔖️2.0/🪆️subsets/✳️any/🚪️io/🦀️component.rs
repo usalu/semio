@@ -121,7 +121,7 @@ pub enum ZipError {
 }
 
 impl std::fmt::Display for ZipError {
-    async fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Truncated(what) => write!(f, "zip: truncated ({what})"),
             Self::BadSignature { what, at } => write!(f, "zip: bad {what} signature at offset {at}"),
@@ -838,13 +838,13 @@ mod codec_tests {
     }
     //#endregion Fixtures
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn crc32_known_vector() {
         // CRC of "123456789" is 0xCBF43926
         assert_eq!(crc32(b"123456789"), 0xCBF4_3926);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn zip_store_round_trip() {
         let snap = ZipSnapshot {
             schema: STDIO_ZIP_DOCUMENT_SCHEMA.into(),
@@ -859,7 +859,7 @@ mod codec_tests {
         assert_eq!(decoded.entries[1].data, vec![0, 1, 2, 3, 255]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn zip_deflate_round_trip() {
         let snap = ZipSnapshot { schema: STDIO_ZIP_DOCUMENT_SCHEMA.into(), entries: vec![ZipEntry { name: "poem.txt".into(), data: b"deflate inside zip via stdio.deflate raw".to_vec() }], comment: String::new() };
         let bytes = encode_zip(&snap).expect("encode deflate");
@@ -867,7 +867,7 @@ mod codec_tests {
         assert_eq!(decoded.entries[0].data, snap.entries[0].data);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn codec_round_trip() {
         let snap = ZipSnapshot { schema: STDIO_ZIP_DOCUMENT_SCHEMA.into(), entries: vec![ZipEntry { name: "x".into(), data: b"y".to_vec(), ..Default::default() }], comment: String::new() };
         let pack = store::ArtifactPack::encode_pack(&snap);
@@ -883,7 +883,7 @@ mod codec_tests {
     /// 🧪️ Rich synthetic archive: mixed stored+deflate, UTF-8 name, CP437 name, a
     /// data-descriptor entry, a ZIP64-sentineled entry, an unrecognized extra field kept
     /// verbatim, per-entry + archive comments. Exercises every D2 zip requirement at once.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn decode_rich_synthetic_archive() {
         let raw = build_raw_zip(
             vec![
@@ -967,7 +967,7 @@ mod codec_tests {
         assert_eq!(zip64_entry.data, b"tiny payload but declared via a ZIP64 extra field for test purposes".to_vec());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn decode_rejects_unsupported_method() {
         let raw = build_raw_zip(
             vec![RawZipEntry {
@@ -992,7 +992,7 @@ mod codec_tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn decode_rejects_crc_mismatch() {
         let mut raw = build_raw_zip(vec![RawZipEntry { name: b"a.txt".to_vec(), data: b"original".to_vec(), method: 0, flags: 0x0800, extra: Vec::new(), comment: Vec::new(), use_descriptor: false, force_zip64_sentinel: false }], b"");
         // Corrupt the stored payload byte in place (after the 30-byte local header + name).
@@ -1002,7 +1002,7 @@ mod codec_tests {
         assert!(matches!(err, ZipError::Crc32Mismatch { .. }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn deterministic_logical_round_trip() {
         use crate::artifacts::zip::{ZipDiff, ZipMutation};
         use protocol::{DiffAlgebra, DiffCodec, MutationDiff, OpBinary, OpText};
@@ -1060,7 +1060,7 @@ mod codec_tests {
         assert_eq!(crate::artifacts::zip::opc::decode_opc(&canonical_opc).expect("redecode deterministic OPC package"), opc);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn encode_rejects_would_be_zip64_entry_size() {
         // Rather than allocate a real 4GiB buffer, exercise the guard directly: an entry whose
         // *compressed* size would exceed u32::MAX must be rejected, never silently truncated.
@@ -1077,7 +1077,7 @@ mod codec_tests {
         assert_eq!(err, ZipError::UnsupportedZip64Write);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn sniff_recognizes_real_magic_and_rejects_garbage() {
         let snap = ZipSnapshot { schema: STDIO_ZIP_DOCUMENT_SCHEMA.into(), entries: vec![ZipEntry { name: "a".into(), data: b"b".to_vec(), ..Default::default() }], comment: String::new() };
         let real = encode_zip(&snap).expect("encode");

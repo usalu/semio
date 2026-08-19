@@ -93,7 +93,7 @@ pub mod derived_composition {
             "{\"a\":1,\"b\":[1,2,3]}".to_string()
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn conforming_document_composes_and_stamps_i_json() {
             let text = conforming_json_text();
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Text(&text) }];
@@ -101,7 +101,7 @@ pub mod derived_composition {
             assert!(composed.diagnostics.iter().all(|d| d.severity != Severity::Error), "no hard diagnostics expected: {:?}", composed.diagnostics);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn duplicate_member_name_fails_compose_with_real_diagnostic() {
             let text = "{\"a\":1,\"a\":2}".to_string();
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Text(&text) }];
@@ -109,7 +109,7 @@ pub mod derived_composition {
             assert!(err.diagnostics.iter().any(|d| d.code.0 == "stdio.json.i-json.duplicate-member-name" && d.severity == Severity::Error), "got {:?}", err.diagnostics);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn unsafe_integer_fails_compose_with_real_diagnostic() {
             let text = "{\"n\":9007199254740993}".to_string();
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Text(&text) }];
@@ -117,7 +117,7 @@ pub mod derived_composition {
             assert!(err.diagnostics.iter().any(|d| d.code.0 == "stdio.json.i-json.unsafe-integer" && d.severity == Severity::Error), "got {:?}", err.diagnostics);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn subset_validator_recheck_flags_only_soft_diagnostics_for_a_clean_document() {
             let text = "\"just a top-level string\"".to_string();
             let snapshot = <JsonSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parses");

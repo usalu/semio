@@ -104,7 +104,7 @@ impl store::ArtifactPack for SequenceConfig {
 
 
 impl Default for SequenceConfig {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { last_run_json: String::new(), orientation: "leftRight".into(), camera: SequenceCamera::default(), locale: "en-US".into() }
     }
 }
@@ -235,7 +235,7 @@ impl Mutation<SequenceConfig> for SequenceConfigMutation {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn sequence_config_default_matches_the_existing_runtime_defaults() {
         let config = SequenceConfig::default();
         assert!(config.last_run_json.is_empty());
@@ -243,7 +243,7 @@ mod tests {
         assert_eq!(config.locale, "en-US");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn sequence_config_dsl_round_trips() {
         let config = SequenceConfig { last_run_json: "{}".into(), orientation: "topBottom".into(), camera: SequenceCamera { x: 1.0, y: 2.0, zoom: 3.0 }, locale: "de-DE".into() };
         let text = store::ArtifactDsl::print_dsl(&config);
@@ -251,7 +251,7 @@ mod tests {
         assert_eq!(parsed, config);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn sequence_config_pack_round_trips() {
         let config = SequenceConfig { last_run_json: "{\"ok\":true}".into(), orientation: "leftRight".into(), camera: SequenceCamera::default(), locale: "en-US".into() };
         let bytes = store::ArtifactPack::encode_pack(&config);
@@ -269,21 +269,21 @@ mod tests {
         forward
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn config_set_last_run_round_trips() {
         let config = SequenceConfig::default();
         let next = round_trip_config(&config, &SequenceConfigMutation::SetLastRun { json: "{\"ok\":true}".into() });
         assert_eq!(next.last_run_json, "{\"ok\":true}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn config_set_orientation_round_trips() {
         let config = SequenceConfig::default();
         let next = round_trip_config(&config, &SequenceConfigMutation::SetOrientation { value: "topBottom".into() });
         assert_eq!(next.orientation, "topBottom");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn config_set_camera_round_trips() {
         let config = SequenceConfig::default();
         let camera = SequenceCamera { x: 5.0, y: 6.0, zoom: 2.0 };
@@ -291,14 +291,14 @@ mod tests {
         assert_eq!(next.camera, camera);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn config_set_locale_round_trips() {
         let config = SequenceConfig::default();
         let next = round_trip_config(&config, &SequenceConfigMutation::SetLocale { value: "de-DE".into() });
         assert_eq!(next.locale, "de-DE");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn config_op_text_round_trips_every_variant() {
         store::os_store::test_support::assert_op_line_round_trip(&SequenceConfigMutation::Snapshot { config: SequenceConfig::default() });
         store::os_store::test_support::assert_op_line_round_trip(&SequenceConfigMutation::SetLastRun { json: "{}".into() });

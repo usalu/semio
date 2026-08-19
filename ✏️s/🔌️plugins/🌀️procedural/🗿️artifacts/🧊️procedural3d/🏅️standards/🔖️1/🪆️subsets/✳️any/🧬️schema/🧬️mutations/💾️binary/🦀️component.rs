@@ -198,59 +198,59 @@ mod tests {
     use semio_framework_os_kernel::os_store::test_support;
     use store::{create_document_envelope, ArtifactCommand};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_text_round_trip_create_widget() {
         test_support::assert_op_line_round_trip(&Procedural3dMutation::CreateWidget(CreateWidget { index: 2, widget: Widget::InputNote { id: "note-9".into(), text: "hello \"world\"".into() } }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_text_round_trip_delete_widget() {
         test_support::assert_op_line_round_trip(&Procedural3dMutation::DeleteWidget(DeleteWidget { id: "note-9".into() }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_text_round_trip_connect_synapse() {
         test_support::assert_op_line_round_trip(&Procedural3dMutation::ConnectSynapse(ConnectSynapse { index: 1, synapse: SynapseSpec { id: "e1".into(), from: "height".into(), to: "extrude".into(), from_port: "number".into(), to_port: String::new() } }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_text_round_trip_disconnect_synapse() {
         test_support::assert_op_line_round_trip(&Procedural3dMutation::DisconnectSynapse(DisconnectSynapse { id: "e1".into() }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_text_round_trip_move_widget() {
         test_support::assert_op_line_round_trip(&Procedural3dMutation::MoveWidget(MoveWidget { id: "extrude".into(), layout: WidgetLayout { x: 12.5, y: -8.25 } }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_text_round_trip_delete_widget_position() {
         test_support::assert_op_line_round_trip(&Procedural3dMutation::DeleteWidgetPosition(DeleteWidgetPosition { id: "extrude".into() }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_text_round_trip_update_camera() {
         test_support::assert_op_line_round_trip(&Procedural3dMutation::UpdateCamera(UpdateCamera { camera: CameraJson { x: 1.5, y: -2.5, zoom: 1.2 } }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_text_round_trip_change_schema() {
         test_support::assert_op_line_round_trip(&Procedural3dMutation::ChangeSchema(ChangeSchema { new_schema: "flow.fixture".into() }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_text_round_trip_create_generation() {
         let generation = flow::playbook::FormGeneration { id: "generation-1".into(), name: "Generation 1".into(), values: serde_json::Map::new() };
         test_support::assert_op_line_round_trip(&Procedural3dMutation::CreateGeneration(CreateGeneration { generation }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_text_parse_rejects_unknown_operation() {
         let error = <Procedural3dMutation as protocol::OpText>::parse_op("bogus-op id=\"w-1\"").expect_err("unknown operation must fail to parse");
         assert!(error.to_string().contains("unknown operation"), "unexpected error: {error}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn document_text_round_trip_with_operation_applied() {
         let mut store = store::ArtifactStore::<Procedural3dSnapshot, Procedural3dMutation>::new(create_document_envelope(PROCEDURAL_3D_SCHEMA, "procedural3d", Procedural3dSnapshot::default(), None)).expect("valid artifact store fixture");
         store.dispatch(ArtifactCommand::Apply { mutations: vec![Procedural3dMutation::CreateWidget(CreateWidget { index: 3, widget: Widget::InputNote { id: "note-9".into(), text: String::new() } })], description: None }).expect("apply");

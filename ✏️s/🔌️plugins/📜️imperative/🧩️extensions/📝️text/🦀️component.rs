@@ -54,14 +54,16 @@ async fn operator_info(id: &str, name: &str, abbreviation: &str, summary: &str, 
     OperatorInfo { id: id.into(), extension: "text".into(), name: name.into(), abbreviation: abbreviation.into(), icon: "emoji:📝️".into(), summary: summary.into(), inputs, outputs: vec![ChannelSpec::wildcard()], ..Default::default() }
 }
 
-async fn register_simple(registry: &mut Registry, info: OperatorInfo, operation: Box<dyn Operator>) {
-    registry.register_operator(info, vec![OperatorImpl { schemas: vec![], operator: operation }], &[]);
+// 🗺️ Generic over the concrete operator, not `Box<dyn Operator>` — see the sibling note in
+// `🧠️logic/🦀️component.rs` and R11.
+async fn register_simple<O: Operator + 'static>(registry: &mut Registry, info: OperatorInfo, operation: O) {
+    registry.register_operator(info, vec![OperatorImpl { schemas: vec![], operator: Box::new(operation) }], &[]);
 }
 
 pub async fn register(registry: &mut Registry) {
-    register_simple(registry, operator_info("text.concat", "Text Concat", "Cat", "Concatenates two strings and writes the result into scope", vec![string_channel("left"), string_channel("right"), string_channel("into")]), Box::new(TextConcat));
-    register_simple(registry, operator_info("text.uppercase", "Text Uppercase", "Up", "Uppercases a string and writes the result into scope", vec![string_channel("text"), string_channel("into")]), Box::new(TextUppercase));
-    register_simple(registry, operator_info("text.length", "Text Length", "Len", "Returns the character length of a string and writes the result into scope", vec![string_channel("text"), string_channel("into")]), Box::new(TextLength));
+    register_simple(registry, operator_info("text.concat", "Text Concat", "Cat", "Concatenates two strings and writes the result into scope", vec![string_channel("left"), string_channel("right"), string_channel("into")]), TextConcat);
+    register_simple(registry, operator_info("text.uppercase", "Text Uppercase", "Up", "Uppercases a string and writes the result into scope", vec![string_channel("text"), string_channel("into")]), TextUppercase);
+    register_simple(registry, operator_info("text.length", "Text Length", "Len", "Returns the character length of a string and writes the result into scope", vec![string_channel("text"), string_channel("into")]), TextLength);
     registry.finalize();
 }
 
@@ -142,7 +144,7 @@ semio_framework_plugin::extension_exports!(bundle);
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn text_concat_writes_into_scope() {
         let registry = module_registry();
         let input = Dictionary::new().insert("left", Value::Atom(Atom::String("hello ".into()))).insert("right", Value::Atom(Atom::String("world".into()))).insert("into", Value::Atom(Atom::String("greeting".into())));
@@ -151,7 +153,7 @@ mod tests {
         assert_eq!(value, Some("hello world"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn text_uppercase_writes_into_scope() {
         let registry = module_registry();
         let input = Dictionary::new().insert("text", Value::Atom(Atom::String("abc".into()))).insert("into", Value::Atom(Atom::String("upper".into())));
@@ -160,7 +162,7 @@ mod tests {
         assert_eq!(value, Some("ABC"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn text_length_writes_into_scope() {
         let registry = module_registry();
         let input = Dictionary::new().insert("text", Value::Atom(Atom::String("abcd".into()))).insert("into", Value::Atom(Atom::String("len".into())));
@@ -169,7 +171,7 @@ mod tests {
         assert_eq!(value, Some(4.0));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn catalogue_json_lists_text_operators() {
         let registry = module_registry();
         let raw = catalogue_json(&registry);

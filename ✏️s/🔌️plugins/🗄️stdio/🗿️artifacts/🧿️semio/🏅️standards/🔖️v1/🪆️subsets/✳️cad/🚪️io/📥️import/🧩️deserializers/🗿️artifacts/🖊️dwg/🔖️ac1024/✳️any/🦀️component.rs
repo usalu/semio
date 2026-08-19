@@ -46,7 +46,7 @@ mod tests {
         crate::artifacts::dwg::standards::v_ac1024::subsets::any::schema::snapshot::decode_dwg(&bytes).expect("decode sample")
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn produces_empty_but_valid_cad_snapshot() {
         let cad = semio_framework_plugin::resolve_ready(SemioCadFromDwg::deserialize(&sample_dwg())).expect("deserialize");
         assert!(cad.layers.is_empty());
@@ -55,7 +55,7 @@ mod tests {
         assert_eq!(cad.schema, STDIO_SEMIOCAD_DOCUMENT_SCHEMA);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn rejects_missing_version() {
         let bad = DwgSnapshot { version: String::new(), ..DwgSnapshot::default() };
         assert!(semio_framework_plugin::resolve_ready(SemioCadFromDwg::deserialize(&bad)).is_err());

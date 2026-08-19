@@ -51,7 +51,7 @@ pub mod config {
     }
 
     impl Default for CacheConfig {
-        async fn default() -> Self {
+        fn default() -> Self {
             Self { enabled: true, max_entries: 10_000, partial_movie_dir: PathBuf::from("partial_movie_files") }
         }
     }
@@ -72,7 +72,7 @@ pub mod config {
     }
 
     impl Default for AnimateConfig {
-        async fn default() -> Self {
+        fn default() -> Self {
             Self::from_quality(QualityPreset::High)
         }
     }
@@ -138,19 +138,19 @@ pub mod config {
     mod tests {
         use super::*;
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn quality_presets_have_expected_resolution() {
             assert_eq!(QualityPreset::High.resolution(), (1920, 1080));
             assert_eq!(QualityPreset::FourK.resolution(), (3840, 2160));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn config_frame_duration_matches_rate() {
             let cfg = AnimateConfig::default().with_frame_rate(30.0);
             assert!((cfg.frame_duration() - 1.0 / 30.0).abs() < 1e-9);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn all_quality_presets_report_frame_rate_and_resolution() {
             assert_eq!(QualityPreset::Low.frame_rate(), 15.0);
             assert_eq!(QualityPreset::Medium.frame_rate(), 15.0);
@@ -163,7 +163,7 @@ pub mod config {
             assert_eq!(QualityPreset::High.pixel_height(), 1080);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn config_builder_methods_apply() {
             let cfg = AnimateConfig::from_quality(QualityPreset::Low).with_resolution(0, 0).with_output_dir("out").with_media_dir("media2").with_audio_track("track.wav").with_subtitles_path("subs.srt");
             assert_eq!(cfg.width, 1);
@@ -174,13 +174,13 @@ pub mod config {
             assert_eq!(cfg.subtitles_path, Some(PathBuf::from("subs.srt")));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn config_with_frame_rate_clamps_to_minimum() {
             let cfg = AnimateConfig::default().with_frame_rate(-5.0);
             assert_eq!(cfg.frame_rate, 1.0);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn config_aspect_ratio_and_default_cache() {
             let cfg = AnimateConfig::from_quality(QualityPreset::Medium);
             assert!(cfg.cache.enabled);
@@ -252,7 +252,7 @@ pub mod hash {
     mod tests {
         use super::*;
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn animation_hash_is_stable() {
             let input = AnimationHashInput::new("FadeIn", 1.0).with_targets(vec![42]);
             let a = hash_animation(&input);
@@ -260,13 +260,13 @@ pub mod hash {
             assert_eq!(a, b);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn timeline_merkle_orders_children() {
             let h = hash_animation_timeline(vec!["a".into(), "b".into()]);
             assert!(!h.is_empty());
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn hash_scene_config_is_stable_and_sensitive_to_inputs() {
             let a = hash_scene_config(60.0, 1920, 1080, 3);
             let b = hash_scene_config(60.0, 1920, 1080, 3);
@@ -275,7 +275,7 @@ pub mod hash {
             assert_ne!(a, c);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn hash_animation_differs_by_rate_and_extras() {
             let base = AnimationHashInput::new("Fade", 1.0);
             let with_rate = base.clone().with_rate("smooth");
@@ -291,7 +291,7 @@ pub mod graph {
 
     use crate::editor::animate::engine::text::color::Color;
     use crate::editor::animate::engine::geometry::geometry::{arrow, circle, line};
-    use crate::editor::animate::engine::scene::sobject::{Group, Sobject};
+    use crate::editor::animate::engine::scene::sobject::{Group, Sobject, Sobjects};
     use crate::editor::animate::engine::text::text::Text;
     use geometry::Point;
     use std::collections::HashMap;
@@ -306,15 +306,15 @@ pub mod graph {
     impl Graph {
         pub async fn new(nodes: Vec<u32>, edges: Vec<(u32, u32)>, radius: f64, center: Point, color: Color) -> Self {
             let positions = circular_layout(&nodes, radius, center);
-            let mut children: Vec<Box<dyn Sobject>> = Vec::new();
+            let mut children: Vec<Sobjects> = Vec::new();
             for &(a, b) in &edges {
                 if let (Some(&pa), Some(&pb)) = (positions.get(&a), positions.get(&b)) {
-                    children.push(Box::new(line(pa, pb, color.with_alpha(0.6), 2.0)));
+                    children.push((line(pa, pb, color.with_alpha(0.6), 2.0)).into());
                 }
             }
             for &n in &nodes {
                 if let Some(&p) = positions.get(&n) {
-                    children.push(Box::new(circle(p, 0.2, color, None, 0.0)));
+                    children.push((circle(p, 0.2, color, None, 0.0)).into());
                 }
             }
             Self { group: Group::new(children), nodes, edges }
@@ -326,7 +326,7 @@ pub mod graph {
                     let mid = Point::new((pa.x() + pb.x()) / 2.0, (pa.y() + pb.y()) / 2.0);
                     let mut t = Text::new(label, color);
                     t.inner.move_to(mid);
-                    self.group.add_child(Box::new(t.inner));
+                    self.group.add_child((t.inner).into());
                 }
             }
             self
@@ -344,7 +344,7 @@ pub mod graph {
         pub async fn new(nodes: Vec<u32>, edges: Vec<(u32, u32)>, radius: f64, center: Point, color: Color) -> Self {
             let positions = force_layout_seed(&nodes, &edges, radius, center);
             let node_r = 0.18;
-            let mut children: Vec<Box<dyn Sobject>> = Vec::new();
+            let mut children: Vec<Sobjects> = Vec::new();
             for &(a, b) in &edges {
                 if let (Some(&pa), Some(&pb)) = (positions.get(&a), positions.get(&b)) {
                     let dir = pb - pa;
@@ -352,12 +352,12 @@ pub mod graph {
                     let u = dir / len;
                     let start = pa + u * node_r;
                     let end = pb - u * node_r;
-                    children.push(Box::new(arrow(start, end, color.with_alpha(0.7), 2.0, 0.15)));
+                    children.push((arrow(start, end, color.with_alpha(0.7), 2.0, 0.15)).into());
                 }
             }
             for &n in &nodes {
                 if let Some(&p) = positions.get(&n) {
-                    children.push(Box::new(circle(p, node_r, color, Some(Color::WHITE), 1.0)));
+                    children.push((circle(p, node_r, color, Some(Color::WHITE), 1.0)).into());
                 }
             }
             Self { group: Group::new(children), nodes, edges }
@@ -369,7 +369,7 @@ pub mod graph {
                     let mid = Point::new((pa.x() + pb.x()) / 2.0, (pa.y() + pb.y()) / 2.0);
                     let mut t = Text::new(label, color);
                     t.inner.move_to(mid);
-                    self.group.add_child(Box::new(t.inner));
+                    self.group.add_child((t.inner).into());
                 }
             }
             self
@@ -438,14 +438,14 @@ pub mod graph {
     mod tests {
         use super::*;
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn graph_has_node_and_edge_children() {
             let g = Graph::new(vec![1, 2, 3], vec![(1, 2), (2, 3)], 2.0, Point::ZERO, Color::BLUE);
             assert_eq!(g.nodes.len(), 3);
             assert!(!g.group.children.is_empty());
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn digraph_uses_arrows_and_labels() {
             let dg = DiGraph::new(vec![1, 2], vec![(1, 2)], 2.0, Point::ZERO, Color::WHITE);
             assert_eq!(dg.edges.len(), 1);

@@ -14,7 +14,7 @@ pub struct VcsIntoTxt;
 impl Serializer<VcsSnapshot> for VcsIntoTxt {
     const INTO: Dialect = TXT_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    async fn serialize(_from: &VcsSnapshot) -> IoResult<IoPayload> {
+    fn serialize(_from: &VcsSnapshot) -> IoResult<IoPayload> {
         Err(IoError { message: "txt export not yet implemented".to_string(), diagnostics: Vec::new() })
     }
 }

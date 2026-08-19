@@ -175,7 +175,7 @@ pub struct BcfSnapshot {
 }
 
 impl Default for BcfSnapshot {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { schema: STDIO_BCF_DOCUMENT_SCHEMA.into(), version: String::new(), topics: Vec::new(), parts: Vec::new() }
     }
 }

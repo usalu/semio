@@ -100,7 +100,7 @@ mod canonical_vectors {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn every_topology_leaf_executes_its_shared_vectors() {
         assert_unsigned(include_str!("boundary-loops/🧪️contract/🔣️component.json"), boundary_loops::infer, boundary_loops::unavailable_measure);
         assert_signed(include_str!("euler-characteristic/🧪️contract/🔣️component.json"), euler_characteristic::infer, euler_characteristic::unavailable_measure);

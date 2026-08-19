@@ -205,6 +205,18 @@ pub mod os_directory;
 #[path = "../../../../🔨️modules/🚪️io/🦀️component.rs"]
 pub mod os_io;
 
+// 🪡 Crate-root aliases the `compose_thunk!`/`io_run_thunk!`/`io_sniff_thunk!` macros need.
+// Those macros live in the shared io file and refer to `$crate::io`, `$crate::io_schema`,
+// `$crate::ErasedComposeSource` and `$crate::ComposeFuture`. `$crate` expands to whichever crate
+// is compiling the file — in `semio-framework` those names sit at its root, but here the module is
+// mounted as `os_io` and the root `io` name is free (this crate's `pub use pack::io` is nested
+// inside `os_pack`), so the macros could not resolve and every thunk-using row failed to compile.
+// `io_schema` above is already root-mounted for exactly the same "resolves in whichever crate
+// compiles the shared file" reason; these two lines complete that contract rather than inventing a
+// new one. Part of recorded debt D2 — the double-mount itself still goes away wholesale at W6.
+pub use crate::os_io as io;
+pub use crate::os_io::{ComposeFuture, ErasedComposeSource};
+
 // 🧬️ `io`'s pure `StandardId`/`SubsetId`/`Dialect`/`ArtifactDialect`/`ArtifactKindId`/`ArtifactRef`
 // vocabulary (ticket 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM W1-A task 1) is mounted
 // ONCE, here — it has no `store::`/registry dependency, so unlike `os_io` above it does not need

@@ -137,22 +137,22 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_text_round_trip_edit_lhs() {
         assert_op_line_round_trip(&edit_lhs("{}".into()));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_text_round_trip_change_parameter_binding() {
         assert_op_line_round_trip(&change_parameter_binding("count".into(), PropertyValue::Number(4.0)));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_text_round_trip_remove_rule_layout_point() {
         assert_op_line_round_trip(&remove_rule_layout_point("a".into()));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn document_text_round_trip_rewrite_rule_store() {
         let base = sample_rule_state();
         let mut store = RewriteRuleStore::new(create_rewrite_rule_envelope("test", base.clone()));
@@ -163,7 +163,7 @@ mod tests {
         assert_document_pack_round_trip(&store);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_text_parse_op_errors_on_unknown_keyword() {
         let err = <RewriteRuleMutation as protocol::OpText>::parse_op("bogus xyz").unwrap_err();
         assert!(err.message.contains("unknown mutation line"));
@@ -171,7 +171,7 @@ mod tests {
 
     /// 🎫️ CW7 command-envelope law: proves `RewriteRuleMutation`'s `Edit` round-trips through
     /// `protocol::MutationEnvelope`s.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn command_envelope_round_trip_holds_for_an_applied_operation() {
         use protocol::{ArtifactId, Edit, SchemaId};
 
@@ -183,7 +183,7 @@ mod tests {
     }
 
     //#region 🔖️MutationLaws
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn edit_mutations_inverse_law() {
         let base = sample_rule_state();
         assert_mutation_inverse_law(&base, &edit_before_fixture("{}".into()));
@@ -191,7 +191,7 @@ mod tests {
         assert_mutation_inverse_law(&base, &edit_rhs("{}".into()));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn parameter_binding_mutations_inverse_law() {
         let base = sample_rule_state();
         assert_mutation_inverse_law(&base, &change_parameter_binding("count".into(), PropertyValue::Number(9.0)));
@@ -200,7 +200,7 @@ mod tests {
         assert_mutation_inverse_law(&base, &remove_parameter_binding("ghost".into()));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn rule_layout_point_mutations_inverse_law() {
         let base = sample_rule_state();
         assert_mutation_inverse_law(&base, &change_rule_layout_point("a".into(), LayoutPoint::from((1.0, 2.0))));
@@ -209,7 +209,7 @@ mod tests {
         assert_mutation_inverse_law(&base, &remove_rule_layout_point("ghost".into()));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn edit_lhs_diff_absorb_law() {
         let base = sample_rule_state();
         let d1 = protocol::Mutation::diff(&edit_lhs("{\"a\":1}".into()), &base).diff().clone();
@@ -218,7 +218,7 @@ mod tests {
         assert_mutation_diff_absorb_law(&base, d1, d2);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dispatch_registers_semantic_descriptors() {
         register_rewrite_rule_mutation_descriptors();
         for kind in <RewriteRuleMutation as protocol::SemanticMutation<RewriteSnapshot>>::kinds() {

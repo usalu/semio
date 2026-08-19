@@ -21,7 +21,7 @@ impl Deserializer<WriterSnapshot> for JsonIntoWriter {
     /// restores the ephemeral working-scene text cache; that is a documented, orthogonal gap, not a
     /// json-specific loss).
     const FIDELITY: IoFidelity = IoFidelity::Exact;
-    async fn deserialize(payload: &IoPayload) -> IoResult<WriterSnapshot> {
+    fn deserialize(payload: &IoPayload) -> IoResult<WriterSnapshot> {
         let IoPayload::Text(text) = payload else {
             return Err(IoError { message: "JsonIntoWriter: expected a text payload".to_string(), diagnostics: Vec::new() });
         };
@@ -36,7 +36,7 @@ impl Deserializer<WriterSnapshot> for JsonIntoWriter {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn json_into_writer_round_trips_a_real_snapshot() {
         let original = crate::artifacts::writer::writer_snapshot_with_text("writer.document", "id", "plain", "writer://id", "hello");
         let text = serde_json::to_string(&original).expect("serialize");

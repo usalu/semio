@@ -30,19 +30,19 @@ pub async fn print_dsl(document: &En1992Snapshot) -> String {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn document_dsl_round_trips() {
         store::os_store::test_support::assert_dsl_round_trip(&En1992Snapshot::default());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dsl_round_trip_agrees_with_print_parse_wrappers() {
         let document = En1992Snapshot::default();
         let printed = print_dsl(&document);
         assert_eq!(parse_dsl(&printed).expect("parse printed document"), document);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn document_dsl_parse_error_reports_the_real_line_of_the_bad_field() {
         // The engine's per-token spans are a concrete improvement over the old `dsl_kv` printer,
         // whose errors always reported `TextSpan::at(1, 1)` regardless of which line actually
@@ -58,7 +58,7 @@ mod tests {
         assert_eq!(error.span.line, bad_line, "error span must point at the actual malformed line, not (1, 1)");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn liquid_retaining_fem_anchor_example_fixture_parses_and_round_trips() {
         use crate::artifacts::en1992::part_1_2::FireRating;
         use crate::artifacts::en1992::part_3::TightnessClass;
@@ -77,7 +77,7 @@ mod tests {
 mod semio_grammar_conformance {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn component_grammar_semio_is_grammar_dialect() {
         let g = ::dsl::parse_grammar(COMPONENT_GRAMMAR_SEMIO).expect("parse grammar.semio");
         assert_eq!(g.dialect, ::dsl::SemioDialect::Grammar);

@@ -26,7 +26,7 @@ mod tests {
     use super::*;
     use crate::artifacts::cad::testkit::sample_scene;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn cad_scene_round_trips_through_pack() {
         store::os_store::test_support::assert_dsl_pack_equivalence(&sample_scene());
         let bytes = encode(&sample_scene());
@@ -38,7 +38,7 @@ mod tests {
     /// `CadMutation`'s `Edit` round-trips through `protocol::MutationEnvelope`s beside this file's
     /// existing dsl/pack round-trip laws (same pattern as `mathematical_pack`'s own
     /// `command_envelope_round_trip_holds_for_an_applied_operation`).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn command_envelope_round_trip_holds_for_an_applied_operation() {
         use crate::artifacts::cad::mutations::create_shape_model::mutation::CreateShapeModel;
         use crate::artifacts::cad::op::CadMutation;

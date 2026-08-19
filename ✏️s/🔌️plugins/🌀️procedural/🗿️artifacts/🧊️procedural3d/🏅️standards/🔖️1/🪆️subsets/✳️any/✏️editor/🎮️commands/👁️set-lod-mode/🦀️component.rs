@@ -24,7 +24,7 @@ mod tests {
     use crate::editor::procedural3d::Procedural3dCommand;
     use crate::editor::procedural3d::commands::set_active_utility;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_lod_mode_is_a_view_action_with_no_artifact_mutations() {
         let _serial = crate::editor::procedural3d::test_support::lock();
         let mut app = app();
@@ -33,7 +33,7 @@ mod tests {
         assert_eq!(app.snapshot().expect("snapshot"), before, "setLodMode must not mutate the document");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_active_utility_switch_clears_scratch_and_emits_no_operations() {
         let _serial = crate::editor::procedural3d::test_support::lock();
         let mut app = app_with_registry();

@@ -46,7 +46,7 @@ mod tests {
     use super::*;
     use crate::editor::imperative::testkit::{imperative_app, render as render_body};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inspection_shows_step_count_summary() {
         let mut app = imperative_app();
         assert!(render_body(&mut app, IMPERATIVE_PLAY_BODY_INSPECTOR).contains("imperative-play-inspector.steps"));

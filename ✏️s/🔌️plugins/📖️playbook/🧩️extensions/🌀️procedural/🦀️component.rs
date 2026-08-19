@@ -844,7 +844,7 @@ mod tests {
         .unwrap()
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn module_app_declares_window_kinds() {
         let app = create_module_app().expect("MODULE_APP_ID must be a canonical surface id");
         assert_eq!(app.definition.window_kinds.len(), 2);
@@ -854,7 +854,7 @@ mod tests {
         assert_eq!(app.definition.window_kinds[1].body_key, BODY_PREVIEW);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn module_manifest_contributes_building_component() {
         let bundle = module_extension_bundle();
         let manifest = bundle.manifest;
@@ -867,7 +867,7 @@ mod tests {
         assert_eq!(payload["previewBodyKey"], BODY_PREVIEW);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn preview_body_emits_world_scene() {
         let mut app = new_app();
         let document = payload_json(json!({ "height": 6.0, "radius": 0.5, "sides": 6.0 }));
@@ -875,14 +875,14 @@ mod tests {
         assert!(matches!(node, UiNode::ComponentScene(_)));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn params_body_lists_flow_inputs() {
         let mut app = new_app();
         let node = app.render(BODY_PARAMS, None, &ViewModel::default()).expect("render");
         assert!(matches!(node, UiNode::Stack(_)));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn params_body_includes_media_export_buttons() {
         let mut app = new_app();
         let node = app.render(BODY_PARAMS, None, &ViewModel::default()).expect("render");
@@ -893,7 +893,7 @@ mod tests {
         assert_eq!(button_count, SOLID_MEDIA_FORMATS.len() * 2);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn export_solid_action_stashes_result_and_is_undoable() {
         let mut app = new_app();
         assert!(app.snapshot().expect("projection").params.get("__solidExport").is_none());
@@ -906,14 +906,14 @@ mod tests {
         assert!(app.snapshot().expect("projection").params.get("__solidExport").is_none(), "undo restores the pre-operation payload");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn import_solid_action_stashes_result_on_params() {
         let mut app = new_app();
         app.handle_action(ACTION_IMPORT_SOLID, Some(&json!({ "format": "obj", "data": "v 0 0 0\nv 1 0 0\nv 0 1 0\nf 1 2 3\n" })), &meta()).expect("import");
         assert!(app.snapshot().expect("projection").params.get("__solidImport").is_some(), "import result stashed on params via the SetPayload operation");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn import_solid_action_reports_error_when_no_data_given() {
         let mut app = new_app();
         app.handle_action(ACTION_IMPORT_SOLID, Some(&json!({ "format": "obj" })), &meta()).expect("import");
@@ -922,7 +922,7 @@ mod tests {
         assert!(import.get("error").is_some());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn export_solid_declares_only_format_arg_and_materializes_default() {
         use semio_framework_plugin::app::AppActionRegistry;
         let definition = create_module_app().expect("MODULE_APP_ID must be a canonical surface id").definition;
@@ -938,7 +938,7 @@ mod tests {
         assert!(app.snapshot().expect("projection").params.get("__solidExport").is_some(), "export result stashed under the materialized format");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn unknown_action_yields_no_document_change() {
         let mut app = new_app();
         let before = app.snapshot().expect("projection");
@@ -946,7 +946,7 @@ mod tests {
         assert_eq!(app.snapshot().expect("snapshot"), before);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn module_labels_resolve_native_english_by_default() {
         let labels = ModuleLabels::labels(Locale::En, Terminology::Native);
         assert_eq!(labels.no_flow_inputs.as_str(), "No flow inputs.");
@@ -956,7 +956,7 @@ mod tests {
         assert!(json.contains("No procedural parameters."));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn module_labels_resolve_german_locale() {
         let labels = ModuleLabels::labels(Locale::De, Terminology::Native);
         assert_eq!(labels.no_flow_inputs.as_str(), "Keine Flow-Eingaben.");
@@ -968,13 +968,13 @@ mod tests {
     }
 
     //#region 🔖️DslAndOpText
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn module_render_payload_dsl_round_trips() {
         store::os_store::test_support::assert_dsl_round_trip(&default_payload());
         store::os_store::test_support::assert_dsl_pack_equivalence(&default_payload());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn module_payload_operation_op_text_round_trips() {
         store::os_store::test_support::assert_op_line_round_trip(&ModulePayloadMutation::SetPayload { payload: default_payload() });
     }
@@ -986,7 +986,7 @@ mod tests {
     /// `command_envelope_round_trip_holds_for_an_applied_operation`). Dispatches through a standalone
     /// `store::ArtifactStore` directly (this app has no separate dsl/pack/protocol crate split, so
     /// there is no existing whole-store test to extend).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn command_envelope_round_trip_holds_for_an_applied_operation() {
         use protocol::{ArtifactId, Edit, SchemaId};
         use store::{create_document_envelope, ArtifactCommand, ArtifactStore};

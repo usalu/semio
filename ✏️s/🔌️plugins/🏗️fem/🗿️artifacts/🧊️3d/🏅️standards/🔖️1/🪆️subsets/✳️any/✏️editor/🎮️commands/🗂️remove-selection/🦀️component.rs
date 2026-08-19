@@ -51,7 +51,7 @@ mod tests {
     use crate::editor::fem3d::testkit::{dispatch, fem3d_app};
     use crate::editor::fem3d::Fem3dCommand;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn remove_selection_covers_solids_3d() {
         let mut app = fem3d_app();
         dispatch(
@@ -63,7 +63,7 @@ mod tests {
         assert!(app.snapshot().expect("snapshot").solids.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn remove_selection_with_unknown_ids_is_a_no_op() {
         let mut app = fem3d_app();
         dispatch(&mut app, Fem3dCommand::RemoveSelection(RemoveSelection { ids: vec!["missing".into()] }));

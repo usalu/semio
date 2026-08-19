@@ -51,7 +51,7 @@ mod tests {
     /// carrying the replacement document's pack bytes, not an `artifact_mutations` entry — `dispatch`'s
     /// in-process `VcsArtifactApp` never applies `effects` to its own store (that's the real host's
     /// job), so this asserts on `requested_effects` rather than through `app.snapshot()`.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn curate_and_example_actions_survive_registry_enforcement() {
         let mut app = crate::editor::sourcing::testkit::new_app_with_registry();
         let result = app
@@ -70,14 +70,14 @@ mod tests {
         app.handle_action("undo", None, &semio_framework_plugin::testkit::meta("local")).expect("undo");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn initial_document_has_populated_demo_stock() {
         let app = new_app();
         let document = app.snapshot().expect("snapshot");
         assert!(!document.stock_extra.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_active_example_loads_the_demo_stock_or_empty_curation_fixture() {
         let (snapshot, history) = empty_view();
         let doc = ArtifactView::new(&snapshot, &history);
@@ -89,7 +89,7 @@ mod tests {
         assert!(load_document_pack(&emit).curated.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_artifact_json_emits_a_load_document_effect_for_the_parsed_snapshot() {
         let (snapshot, history) = empty_view();
         let doc = ArtifactView::new(&snapshot, &history);
@@ -100,7 +100,7 @@ mod tests {
         assert_eq!(load_document_pack(&emit), expected);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn stock_from_catalogue_merges_built_in_kinds_without_duplicating() {
         let (empty, history) = (empty_document(), HistoryView::empty());
         let doc = ArtifactView::new(&empty, &history);

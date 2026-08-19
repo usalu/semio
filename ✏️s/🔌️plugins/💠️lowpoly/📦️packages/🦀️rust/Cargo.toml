@@ -47,3 +47,6 @@ optional = true
 # one component is a `rust-lld: duplicate symbol` link error. Only surfaces at link time — never in
 # `cargo check`/`cargo test` — so it stays invisible until something actually builds the component.
 default-features = false
+
+[dev-dependencies]
+semio-framework-async-macros = { path = "../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }

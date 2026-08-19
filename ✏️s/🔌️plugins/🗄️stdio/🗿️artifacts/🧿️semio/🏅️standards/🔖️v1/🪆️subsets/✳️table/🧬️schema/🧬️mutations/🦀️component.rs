@@ -88,7 +88,7 @@ mod tests {
 
     /// 🧪️ CRITICAL alignment invariant: creating a column inserts a `Null` cell at the same index
     /// into EVERY row.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_column_keeps_rows_aligned() {
         let base = fixture();
         let create = SemioTableMutation::CreateColumn(create_column::mutation::CreateColumn { name: "notes".into(), kind: SemioTableCellKind::Str, index: Some(1) });
@@ -106,7 +106,7 @@ mod tests {
     /// 🧪️ CRITICAL alignment invariant: deleting a column removes the aligned cell from EVERY
     /// row, and the cascade-capturing inverse restores the exact original per-row cell values (not
     /// just `Null`).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn delete_column_captures_full_row_cascade_for_inverse() {
         let base = fixture();
         let delete = SemioTableMutation::DeleteColumn(delete_column::mutation::DeleteColumn { name: "label".into() });
@@ -125,7 +125,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn delete_column_of_an_absent_name_has_an_empty_inverse() {
         let base = fixture();
         let delete = SemioTableMutation::DeleteColumn(delete_column::mutation::DeleteColumn { name: "missing".into() });
@@ -133,7 +133,7 @@ mod tests {
         assert_eq!(delete.diff(&base).diff().apply(&base).expect("apply must succeed for a well-formed fixture"), base, "an absent-name delete is a no-op");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn rename_column_round_trips() {
         let base = fixture();
         let rename = SemioTableMutation::RenameColumn(rename_column::mutation::RenameColumn { name: "label".into(), new_name: "title".into() });
@@ -144,7 +144,7 @@ mod tests {
 
     /// 🧪️ CRITICAL alignment invariant: reordering a column applies the identical remove-then-
     /// insert to every row's cells.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn reorder_columns_keeps_rows_aligned() {
         let base = fixture();
         let reorder = SemioTableMutation::ReorderColumns(reorder_columns::mutation::ReorderColumns { name: "score".into(), to_index: 0 });
@@ -157,7 +157,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn insert_remove_row_round_trips() {
         let base = fixture();
         let new_row = SemioTableRow { cells: vec![SemioValue::Str { value: "c".into() }, SemioValue::Float { lexeme: "3.000".into() }] };
@@ -176,7 +176,7 @@ mod tests {
         assert_eq!(after_remove.rows[0], base.rows[1]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn remove_row_of_an_out_of_range_index_has_an_empty_inverse() {
         let base = fixture();
         let remove = SemioTableMutation::RemoveRow(remove_row::mutation::RemoveRow { index: 99 });
@@ -184,7 +184,7 @@ mod tests {
         assert_eq!(remove.diff(&base).diff().apply(&base).expect("apply must succeed for a well-formed fixture"), base, "an out-of-range remove is a no-op");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn reorder_rows_round_trips() {
         let base = fixture();
         let reorder = SemioTableMutation::ReorderRows(reorder_rows::mutation::ReorderRows { from: 0, to: 1 });
@@ -193,7 +193,7 @@ mod tests {
         assert_eq!(after.rows[1], base.rows[0]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn edit_cell_round_trips() {
         let base = fixture();
         let edit = SemioTableMutation::EditCell(edit_cell::mutation::EditCell { row_index: 0, column_name: "score".into(), new_value: SemioValue::Float { lexeme: "9.000".into() } });
@@ -205,7 +205,7 @@ mod tests {
         assert!(missing.inverse(&base).is_empty(), "editing an absent row has nothing to undo");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn semantic_kinds_cover_every_variant() {
         assert_eq!(SemioTableMutation::kinds().len(), 8);
         let mutation = SemioTableMutation::RemoveRow(remove_row::mutation::RemoveRow { index: 2 });

@@ -44,7 +44,7 @@ mod tests {
     use crate::editor::flow::testkit::{dispatch, dispatch_with_registry, flow_app_with_registry, select_graph};
     use crate::editor::flow::{FlowCommand, FLOW_PLAY_BODY_MAIN};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn delete_selection_deletes_the_widgets_picked_via_interaction_select() {
         let mut app = flow_app_with_registry();
         select_graph(&mut app, &["slider"], &[]);
@@ -53,7 +53,7 @@ mod tests {
         assert!(!app.snapshot().expect("snapshot").to_fixture().widgets.iter().any(|widget| crate::artifacts::flow::schema::widget_id(widget) == "slider"), "slider must be deleted");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn delete_selection_action_removes_selected_synapses() {
         let mut app = flow_app_with_registry();
         let before = app.snapshot().expect("snapshot").to_fixture().synapses.len();
@@ -69,7 +69,7 @@ mod tests {
     /// selection (framework-owned now) — kept only because the shared `NodeGraph` canvas renderer
     /// (framework layer, unmigrated this wave) still dispatches it on right-click; a blank id (or any
     /// id) is a genuine no-operation.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn context_menu_at_is_a_no_operation() {
         use crate::editor::flow::commands::context_menu_at;
         let mut app = flow_app_with_registry();

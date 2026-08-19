@@ -314,7 +314,7 @@ pub async fn puzzle5d_document_delta_operations(before: &Value, after: &Value) -
 pub struct Puzzle5dPlaySnapshot(pub Value);
 
 impl PartialEq for Puzzle5dPlaySnapshot {
-    async fn eq(&self, other: &Self) -> bool {
+    fn eq(&self, other: &Self) -> bool {
         store::pack_rt::json_values_equal(&self.0, &other.0)
     }
 }
@@ -391,7 +391,7 @@ impl protocol::SemanticMutation<Puzzle5dPlaySnapshot> for Puzzle5dMutation {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn puzzle5d_delta_ops_round_trip_and_stay_granular() {
         let before = serde_json::json!({
             "schema": crate::artifacts::puzzle5d::PUZZLE_5D_SCHEMA, "domain": "architecture",
@@ -433,7 +433,7 @@ mod tests {
     use protocol::testkit::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
     use protocol::SemanticMutation;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn move_part_2d_diff_absorb_law() {
         use crate::artifacts::puzzle5d::Puzzle5dPart;
         let base = empty();
@@ -449,7 +449,7 @@ mod tests {
         Puzzle5dSnapshot::default()
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_delete_part_inverse_law() {
         use crate::artifacts::puzzle5d::Puzzle5dPart;
         let base = empty();
@@ -459,7 +459,7 @@ mod tests {
         assert_mutation_inverse_law(&with_part, &delete_part("p1".into()));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn part_field_mutations_inverse_law() {
         use crate::artifacts::puzzle5d::{Puzzle5dGrip, Puzzle5dPart, Puzzle5dPartAnchor, Puzzle5dScale};
         let base = empty();
@@ -483,7 +483,7 @@ mod tests {
         assert_mutation_inverse_law(&with_part, &replace_part_grip("p1".into(), "g1".into(), Puzzle5dGrip { id: "g1".into(), grip_kind: Some("k".into()), grip_2d: Default::default(), grip_3d: Default::default() }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn connect_disconnect_grips_inverse_law_and_cascade() {
         use crate::artifacts::puzzle5d::{Puzzle5dGrip, Puzzle5dPart};
         let base = empty();
@@ -503,7 +503,7 @@ mod tests {
         assert_mutation_inverse_law(&connected, &deleted);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn document_scalar_mutations_inverse_law() {
         use crate::artifacts::puzzle5d::{Puzzle5dCompatSpecificity, Puzzle5dKindCatalogs};
         let base = empty();
@@ -516,7 +516,7 @@ mod tests {
         assert_mutation_inverse_law(&base, &replace_kind_catalogs(Some(Puzzle5dKindCatalogs::default())));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dispatch_registers_semantic_descriptors() {
         register_puzzle5d_mutation_descriptors();
         for kind in Puzzle5dMutation::kinds() {
@@ -531,7 +531,7 @@ mod tests {
     // `📓️w3-f-block-puzzle-report.md` for the `assert_outcome_policy_matrix` pending-helper note.
     use protocol::testkit::{assert_fatal_never_applies, assert_missing_target_is_error};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn missing_target_is_error_per_verb_family() {
         let base = empty();
         assert_missing_target_is_error(&base, &delete_part("missing".into())); // delete
@@ -542,7 +542,7 @@ mod tests {
         assert_missing_target_is_error(&base, &disconnect_grips("missing".into())); // disconnect/unbind
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_duplicate_id_is_fatal_and_never_applies() {
         use crate::artifacts::puzzle5d::Puzzle5dPart;
         let mut base = empty();

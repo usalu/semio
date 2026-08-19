@@ -159,7 +159,7 @@ mod tests {
         forward
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn every_variant_registers_an_approved_semantic_descriptor() {
         for mutation in every_mutation() {
             let descriptor = protocol::SemanticMutation::semantics(&mutation);
@@ -168,7 +168,7 @@ mod tests {
         assert_eq!(<En1997Mutation as protocol::SemanticMutation<En1997Snapshot>>::kinds().len(), every_mutation().len(), "kinds() must register exactly one descriptor per dispatch variant");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn every_variant_round_trips_via_inverse() {
         let base = En1997Snapshot::default();
         for mutation in every_mutation() {
@@ -176,7 +176,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn from_snapshot_round_trips_via_full_document_replacement() {
         let base = En1997Snapshot::default();
         let mut target = En1997Snapshot::default();
@@ -194,7 +194,7 @@ mod tests {
     /// ⚖️ Shared law helpers from `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️testkit/🦀️component.rs`
     /// (reachable here as `protocol::os_spr::testkit`), exercised against three structurally distinct
     /// variants.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn change_annex_satisfies_the_inverse_and_absorb_laws() {
         let base = En1997Snapshot::default();
         let mutation = En1997Mutation::ChangeAnnex(change_annex::mutation::ChangeAnnex { new_annex: crate::document::AnnexChoice::En });
@@ -203,7 +203,7 @@ mod tests {
         let d2 = En1997Mutation::ChangeDesignApproach(change_design_approach::mutation::ChangeDesignApproach { new_design_approach: "da2".to_string() }).diff(&base).diff().clone();
         protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn change_v_ed_kn_satisfies_the_inverse_and_absorb_laws() {
         let base = En1997Snapshot::default();
         let mutation = En1997Mutation::ChangeVEdKn(change_v_ed_kn::mutation::ChangeVEdKn { new_v_ed_kn: 620.0 });
@@ -212,7 +212,7 @@ mod tests {
         let d2 = En1997Mutation::ChangePileNProfiles(change_pile_n_profiles::mutation::ChangePileNProfiles { new_pile_n_profiles: 3 }).diff(&base).diff().clone();
         protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn change_design_approach_satisfies_the_inverse_and_absorb_laws() {
         let base = En1997Snapshot::default();
         let mutation = En1997Mutation::ChangeDesignApproach(change_design_approach::mutation::ChangeDesignApproach { new_design_approach: "da2".to_string() });

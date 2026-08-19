@@ -33,7 +33,7 @@ pub async fn decode_op(bytes: &[u8]) -> Result<DagMutation, protocol::ProtocolEr
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_binary_round_trips_and_agrees_with_text() {
         let operation = crate::artifacts::dag::mutations::delete_node("node-1".into());
         store::os_store::test_support::assert_op_text_binary_equivalence(&operation);
@@ -47,7 +47,7 @@ mod tests {
 mod semio_protocol_conformance {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn component_protocol_semio_is_protocol_dialect() {
         let g = ::dsl::parse_grammar(COMPONENT_PROTOCOL_SEMIO).expect("parse protocol.semio");
         assert_eq!(g.dialect, ::dsl::SemioDialect::Protocol);
@@ -55,7 +55,7 @@ mod semio_protocol_conformance {
         let _ = COMPONENT_PROTOCOL_PATH;
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn verify_protocol_bytes_against_encoded_spr() {
         let operation = crate::artifacts::dag::mutations::delete_node("node-1".into());
         let bytes = encode_op(&operation).expect("encode op");

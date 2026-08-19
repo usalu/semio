@@ -89,21 +89,21 @@ pub async fn render(document: &WiresSnapshot) -> UiNode {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn definition_declares_the_canvas_2d_surface_and_body_key() {
         let definition = definition();
         assert_eq!(definition.body_key, WIRES_VIEW_BODY_CANVAS);
         assert!(matches!(definition.surface_kind, SurfaceKind::Canvas2d));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn renders_canvas_scene_for_the_empty_document() {
         let document = crate::artifacts::wires::empty_wires_snapshot();
         let json = serde_json::to_string(&render(&document)).expect("render json");
         assert!(json.contains("canvas-2d"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn renders_canvas_scene_for_the_metabolism_example() {
         let document = crate::artifacts::wires::schema::metabolism_wires_example_snapshot()
             .expect("valid metabolism fixture mutations");

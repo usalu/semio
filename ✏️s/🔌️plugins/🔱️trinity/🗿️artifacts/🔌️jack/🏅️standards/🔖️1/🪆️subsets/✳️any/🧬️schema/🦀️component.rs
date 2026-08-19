@@ -50,7 +50,7 @@ pub struct JackEditorSelection {
 
 //#region 🔖️Conversions
 impl Default for JackArtifact {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self {
             schema: crate::artifacts::jack::TRINITY_GRAPH_SCHEMA.into(),
             name: String::new(),
@@ -177,7 +177,7 @@ pub async fn empty_jack_document() -> crate::artifacts::jack::JackSnapshot {
 mod empty_document_tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn empty_jack_document_has_no_nodes_or_edges() {
         let fixture = empty_jack_document();
         assert!(fixture.nodes().is_empty());

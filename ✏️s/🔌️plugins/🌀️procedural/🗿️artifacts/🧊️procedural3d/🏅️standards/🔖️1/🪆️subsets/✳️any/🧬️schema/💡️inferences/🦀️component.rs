@@ -98,18 +98,18 @@ mod tests {
     //#endregion 🧸️Fixtures
 
     //#region 🧪️InferenceLaws
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = sample_snapshot();
         assert_eq!(Procedural3dInference::infer(&snapshot), Procedural3dInference::infer(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(Procedural3dInference::infer(&Procedural3dSnapshot::default()), Procedural3dInference::default());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn topology_matches_the_linear_chain() {
         let snapshot = sample_snapshot();
         let inferred = Procedural3dInference::infer(&snapshot);

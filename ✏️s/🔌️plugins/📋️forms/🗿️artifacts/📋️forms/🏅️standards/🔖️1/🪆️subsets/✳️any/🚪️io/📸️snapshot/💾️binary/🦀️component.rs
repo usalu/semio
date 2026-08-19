@@ -133,7 +133,7 @@ mod tests {
     use crate::artifacts::forms::dsl;
     use crate::artifacts::forms::{forms_children_from_steps, FormStep, FORMS_DOCUMENT_SCHEMA};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn snapshot_pack_round_trips_with_composed_children() {
         let steps = vec![FormStep { id: "s1".into(), title: "Step".into(), description: None, blocks: Vec::new() }];
         let (structure, results) = forms_children_from_steps(&steps);
@@ -143,7 +143,7 @@ mod tests {
         assert_eq!(decoded, snapshot);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn building_component_fixture_pack_agrees_with_dsl() {
         let spec = dsl::parse_playbook_example_dsl(dsl::BUILDING_COMPONENT_EXAMPLE_TEXT).expect("📋️building-component.forms parses");
         store::os_store::test_support::assert_dsl_pack_equivalence(&spec);
@@ -151,7 +151,7 @@ mod tests {
         assert_eq!(decode(&bytes).expect("decode"), spec);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn default_fixture_pack_agrees_with_dsl() {
         let spec = dsl::parse_playbook_example_dsl(dsl::DEFAULT_EXAMPLE_TEXT).expect("📋️default.forms parses");
         store::os_store::test_support::assert_dsl_pack_equivalence(&spec);
@@ -159,7 +159,7 @@ mod tests {
         assert_eq!(decode(&bytes).expect("decode"), spec);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn onboarding_fixture_pack_agrees_with_dsl() {
         let spec = dsl::parse_playbook_example_dsl(dsl::ONBOARDING_EXAMPLE_TEXT).expect("📋️onboarding.forms parses");
         store::os_store::test_support::assert_dsl_pack_equivalence(&spec);
@@ -172,7 +172,7 @@ mod tests {
     /// `FormMutation`'s `CreateStep` round-trips through `protocol::MutationEnvelope`s beside this file's
     /// existing dsl/pack round-trip laws (same pattern as `mathematical`'s own
     /// `command_envelope_round_trip_holds_for_an_applied_operation`).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn command_envelope_round_trip_holds_for_an_applied_operation() {
         use crate::artifacts::forms::{op::FormMutation, FormStep, FORMS_DOCUMENT_SCHEMA};
         use protocol::{ArtifactId, Edit, SchemaId};

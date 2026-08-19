@@ -75,7 +75,7 @@ pub mod derived_construction {
         use crate::artifacts::svg::standards::v1_1::subsets::basic::schema::CODE_FILTER_PRIMITIVE;
         use crate::artifacts::xml::schema::snapshot::{XmlAttr, XmlNode};
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn empty_builder_injects_profile_and_builds_clean() {
             let snapshot = SvgBasicBuilderConstruction::empty().build().expect("empty document builds clean");
             match &snapshot.doc.root {
@@ -87,7 +87,7 @@ pub mod derived_construction {
             }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn hard_violation_injected_via_raw_mutate_still_fails_build() {
             let mut snapshot = SvgBasicBuilderConstruction::empty().build().unwrap();
             if let Some(XmlNode::Element { children, .. }) = snapshot.doc.root.as_mut() {
@@ -98,7 +98,7 @@ pub mod derived_construction {
             assert!(err.iter().any(|d| d.code.0 == CODE_FILTER_PRIMITIVE));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn from_text_round_trips_through_basic_build() {
             let text = r#"<svg xmlns="http://www.w3.org/2000/svg"><circle cx="5" cy="5" r="5"/></svg>"#;
             let built = SvgBasicBuilderConstruction::from_text(text).expect("parses").build().expect("conforming document builds");
@@ -295,49 +295,49 @@ pub mod derived_analysis {
             vec![attr("baseProfile", "basic"), attr("version", "1.1")]
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn fully_conforming_document_reports_no_diagnostics() {
             let snapshot = svg_root(base_attrs(), vec![elem("rect", vec![attr("x", "0"), attr("y", "0"), attr("width", "10"), attr("height", "10")], vec![])]);
             let diagnostics = check_svg_basic_conformance(&snapshot);
             assert!(diagnostics.is_empty(), "got {diagnostics:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn blocklisted_filter_primitive_is_hard() {
             let snapshot = svg_root(base_attrs(), vec![elem("filter", vec![attr("id", "f1")], vec![elem("feTurbulence", vec![], vec![])])]);
             let diagnostics = check_svg_basic_conformance(&snapshot);
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_FILTER_PRIMITIVE && d.severity == Severity::Error), "got {diagnostics:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn lighting_child_primitive_is_hard() {
             let snapshot = svg_root(base_attrs(), vec![elem("filter", vec![attr("id", "f1")], vec![elem("feDiffuseLighting", vec![], vec![elem("feDistantLight", vec![], vec![])])])]);
             let diagnostics = check_svg_basic_conformance(&snapshot);
             assert_eq!(diagnostics.iter().filter(|d| d.code.0 == CODE_FILTER_PRIMITIVE).count(), 2, "expected both feDiffuseLighting and feDistantLight flagged: {diagnostics:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn clip_path_referencing_text_is_hard() {
             let snapshot = svg_root(base_attrs(), vec![elem("clipPath", vec![attr("id", "c1")], vec![elem("text", vec![], vec![XmlNode::Text { text: "hi".into() }])]), elem("rect", vec![attr("clip-path", "url(#c1)")], vec![])]);
             let diagnostics = check_svg_basic_conformance(&snapshot);
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_CLIP_PATH_TEXT && d.severity == Severity::Error), "got {diagnostics:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn clip_path_referencing_shapes_only_is_clean() {
             let snapshot = svg_root(base_attrs(), vec![elem("clipPath", vec![attr("id", "c1")], vec![elem("circle", vec![attr("cx", "5"), attr("cy", "5"), attr("r", "5")], vec![])]), elem("rect", vec![attr("clip-path", "url(#c1)")], vec![])]);
             let diagnostics = check_svg_basic_conformance(&snapshot);
             assert!(diagnostics.iter().all(|d| d.code.0 != CODE_CLIP_PATH_TEXT), "got {diagnostics:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn nested_svg_is_soft() {
             let snapshot = svg_root(base_attrs(), vec![elem("svg", vec![attr("width", "5"), attr("height", "5")], vec![])]);
             let diagnostics = check_svg_basic_conformance(&snapshot);
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_NESTED_SVG && d.severity == Severity::Warning), "got {diagnostics:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn missing_base_profile_is_soft() {
             let snapshot = svg_root(vec![], vec![]);
             let diagnostics = check_svg_basic_conformance(&snapshot);

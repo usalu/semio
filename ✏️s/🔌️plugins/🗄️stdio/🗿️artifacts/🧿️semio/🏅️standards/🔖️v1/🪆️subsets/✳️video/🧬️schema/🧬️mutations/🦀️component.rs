@@ -369,7 +369,7 @@ mod tests {
         MutationDiff::apply(diff, base).expect("valid Semio video diff fixture")
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mutation_diff_law() {
         for mutation in sample_mutations() {
             let base = fixture();
@@ -386,7 +386,7 @@ mod tests {
     //#endregion 🔖️MutationDiffLaw
 
     //#region 🔖️InverseLaw
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inverse_law() {
         for mutation in sample_mutations() {
             let base = fixture();
@@ -420,7 +420,7 @@ mod tests {
         diff.streams.as_ref().expect("streams diff present")
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_law() {
         // Canonical: Insert(2)+Remove(0) -> {removed:[0], added:[(1,f)]}.
         {
@@ -507,7 +507,7 @@ mod tests {
     //#endregion 🔖️AbsorbLaw
 
     //#region 🔖️BetweenRoundtripLaw
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn between_roundtrip_law() {
         let a = sweep_a();
         let b = sweep_b();
@@ -528,7 +528,7 @@ mod tests {
     //#endregion 🔖️BetweenRoundtripLaw
 
     //#region 🔖️CodecRetentionLaw
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn codec_retention_law() {
         let snap = fixture();
         let bytes = store::ArtifactPack::encode_pack(&snap);
@@ -541,7 +541,7 @@ mod tests {
     /// 🎯️ THE acceptance criterion: `sweep_a`/`sweep_b` differ in every mutable field at both
     /// nesting levels (see the fixtures' own doc comment for exactly how removed/modified/added
     /// is exercised at each level, and why the two directions of `between()` are both asserted).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn field_sweep() {
         let a = sweep_a();
         let b = sweep_b();
@@ -585,7 +585,7 @@ mod tests {
     /// exercises every variant, incl. `InsertStream`'s bare `SemioVideoStream` payload (with
     /// nested samples), `SetSnapshot`'s whole `SemioVideoSnapshot`, and the `SemioVideoStreamKind`
     /// enum tag.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_text_binary_roundtrip_law() {
         let stream = SemioVideoStream { kind: SemioVideoStreamKind::Subtitle, codec: "srt".into(), width: 0, height: 0, rate: SemioRational { num: 1, den: 1 }, samples: vec![SemioVideoSample { pts: 5, key: true, data: vec![1, 2] }] };
         let mutations = vec![

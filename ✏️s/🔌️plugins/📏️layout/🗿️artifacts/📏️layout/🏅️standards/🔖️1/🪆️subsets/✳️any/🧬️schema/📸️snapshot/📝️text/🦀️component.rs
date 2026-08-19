@@ -87,7 +87,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn sample_fixture_dsl_round_trips() {
         let doc = parse_dsl(LAYOUT_SAMPLE_TEXT).expect("parse sample layout fixture");
         assert_eq!(doc.schema, LAYOUT_DOCUMENT_SCHEMA);
@@ -96,7 +96,7 @@ mod tests {
         store::os_store::test_support::assert_dsl_round_trip(&doc);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn demo_dsl_snapshot() {
         let text = print_dsl(&crate::artifacts::layout::schema::default_document());
         assert!(parse_dsl(&text).is_ok());
@@ -105,7 +105,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn example_fixture_matches_engine_demo() {
         let demo = crate::artifacts::layout::schema::default_document();
         let from_example = parse_dsl(LAYOUT_SAMPLE_TEXT).expect("example dsl");
@@ -113,12 +113,12 @@ mod tests {
         assert_eq!(from_example.pages[0].frames.len(), demo.pages[0].frames.len());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dsl_round_trips_minimal_document_with_character_style() {
         store::os_store::test_support::assert_dsl_round_trip(&minimal_document_with_character_style());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dsl_round_trips_overrides_frame_flags_and_absent_print_target() {
         store::os_store::test_support::assert_dsl_round_trip(&overrides_frame_flags_document());
     }
@@ -127,7 +127,7 @@ mod tests {
     /// parser is gone (dropped alongside the `dsl::DslArtifact` derive — see `📸️snapshot/🦀️component.rs`'s
     /// doc comment on why), replaced by the hand-rolled `key=<hex-or-json-hex>` line codec. These
     /// assertions now exercise THAT codec's real failure modes instead of the old grammar's.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn parse_dsl_reports_hand_rolled_codec_errors() {
         assert!(parse_dsl("").is_err(), "empty text must fail: no schema line at all");
         assert!(parse_dsl("not a document at all").is_err(), "a line with no recognized key= prefix must fail");

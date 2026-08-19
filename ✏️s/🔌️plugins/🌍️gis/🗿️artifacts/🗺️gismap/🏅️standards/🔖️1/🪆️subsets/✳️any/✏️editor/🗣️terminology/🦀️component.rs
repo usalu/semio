@@ -71,13 +71,13 @@ pub async fn gis2d_layer_label(layer_id: &str, labels: &Gis2dPlayLabels) -> &'st
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn labels_resolve_native_english_and_german_from_the_config_locale() {
         assert_eq!(gis2d_labels(&Gis2dConfig::default()).map_view.as_str(), "Map View");
         assert_eq!(gis2d_labels(&Gis2dConfig { locale: "de-DE".into(), ..Gis2dConfig::default() }).map_view.as_str(), "Kartenansicht");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn every_declared_layer_id_resolves_to_a_non_empty_label() {
         let labels = gis2d_labels(&Gis2dConfig::default());
         for (id, _, _) in crate::editor::gis2d::GIS_MAP_LAYER_IDS {

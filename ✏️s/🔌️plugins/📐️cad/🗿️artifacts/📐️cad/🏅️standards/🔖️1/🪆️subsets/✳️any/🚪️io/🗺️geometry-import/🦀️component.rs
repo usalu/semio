@@ -13,7 +13,7 @@
 //! (`step_text` ↔ `SemioBrepSnapshot`, in `🚪️io/🦀️component.rs`) already uses for STEP.
 
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::mesh_data_from_mesh_transfer;
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::{block_on, BrepKernel, GeometryHandle};
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::{block_on, Brep, BrepKernel, GeometryHandle};
 use semio_framework_3d::engine::Vec3;
 use semio_framework_plugin::{ArtifactSerializer, MeshData};
 use serde_json::Value;
@@ -253,7 +253,7 @@ async fn face_boundary_points(face: &CadFace, wires: &HashMap<String, &CadWire>,
     face.wire_ids.iter().find_map(|wire_id| wires.get(wire_id)).map(|wire| wire_points(wire, edges, vertices)).unwrap_or_default()
 }
 
-pub(crate) async fn import_geometry_handles(kernel: &mut dyn BrepKernel, geometry: &CadGeometry) -> HashMap<String, String> {
+pub(crate) async fn import_geometry_handles(kernel: &mut Brep, geometry: &CadGeometry) -> HashMap<String, String> {
     let vertices = vertex_map(geometry);
     let edges = edge_map(geometry);
     let wires = wire_map(geometry);
@@ -401,7 +401,7 @@ pub(crate) async fn centroid_from_fixture_primitives(geometry: &CadGeometry, pri
 }
 
 /// 🧵️ Tessellates an object through a kernel handle when that handle is still resident.
-pub(crate) async fn tessellate_object_mesh(kernel: &mut dyn BrepKernel, object: &CadObject, kind: &str) -> Option<MeshData> {
+pub(crate) async fn tessellate_object_mesh(kernel: &mut Brep, object: &CadObject, kind: &str) -> Option<MeshData> {
     let handle_id = object.solid_handle.as_deref()?;
     if block_on(kernel.kind(&GeometryHandle(handle_id.into()))).is_err() {
         return None;
@@ -410,7 +410,7 @@ pub(crate) async fn tessellate_object_mesh(kernel: &mut dyn BrepKernel, object: 
 }
 
 /// 🧵️ Re-imports fixture geometry and tessellates the object's primitive slots.
-pub(crate) async fn tessellate_object_mesh_from_fixture(kernel: &mut dyn BrepKernel, object: &CadObject, geometry: &CadGeometry) -> Option<MeshData> {
+pub(crate) async fn tessellate_object_mesh_from_fixture(kernel: &mut Brep, object: &CadObject, geometry: &CadGeometry) -> Option<MeshData> {
     if object.primitives.is_empty() {
         return None;
     }
@@ -447,7 +447,7 @@ async fn strip_degenerate_triangles(mesh: MeshData) -> MeshData {
     MeshData { indices, ..mesh }
 }
 
-pub async fn tessellate_geometry_handle(kernel: &mut dyn BrepKernel, handle_id: &str, kind: &str) -> Option<MeshData> {
+pub async fn tessellate_geometry_handle(kernel: &mut Brep, handle_id: &str, kind: &str) -> Option<MeshData> {
     let handle = GeometryHandle(handle_id.into());
     if kind == "curve" {
         return curve_mesh_from_wire(kernel, &handle);
@@ -462,7 +462,7 @@ pub async fn tessellate_geometry_handle(kernel: &mut dyn BrepKernel, handle_id: 
     None
 }
 
-async fn curve_mesh_from_wire(kernel: &mut dyn BrepKernel, wire: &GeometryHandle) -> Option<MeshData> {
+async fn curve_mesh_from_wire(kernel: &mut Brep, wire: &GeometryHandle) -> Option<MeshData> {
     let mesh = block_on(kernel.tessellate(wire, 0.1)).ok()?;
     Some(mesh_data_from_mesh_transfer(&mesh))
 }
@@ -516,7 +516,7 @@ async fn mesh_extent(mesh: &MeshData) -> Option<[f64; 3]> {
 /// `solidHandle`/`primitives` path fixture geometry uses. Falls back to an extent-only object
 /// with no primitives (rendered via the typology bounding-box mesh fallback) when the mesh has
 /// no triangles or the kernel is unable to import it.
-pub(crate) async fn cad_object_from_mesh(kernel: &mut dyn BrepKernel, id: impl Into<String>, label: impl Into<String>, typology: impl Into<String>, mesh: &MeshData) -> CadObject {
+pub(crate) async fn cad_object_from_mesh(kernel: &mut Brep, id: impl Into<String>, label: impl Into<String>, typology: impl Into<String>, mesh: &MeshData) -> CadObject {
     let extent = mesh_extent(mesh);
     let solid_handle = mesh_to_obj_text(mesh).and_then(|text| block_on(kernel.import_obj(&text, 0.01)).ok()).map(|handle| handle.0);
     let primitives = solid_handle.clone().map(|primitive_id| vec![CadPrimitiveSlot { slot: "solid".into(), primitive_id, kind: "solid".into() }]).unwrap_or_default();
@@ -528,7 +528,7 @@ pub async fn object_label_from_id(object_id: &str) -> String {
     object_id.split('-').next_back().map_or_else(|| object_id.to_string(), str::to_string)
 }
 
-pub(crate) async fn objects_from_fixture_model(kernel: &mut dyn BrepKernel, objects_value: &[Value], geometry: &CadGeometry) -> Vec<CadObject> {
+pub(crate) async fn objects_from_fixture_model(kernel: &mut Brep, objects_value: &[Value], geometry: &CadGeometry) -> Vec<CadObject> {
     let handles = import_geometry_handles(kernel, geometry);
     objects_value
         .iter()
@@ -675,7 +675,7 @@ mod tests {
         0.5 * (cross[0] * cross[0] + cross[1] * cross[1] + cross[2] * cross[2]).sqrt()
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn forest_wire_chains_reversed_edges_by_vertex_id() {
         let source = include_str!("../../📚️examples/🖼️assets/🎮️play/🔣️hexagonal-cut-concrete-forest-left.model.json");
         let root: Value = serde_json::from_str(source).expect("fixture");
@@ -695,7 +695,7 @@ mod tests {
         );
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn forest_shape_geometry_imports_solid_handle() {
         let source = include_str!("../../📚️examples/🖼️assets/🎮️play/🔣️hexagonal-cut-concrete-forest-left.model.json");
         let root: Value = serde_json::from_str(source).expect("fixture");
@@ -714,7 +714,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn forest_energy_surface_tessellates_at_authored_height() {
         let source = include_str!("../../📚️examples/🖼️assets/🎮️play/🔣️hexagonal-cut-concrete-forest-left.model.json");
         let root: Value = serde_json::from_str(source).expect("fixture");
@@ -732,7 +732,7 @@ mod tests {
         assert!(max_z < 3.5, "energy surface max z {max_z}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn forest_structure_surface_tessellates_at_authored_height() {
         let source = include_str!("../../📚️examples/🖼️assets/🎮️play/🔣️hexagonal-cut-concrete-forest-left.model.json");
         let root: Value = serde_json::from_str(source).expect("fixture");
@@ -746,7 +746,7 @@ mod tests {
         assert!(min_z > 2.5, "structure slab min z {min_z}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn forest_structure_curve_wires_tessellate_as_centerlines() {
         let source = include_str!("../../📚️examples/🖼️assets/🎮️play/🔣️hexagonal-cut-concrete-forest-left.model.json");
         let root: Value = serde_json::from_str(source).expect("fixture");
@@ -764,7 +764,7 @@ mod tests {
     }
 
     //#region 🧪️ModelBridgeLaws
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn cad_object_model_element_round_trip_preserves_identity_placement_and_geometry() {
         let object = CadObject {
             id: "object-7".into(),
@@ -792,7 +792,7 @@ mod tests {
         assert_eq!(restored.solid_handle, object.solid_handle);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn semio_model_snapshot_from_objects_round_trips_via_objects_from_model_snapshot() {
         let objects = vec![
             CadObject { id: "object-a".into(), label: "A".into(), typology: "spatial.shape.primitive.box".into(), visible: true, locked: false, origin: [0.0, 0.0, 0.0], orientation: None, scale: None, mesh_url: None, extent: None, solid_handle: Some("h1".into()), primitives: Vec::new() },

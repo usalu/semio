@@ -24,7 +24,7 @@ pub struct ArchitectPresence {
 }
 
 impl Default for ArchitectPresence {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { active_register: "elements".into(), adjacency_kind_filter: None, graph_camera_x: 0.0, graph_camera_y: 0.0, graph_camera_zoom: 1.0 }
     }
 }

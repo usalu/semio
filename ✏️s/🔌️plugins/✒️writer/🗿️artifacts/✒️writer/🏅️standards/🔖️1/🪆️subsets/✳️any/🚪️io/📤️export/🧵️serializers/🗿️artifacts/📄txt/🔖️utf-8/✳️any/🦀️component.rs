@@ -18,7 +18,7 @@ impl Serializer<WriterSnapshot> for WriterIntoTxt {
     /// 🪧️ Lossy: only the document's content text survives — `schema`/`id`/`uri`/`language_id` have
     /// no home in a plain-text file.
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    async fn serialize(from: &WriterSnapshot) -> IoResult<IoPayload> {
+    fn serialize(from: &WriterSnapshot) -> IoResult<IoPayload> {
         Ok(IoOutcome { value: IoPayload::Text(writer_text(from)), diagnostics: Vec::new() })
     }
 }
@@ -28,7 +28,7 @@ impl Serializer<WriterSnapshot> for WriterIntoTxt {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn writer_into_txt_emits_plain_document_text() {
         let snapshot = crate::artifacts::writer::writer_snapshot_with_text("writer.document", "id", "plain", "writer://id", "hello\nworld");
         let outcome = WriterIntoTxt::serialize(&snapshot).expect("serialize");

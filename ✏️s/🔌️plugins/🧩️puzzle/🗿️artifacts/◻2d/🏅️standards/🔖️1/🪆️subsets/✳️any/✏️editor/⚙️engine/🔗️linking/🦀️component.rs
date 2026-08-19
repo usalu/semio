@@ -14,7 +14,7 @@ mod tests {
     };
     use serde_json::json;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn board_host_node_drag_proximity_connect_overlapping_compatible_handles() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
@@ -35,7 +35,7 @@ mod tests {
         assert!(ev.contains("a:h0"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn board_host_node_drag_skips_proximity_when_moving_node_has_incident_edge() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
@@ -53,7 +53,7 @@ mod tests {
         assert!(!ev.contains("proximityConnect"), "expected no proximityConnect, got: {ev}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn board_host_link_drag_snap_emits_edge_create() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
@@ -78,7 +78,7 @@ mod tests {
         assert_eq!(created.len(), 1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn board_host_link_drag_snap_micro_zoom_rectangle_compatible_handles() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
@@ -192,7 +192,7 @@ mod tests {
         assert!(ev.contains("proximityConnect"), "expected proximityConnect, got: {ev}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn board_host_link_drag_snap_proximity_connect_in_overview_lod() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
@@ -217,7 +217,7 @@ mod tests {
         assert!(ev.contains("proximityConnect") || ev.contains("indirectConnect"), "expected proximityConnect or indirectConnect, got: {ev}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn board_host_parses_mindmap_fixture_without_handles() {
         let mut h = BoardHost::new_normal();
         let fixture = json!({
@@ -242,7 +242,7 @@ mod tests {
         assert!(scene.path_count() > 0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn board_host_ingests_edge_and_node_kind_catalog_visual_fields() {
         let mut h = BoardHost::new_normal();
         h.set_board_kind_catalogs_from_json(
@@ -276,7 +276,7 @@ mod tests {
         assert!(capsule.color_fill.is_some());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn board_host_sync_descriptor_normal_graph_node_id_edges() {
         let mut h = BoardHost::new_normal();
         let desc = SceneDescriptorJson {
@@ -336,7 +336,7 @@ mod tests {
         assert!(scene.path_count() > 0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn board_host_hidden_handle_blocks_proximity_connect() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
@@ -378,7 +378,7 @@ mod tests {
         assert!(h.edges.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn board_host_hidden_node_blocks_indirect_connect() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
@@ -420,7 +420,7 @@ mod tests {
         assert!(h.edges.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn board_host_locked_node_blocks_hit_select() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
@@ -433,7 +433,7 @@ mod tests {
         assert_ne!(h.hovered_id.as_deref(), Some("a"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn board_host_locked_handle_blocks_proximity_connect() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
@@ -475,7 +475,7 @@ mod tests {
         assert!(h.edges.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn board_host_overview_lod_omits_direct_handle_resolve_hit() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
@@ -486,7 +486,7 @@ mod tests {
         assert_ne!(h.resolve_hit_world(probe).as_deref(), Some("a:h0"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn board_host_link_rejects_incompatible_handle_kind_pairs() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
@@ -508,7 +508,7 @@ mod tests {
         assert!(!ev.contains("edgeCreate"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn board_host_link_accepts_matching_handle_kind_pair() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
@@ -531,7 +531,7 @@ mod tests {
         assert!(ev.contains("proximityConnect"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn board_host_normal_lod_prefers_node_at_center_and_handle_off_rim() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
@@ -542,7 +542,7 @@ mod tests {
         assert_eq!(h.resolve_hit_world(probe).as_deref(), Some("a:h0"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn board_host_indirect_ring_resolve_skips_connected_handles() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
@@ -557,7 +557,7 @@ mod tests {
         assert_eq!(h.resolve_hit_world(Point::new(0.0, 0.0)).as_deref(), Some("a:h1"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn board_host_indirect_sole_compatible_drop_creates_edge_immediately() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
@@ -584,7 +584,7 @@ mod tests {
         assert!(ev.contains("b:h0"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn board_host_indirect_two_compatible_child_handles_on_target_require_ring_pick() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
@@ -613,7 +613,7 @@ mod tests {
         assert!(ev.contains("b:h0"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn board_host_indirect_target_click_elsewhere_stops_wire() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
@@ -632,7 +632,7 @@ mod tests {
         assert!(h.edges.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn board_host_indirect_ring_shown_when_node_has_two_free_handles() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
@@ -646,7 +646,7 @@ mod tests {
         assert_eq!(h.resolve_hit_world(ring).as_deref(), Some("a:h0"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn board_host_indirect_ring_paints_without_rebuilding_world_cache() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
@@ -665,7 +665,7 @@ mod tests {
         assert_eq!(h.encoded_scene_hint(), neutral_hint);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn board_host_link_drag_emits_compatible_nodes_and_target_ring_events() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
@@ -692,7 +692,7 @@ mod tests {
         assert!(ev_end.contains("linkTargetRing"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn board_host_indirect_ring_gap_scales_with_node_across_zoom() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
@@ -716,7 +716,7 @@ mod tests {
         assert!((gap_px_z2 - gap_px_z1 * 4.25).abs() < 0.6, "screen gap should scale with zoom: {gap_px_z1} vs {gap_px_z2}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn board_host_indirect_handle_marker_radius_scales_with_node_extent() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
@@ -725,7 +725,7 @@ mod tests {
         assert!((h.indirect_handle_marker_radius_world(ha) - 32.0).abs() < 1e-6);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn board_host_handle_scale_combines_node_and_kind_scales() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
@@ -748,7 +748,7 @@ mod tests {
         assert!((h.indirect_handle_marker_radius_world(ha) - 96.0).abs() < 1e-6);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn board_host_link_wire_specificity_allows_when_handle_row_absent() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
@@ -779,7 +779,7 @@ mod tests {
         assert!(ev.contains("proximityConnect"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn board_host_kind_catalog_accepts_modern_hsl_handle_colors() {
         let mut h = BoardHost::new();
         h.set_board_kind_catalogs_from_json(
@@ -800,14 +800,14 @@ mod tests {
         assert_ne!(c_space, c_slash);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn board_host_rejects_kind_catalog_rows_with_legacy_label() {
         let mut h = BoardHost::new();
         let err = h.set_board_kind_catalogs_from_json(&serde_json::json!({"handleKinds":[{"id":"h","label":"legacy","color":"#112233"}]}).to_string()).unwrap_err();
         assert!(err.to_string().contains("legacy label"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn board_host_link_important_pair_overrides_lower_specificity_filter() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
@@ -844,7 +844,7 @@ mod tests {
         assert!(ev.contains("proximityConnect"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn board_host_link_drag_does_not_snap_when_target_handle_busy() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
@@ -867,7 +867,7 @@ mod tests {
         assert!(h.edges.contains_key("e-bc"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn board_host_link_does_not_start_from_busy_source_handle() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
@@ -881,7 +881,7 @@ mod tests {
         assert!(!h.drain_events_json().contains("edgeCreate"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn board_host_indirect_does_not_commit_on_busy_target_handle() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
@@ -911,7 +911,7 @@ mod tests {
         assert!(matches!(h.interaction, Interaction::None));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn board_host_link_short_drag_does_not_emit_edge_create() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);

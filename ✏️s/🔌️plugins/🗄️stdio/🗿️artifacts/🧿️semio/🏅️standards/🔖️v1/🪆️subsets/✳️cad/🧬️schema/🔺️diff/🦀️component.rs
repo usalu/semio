@@ -798,7 +798,7 @@ mod tests {
     /// ⚖️ Law 6 — `field_sweep`: `sweep_a`/`sweep_b` differ in every mutable field, incl. per
     /// collection one removed/one modified-in-every-field/one added, at BOTH the top level and the
     /// nested `blocks[].entities` level.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn field_sweep() {
         let a = sweep_a();
         let b = sweep_b();
@@ -841,7 +841,7 @@ mod tests {
     //#region 🧪️Law3_AbsorbLaw
     /// ⚖️ Law 3 — `absorb_law`: curated op list (Insert+Remove-before, Add+SetField-patches-into-
     /// added, Modify+Remove-annihilates) plus associativity — same canonical cases as bcf's.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_law() {
         let base = sweep_a();
 
@@ -901,7 +901,7 @@ mod tests {
 
     //#region 🧪️Law4_BetweenRoundtripLaw
     /// ⚖️ Law 4 — `between_roundtrip_law`: `between(a,b).apply(a) == b` on fixtures.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn between_roundtrip_law() {
         let a = sweep_a();
         let b = sweep_b();
@@ -917,7 +917,7 @@ mod tests {
     /// ⚖️ Law 8 — `diff_codec_text_binary_roundtrip_law`: hand-rolled `DiffCodec` text/binary
     /// round-trip, exercising every collection triple (top-level AND the nested
     /// `blocks[].entities`) plus all 9 `CadEntity` variants across `between()` results.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn diff_codec_text_binary_roundtrip_law() {
         let a = sweep_a();
         let b = sweep_b();

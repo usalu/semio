@@ -46,7 +46,7 @@ mod tests {
     use crate::editor::procedural2d::testkit::{app, dispatch, render as render_body};
     use crate::editor::procedural2d::Procedural2dCommand;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn procedural2d_labels_translate_catalogue_and_inspector_in_german() {
         let mut app = app();
         dispatch(&mut app, Procedural2dCommand::SetLocale(crate::editor::procedural2d::commands::set_locale::SetLocale { value: "de".into() }));

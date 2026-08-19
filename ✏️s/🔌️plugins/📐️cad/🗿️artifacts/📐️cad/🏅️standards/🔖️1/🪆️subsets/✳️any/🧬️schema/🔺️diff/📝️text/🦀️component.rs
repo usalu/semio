@@ -305,7 +305,7 @@ mod tests {
     /// ⚖️ `CadDiff.artifact` (a whole-artifact replacement fragment) still exists as a `CadDiff`
     /// FIELD — only its former mutation source (`SetSnapshot`, banned per taxonomy) is gone; this
     /// law still holds for whatever future non-mutation path (`ArtifactStore::reset`) populates it.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn whole_artifact_diff_replaces_the_snapshot_and_absorbs_every_earlier_edit() {
         let base = sample_scene();
         let mut diff = CadMutation::DeleteNode(DeleteNode { node_id: "node-1".into() }).diff(&base).diff().clone();
@@ -314,7 +314,7 @@ mod tests {
         assert_eq!(diff.apply(&base).expect("valid mutation diff"), base, "a whole-artifact diff wins over anything absorbed before it");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn node_collection_diffs_absorb_into_one_apply() {
         let base = sample_scene();
         let mut diff = CadMutation::CreateNode(CreateNode { node: crate::artifacts::cad::CadNode { id: "node-9".into(), label: "Fresh".into(), kind: "group".into() } }).diff(&base).diff().clone();
@@ -324,7 +324,7 @@ mod tests {
         assert_eq!(next.nodes.iter().find(|node| node.id == "node-1").expect("node-1").label, "Renamed");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn malformed_named_diff_rejects_without_changing_the_base() {
         let base = sample_scene();
         let original = base.clone();

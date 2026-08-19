@@ -1178,7 +1178,7 @@ mod tests {
     }
 
     //#region between_roundtrip_law
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn between_roundtrip_law_scalars_and_kind_change() {
         let cases = [(JsonValue::Null, JsonValue::Bool { value: true }), (JsonValue::Bool { value: true }, JsonValue::Bool { value: false }), (num("1"), num("2.5e10")), (str_("a"), str_("b")), (num("1"), str_("1"))];
         for (a, b) in cases {
@@ -1188,7 +1188,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn between_roundtrip_law_nested_collections() {
         let a = objv(vec![("tags", arr(vec![str_("x"), str_("y")])), ("n", num("1"))]);
         let b = objv(vec![("tags", arr(vec![str_("x"), str_("z"), str_("w")])), ("n", num("2")), ("extra", JsonValue::Bool { value: true })]);
@@ -1197,7 +1197,7 @@ mod tests {
         assert_eq!(JsonDiff::between(&sb, &sa).apply(&sb).unwrap(), sa);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn between_self_is_empty() {
         let a = objv(vec![("x", num("1"))]);
         let sa = snap(a);
@@ -1206,7 +1206,7 @@ mod tests {
     //#endregion between_roundtrip_law
 
     //#region inverse_law
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inverse_law_diff_level() {
         let a = objv(vec![("x", num("1")), ("y", arr(vec![num("1"), num("2")]))]);
         let b = objv(vec![("x", num("2")), ("z", str_("new"))]);
@@ -1231,7 +1231,7 @@ mod tests {
         JsonDiff { value: Some(JsonValueDiff::Array { diff: d }) }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_array_insert_then_remove_before() {
         // base = [a,b,c]; d1 = Insert(2,f) -> mid=[a,b,f,c]; d2 = Remove(0) -> after=[b,f,c].
         let base = snap(arr(vec![str_("a"), str_("b"), str_("c")]));
@@ -1251,7 +1251,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_array_insert_insert_same_index_both_survive() {
         // base = [a,b]; d1 = Insert(2,f); d2 = Insert(2,g) (against mid=[a,b,f]) -> [a,b,g,f].
         let base = snap(arr(vec![str_("a"), str_("b")]));
@@ -1268,7 +1268,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_array_insert_then_remove_of_same_added_item_cancels() {
         // base = [a]; d1 = Insert(1,f) -> mid=[a,f]; d2 = Remove(1) -> after=[a].
         let base = snap(arr(vec![str_("a")]));
@@ -1282,7 +1282,7 @@ mod tests {
         assert!(combined.is_empty(), "cancelling insert+remove must coalesce to an empty diff");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_array_add_then_setfield_patches_added_payload() {
         // base = []; d1 = Insert(0,{x:1}) -> mid=[{x:1}]; d2 = SetMember([0],y,2) -> [{x:1,y:2}].
         let base = snap(arr(vec![]));
@@ -1306,7 +1306,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_array_modify_then_remove_drops_pending_patch() {
         // base = [1,2]; d1 = Modify(0,9) -> mid=[9,2]; d2 = Remove(0) -> after=[2].
         let base = snap(arr(vec![num("1"), num("2")]));
@@ -1326,7 +1326,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_array_associativity() {
         let s0 = snap(arr(vec![num("1"), num("2"), num("3")]));
         let s1 = snap(arr(vec![num("1"), num("9"), num("3")]));
@@ -1352,7 +1352,7 @@ mod tests {
     //#endregion absorb_law canonical cases (array/index-keyed)
 
     //#region absorb_law canonical cases (object/name-keyed)
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_object_add_then_setfield_patches_added_payload() {
         let base = objv(vec![]);
         let mid = objv(vec![("config", objv(vec![]))]);
@@ -1373,7 +1373,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_object_modify_then_remove_drops_pending_patch() {
         let base = objv(vec![("a", num("1")), ("b", num("2"))]);
         let mid = objv(vec![("a", num("9")), ("b", num("2"))]);
@@ -1393,7 +1393,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_object_insert_insert_both_survive() {
         let base = objv(vec![("a", num("1"))]);
         let mid = objv(vec![("a", num("1")), ("f", num("2"))]);
@@ -1410,7 +1410,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_object_insert_then_remove_of_same_added_item_cancels() {
         let base = objv(vec![("a", num("1"))]);
         let mid = objv(vec![("a", num("1")), ("f", num("2"))]);
@@ -1424,7 +1424,7 @@ mod tests {
         assert!(combined.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_object_associativity() {
         let s0 = snap(objv(vec![("a", num("1"))]));
         let s1 = snap(objv(vec![("a", num("1")), ("b", num("2"))]));
@@ -1478,7 +1478,7 @@ mod tests {
         ]))
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn field_sweep_between_roundtrips_both_directions() {
         let (a, b) = (sweep_a(), sweep_b());
         assert_eq!(JsonDiff::between(&a, &b).apply(&a).unwrap(), b);
@@ -1486,7 +1486,7 @@ mod tests {
         assert!(JsonDiff::between(&a, &a).is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn field_sweep_every_field_present_in_diff() {
         let (a, b) = (sweep_a(), sweep_b());
         let diff = JsonDiff::between(&a, &b);
@@ -1529,7 +1529,7 @@ mod tests {
     /// 🧪️ F6: `DiffCodec` round-trip laws over the hand-rolled `JsonDiff` grammar — exercises
     /// every `JsonValueDiff` variant (incl. the `Replace` kind-change fallback), nested
     /// array/object collection triples, and the empty (`None`) diff.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn diff_codec_text_binary_roundtrip_law() {
         use protocol::DiffCodec;
 

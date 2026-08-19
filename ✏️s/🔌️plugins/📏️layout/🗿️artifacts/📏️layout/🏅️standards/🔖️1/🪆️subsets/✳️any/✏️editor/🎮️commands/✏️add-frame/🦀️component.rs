@@ -88,7 +88,7 @@ mod tests {
     use crate::editor::layout::testkit::{dispatch, layout_app};
     use crate::editor::layout::LayoutCommand;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_frame_action_appends_rect() {
         let mut app = layout_app();
         let before = app.snapshot().expect("projection").pages[0].frames.len();
@@ -97,14 +97,14 @@ mod tests {
         assert_eq!(app.snapshot().expect("projection").pages[0].frames.len(), before + 1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn undo_redo_round_trips_add_frame() {
         let mut app = layout_app();
         let before = app.snapshot().expect("projection").pages[0].frames.len();
         semio_framework_plugin::testkit::assert_undo_redo_round_trip(&mut app, LayoutCommand::AddFrame(AddFrame { kind: "rect".into(), x: None, y: None }), |app| app.snapshot().expect("projection").pages[0].frames.len(), before, before + 1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn patch_page_supports_margins_and_columns() {
         let mut app = layout_app();
         for (field, value) in [("marginTop", 60.0), ("marginRight", 40.0), ("marginBottom", 60.0), ("marginLeft", 40.0), ("columnsGutter", 18.0)] {
@@ -116,7 +116,7 @@ mod tests {
         assert_eq!(page.columns.count, 3);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn patch_frame_supports_rect_fill_and_stroke() {
         let mut app = layout_app();
         let before = app.snapshot().expect("projection").pages[0].frames.len();
@@ -130,7 +130,7 @@ mod tests {
         assert_eq!(fill.unwrap(), [0.5, 0.4, 0.3, 1.0]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn patch_frame_supports_text_story_content_and_wrap_mode() {
         let mut app = layout_app();
         dispatch(&mut app, LayoutCommand::PatchFrame(patch_frame::PatchFrame { frame_id: "frame-text-1".into(), page_id: Some("page-1".into()), field: "storyContent".into(), value: "Edited story body.".into() }));
@@ -144,7 +144,7 @@ mod tests {
         assert_eq!(wrap_mode, "contour");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn patch_frame_supports_image_link_path() {
         let mut app = layout_app();
         dispatch(&mut app, LayoutCommand::PatchFrame(patch_frame::PatchFrame { frame_id: "frame-image-1".into(), page_id: Some("page-1".into()), field: "linkPath".into(), value: "assets/updated.png".into() }));

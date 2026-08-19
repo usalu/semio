@@ -120,7 +120,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn serialize_then_deserialize_round_trips_at_the_semio_level() {
         let original = sample_semio_mesh();
         let obj = semio_framework_plugin::resolve_ready(SemioMeshToObj::serialize(&original)).expect("serialize");
@@ -132,7 +132,7 @@ mod tests {
         assert_eq!(original, round_tripped);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn non_triangle_topology_is_a_hard_error() {
         let mut semio = sample_semio_mesh();
         semio.meshes[0].primitives[0].topology = SemioTopology::TriangleFan;

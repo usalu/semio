@@ -26,7 +26,7 @@ pub struct CadPresence {
 }
 
 impl Default for CadPresence {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self {
             camera_position: [12.0, -12.0, 8.0],
             camera_target: [0.0, 0.0, 0.0],

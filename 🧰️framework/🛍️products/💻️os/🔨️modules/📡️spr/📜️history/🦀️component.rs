@@ -241,15 +241,25 @@ const F_CURSOR_REDO: u16 = 1;
 const F_CURSOR_CHECKPOINT: u16 = 2;
 
 /// @emoji 🖋️ `by=[...]` list entry twin of vcs's `OpsAuthor`: two positional fields, no keyword.
+// 🚫️async: E4 fn-pointer slot — stored bare as `Shape::Record(fn() -> RecordSpec)` (🗣️dsl schema),
+// so this item's pointer type must stay nameable. Builds `RecordSpec`/`FieldSpec` via their `pub`
+// fields directly rather than the async `::new`/`positional` builders, which a sync fn cannot call.
 fn author_spec() -> RecordSpec {
-    RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(F_AUTHOR_ID, "", Shape::Text).positional(0), FieldSpec::new(F_AUTHOR_NAME, "", Shape::Text).positional(1)])
+    RecordSpec {
+        keyword: None,
+        layout: RecordLayout::Inline,
+        fields: vec![
+            FieldSpec { id: F_AUTHOR_ID, key: String::new(), position: Some(0), shape: Shape::Text, optional: false, flatten: false, defines: None, is_call_name: false },
+            FieldSpec { id: F_AUTHOR_NAME, key: String::new(), position: Some(1), shape: Shape::Text, optional: false, flatten: false, defines: None, is_call_name: false },
+        ],
+    }
 }
 
-fn doc_spec() -> RecordSpec {
+async fn doc_spec() -> RecordSpec {
     RecordSpec::new(Some("doc"), RecordLayout::Inline, vec![FieldSpec::new(F_DOC_ID, "", Shape::Text).positional(0), FieldSpec::new(F_DOC_SCHEMA, "schema", Shape::Text)])
 }
 
-fn edit_spec() -> RecordSpec {
+async fn edit_spec() -> RecordSpec {
     RecordSpec::new(
         Some("edit"),
         RecordLayout::Inline,
@@ -264,7 +274,7 @@ fn edit_spec() -> RecordSpec {
     )
 }
 
-fn change_spec() -> RecordSpec {
+async fn change_spec() -> RecordSpec {
     RecordSpec::new(
         Some("change"),
         RecordLayout::Inline,
@@ -277,7 +287,7 @@ fn change_spec() -> RecordSpec {
     )
 }
 
-fn checkpoint_spec() -> RecordSpec {
+async fn checkpoint_spec() -> RecordSpec {
     RecordSpec::new(
         Some("checkpoint"),
         RecordLayout::Inline,
@@ -292,7 +302,7 @@ fn checkpoint_spec() -> RecordSpec {
     )
 }
 
-fn alternative_spec() -> RecordSpec {
+async fn alternative_spec() -> RecordSpec {
     RecordSpec::new(
         Some("alternative"),
         RecordLayout::Inline,
@@ -300,13 +310,13 @@ fn alternative_spec() -> RecordSpec {
     )
 }
 
-fn active_spec() -> RecordSpec {
+async fn active_spec() -> RecordSpec {
     RecordSpec::new(Some("active"), RecordLayout::Inline, vec![FieldSpec::new(F_ACTIVE_ID, "", Shape::Text).positional(0)])
 }
 
 /// @emoji 🎯️ `cursor applied=[...] redo=[...] checkpoint=<id>` — carries the FULL applied/redo
 /// edit-id lists (see `HistoryCursor`'s doc for why a single marker id is insufficient).
-fn cursor_spec() -> RecordSpec {
+async fn cursor_spec() -> RecordSpec {
     RecordSpec::new(
         Some("cursor"),
         RecordLayout::Inline,
@@ -314,41 +324,47 @@ fn cursor_spec() -> RecordSpec {
     )
 }
 
-fn record_with(fields: Vec<(u16, FieldValue)>) -> RecordValue {
+async fn record_with(fields: Vec<(u16, FieldValue)>) -> RecordValue {
     RecordValue { fields: fields.into_iter().collect() }
 }
 
-fn field_text(record: &RecordValue, id: u16) -> Option<String> {
+async fn field_text(record: &RecordValue, id: u16) -> Option<String> {
     match record.get(id) {
         Some(FieldValue::Text(s)) => Some(s.clone()),
         _ => None,
     }
 }
 
-fn required_text(record: &RecordValue, id: u16, what: &'static str) -> Result<String, ProtocolError> {
-    field_text(record, id).ok_or_else(|| ProtocolError::Malformed { what, offset: 0, detail: "missing required field in ops text".to_string() })
+async fn required_text(record: &RecordValue, id: u16, what: &'static str) -> Result<String, ProtocolError> {
+    field_text(record, id).await.ok_or_else(|| ProtocolError::Malformed { what, offset: 0, detail: "missing required field in ops text".to_string() })
 }
 
-fn field_text_list(record: &RecordValue, id: u16) -> Vec<String> {
+async fn field_text_list(record: &RecordValue, id: u16) -> Vec<String> {
     match record.get(id) {
         Some(FieldValue::List(items)) => items.iter().filter_map(|v| if let FieldValue::Text(s) = v { Some(s.clone()) } else { None }).collect(),
         _ => Vec::new(),
     }
 }
 
-fn field_authors(record: &RecordValue, id: u16) -> Vec<HistoryAuthor> {
+async fn field_authors(record: &RecordValue, id: u16) -> Vec<HistoryAuthor> {
     match record.get(id) {
-        Some(FieldValue::List(items)) => items
-            .iter()
-            .filter_map(|v| {
-                let FieldValue::Record(rec) = v else { return None };
-                Some(HistoryAuthor { id: field_text(rec, F_AUTHOR_ID)?, name: field_text(rec, F_AUTHOR_NAME)? })
-            })
-            .collect(),
+        Some(FieldValue::List(items)) => {
+            // 🚫️async: R10 shape 1 — `field_text` is async now, but `filter_map`'s closure is sync;
+            // hoisted into a plain loop so the two lookups can be awaited.
+            let mut out = Vec::new();
+            for v in items.iter() {
+                let FieldValue::Record(rec) = v else { continue };
+                let (Some(id), Some(name)) = (field_text(rec, F_AUTHOR_ID).await, field_text(rec, F_AUTHOR_NAME).await) else { continue };
+                out.push(HistoryAuthor { id, name });
+            }
+            out
+        }
         _ => Vec::new(),
     }
 }
 
+// 🚫️async: R9 pure accessor — only consumer is `.map_err(text_error_to_protocol)`, and
+// `Result::map_err` requires a sync `FnOnce`; no suspension point exists in the body either.
 fn text_error_to_protocol(err: crate::os_dsl::TextError) -> ProtocolError {
     ProtocolError::Malformed { what: "ops text", offset: err.span.line as u64, detail: err.message }
 }
@@ -357,7 +373,7 @@ fn text_error_to_protocol(err: crate::os_dsl::TextError) -> ProtocolError {
 /// normalize away; a two-space-indented line under a pending `edit` header is an opaque forward
 /// op line (never interpreted). Unlike `crate::os_store::replay_ops`, this never replays operation semantics
 /// (ops are opaque here) — `HistoryEdit::meta`/inverse are simply never populated from text.
-pub fn parse_ops_text(ops: &str) -> Result<HistoryLog, ProtocolError> {
+pub async fn parse_ops_text(ops: &str) -> Result<HistoryLog, ProtocolError> {
     struct PendingEdit {
         id: String,
         actor: Option<String>,
@@ -371,7 +387,7 @@ pub fn parse_ops_text(ops: &str) -> Result<HistoryLog, ProtocolError> {
     let mut pending: Option<PendingEdit> = None;
     let mut forwards: Vec<OpPayload> = Vec::new();
 
-    fn flush(pending: &mut Option<PendingEdit>, forwards: &mut Vec<OpPayload>, edits: &mut Vec<HistoryEdit>) {
+    async fn flush(pending: &mut Option<PendingEdit>, forwards: &mut Vec<OpPayload>, edits: &mut Vec<HistoryEdit>) {
         if let Some(header) = pending.take() {
             edits.push(HistoryEdit {
                 id: header.id,
@@ -396,68 +412,68 @@ pub fn parse_ops_text(ops: &str) -> Result<HistoryLog, ProtocolError> {
             forwards.push(OpPayload { text: Some(trimmed.to_string()), binary: None });
             continue;
         }
-        flush(&mut pending, &mut forwards, &mut log.edits);
+        flush(&mut pending, &mut forwards, &mut log.edits).await;
 
         let opts = ParseOptions::default();
         let keyword = trimmed.split_whitespace().next().unwrap_or("");
         match keyword {
             "doc" => {
-                let record = crate::os_dsl::schema::parse(trimmed, &doc_spec(), &opts).map_err(text_error_to_protocol)?;
-                log.doc_id = required_text(&record, F_DOC_ID, "doc id")?;
-                log.schema = required_text(&record, F_DOC_SCHEMA, "doc schema")?;
+                let record = crate::os_dsl::schema::parse(trimmed, &doc_spec().await, &opts).await.map_err(text_error_to_protocol)?;
+                log.doc_id = required_text(&record, F_DOC_ID, "doc id").await?;
+                log.schema = required_text(&record, F_DOC_SCHEMA, "doc schema").await?;
             }
             "edit" => {
-                let record = crate::os_dsl::schema::parse(trimmed, &edit_spec(), &opts).map_err(text_error_to_protocol)?;
+                let record = crate::os_dsl::schema::parse(trimmed, &edit_spec().await, &opts).await.map_err(text_error_to_protocol)?;
                 pending = Some(PendingEdit {
-                    id: required_text(&record, F_EDIT_ID, "edit id")?,
-                    started_at: required_text(&record, F_EDIT_STARTED, "edit started")?,
-                    actor: field_text(&record, F_EDIT_ACTOR),
-                    finished_at: field_text(&record, F_EDIT_FINISHED),
-                    coalesce_key: field_text(&record, F_EDIT_KEY),
-                    description: field_text(&record, F_EDIT_DESCRIPTION),
+                    id: required_text(&record, F_EDIT_ID, "edit id").await?,
+                    started_at: required_text(&record, F_EDIT_STARTED, "edit started").await?,
+                    actor: field_text(&record, F_EDIT_ACTOR).await,
+                    finished_at: field_text(&record, F_EDIT_FINISHED).await,
+                    coalesce_key: field_text(&record, F_EDIT_KEY).await,
+                    description: field_text(&record, F_EDIT_DESCRIPTION).await,
                 });
                 forwards = Vec::new();
             }
             "change" => {
-                let record = crate::os_dsl::schema::parse(trimmed, &change_spec(), &opts).map_err(text_error_to_protocol)?;
+                let record = crate::os_dsl::schema::parse(trimmed, &change_spec().await, &opts).await.map_err(text_error_to_protocol)?;
                 log.changes.push(HistoryChange {
-                    id: required_text(&record, F_CHANGE_ID, "change id")?,
-                    saved_at: required_text(&record, F_CHANGE_SAVED, "change saved")?,
-                    edit_ids: field_text_list(&record, F_CHANGE_EDITS),
-                    description: field_text(&record, F_CHANGE_DESCRIPTION),
+                    id: required_text(&record, F_CHANGE_ID, "change id").await?,
+                    saved_at: required_text(&record, F_CHANGE_SAVED, "change saved").await?,
+                    edit_ids: field_text_list(&record, F_CHANGE_EDITS).await,
+                    description: field_text(&record, F_CHANGE_DESCRIPTION).await,
                 });
             }
             "checkpoint" => {
-                let record = crate::os_dsl::schema::parse(trimmed, &checkpoint_spec(), &opts).map_err(text_error_to_protocol)?;
+                let record = crate::os_dsl::schema::parse(trimmed, &checkpoint_spec().await, &opts).await.map_err(text_error_to_protocol)?;
                 log.checkpoints.push(HistoryCheckpoint {
-                    id: required_text(&record, F_CHECKPOINT_ID, "checkpoint id")?,
-                    timestamp: required_text(&record, F_CHECKPOINT_AT, "checkpoint at")?,
-                    change_ids: field_text_list(&record, F_CHECKPOINT_CHANGES),
-                    parent_id: field_text(&record, F_CHECKPOINT_PARENT),
-                    authors: field_authors(&record, F_CHECKPOINT_BY),
-                    message: field_text(&record, F_CHECKPOINT_MESSAGE),
+                    id: required_text(&record, F_CHECKPOINT_ID, "checkpoint id").await?,
+                    timestamp: required_text(&record, F_CHECKPOINT_AT, "checkpoint at").await?,
+                    change_ids: field_text_list(&record, F_CHECKPOINT_CHANGES).await,
+                    parent_id: field_text(&record, F_CHECKPOINT_PARENT).await,
+                    authors: field_authors(&record, F_CHECKPOINT_BY).await,
+                    message: field_text(&record, F_CHECKPOINT_MESSAGE).await,
                 });
             }
             "alternative" => {
-                let record = crate::os_dsl::schema::parse(trimmed, &alternative_spec(), &opts).map_err(text_error_to_protocol)?;
+                let record = crate::os_dsl::schema::parse(trimmed, &alternative_spec().await, &opts).await.map_err(text_error_to_protocol)?;
                 log.alternatives.push(HistoryAlternative {
-                    id: required_text(&record, F_ALTERNATIVE_ID, "alternative id")?,
-                    name: required_text(&record, F_ALTERNATIVE_NAME, "alternative name")?,
-                    checkpoint_ids: field_text_list(&record, F_ALTERNATIVE_CHECKPOINTS),
+                    id: required_text(&record, F_ALTERNATIVE_ID, "alternative id").await?,
+                    name: required_text(&record, F_ALTERNATIVE_NAME, "alternative name").await?,
+                    checkpoint_ids: field_text_list(&record, F_ALTERNATIVE_CHECKPOINTS).await,
                 });
             }
             "active" => {
-                let record = crate::os_dsl::schema::parse(trimmed, &active_spec(), &opts).map_err(text_error_to_protocol)?;
-                log.active_alternative_id = Some(required_text(&record, F_ACTIVE_ID, "active id")?);
+                let record = crate::os_dsl::schema::parse(trimmed, &active_spec().await, &opts).await.map_err(text_error_to_protocol)?;
+                log.active_alternative_id = Some(required_text(&record, F_ACTIVE_ID, "active id").await?);
             }
             "cursor" => {
-                let record = crate::os_dsl::schema::parse(trimmed, &cursor_spec(), &opts).map_err(text_error_to_protocol)?;
-                log.cursor = Some(HistoryCursor { applied_edit_ids: field_text_list(&record, F_CURSOR_APPLIED), redo_edit_ids: field_text_list(&record, F_CURSOR_REDO), checkpoint_id: field_text(&record, F_CURSOR_CHECKPOINT) });
+                let record = crate::os_dsl::schema::parse(trimmed, &cursor_spec().await, &opts).await.map_err(text_error_to_protocol)?;
+                log.cursor = Some(HistoryCursor { applied_edit_ids: field_text_list(&record, F_CURSOR_APPLIED).await, redo_edit_ids: field_text_list(&record, F_CURSOR_REDO).await, checkpoint_id: field_text(&record, F_CURSOR_CHECKPOINT).await });
             }
             other => return Err(ProtocolError::Malformed { what: "ops text line", offset: 0, detail: format!("unknown line keyword '{other}'") }),
         }
     }
-    flush(&mut pending, &mut forwards, &mut log.edits);
+    flush(&mut pending, &mut forwards, &mut log.edits).await;
     Ok(log)
 }
 
@@ -467,11 +483,11 @@ pub fn parse_ops_text(ops: &str) -> Result<HistoryLog, ProtocolError> {
 /// (the binary-only `.spr` convention): this crate is schema-agnostic and cannot recover text
 /// from an opaque binary payload — printing `.ops` for a real app document goes through the
 /// concrete `Mutation::print_op` path instead (`crate::os_store::print_document_pack`'s `.ops` mirror).
-pub fn print_ops_text(log: &HistoryLog) -> Result<String, ProtocolError> {
+pub async fn print_ops_text(log: &HistoryLog) -> Result<String, ProtocolError> {
     let mut out = String::new();
 
-    let doc_record = record_with(vec![(F_DOC_ID, FieldValue::Text(log.doc_id.clone())), (F_DOC_SCHEMA, FieldValue::Text(log.schema.clone()))]);
-    out.push_str(&crate::os_dsl::schema::print(&doc_record, &doc_spec(), JoinMode::Inline));
+    let doc_record = record_with(vec![(F_DOC_ID, FieldValue::Text(log.doc_id.clone())), (F_DOC_SCHEMA, FieldValue::Text(log.schema.clone()))]).await;
+    out.push_str(&crate::os_dsl::schema::print(&doc_record, &doc_spec().await, JoinMode::Inline).await);
     out.push('\n');
 
     for edit in &log.edits {
@@ -488,7 +504,7 @@ pub fn print_ops_text(log: &HistoryLog) -> Result<String, ProtocolError> {
         if let Some(description) = &edit.description {
             fields.push((F_EDIT_DESCRIPTION, FieldValue::Text(description.clone())));
         }
-        out.push_str(&crate::os_dsl::schema::print(&record_with(fields), &edit_spec(), JoinMode::Inline));
+        out.push_str(&crate::os_dsl::schema::print(&record_with(fields).await, &edit_spec().await, JoinMode::Inline).await);
         out.push('\n');
         for op in &edit.ops {
             let Some(text) = &op.text else {
@@ -505,7 +521,7 @@ pub fn print_ops_text(log: &HistoryLog) -> Result<String, ProtocolError> {
         if let Some(description) = &change.description {
             fields.push((F_CHANGE_DESCRIPTION, FieldValue::Text(description.clone())));
         }
-        out.push_str(&crate::os_dsl::schema::print(&record_with(fields), &change_spec(), JoinMode::Inline));
+        out.push_str(&crate::os_dsl::schema::print(&record_with(fields).await, &change_spec().await, JoinMode::Inline).await);
         out.push('\n');
     }
 
@@ -518,11 +534,17 @@ pub fn print_ops_text(log: &HistoryLog) -> Result<String, ProtocolError> {
         if let Some(parent) = &checkpoint.parent_id {
             fields.push((F_CHECKPOINT_PARENT, FieldValue::Text(parent.clone())));
         }
-        fields.push((F_CHECKPOINT_BY, FieldValue::List(checkpoint.authors.iter().map(|a| FieldValue::Record(record_with(vec![(F_AUTHOR_ID, FieldValue::Text(a.id.clone())), (F_AUTHOR_NAME, FieldValue::Text(a.name.clone()))]))).collect())));
+        // 🚫️async: R10 shape 1 — `record_with` is async now, but `Iterator::map`'s closure is sync;
+        // hoisted into a plain loop so each author record can be awaited.
+        let mut author_records = Vec::with_capacity(checkpoint.authors.len());
+        for a in &checkpoint.authors {
+            author_records.push(FieldValue::Record(record_with(vec![(F_AUTHOR_ID, FieldValue::Text(a.id.clone())), (F_AUTHOR_NAME, FieldValue::Text(a.name.clone()))]).await));
+        }
+        fields.push((F_CHECKPOINT_BY, FieldValue::List(author_records)));
         if let Some(message) = &checkpoint.message {
             fields.push((F_CHECKPOINT_MESSAGE, FieldValue::Text(message.clone())));
         }
-        out.push_str(&crate::os_dsl::schema::print(&record_with(fields), &checkpoint_spec(), JoinMode::Inline));
+        out.push_str(&crate::os_dsl::schema::print(&record_with(fields).await, &checkpoint_spec().await, JoinMode::Inline).await);
         out.push('\n');
     }
 
@@ -532,12 +554,12 @@ pub fn print_ops_text(log: &HistoryLog) -> Result<String, ProtocolError> {
             (F_ALTERNATIVE_NAME, FieldValue::Text(alternative.name.clone())),
             (F_ALTERNATIVE_CHECKPOINTS, FieldValue::List(alternative.checkpoint_ids.iter().map(|s| FieldValue::Text(s.clone())).collect())),
         ];
-        out.push_str(&crate::os_dsl::schema::print(&record_with(fields), &alternative_spec(), JoinMode::Inline));
+        out.push_str(&crate::os_dsl::schema::print(&record_with(fields).await, &alternative_spec().await, JoinMode::Inline).await);
         out.push('\n');
     }
 
     if let Some(active_id) = &log.active_alternative_id {
-        out.push_str(&crate::os_dsl::schema::print(&record_with(vec![(F_ACTIVE_ID, FieldValue::Text(active_id.clone()))]), &active_spec(), JoinMode::Inline));
+        out.push_str(&crate::os_dsl::schema::print(&record_with(vec![(F_ACTIVE_ID, FieldValue::Text(active_id.clone()))]).await, &active_spec().await, JoinMode::Inline).await);
         out.push('\n');
     }
 
@@ -547,7 +569,7 @@ pub fn print_ops_text(log: &HistoryLog) -> Result<String, ProtocolError> {
         if let Some(checkpoint_id) = &cursor.checkpoint_id {
             fields.push((F_CURSOR_CHECKPOINT, FieldValue::Text(checkpoint_id.clone())));
         }
-        out.push_str(&crate::os_dsl::schema::print(&record_with(fields), &cursor_spec(), JoinMode::Inline));
+        out.push_str(&crate::os_dsl::schema::print(&record_with(fields).await, &cursor_spec().await, JoinMode::Inline).await);
         out.push('\n');
     }
 
@@ -582,32 +604,38 @@ pub fn print_ops_text(log: &HistoryLog) -> Result<String, ProtocolError> {
 // - Every `Option<T>` field not already covered by a record-level presence bitmask (i.e. every
 //   field inside one `HistoryOpMeta` entry) gets its own bitmask byte, described per-function.
 
-fn malformed_fmt(what: &'static str, format: u8) -> ProtocolError {
+async fn malformed_fmt(what: &'static str, format: u8) -> ProtocolError {
     ProtocolError::Malformed { what, offset: 0, detail: format!("unsupported format {format}") }
 }
 
-fn write_str_field(out: &mut ByteWriter, s: &str) {
-    out.write_varint_u64(s.len() as u64);
-    out.write_bytes(s.as_bytes());
+async fn write_str_field(out: &mut ByteWriter, s: &str) {
+    out.write_varint_u64(s.len() as u64).await;
+    out.write_bytes(s.as_bytes()).await;
 }
 
-fn read_str_field(input: &mut ByteReader<'_>) -> Result<String, ProtocolError> {
-    let len = input.read_varint_u64()? as usize;
-    let bytes = input.read_bytes(len)?;
+async fn read_str_field(input: &mut ByteReader<'_>) -> Result<String, ProtocolError> {
+    let len = input.read_varint_u64().await? as usize;
+    let bytes = input.read_bytes(len).await?;
     std::str::from_utf8(bytes).map(str::to_string).map_err(|_| ProtocolError::Malformed { what: "utf8", offset: 0, detail: "invalid utf-8".to_string() })
 }
 
-fn write_id_field(out: &mut ByteWriter, id: &str, dict: &mut DictBuilder, edit_ordinal_of: &dyn Fn(&str) -> Option<u64>) -> Result<(), ProtocolError> {
-    crate::os_spr::scalar::scalar::write_id(out, id, |s| dict.intern(s), edit_ordinal_of).map_err(ProtocolError::from)
+async fn write_id_field(out: &mut ByteWriter, id: &str, dict: &mut DictBuilder, edit_ordinal_of: &dyn Fn(&str) -> Option<u64>) -> Result<(), ProtocolError> {
+    // ✏️ Genuine `async |s|` closure — see `read_id_field`'s tag above (the HRTB gap applies to
+    // `AsyncFnMut` the same way it does to `AsyncFn`).
+    crate::os_spr::scalar::scalar::write_id(out, id, async |s| dict.intern(s).await, edit_ordinal_of).await.map_err(ProtocolError::from)
 }
 
-fn read_id_field<'d>(input: &mut ByteReader<'_>, dict: &'d DictReader, ordinal_to_id: &dyn Fn(u64) -> Result<&'d str, ProtocolError>) -> Result<String, ProtocolError> {
+async fn read_id_field<'d>(input: &mut ByteReader<'_>, dict: &'d DictReader, ordinal_to_id: &dyn Fn(u64) -> Result<&'d str, ProtocolError>) -> Result<String, ProtocolError> {
+    // ✏️ `scalar::read_id`'s `resolve` param is `AsyncFn` (granted lease, kernel-finish packet).
+    // A plain closure returning a future satisfies the blanket impl in THEORY, but hits rustc's
+    // known "implementation of AsyncFn is not general enough" HRTB gap in practice (reproduced in
+    // `📡️replication/🧾️wire/🦀️component.rs`'s tests) — a genuine `async |args|` closure sidesteps it.
     crate::os_spr::scalar::scalar::read_id(
         input,
-        |idx: u32| dict.resolve(idx).map_err(|_| crate::os_pack::PackError::Malformed { what: "dict index", offset: idx as u64, detail: "out of range".to_string() }),
+        async |idx: u32| dict.resolve(idx).await.map_err(|_| crate::os_pack::PackError::Malformed { what: "dict index", offset: idx as u64, detail: "out of range".to_string() }),
         |ord: u64| ordinal_to_id(ord).map_err(|_| crate::os_pack::PackError::Malformed { what: "edit ordinal", offset: ord, detail: "unresolvable".to_string() }),
     )
-    .map_err(ProtocolError::from)
+    .await.map_err(ProtocolError::from)
 }
 
 //#region 🔖️Message
@@ -616,64 +644,70 @@ fn read_id_field<'d>(input: &mut ByteReader<'_>, dict: &'d DictReader, ordinal_t
 
 /// @emoji 🎯️ `level u8 | code(idfield, dict-interned) | message(strfield) | target_count varint +
 /// target(strfield)* | op_index presence u8 + [varint]`.
-fn write_history_message(out: &mut ByteWriter, message: &HistoryMessage, dict: &mut DictBuilder) -> Result<(), ProtocolError> {
-    out.write_u8(message.level);
-    write_id_field(out, &message.code, dict, &|_: &str| None)?;
-    write_str_field(out, &message.message);
-    out.write_varint_u64(message.target.len() as u64);
+async fn write_history_message(out: &mut ByteWriter, message: &HistoryMessage, dict: &mut DictBuilder) -> Result<(), ProtocolError> {
+    out.write_u8(message.level).await;
+    write_id_field(out, &message.code, dict, &|_: &str| None).await?;
+    write_str_field(out, &message.message).await;
+    out.write_varint_u64(message.target.len() as u64).await;
     for target in &message.target {
-        write_str_field(out, target);
+        write_str_field(out, target).await;
     }
     match message.op_index {
         Some(index) => {
-            out.write_u8(1);
-            out.write_varint_u64(index as u64);
+            out.write_u8(1).await;
+            out.write_varint_u64(index as u64).await;
         }
-        None => out.write_u8(0),
+        None => out.write_u8(0).await,
     }
     Ok(())
 }
 
 /// @emoji 🎯️ Inverse of [`write_history_message`].
-fn read_history_message(input: &mut ByteReader<'_>, dict: &DictReader) -> Result<HistoryMessage, ProtocolError> {
-    let level = input.read_u8()?;
+async fn read_history_message(input: &mut ByteReader<'_>, dict: &DictReader) -> Result<HistoryMessage, ProtocolError> {
+    let level = input.read_u8().await?;
     if crate::os_dsl::Severity::from_u8(level).is_none() {
-        return Err(ProtocolError::Malformed { what: "history message severity", offset: input.position() as u64 - 1, detail: format!("unknown severity {level}") });
+        return Err(ProtocolError::Malformed { what: "history message severity", offset: input.position().await as u64 - 1, detail: format!("unknown severity {level}") });
     }
-    let code = read_id_field(input, dict, &|ord: u64| Err(ProtocolError::DictMiss(ord as u32)))?;
-    let message = read_str_field(input)?;
-    let target_count = input.read_varint_u64()?;
+    let code = read_id_field(input, dict, &|ord: u64| Err(ProtocolError::DictMiss(ord as u32))).await?;
+    let message = read_str_field(input).await?;
+    let target_count = input.read_varint_u64().await?;
     let mut target = Vec::with_capacity(target_count as usize);
     for _ in 0..target_count {
-        target.push(read_str_field(input)?);
+        target.push(read_str_field(input).await?);
     }
-    let has_op_index = input.read_u8()?;
+    let has_op_index = input.read_u8().await?;
     let op_index = match has_op_index {
         0 => None,
-        1 => Some(u32::try_from(input.read_varint_u64()?).map_err(|_| ProtocolError::Malformed { what: "history message operation index", offset: input.position() as u64, detail: "exceeds u32".to_string() })?),
-        value => return Err(ProtocolError::Malformed { what: "history message operation index presence", offset: input.position() as u64 - 1, detail: format!("expected 0 or 1, got {value}") }),
+        1 => {
+            let raw = input.read_varint_u64().await?;
+            // 🚫️async: R10 shape 1 — `position()` is async but `map_err`'s closure is sync; the
+            // offset is captured up front instead of awaited inside the closure.
+            let offset = input.position().await as u64;
+            Some(u32::try_from(raw).map_err(|_| ProtocolError::Malformed { what: "history message operation index", offset, detail: "exceeds u32".to_string() })?)
+        }
+        value => return Err(ProtocolError::Malformed { what: "history message operation index presence", offset: input.position().await as u64 - 1, detail: format!("expected 0 or 1, got {value}") }),
     };
     Ok(HistoryMessage { level, code, message, target, op_index })
 }
 //#endregion 🔖️Message
 
 //#region 🔖️Doc
-pub fn encode_doc(doc_id: &str, schema: &str, dict: &mut DictBuilder) -> Vec<u8> {
-    let mut out = ByteWriter::new();
-    out.write_u8(1);
-    write_id_field(&mut out, doc_id, dict, &|_: &str| None).expect("write_id never fails for an in-memory ByteWriter");
-    write_id_field(&mut out, schema, dict, &|_: &str| None).expect("write_id never fails for an in-memory ByteWriter");
-    out.into_bytes()
+pub async fn encode_doc(doc_id: &str, schema: &str, dict: &mut DictBuilder) -> Vec<u8> {
+    let mut out = ByteWriter::new().await;
+    out.write_u8(1).await;
+    write_id_field(&mut out, doc_id, dict, &|_: &str| None).await.expect("write_id never fails for an in-memory ByteWriter");
+    write_id_field(&mut out, schema, dict, &|_: &str| None).await.expect("write_id never fails for an in-memory ByteWriter");
+    out.into_bytes().await
 }
 
-pub fn decode_doc(payload: &[u8], dict: &DictReader) -> Result<(String, String), ProtocolError> {
-    let mut input = ByteReader::new(payload);
-    let format = input.read_u8()?;
+pub async fn decode_doc(payload: &[u8], dict: &DictReader) -> Result<(String, String), ProtocolError> {
+    let mut input = ByteReader::new(payload).await;
+    let format = input.read_u8().await?;
     if format > 1 {
-        return Err(malformed_fmt("doc", format));
+        return Err(malformed_fmt("doc", format).await);
     }
-    let doc_id = read_id_field(&mut input, dict, &|ord: u64| Err(ProtocolError::DictMiss(ord as u32)))?;
-    let schema = read_id_field(&mut input, dict, &|ord: u64| Err(ProtocolError::DictMiss(ord as u32)))?;
+    let doc_id = read_id_field(&mut input, dict, &|ord: u64| Err(ProtocolError::DictMiss(ord as u32))).await?;
+    let schema = read_id_field(&mut input, dict, &|ord: u64| Err(ProtocolError::DictMiss(ord as u32))).await?;
     Ok((doc_id, schema))
 }
 //#endregion 🔖️Doc
@@ -691,39 +725,39 @@ pub fn decode_doc(payload: &[u8], dict: &DictReader) -> Result<(String, String),
 /// @emoji 🎯️ Writes one op payload: `op_tag u8 [bit0 has_text=1 required in v1, bit1 has_binary]
 /// + text_len varint + utf8 + [binary_len varint + bytes iff bit1]`. Used for both `edit.ops`
 /// and `edit.inverse` — the two sections share this exact wire shape.
-fn write_op_payload(out: &mut ByteWriter, op: &OpPayload) -> Result<(), ProtocolError> {
+async fn write_op_payload(out: &mut ByteWriter, op: &OpPayload) -> Result<(), ProtocolError> {
     if op.text.is_none() && op.binary.is_none() {
         return Err(ProtocolError::Malformed { what: "op payload", offset: 0, detail: "requires text or binary".to_string() });
     }
     let tag = (op.text.is_some() as u8) | ((op.binary.is_some() as u8) << 1);
-    out.write_u8(tag);
+    out.write_u8(tag).await;
     if let Some(text) = &op.text {
-        write_str_field(out, text);
+        write_str_field(out, text).await;
     }
     if let Some(binary) = &op.binary {
-        out.write_varint_u64(binary.len() as u64);
-        out.write_bytes(binary);
+        out.write_varint_u64(binary.len() as u64).await;
+        out.write_bytes(binary).await;
     }
     Ok(())
 }
 
 /// @emoji 🎯️ Inverse of [`write_op_payload`].
-fn read_op_payload(input: &mut ByteReader<'_>) -> Result<OpPayload, ProtocolError> {
-    let op_tag = input.read_u8()?;
+async fn read_op_payload(input: &mut ByteReader<'_>) -> Result<OpPayload, ProtocolError> {
+    let op_tag = input.read_u8().await?;
     if op_tag & 0b11 == 0 {
         return Err(ProtocolError::Malformed { what: "op payload", offset: 0, detail: "requires text or binary bit set".to_string() });
     }
-    let text = if op_tag & 0b01 != 0 { Some(read_str_field(input)?) } else { None };
+    let text = if op_tag & 0b01 != 0 { Some(read_str_field(input).await?) } else { None };
     let binary = if op_tag & 0b10 != 0 {
-        let len = input.read_varint_u64()? as usize;
-        Some(input.read_bytes(len)?.to_vec())
+        let len = input.read_varint_u64().await? as usize;
+        Some(input.read_bytes(len).await?.to_vec())
     } else {
         None
     };
     Ok(OpPayload { text, binary })
 }
 
-fn write_op_meta(out: &mut ByteWriter, meta: &HistoryOpMeta, dict: &mut DictBuilder, edit_ordinal_of: &dyn Fn(&str) -> Option<u64>) -> Result<(), ProtocolError> {
+async fn write_op_meta(out: &mut ByteWriter, meta: &HistoryOpMeta, dict: &mut DictBuilder, edit_ordinal_of: &dyn Fn(&str) -> Option<u64>) -> Result<(), ProtocolError> {
     let mut presence = 0u8;
     if meta.op_id.is_some() {
         presence |= 1 << 0;
@@ -746,26 +780,26 @@ fn write_op_meta(out: &mut ByteWriter, meta: &HistoryOpMeta, dict: &mut DictBuil
     if !meta.messages.is_empty() {
         presence |= 1 << 6;
     }
-    out.write_u8(presence);
+    out.write_u8(presence).await;
     if let Some(op_id) = &meta.op_id {
-        write_id_field(out, op_id, dict, edit_ordinal_of)?;
+        write_id_field(out, op_id, dict, edit_ordinal_of).await?;
     }
-    out.write_varint_u64(meta.dependencies.len() as u64);
+    out.write_varint_u64(meta.dependencies.len() as u64).await;
     for dep in &meta.dependencies {
-        write_id_field(out, dep, dict, edit_ordinal_of)?;
+        write_id_field(out, dep, dict, edit_ordinal_of).await?;
     }
-    out.write_varint_u64(meta.base_version);
+    out.write_varint_u64(meta.base_version).await;
     if let Some(author) = &meta.author_id {
-        write_id_field(out, author, dict, edit_ordinal_of)?;
+        write_id_field(out, author, dict, edit_ordinal_of).await?;
     }
     if let Some((actor, physical_ms, logical)) = &meta.hlt {
-        out.write_varint_u64(*actor);
-        out.write_varint_i64(*physical_ms);
-        out.write_varint_u64(*logical);
+        out.write_varint_u64(*actor).await;
+        out.write_varint_i64(*physical_ms).await;
+        out.write_varint_u64(*logical).await;
     }
-    out.write_u8(meta.undo_policy);
+    out.write_u8(meta.undo_policy).await;
     if let Some(hash) = &meta.payload_hash {
-        out.write_bytes(hash);
+        out.write_bytes(hash).await;
     }
     // 🎯️ Appended past the pre-existing tail (bit4 of the same presence byte) — a decoder reading
     // a byte-log written before this field existed sees bit4 unset (that bit never existed in the
@@ -773,7 +807,7 @@ fn write_op_meta(out: &mut ByteWriter, meta: &HistoryOpMeta, dict: &mut DictBuil
     // "absent for logs predating this field" contract `HistoryLog.cursor` documents for its own
     // additive field.
     if let Some(group_id) = &meta.group_id {
-        write_id_field(out, group_id, dict, edit_ordinal_of)?;
+        write_id_field(out, group_id, dict, edit_ordinal_of).await?;
     }
     // 🎯️ Appended past `group_id` (bit5 of the same presence byte, same "absent for logs predating
     // this field" contract) — canonical-JSON, not dict-interned: unlike `group_id`, an origin's
@@ -781,51 +815,51 @@ fn write_op_meta(out: &mut ByteWriter, meta: &HistoryOpMeta, dict: &mut DictBuil
     // siblings the way a shared composite-gesture id does.
     if !meta.origin.is_owner() {
         let encoded = serde_json::to_string(&meta.origin).expect("MutationOrigin canonical encoding never fails");
-        write_str_field(out, &encoded);
+        write_str_field(out, &encoded).await;
     }
     // 🎯️ Appended past `origin` (bit6 of the same presence byte, same "absent for logs predating
     // this field" contract) — the durable message ledger, not reproducible from a fresh replay.
     if !meta.messages.is_empty() {
-        out.write_varint_u64(meta.messages.len() as u64);
+        out.write_varint_u64(meta.messages.len() as u64).await;
         for message in &meta.messages {
-            write_history_message(out, message, dict)?;
+            write_history_message(out, message, dict).await?;
         }
     }
     Ok(())
 }
 
-fn read_op_meta<'d>(input: &mut ByteReader<'_>, dict: &'d DictReader, ordinal_to_id: &dyn Fn(u64) -> Result<&'d str, ProtocolError>) -> Result<HistoryOpMeta, ProtocolError> {
-    let presence = input.read_u8()?;
-    let op_id = if presence & (1 << 0) != 0 { Some(read_id_field(input, dict, ordinal_to_id)?) } else { None };
-    let dep_count = input.read_varint_u64()?;
+async fn read_op_meta<'d>(input: &mut ByteReader<'_>, dict: &'d DictReader, ordinal_to_id: &dyn Fn(u64) -> Result<&'d str, ProtocolError>) -> Result<HistoryOpMeta, ProtocolError> {
+    let presence = input.read_u8().await?;
+    let op_id = if presence & (1 << 0) != 0 { Some(read_id_field(input, dict, ordinal_to_id).await?) } else { None };
+    let dep_count = input.read_varint_u64().await?;
     let mut dependencies = Vec::with_capacity(dep_count as usize);
     for _ in 0..dep_count {
-        dependencies.push(read_id_field(input, dict, ordinal_to_id)?);
+        dependencies.push(read_id_field(input, dict, ordinal_to_id).await?);
     }
-    let base_version = input.read_varint_u64()?;
-    let author_id = if presence & (1 << 1) != 0 { Some(read_id_field(input, dict, ordinal_to_id)?) } else { None };
+    let base_version = input.read_varint_u64().await?;
+    let author_id = if presence & (1 << 1) != 0 { Some(read_id_field(input, dict, ordinal_to_id).await?) } else { None };
     let hlt = if presence & (1 << 2) != 0 {
-        let actor = input.read_varint_u64()?;
-        let physical_ms = input.read_varint_i64()?;
-        let logical = input.read_varint_u64()?;
+        let actor = input.read_varint_u64().await?;
+        let physical_ms = input.read_varint_i64().await?;
+        let logical = input.read_varint_u64().await?;
         Some((actor, physical_ms, logical))
     } else {
         None
     };
-    let undo_policy = input.read_u8()?;
-    let payload_hash = if presence & (1 << 3) != 0 { Some(input.read_array32()?) } else { None };
-    let group_id = if presence & (1 << 4) != 0 { Some(read_id_field(input, dict, ordinal_to_id)?) } else { None };
+    let undo_policy = input.read_u8().await?;
+    let payload_hash = if presence & (1 << 3) != 0 { Some(input.read_array32().await?) } else { None };
+    let group_id = if presence & (1 << 4) != 0 { Some(read_id_field(input, dict, ordinal_to_id).await?) } else { None };
     let origin = if presence & (1 << 5) != 0 {
-        let encoded = read_str_field(input)?;
+        let encoded = read_str_field(input).await?;
         serde_json::from_str(&encoded).map_err(|error| ProtocolError::Malformed { what: "op meta origin", offset: 0, detail: error.to_string() })?
     } else {
         crate::os_spr::command::MutationOrigin::Owner
     };
     let messages = if presence & (1 << 6) != 0 {
-        let count = input.read_varint_u64()?;
+        let count = input.read_varint_u64().await?;
         let mut messages = Vec::with_capacity(count as usize);
         for _ in 0..count {
-            messages.push(read_history_message(input, dict)?);
+            messages.push(read_history_message(input, dict).await?);
         }
         messages
     } else {
@@ -834,10 +868,10 @@ fn read_op_meta<'d>(input: &mut ByteReader<'_>, dict: &'d DictReader, ordinal_to
     Ok(HistoryOpMeta { op_id, dependencies, base_version, author_id, hlt, undo_policy, payload_hash, group_id, origin, messages })
 }
 
-pub fn encode_edit(edit: &HistoryEdit, dict: &mut DictBuilder, edit_ordinal_of: impl Fn(&str) -> Option<u64>) -> Result<Vec<u8>, ProtocolError> {
+pub async fn encode_edit(edit: &HistoryEdit, dict: &mut DictBuilder, edit_ordinal_of: impl Fn(&str) -> Option<u64>) -> Result<Vec<u8>, ProtocolError> {
     let edit_ordinal_of: &dyn Fn(&str) -> Option<u64> = &edit_ordinal_of;
-    let mut out = ByteWriter::new();
-    out.write_u8(1);
+    let mut out = ByteWriter::new().await;
+    out.write_u8(1).await;
     let mut presence = 0u8;
     if edit.actor.is_some() {
         presence |= 1 << 0;
@@ -857,33 +891,33 @@ pub fn encode_edit(edit: &HistoryEdit, dict: &mut DictBuilder, edit_ordinal_of: 
     if !edit.inverse.is_empty() {
         presence |= 1 << 5;
     }
-    out.write_u8(presence);
-    write_id_field(&mut out, &edit.id, dict, &|_: &str| None)?;
-    let mut prev_epoch_ms = crate::os_spr::scalar::scalar::write_timestamp(&mut out, &edit.started_at, None);
+    out.write_u8(presence).await;
+    write_id_field(&mut out, &edit.id, dict, &|_: &str| None).await?;
+    let mut prev_epoch_ms = crate::os_spr::scalar::scalar::write_timestamp(&mut out, &edit.started_at, None).await;
     if let Some(actor) = &edit.actor {
-        write_id_field(&mut out, actor, dict, edit_ordinal_of)?;
+        write_id_field(&mut out, actor, dict, edit_ordinal_of).await?;
     }
     if let Some(finished) = &edit.finished_at {
-        prev_epoch_ms = crate::os_spr::scalar::scalar::write_timestamp(&mut out, finished, prev_epoch_ms);
+        prev_epoch_ms = crate::os_spr::scalar::scalar::write_timestamp(&mut out, finished, prev_epoch_ms).await;
     }
     let _ = prev_epoch_ms;
     if let Some(key) = &edit.coalesce_key {
-        write_str_field(&mut out, key);
+        write_str_field(&mut out, key).await;
     }
     if let Some(description) = &edit.description {
-        write_str_field(&mut out, description);
+        write_str_field(&mut out, description).await;
     }
     if edit.ops.len() as u64 > ProtocolLimits::default().max_op_count_per_edit as u64 {
         return Err(ProtocolError::LimitExceeded("edit op count exceeds ProtocolLimits::max_op_count_per_edit"));
     }
-    out.write_varint_u64(edit.ops.len() as u64);
+    out.write_varint_u64(edit.ops.len() as u64).await;
     for op in &edit.ops {
-        write_op_payload(&mut out, op)?;
+        write_op_payload(&mut out, op).await?;
     }
     if !edit.inverse.is_empty() {
-        out.write_varint_u64(edit.inverse.len() as u64);
+        out.write_varint_u64(edit.inverse.len() as u64).await;
         for op in &edit.inverse {
-            write_op_payload(&mut out, op)?;
+            write_op_payload(&mut out, op).await?;
         }
     }
     if let Some(metas) = &edit.meta {
@@ -891,50 +925,50 @@ pub fn encode_edit(edit: &HistoryEdit, dict: &mut DictBuilder, edit_ordinal_of: 
             return Err(ProtocolError::Malformed { what: "edit meta", offset: 0, detail: "explicit meta length must match op count".to_string() });
         }
         for meta in metas {
-            write_op_meta(&mut out, meta, dict, edit_ordinal_of)?;
+            write_op_meta(&mut out, meta, dict, edit_ordinal_of).await?;
         }
     }
-    Ok(out.into_bytes())
+    Ok(out.into_bytes().await)
 }
 
-pub fn decode_edit<'d>(payload: &[u8], dict: &'d DictReader, ordinal_to_id: impl Fn(u64) -> Result<&'d str, ProtocolError>) -> Result<HistoryEdit, ProtocolError> {
+pub async fn decode_edit<'d>(payload: &[u8], dict: &'d DictReader, ordinal_to_id: impl Fn(u64) -> Result<&'d str, ProtocolError>) -> Result<HistoryEdit, ProtocolError> {
     let ordinal_to_id: &dyn Fn(u64) -> Result<&'d str, ProtocolError> = &ordinal_to_id;
-    let mut input = ByteReader::new(payload);
-    let format = input.read_u8()?;
+    let mut input = ByteReader::new(payload).await;
+    let format = input.read_u8().await?;
     if format > 1 {
-        return Err(malformed_fmt("edit", format));
+        return Err(malformed_fmt("edit", format).await);
     }
-    let presence = input.read_u8()?;
-    let id = read_id_field(&mut input, dict, &|ord: u64| Err(ProtocolError::DictMiss(ord as u32)))?;
-    let (started_at, mut prev_epoch_ms) = crate::os_spr::scalar::scalar::read_timestamp(&mut input, None)?;
-    let actor = if presence & (1 << 0) != 0 { Some(read_id_field(&mut input, dict, ordinal_to_id)?) } else { None };
+    let presence = input.read_u8().await?;
+    let id = read_id_field(&mut input, dict, &|ord: u64| Err(ProtocolError::DictMiss(ord as u32))).await?;
+    let (started_at, mut prev_epoch_ms) = crate::os_spr::scalar::scalar::read_timestamp(&mut input, None).await?;
+    let actor = if presence & (1 << 0) != 0 { Some(read_id_field(&mut input, dict, ordinal_to_id).await?) } else { None };
     let finished_at = if presence & (1 << 1) != 0 {
-        let (s, p) = crate::os_spr::scalar::scalar::read_timestamp(&mut input, prev_epoch_ms)?;
+        let (s, p) = crate::os_spr::scalar::scalar::read_timestamp(&mut input, prev_epoch_ms).await?;
         prev_epoch_ms = p;
         Some(s)
     } else {
         None
     };
     let _ = prev_epoch_ms;
-    let coalesce_key = if presence & (1 << 2) != 0 { Some(read_str_field(&mut input)?) } else { None };
-    let description = if presence & (1 << 3) != 0 { Some(read_str_field(&mut input)?) } else { None };
-    let op_count = input.read_varint_u64()?;
+    let coalesce_key = if presence & (1 << 2) != 0 { Some(read_str_field(&mut input).await?) } else { None };
+    let description = if presence & (1 << 3) != 0 { Some(read_str_field(&mut input).await?) } else { None };
+    let op_count = input.read_varint_u64().await?;
     let max_ops = ProtocolLimits::default().max_op_count_per_edit as u64;
     if op_count > max_ops {
         return Err(ProtocolError::LimitExceeded("edit op count exceeds ProtocolLimits::max_op_count_per_edit"));
     }
     let mut ops = Vec::with_capacity(op_count as usize);
     for _ in 0..op_count {
-        ops.push(read_op_payload(&mut input)?);
+        ops.push(read_op_payload(&mut input).await?);
     }
     let inverse = if presence & (1 << 5) != 0 {
-        let back_count = input.read_varint_u64()?;
+        let back_count = input.read_varint_u64().await?;
         if back_count > max_ops {
             return Err(ProtocolError::LimitExceeded("edit inverse op count exceeds ProtocolLimits::max_op_count_per_edit"));
         }
         let mut backs = Vec::with_capacity(back_count as usize);
         for _ in 0..back_count {
-            backs.push(read_op_payload(&mut input)?);
+            backs.push(read_op_payload(&mut input).await?);
         }
         backs
     } else {
@@ -943,7 +977,7 @@ pub fn decode_edit<'d>(payload: &[u8], dict: &'d DictReader, ordinal_to_id: impl
     let meta = if presence & (1 << 4) != 0 {
         let mut metas = Vec::with_capacity(op_count as usize);
         for _ in 0..op_count {
-            metas.push(read_op_meta(&mut input, dict, ordinal_to_id)?);
+            metas.push(read_op_meta(&mut input, dict, ordinal_to_id).await?);
         }
         Some(metas)
     } else {
@@ -954,51 +988,51 @@ pub fn decode_edit<'d>(payload: &[u8], dict: &'d DictReader, ordinal_to_id: impl
 //#endregion 🔖️Edit
 
 //#region 🔖️Change
-pub fn encode_change(change: &HistoryChange, dict: &mut DictBuilder, edit_ordinal_of: impl Fn(&str) -> Option<u64>) -> Result<Vec<u8>, ProtocolError> {
+pub async fn encode_change(change: &HistoryChange, dict: &mut DictBuilder, edit_ordinal_of: impl Fn(&str) -> Option<u64>) -> Result<Vec<u8>, ProtocolError> {
     let edit_ordinal_of: &dyn Fn(&str) -> Option<u64> = &edit_ordinal_of;
-    let mut out = ByteWriter::new();
-    out.write_u8(1);
+    let mut out = ByteWriter::new().await;
+    out.write_u8(1).await;
     let mut presence = 0u8;
     if change.description.is_some() {
         presence |= 1 << 0;
     }
-    out.write_u8(presence);
-    write_id_field(&mut out, &change.id, dict, &|_: &str| None)?;
-    crate::os_spr::scalar::scalar::write_timestamp(&mut out, &change.saved_at, None);
-    out.write_varint_u64(change.edit_ids.len() as u64);
+    out.write_u8(presence).await;
+    write_id_field(&mut out, &change.id, dict, &|_: &str| None).await?;
+    crate::os_spr::scalar::scalar::write_timestamp(&mut out, &change.saved_at, None).await;
+    out.write_varint_u64(change.edit_ids.len() as u64).await;
     for edit_id in &change.edit_ids {
-        write_id_field(&mut out, edit_id, dict, edit_ordinal_of)?;
+        write_id_field(&mut out, edit_id, dict, edit_ordinal_of).await?;
     }
     if let Some(description) = &change.description {
-        write_str_field(&mut out, description);
+        write_str_field(&mut out, description).await;
     }
-    Ok(out.into_bytes())
+    Ok(out.into_bytes().await)
 }
 
-pub fn decode_change<'d>(payload: &[u8], dict: &'d DictReader, ordinal_to_id: impl Fn(u64) -> Result<&'d str, ProtocolError>) -> Result<HistoryChange, ProtocolError> {
+pub async fn decode_change<'d>(payload: &[u8], dict: &'d DictReader, ordinal_to_id: impl Fn(u64) -> Result<&'d str, ProtocolError>) -> Result<HistoryChange, ProtocolError> {
     let ordinal_to_id: &dyn Fn(u64) -> Result<&'d str, ProtocolError> = &ordinal_to_id;
-    let mut input = ByteReader::new(payload);
-    let format = input.read_u8()?;
+    let mut input = ByteReader::new(payload).await;
+    let format = input.read_u8().await?;
     if format > 1 {
-        return Err(malformed_fmt("change", format));
+        return Err(malformed_fmt("change", format).await);
     }
-    let presence = input.read_u8()?;
-    let id = read_id_field(&mut input, dict, &|ord: u64| Err(ProtocolError::DictMiss(ord as u32)))?;
-    let (saved_at, _) = crate::os_spr::scalar::scalar::read_timestamp(&mut input, None)?;
-    let edit_count = input.read_varint_u64()?;
+    let presence = input.read_u8().await?;
+    let id = read_id_field(&mut input, dict, &|ord: u64| Err(ProtocolError::DictMiss(ord as u32))).await?;
+    let (saved_at, _) = crate::os_spr::scalar::scalar::read_timestamp(&mut input, None).await?;
+    let edit_count = input.read_varint_u64().await?;
     let mut edit_ids = Vec::with_capacity(edit_count as usize);
     for _ in 0..edit_count {
-        edit_ids.push(read_id_field(&mut input, dict, ordinal_to_id)?);
+        edit_ids.push(read_id_field(&mut input, dict, ordinal_to_id).await?);
     }
-    let description = if presence & (1 << 0) != 0 { Some(read_str_field(&mut input)?) } else { None };
+    let description = if presence & (1 << 0) != 0 { Some(read_str_field(&mut input).await?) } else { None };
     Ok(HistoryChange { id, saved_at, edit_ids, description })
 }
 //#endregion 🔖️Change
 
 //#region 🔖️Checkpoint
-pub fn encode_checkpoint(checkpoint: &HistoryCheckpoint, dict: &mut DictBuilder) -> Result<Vec<u8>, ProtocolError> {
-    let mut out = ByteWriter::new();
-    out.write_u8(1);
+pub async fn encode_checkpoint(checkpoint: &HistoryCheckpoint, dict: &mut DictBuilder) -> Result<Vec<u8>, ProtocolError> {
+    let mut out = ByteWriter::new().await;
+    out.write_u8(1).await;
     let mut presence = 0u8;
     if checkpoint.parent_id.is_some() {
         presence |= 1 << 0;
@@ -1006,106 +1040,106 @@ pub fn encode_checkpoint(checkpoint: &HistoryCheckpoint, dict: &mut DictBuilder)
     if checkpoint.message.is_some() {
         presence |= 1 << 1;
     }
-    out.write_u8(presence);
-    write_id_field(&mut out, &checkpoint.id, dict, &|_: &str| None)?;
-    crate::os_spr::scalar::scalar::write_timestamp(&mut out, &checkpoint.timestamp, None);
-    out.write_varint_u64(checkpoint.change_ids.len() as u64);
+    out.write_u8(presence).await;
+    write_id_field(&mut out, &checkpoint.id, dict, &|_: &str| None).await?;
+    crate::os_spr::scalar::scalar::write_timestamp(&mut out, &checkpoint.timestamp, None).await;
+    out.write_varint_u64(checkpoint.change_ids.len() as u64).await;
     for change_id in &checkpoint.change_ids {
-        write_id_field(&mut out, change_id, dict, &|_: &str| None)?;
+        write_id_field(&mut out, change_id, dict, &|_: &str| None).await?;
     }
     if let Some(parent) = &checkpoint.parent_id {
-        write_id_field(&mut out, parent, dict, &|_: &str| None)?;
+        write_id_field(&mut out, parent, dict, &|_: &str| None).await?;
     }
-    out.write_varint_u64(checkpoint.authors.len() as u64);
+    out.write_varint_u64(checkpoint.authors.len() as u64).await;
     for author in &checkpoint.authors {
-        write_id_field(&mut out, &author.id, dict, &|_: &str| None)?;
-        write_str_field(&mut out, &author.name);
+        write_id_field(&mut out, &author.id, dict, &|_: &str| None).await?;
+        write_str_field(&mut out, &author.name).await;
     }
     if let Some(message) = &checkpoint.message {
-        write_str_field(&mut out, message);
+        write_str_field(&mut out, message).await;
     }
-    Ok(out.into_bytes())
+    Ok(out.into_bytes().await)
 }
 
-pub fn decode_checkpoint(payload: &[u8], dict: &DictReader) -> Result<HistoryCheckpoint, ProtocolError> {
-    let mut input = ByteReader::new(payload);
-    let format = input.read_u8()?;
+pub async fn decode_checkpoint(payload: &[u8], dict: &DictReader) -> Result<HistoryCheckpoint, ProtocolError> {
+    let mut input = ByteReader::new(payload).await;
+    let format = input.read_u8().await?;
     if format > 1 {
-        return Err(malformed_fmt("checkpoint", format));
+        return Err(malformed_fmt("checkpoint", format).await);
     }
-    let presence = input.read_u8()?;
-    let id = read_id_field(&mut input, dict, &|ord: u64| Err(ProtocolError::DictMiss(ord as u32)))?;
-    let (timestamp, _) = crate::os_spr::scalar::scalar::read_timestamp(&mut input, None)?;
-    let change_count = input.read_varint_u64()?;
+    let presence = input.read_u8().await?;
+    let id = read_id_field(&mut input, dict, &|ord: u64| Err(ProtocolError::DictMiss(ord as u32))).await?;
+    let (timestamp, _) = crate::os_spr::scalar::scalar::read_timestamp(&mut input, None).await?;
+    let change_count = input.read_varint_u64().await?;
     let mut change_ids = Vec::with_capacity(change_count as usize);
     for _ in 0..change_count {
-        change_ids.push(read_id_field(&mut input, dict, &|ord: u64| Err(ProtocolError::DictMiss(ord as u32)))?);
+        change_ids.push(read_id_field(&mut input, dict, &|ord: u64| Err(ProtocolError::DictMiss(ord as u32))).await?);
     }
-    let parent_id = if presence & (1 << 0) != 0 { Some(read_id_field(&mut input, dict, &|ord: u64| Err(ProtocolError::DictMiss(ord as u32)))?) } else { None };
-    let author_count = input.read_varint_u64()?;
+    let parent_id = if presence & (1 << 0) != 0 { Some(read_id_field(&mut input, dict, &|ord: u64| Err(ProtocolError::DictMiss(ord as u32))).await?) } else { None };
+    let author_count = input.read_varint_u64().await?;
     let mut authors = Vec::with_capacity(author_count as usize);
     for _ in 0..author_count {
-        let author_id = read_id_field(&mut input, dict, &|ord: u64| Err(ProtocolError::DictMiss(ord as u32)))?;
-        let name = read_str_field(&mut input)?;
+        let author_id = read_id_field(&mut input, dict, &|ord: u64| Err(ProtocolError::DictMiss(ord as u32))).await?;
+        let name = read_str_field(&mut input).await?;
         authors.push(HistoryAuthor { id: author_id, name });
     }
-    let message = if presence & (1 << 1) != 0 { Some(read_str_field(&mut input)?) } else { None };
+    let message = if presence & (1 << 1) != 0 { Some(read_str_field(&mut input).await?) } else { None };
     Ok(HistoryCheckpoint { id, timestamp, change_ids, parent_id, authors, message })
 }
 //#endregion 🔖️Checkpoint
 
 //#region 🔖️Alternative
-pub fn encode_alternative(alternative: &HistoryAlternative, dict: &mut DictBuilder) -> Result<Vec<u8>, ProtocolError> {
-    let mut out = ByteWriter::new();
-    out.write_u8(1);
-    write_id_field(&mut out, &alternative.id, dict, &|_: &str| None)?;
-    write_str_field(&mut out, &alternative.name);
-    out.write_varint_u64(alternative.checkpoint_ids.len() as u64);
+pub async fn encode_alternative(alternative: &HistoryAlternative, dict: &mut DictBuilder) -> Result<Vec<u8>, ProtocolError> {
+    let mut out = ByteWriter::new().await;
+    out.write_u8(1).await;
+    write_id_field(&mut out, &alternative.id, dict, &|_: &str| None).await?;
+    write_str_field(&mut out, &alternative.name).await;
+    out.write_varint_u64(alternative.checkpoint_ids.len() as u64).await;
     for checkpoint_id in &alternative.checkpoint_ids {
-        write_id_field(&mut out, checkpoint_id, dict, &|_: &str| None)?;
+        write_id_field(&mut out, checkpoint_id, dict, &|_: &str| None).await?;
     }
-    Ok(out.into_bytes())
+    Ok(out.into_bytes().await)
 }
 
-pub fn decode_alternative(payload: &[u8], dict: &DictReader) -> Result<HistoryAlternative, ProtocolError> {
-    let mut input = ByteReader::new(payload);
-    let format = input.read_u8()?;
+pub async fn decode_alternative(payload: &[u8], dict: &DictReader) -> Result<HistoryAlternative, ProtocolError> {
+    let mut input = ByteReader::new(payload).await;
+    let format = input.read_u8().await?;
     if format > 1 {
-        return Err(malformed_fmt("alternative", format));
+        return Err(malformed_fmt("alternative", format).await);
     }
-    let id = read_id_field(&mut input, dict, &|ord: u64| Err(ProtocolError::DictMiss(ord as u32)))?;
-    let name = read_str_field(&mut input)?;
-    let checkpoint_count = input.read_varint_u64()?;
+    let id = read_id_field(&mut input, dict, &|ord: u64| Err(ProtocolError::DictMiss(ord as u32))).await?;
+    let name = read_str_field(&mut input).await?;
+    let checkpoint_count = input.read_varint_u64().await?;
     let mut checkpoint_ids = Vec::with_capacity(checkpoint_count as usize);
     for _ in 0..checkpoint_count {
-        checkpoint_ids.push(read_id_field(&mut input, dict, &|ord: u64| Err(ProtocolError::DictMiss(ord as u32)))?);
+        checkpoint_ids.push(read_id_field(&mut input, dict, &|ord: u64| Err(ProtocolError::DictMiss(ord as u32))).await?);
     }
     Ok(HistoryAlternative { id, name, checkpoint_ids })
 }
 //#endregion 🔖️Alternative
 
 //#region 🔖️Active
-pub fn encode_active(alternative_id: Option<&str>, dict: &mut DictBuilder) -> Vec<u8> {
-    let mut out = ByteWriter::new();
-    out.write_u8(1);
+pub async fn encode_active(alternative_id: Option<&str>, dict: &mut DictBuilder) -> Vec<u8> {
+    let mut out = ByteWriter::new().await;
+    out.write_u8(1).await;
     match alternative_id {
         Some(id) => {
-            out.write_u8(1);
-            write_id_field(&mut out, id, dict, &|_: &str| None).expect("write_id never fails for an in-memory ByteWriter");
+            out.write_u8(1).await;
+            write_id_field(&mut out, id, dict, &|_: &str| None).await.expect("write_id never fails for an in-memory ByteWriter");
         }
-        None => out.write_u8(0),
+        None => out.write_u8(0).await,
     }
-    out.into_bytes()
+    out.into_bytes().await
 }
 
-pub fn decode_active(payload: &[u8], dict: &DictReader) -> Result<Option<String>, ProtocolError> {
-    let mut input = ByteReader::new(payload);
-    let format = input.read_u8()?;
+pub async fn decode_active(payload: &[u8], dict: &DictReader) -> Result<Option<String>, ProtocolError> {
+    let mut input = ByteReader::new(payload).await;
+    let format = input.read_u8().await?;
     if format > 1 {
-        return Err(malformed_fmt("active", format));
+        return Err(malformed_fmt("active", format).await);
     }
-    let presence = input.read_u8()?;
-    if presence & 1 != 0 { Ok(Some(read_id_field(&mut input, dict, &|ord: u64| Err(ProtocolError::DictMiss(ord as u32)))?)) } else { Ok(None) }
+    let presence = input.read_u8().await?;
+    if presence & 1 != 0 { Ok(Some(read_id_field(&mut input, dict, &|ord: u64| Err(ProtocolError::DictMiss(ord as u32))).await?)) } else { Ok(None) }
 }
 //#endregion 🔖️Active
 
@@ -1120,50 +1154,50 @@ pub const REC_CURSOR: u8 = 0x40;
 /// @emoji 🎯️ `format u8 (=1) | presence u8 (bit0 checkpoint) | applied_count varint + id* |
 /// redo_count varint + id* | [checkpoint id]`. Edit ids go through `write_id_field` (dict +
 /// edit-ordinal refs), same as every other edit-id reference in this crate.
-pub fn encode_cursor(cursor: &HistoryCursor, dict: &mut DictBuilder, edit_ordinal_of: impl Fn(&str) -> Option<u64>) -> Result<Vec<u8>, ProtocolError> {
+pub async fn encode_cursor(cursor: &HistoryCursor, dict: &mut DictBuilder, edit_ordinal_of: impl Fn(&str) -> Option<u64>) -> Result<Vec<u8>, ProtocolError> {
     let edit_ordinal_of: &dyn Fn(&str) -> Option<u64> = &edit_ordinal_of;
-    let mut out = ByteWriter::new();
-    out.write_u8(1);
-    out.write_u8(if cursor.checkpoint_id.is_some() { 1 } else { 0 });
-    out.write_varint_u64(cursor.applied_edit_ids.len() as u64);
+    let mut out = ByteWriter::new().await;
+    out.write_u8(1).await;
+    out.write_u8(if cursor.checkpoint_id.is_some() { 1 } else { 0 }).await;
+    out.write_varint_u64(cursor.applied_edit_ids.len() as u64).await;
     for id in &cursor.applied_edit_ids {
-        write_id_field(&mut out, id, dict, edit_ordinal_of)?;
+        write_id_field(&mut out, id, dict, edit_ordinal_of).await?;
     }
-    out.write_varint_u64(cursor.redo_edit_ids.len() as u64);
+    out.write_varint_u64(cursor.redo_edit_ids.len() as u64).await;
     for id in &cursor.redo_edit_ids {
-        write_id_field(&mut out, id, dict, edit_ordinal_of)?;
+        write_id_field(&mut out, id, dict, edit_ordinal_of).await?;
     }
     if let Some(checkpoint_id) = &cursor.checkpoint_id {
-        write_id_field(&mut out, checkpoint_id, dict, &|_: &str| None)?;
+        write_id_field(&mut out, checkpoint_id, dict, &|_: &str| None).await?;
     }
-    Ok(out.into_bytes())
+    Ok(out.into_bytes().await)
 }
 
 /// @emoji 🎯️ Inverse of [`encode_cursor`].
-pub fn decode_cursor<'d>(payload: &[u8], dict: &'d DictReader, ordinal_to_id: impl Fn(u64) -> Result<&'d str, ProtocolError>) -> Result<HistoryCursor, ProtocolError> {
+pub async fn decode_cursor<'d>(payload: &[u8], dict: &'d DictReader, ordinal_to_id: impl Fn(u64) -> Result<&'d str, ProtocolError>) -> Result<HistoryCursor, ProtocolError> {
     let ordinal_to_id: &dyn Fn(u64) -> Result<&'d str, ProtocolError> = &ordinal_to_id;
-    let mut input = ByteReader::new(payload);
-    let format = input.read_u8()?;
+    let mut input = ByteReader::new(payload).await;
+    let format = input.read_u8().await?;
     if format > 1 {
-        return Err(malformed_fmt("cursor", format));
+        return Err(malformed_fmt("cursor", format).await);
     }
-    let presence = input.read_u8()?;
+    let presence = input.read_u8().await?;
     if presence & !1 != 0 {
-        return Err(ProtocolError::Malformed { what: "cursor presence", offset: input.position() as u64 - 1, detail: format!("unknown presence bits {presence:#010b}") });
+        return Err(ProtocolError::Malformed { what: "cursor presence", offset: input.position().await as u64 - 1, detail: format!("unknown presence bits {presence:#010b}") });
     }
-    let applied_count = input.read_varint_u64()?;
+    let applied_count = input.read_varint_u64().await?;
     let mut applied_edit_ids = Vec::with_capacity(applied_count as usize);
     for _ in 0..applied_count {
-        applied_edit_ids.push(read_id_field(&mut input, dict, ordinal_to_id)?);
+        applied_edit_ids.push(read_id_field(&mut input, dict, ordinal_to_id).await?);
     }
-    let redo_count = input.read_varint_u64()?;
+    let redo_count = input.read_varint_u64().await?;
     let mut redo_edit_ids = Vec::with_capacity(redo_count as usize);
     for _ in 0..redo_count {
-        redo_edit_ids.push(read_id_field(&mut input, dict, ordinal_to_id)?);
+        redo_edit_ids.push(read_id_field(&mut input, dict, ordinal_to_id).await?);
     }
-    let checkpoint_id = if presence & 1 != 0 { Some(read_id_field(&mut input, dict, &|ord: u64| Err(ProtocolError::DictMiss(ord as u32)))?) } else { None };
-    if input.remaining() != 0 {
-        return Err(ProtocolError::Malformed { what: "cursor", offset: input.position() as u64, detail: "trailing payload bytes".to_string() });
+    let checkpoint_id = if presence & 1 != 0 { Some(read_id_field(&mut input, dict, &|ord: u64| Err(ProtocolError::DictMiss(ord as u32))).await?) } else { None };
+    if input.remaining().await != 0 {
+        return Err(ProtocolError::Malformed { what: "cursor", offset: input.position().await as u64, detail: "trailing payload bytes".to_string() });
     }
     Ok(HistoryCursor { applied_edit_ids, redo_edit_ids, checkpoint_id })
 }
@@ -1181,54 +1215,58 @@ pub const REC_COMPOSITION: u8 = 0x41;
 /// Every string goes through the shared dictionary via `write_id_field`, same as every other
 /// identifier in this crate — composition ids repeat heavily across checkpoints, so dictionary
 /// coding is what keeps the overlay small on a document with a long pinned history.
-pub fn encode_composition(composition: &HistoryComposition, dict: &mut DictBuilder) -> Result<Vec<u8>, ProtocolError> {
+pub async fn encode_composition(composition: &HistoryComposition, dict: &mut DictBuilder) -> Result<Vec<u8>, ProtocolError> {
     let plain: &dyn Fn(&str) -> Option<u64> = &|_: &str| None;
-    let mut out = ByteWriter::new();
-    out.write_u8(1);
+    let mut out = ByteWriter::new().await;
+    out.write_u8(1).await;
     let presence = u8::from(composition.owner.is_some()) | (u8::from(composition.dialect.is_some()) << 1);
-    out.write_u8(presence);
+    out.write_u8(presence).await;
     if let Some((parent, slot, child_id)) = &composition.owner {
         for field in [parent, slot, child_id] {
-            write_id_field(&mut out, field, dict, plain)?;
+            write_id_field(&mut out, field, dict, plain).await?;
         }
     }
     if let Some((kind, standard, subset)) = &composition.dialect {
         for field in [kind, standard, subset] {
-            write_id_field(&mut out, field, dict, plain)?;
+            write_id_field(&mut out, field, dict, plain).await?;
         }
     }
-    out.write_varint_u64(composition.checkpoint_pins.len() as u64);
+    out.write_varint_u64(composition.checkpoint_pins.len() as u64).await;
     for (checkpoint_id, pins) in &composition.checkpoint_pins {
-        write_id_field(&mut out, checkpoint_id, dict, plain)?;
-        out.write_varint_u64(pins.len() as u64);
+        write_id_field(&mut out, checkpoint_id, dict, plain).await?;
+        out.write_varint_u64(pins.len() as u64).await;
         for (child_uri, child_checkpoint_id) in pins {
-            write_id_field(&mut out, child_uri, dict, plain)?;
-            write_id_field(&mut out, child_checkpoint_id, dict, plain)?;
+            write_id_field(&mut out, child_uri, dict, plain).await?;
+            write_id_field(&mut out, child_checkpoint_id, dict, plain).await?;
         }
     }
-    Ok(out.into_bytes())
+    Ok(out.into_bytes().await)
 }
 
 /// @emoji 🧩️ Inverse of [`encode_composition`].
-pub fn decode_composition<'d>(payload: &[u8], dict: &'d DictReader) -> Result<HistoryComposition, ProtocolError> {
+pub async fn decode_composition<'d>(payload: &[u8], dict: &'d DictReader) -> Result<HistoryComposition, ProtocolError> {
     let miss: &dyn Fn(u64) -> Result<&'d str, ProtocolError> = &|ord: u64| Err(ProtocolError::DictMiss(ord as u32));
-    let mut input = ByteReader::new(payload);
-    let format = input.read_u8()?;
+    let mut input = ByteReader::new(payload).await;
+    let format = input.read_u8().await?;
     if format > 1 {
-        return Err(malformed_fmt("composition", format));
+        return Err(malformed_fmt("composition", format).await);
     }
-    let presence = input.read_u8()?;
-    let triple = |input: &mut ByteReader<'_>| -> Result<(String, String, String), ProtocolError> { Ok((read_id_field(input, dict, miss)?, read_id_field(input, dict, miss)?, read_id_field(input, dict, miss)?)) };
-    let owner = if presence & 1 != 0 { Some(triple(&mut input)?) } else { None };
-    let dialect = if presence & 2 != 0 { Some(triple(&mut input)?) } else { None };
-    let group_count = input.read_varint_u64()?;
+    let presence = input.read_u8().await?;
+    // 🚫️async: R10 shape 1 — `read_id_field` is async but a plain closure can't await; hoisted into
+    // a nested async fn (`dict`/`miss` threaded through explicitly, since a nested fn can't capture).
+    async fn read_triple<'r>(input: &mut ByteReader<'_>, dict: &'r DictReader, miss: &dyn Fn(u64) -> Result<&'r str, ProtocolError>) -> Result<(String, String, String), ProtocolError> {
+        Ok((read_id_field(input, dict, miss).await?, read_id_field(input, dict, miss).await?, read_id_field(input, dict, miss).await?))
+    }
+    let owner = if presence & 1 != 0 { Some(read_triple(&mut input, dict, miss).await?) } else { None };
+    let dialect = if presence & 2 != 0 { Some(read_triple(&mut input, dict, miss).await?) } else { None };
+    let group_count = input.read_varint_u64().await?;
     let mut checkpoint_pins = Vec::with_capacity(group_count as usize);
     for _ in 0..group_count {
-        let checkpoint_id = read_id_field(&mut input, dict, miss)?;
-        let pin_count = input.read_varint_u64()?;
+        let checkpoint_id = read_id_field(&mut input, dict, miss).await?;
+        let pin_count = input.read_varint_u64().await?;
         let mut pins = Vec::with_capacity(pin_count as usize);
         for _ in 0..pin_count {
-            pins.push((read_id_field(&mut input, dict, miss)?, read_id_field(&mut input, dict, miss)?));
+            pins.push((read_id_field(&mut input, dict, miss).await?, read_id_field(&mut input, dict, miss).await?));
         }
         checkpoint_pins.push((checkpoint_id, pins));
     }
@@ -1248,7 +1286,7 @@ pub fn decode_composition<'d>(payload: &[u8], dict: &'d DictReader) -> Result<Hi
 /// majority) and for logs predating the record — no frame is written when `conflicts` is empty.
 pub const REC_CONFLICT: u8 = 0x42;
 
-fn validate_conflict_tags(kind: u8, status: u8, offset: u64) -> Result<(), ProtocolError> {
+async fn validate_conflict_tags(kind: u8, status: u8, offset: u64) -> Result<(), ProtocolError> {
     if !matches!(kind, 0 | 1) {
         return Err(ProtocolError::Malformed { what: "conflict", offset, detail: format!("unknown conflict kind {kind}") });
     }
@@ -1258,60 +1296,60 @@ fn validate_conflict_tags(kind: u8, status: u8, offset: u64) -> Result<(), Proto
     Ok(())
 }
 
-fn write_conflict(out: &mut ByteWriter, conflict: &HistoryConflict, dict: &mut DictBuilder, edit_ordinal_of: &dyn Fn(&str) -> Option<u64>) -> Result<(), ProtocolError> {
-    validate_conflict_tags(conflict.kind, conflict.status, 0)?;
-    write_id_field(out, &conflict.id, dict, &|_: &str| None)?;
-    out.write_u8(conflict.kind);
-    out.write_u8(conflict.status);
-    out.write_varint_u64(conflict.actors.len() as u64);
+async fn write_conflict(out: &mut ByteWriter, conflict: &HistoryConflict, dict: &mut DictBuilder, edit_ordinal_of: &dyn Fn(&str) -> Option<u64>) -> Result<(), ProtocolError> {
+    validate_conflict_tags(conflict.kind, conflict.status, 0).await?;
+    write_id_field(out, &conflict.id, dict, &|_: &str| None).await?;
+    out.write_u8(conflict.kind).await;
+    out.write_u8(conflict.status).await;
+    out.write_varint_u64(conflict.actors.len() as u64).await;
     for actor in &conflict.actors {
-        write_id_field(out, actor, dict, &|_: &str| None)?;
+        write_id_field(out, actor, dict, &|_: &str| None).await?;
     }
-    out.write_varint_u64(conflict.hlt.0);
-    out.write_varint_u64(conflict.hlt.1);
-    out.write_varint_u64(conflict.hlt.2);
-    out.write_varint_u64(conflict.edit_ids.len() as u64);
+    out.write_varint_u64(conflict.hlt.0).await;
+    out.write_varint_u64(conflict.hlt.1).await;
+    out.write_varint_u64(conflict.hlt.2).await;
+    out.write_varint_u64(conflict.edit_ids.len() as u64).await;
     for edit_id in &conflict.edit_ids {
-        write_id_field(out, edit_id, dict, edit_ordinal_of)?;
+        write_id_field(out, edit_id, dict, edit_ordinal_of).await?;
     }
-    out.write_varint_u64(conflict.envelopes.len() as u64);
+    out.write_varint_u64(conflict.envelopes.len() as u64).await;
     for envelope in &conflict.envelopes {
-        out.write_varint_u64(envelope.len() as u64);
-        out.write_bytes(envelope);
+        out.write_varint_u64(envelope.len() as u64).await;
+        out.write_bytes(envelope).await;
     }
-    out.write_varint_u64(conflict.messages.len() as u64);
+    out.write_varint_u64(conflict.messages.len() as u64).await;
     for message in &conflict.messages {
-        write_history_message(out, message, dict)?;
+        write_history_message(out, message, dict).await?;
     }
     Ok(())
 }
 
-fn read_conflict<'d>(input: &mut ByteReader<'_>, dict: &'d DictReader, ordinal_to_id: &dyn Fn(u64) -> Result<&'d str, ProtocolError>) -> Result<HistoryConflict, ProtocolError> {
-    let id = read_id_field(input, dict, &|ord: u64| Err(ProtocolError::DictMiss(ord as u32)))?;
-    let kind = input.read_u8()?;
-    let status = input.read_u8()?;
-    validate_conflict_tags(kind, status, input.position() as u64 - 2)?;
-    let actor_count = input.read_varint_u64()?;
+async fn read_conflict<'d>(input: &mut ByteReader<'_>, dict: &'d DictReader, ordinal_to_id: &dyn Fn(u64) -> Result<&'d str, ProtocolError>) -> Result<HistoryConflict, ProtocolError> {
+    let id = read_id_field(input, dict, &|ord: u64| Err(ProtocolError::DictMiss(ord as u32))).await?;
+    let kind = input.read_u8().await?;
+    let status = input.read_u8().await?;
+    validate_conflict_tags(kind, status, input.position().await as u64 - 2).await?;
+    let actor_count = input.read_varint_u64().await?;
     let mut actors = Vec::with_capacity(actor_count as usize);
     for _ in 0..actor_count {
-        actors.push(read_id_field(input, dict, &|ord: u64| Err(ProtocolError::DictMiss(ord as u32)))?);
+        actors.push(read_id_field(input, dict, &|ord: u64| Err(ProtocolError::DictMiss(ord as u32))).await?);
     }
-    let hlt = (input.read_varint_u64()?, input.read_varint_u64()?, input.read_varint_u64()?);
-    let edit_id_count = input.read_varint_u64()?;
+    let hlt = (input.read_varint_u64().await?, input.read_varint_u64().await?, input.read_varint_u64().await?);
+    let edit_id_count = input.read_varint_u64().await?;
     let mut edit_ids = Vec::with_capacity(edit_id_count as usize);
     for _ in 0..edit_id_count {
-        edit_ids.push(read_id_field(input, dict, ordinal_to_id)?);
+        edit_ids.push(read_id_field(input, dict, ordinal_to_id).await?);
     }
-    let envelope_count = input.read_varint_u64()?;
+    let envelope_count = input.read_varint_u64().await?;
     let mut envelopes = Vec::with_capacity(envelope_count as usize);
     for _ in 0..envelope_count {
-        let len = input.read_varint_u64()? as usize;
-        envelopes.push(input.read_bytes(len)?.to_vec());
+        let len = input.read_varint_u64().await? as usize;
+        envelopes.push(input.read_bytes(len).await?.to_vec());
     }
-    let message_count = input.read_varint_u64()?;
+    let message_count = input.read_varint_u64().await?;
     let mut messages = Vec::with_capacity(message_count as usize);
     for _ in 0..message_count {
-        messages.push(read_history_message(input, dict)?);
+        messages.push(read_history_message(input, dict).await?);
     }
     Ok(HistoryConflict { id, kind, status, actors, hlt, edit_ids, envelopes, messages })
 }
@@ -1325,37 +1363,37 @@ fn read_conflict<'d>(input: &mut ByteReader<'_>, dict: &'d DictReader, ordinal_t
 /// one message's shape). Envelopes are opaque bytes to this crate (already-serialized
 /// `crate::os_spr::causal::MutationEnvelope`s) — same "never interprets" stance the module
 /// docstring states for op payloads.
-pub fn encode_conflicts(conflicts: &[HistoryConflict], dict: &mut DictBuilder, edit_ordinal_of: impl Fn(&str) -> Option<u64>) -> Result<Vec<u8>, ProtocolError> {
+pub async fn encode_conflicts(conflicts: &[HistoryConflict], dict: &mut DictBuilder, edit_ordinal_of: impl Fn(&str) -> Option<u64>) -> Result<Vec<u8>, ProtocolError> {
     let edit_ordinal_of: &dyn Fn(&str) -> Option<u64> = &edit_ordinal_of;
-    let mut out = ByteWriter::new();
-    out.write_u8(1);
-    out.write_varint_u64(conflicts.len() as u64);
+    let mut out = ByteWriter::new().await;
+    out.write_u8(1).await;
+    out.write_varint_u64(conflicts.len() as u64).await;
     for conflict in conflicts {
-        write_conflict(&mut out, conflict, dict, edit_ordinal_of)?;
+        write_conflict(&mut out, conflict, dict, edit_ordinal_of).await?;
     }
-    Ok(out.into_bytes())
+    Ok(out.into_bytes().await)
 }
 
 /// @emoji 🎯️ Inverse of [`encode_conflicts`].
-pub fn decode_conflicts<'d>(payload: &[u8], dict: &'d DictReader, ordinal_to_id: impl Fn(u64) -> Result<&'d str, ProtocolError>) -> Result<Vec<HistoryConflict>, ProtocolError> {
+pub async fn decode_conflicts<'d>(payload: &[u8], dict: &'d DictReader, ordinal_to_id: impl Fn(u64) -> Result<&'d str, ProtocolError>) -> Result<Vec<HistoryConflict>, ProtocolError> {
     let ordinal_to_id: &dyn Fn(u64) -> Result<&'d str, ProtocolError> = &ordinal_to_id;
-    let mut input = ByteReader::new(payload);
-    let format = input.read_u8()?;
+    let mut input = ByteReader::new(payload).await;
+    let format = input.read_u8().await?;
     if format > 1 {
-        return Err(malformed_fmt("conflict", format));
+        return Err(malformed_fmt("conflict", format).await);
     }
-    let count = input.read_varint_u64()?;
+    let count = input.read_varint_u64().await?;
     let mut conflicts = Vec::with_capacity(count as usize);
     let mut ids = HashSet::new();
     for _ in 0..count {
-        let conflict = read_conflict(&mut input, dict, ordinal_to_id)?;
+        let conflict = read_conflict(&mut input, dict, ordinal_to_id).await?;
         if !ids.insert(conflict.id.clone()) {
-            return Err(ProtocolError::Malformed { what: "conflict", offset: input.position() as u64, detail: format!("duplicate conflict id {}", conflict.id) });
+            return Err(ProtocolError::Malformed { what: "conflict", offset: input.position().await as u64, detail: format!("duplicate conflict id {}", conflict.id) });
         }
         conflicts.push(conflict);
     }
-    if input.remaining() != 0 {
-        return Err(ProtocolError::Malformed { what: "conflict", offset: input.position() as u64, detail: "trailing payload bytes".to_string() });
+    if input.remaining().await != 0 {
+        return Err(ProtocolError::Malformed { what: "conflict", offset: input.position().await as u64, detail: "trailing payload bytes".to_string() });
     }
     Ok(conflicts)
 }
@@ -1390,59 +1428,59 @@ pub struct DecodeOptions {
     pub limits: ProtocolLimits,
 }
 
-fn flush_dict_delta<S: PackSink>(writer: &mut SprWriter<S>, dict: &DictBuilder, base: &mut u32) -> Result<(), ProtocolError> {
-    let len = dict.len();
+async fn flush_dict_delta<S: PackSink>(writer: &mut SprWriter<S>, dict: &DictBuilder, base: &mut u32) -> Result<(), ProtocolError> {
+    let len = dict.len().await;
     if len > *base {
-        let entries = dict.entries_since(*base);
-        let mut payload = ByteWriter::new();
-        payload.write_u8(1);
-        payload.write_varint_u64(*base as u64);
-        payload.write_varint_u64(entries.len() as u64);
+        let entries = dict.entries_since(*base).await;
+        let mut payload = ByteWriter::new().await;
+        payload.write_u8(1).await;
+        payload.write_varint_u64(*base as u64).await;
+        payload.write_varint_u64(entries.len() as u64).await;
         for entry in entries {
-            payload.write_varint_u64(entry.len() as u64);
-            payload.write_bytes(entry.as_bytes());
+            payload.write_varint_u64(entry.len() as u64).await;
+            payload.write_bytes(entry.as_bytes()).await;
         }
-        writer.write_record(crate::os_spr::REC_STR_DICT, true, &payload.into_bytes(), CodecId(0))?;
+        writer.write_record(crate::os_spr::REC_STR_DICT, true, &payload.into_bytes().await, CodecId(0)).await?;
         *base = len;
     }
     Ok(())
 }
 
-fn apply_dict_record(dict: &mut DictReader, payload: &[u8]) -> Result<(), ProtocolError> {
-    let mut input = ByteReader::new(payload);
-    let format = input.read_u8()?;
+async fn apply_dict_record(dict: &mut DictReader, payload: &[u8]) -> Result<(), ProtocolError> {
+    let mut input = ByteReader::new(payload).await;
+    let format = input.read_u8().await?;
     if format > 1 {
-        return Err(malformed_fmt("dict", format));
+        return Err(malformed_fmt("dict", format).await);
     }
-    let base_count = input.read_varint_u64()? as u32;
-    let count = input.read_varint_u64()?;
+    let base_count = input.read_varint_u64().await? as u32;
+    let count = input.read_varint_u64().await?;
     let mut entries = Vec::with_capacity(count as usize);
     for _ in 0..count {
-        entries.push(read_str_field(&mut input)?);
+        entries.push(read_str_field(&mut input).await?);
     }
-    dict.extend(base_count, entries)
+    dict.extend(base_count, entries).await
 }
 
 /// 🎞️ `(commit_seq, chain_hash)` out of a `REC_COMMIT` frame's payload — thin wrapper over
 /// `crate::os_spr::format::parse_commit_payload` (public since that crate's own follow-up review pass)
 /// so `VerificationLevel::Full`'s chain recompute doesn't need this crate's own byte-offset copy.
-fn parse_commit_fields(payload: &[u8]) -> Result<(u64, [u8; 32]), ProtocolError> {
-    let commit = crate::os_spr::format::parse_commit_payload(payload)?;
+async fn parse_commit_fields(payload: &[u8]) -> Result<(u64, [u8; 32]), ProtocolError> {
+    let commit = crate::os_spr::format::parse_commit_payload(payload).await?;
     Ok((commit.commit_seq, commit.chain_hash))
 }
 
-pub fn encode_history(log: &HistoryLog, options: &EncodeOptions) -> Result<Vec<u8>, ProtocolError> {
+pub async fn encode_history(log: &HistoryLog, options: &EncodeOptions) -> Result<Vec<u8>, ProtocolError> {
     if log.edits.len() as u64 > options.limits.max_record_count {
         return Err(ProtocolError::LimitExceeded("edit count exceeds ProtocolLimits::max_record_count"));
     }
     let write_options = WriteOptions { required_flags: crate::os_spr::REQUIRED_HASH_CHAIN, optional_flags: if options.canonical { crate::os_spr::OPTIONAL_CANONICAL } else { 0 } };
-    let mut writer = SprWriter::begin(Vec::<u8>::new(), &write_options)?;
-    let mut dict = DictBuilder::new();
+    let mut writer = SprWriter::begin(Vec::<u8>::new(), &write_options).await?;
+    let mut dict = DictBuilder::new().await;
     let mut dict_base = 0u32;
 
-    let doc_payload = encode_doc(&log.doc_id, &log.schema, &mut dict);
-    flush_dict_delta(&mut writer, &dict, &mut dict_base)?;
-    writer.write_record(crate::os_spr::REC_DOC, true, &doc_payload, CodecId(0))?;
+    let doc_payload = encode_doc(&log.doc_id, &log.schema, &mut dict).await;
+    flush_dict_delta(&mut writer, &dict, &mut dict_base).await?;
+    writer.write_record(crate::os_spr::REC_DOC, true, &doc_payload, CodecId(0)).await?;
 
     // 🎯️ Built incrementally (an edit's own id is inserted only AFTER it is encoded), matching
     // `HistoryAppender::append_edit`'s streaming semantics and the decoder's causal resolution
@@ -1457,114 +1495,114 @@ pub fn encode_history(log: &HistoryLog, options: &EncodeOptions) -> Result<Vec<u
         // persisting it here. `HistoryAppender::append_edit` has no such switch — its streaming,
         // one-edit-at-a-time API gives the caller direct per-edit control via the data itself.
         let payload = if options.write_backwards_section {
-            encode_edit(edit, &mut dict, |id| ordinals.get(id).copied())?
+            encode_edit(edit, &mut dict, |id| ordinals.get(id).copied()).await?
         } else {
             let stripped = HistoryEdit { inverse: Vec::new(), ..edit.clone() };
-            encode_edit(&stripped, &mut dict, |id| ordinals.get(id).copied())?
+            encode_edit(&stripped, &mut dict, |id| ordinals.get(id).copied()).await?
         };
-        flush_dict_delta(&mut writer, &dict, &mut dict_base)?;
-        writer.write_record(crate::os_spr::REC_EDIT, true, &payload, CodecId(0))?;
+        flush_dict_delta(&mut writer, &dict, &mut dict_base).await?;
+        writer.write_record(crate::os_spr::REC_EDIT, true, &payload, CodecId(0)).await?;
         ordinals.insert(edit.id.as_str(), index as u64);
     }
     for change in &log.changes {
-        let payload = encode_change(change, &mut dict, |id| ordinals.get(id).copied())?;
-        flush_dict_delta(&mut writer, &dict, &mut dict_base)?;
-        writer.write_record(crate::os_spr::REC_CHANGE, true, &payload, CodecId(0))?;
+        let payload = encode_change(change, &mut dict, |id| ordinals.get(id).copied()).await?;
+        flush_dict_delta(&mut writer, &dict, &mut dict_base).await?;
+        writer.write_record(crate::os_spr::REC_CHANGE, true, &payload, CodecId(0)).await?;
     }
     for checkpoint in &log.checkpoints {
-        let payload = encode_checkpoint(checkpoint, &mut dict)?;
-        flush_dict_delta(&mut writer, &dict, &mut dict_base)?;
-        writer.write_record(crate::os_spr::REC_CHECKPOINT, true, &payload, CodecId(0))?;
+        let payload = encode_checkpoint(checkpoint, &mut dict).await?;
+        flush_dict_delta(&mut writer, &dict, &mut dict_base).await?;
+        writer.write_record(crate::os_spr::REC_CHECKPOINT, true, &payload, CodecId(0)).await?;
     }
     for alternative in &log.alternatives {
-        let payload = encode_alternative(alternative, &mut dict)?;
-        flush_dict_delta(&mut writer, &dict, &mut dict_base)?;
-        writer.write_record(crate::os_spr::REC_ALTERNATIVE, true, &payload, CodecId(0))?;
+        let payload = encode_alternative(alternative, &mut dict).await?;
+        flush_dict_delta(&mut writer, &dict, &mut dict_base).await?;
+        writer.write_record(crate::os_spr::REC_ALTERNATIVE, true, &payload, CodecId(0)).await?;
     }
-    let active_payload = encode_active(log.active_alternative_id.as_deref(), &mut dict);
-    flush_dict_delta(&mut writer, &dict, &mut dict_base)?;
-    writer.write_record(crate::os_spr::REC_ACTIVE, true, &active_payload, CodecId(0))?;
+    let active_payload = encode_active(log.active_alternative_id.as_deref(), &mut dict).await;
+    flush_dict_delta(&mut writer, &dict, &mut dict_base).await?;
+    writer.write_record(crate::os_spr::REC_ACTIVE, true, &active_payload, CodecId(0)).await?;
 
     if let Some(cursor) = &log.cursor {
-        let cursor_payload = encode_cursor(cursor, &mut dict, |id| ordinals.get(id).copied())?;
-        flush_dict_delta(&mut writer, &dict, &mut dict_base)?;
-        writer.write_record(REC_CURSOR, false, &cursor_payload, CodecId(0))?;
+        let cursor_payload = encode_cursor(cursor, &mut dict, |id| ordinals.get(id).copied()).await?;
+        flush_dict_delta(&mut writer, &dict, &mut dict_base).await?;
+        writer.write_record(REC_CURSOR, false, &cursor_payload, CodecId(0)).await?;
     }
 
     if let Some(composition) = &log.composition {
-        let composition_payload = encode_composition(composition, &mut dict)?;
-        flush_dict_delta(&mut writer, &dict, &mut dict_base)?;
-        writer.write_record(REC_COMPOSITION, false, &composition_payload, CodecId(0))?;
+        let composition_payload = encode_composition(composition, &mut dict).await?;
+        flush_dict_delta(&mut writer, &dict, &mut dict_base).await?;
+        writer.write_record(REC_COMPOSITION, false, &composition_payload, CodecId(0)).await?;
     }
 
     if !log.conflicts.is_empty() {
-        let conflicts_payload = encode_conflicts(&log.conflicts, &mut dict, |id| ordinals.get(id).copied())?;
-        flush_dict_delta(&mut writer, &dict, &mut dict_base)?;
-        writer.write_record(REC_CONFLICT, false, &conflicts_payload, CodecId(0))?;
+        let conflicts_payload = encode_conflicts(&log.conflicts, &mut dict, |id| ordinals.get(id).copied()).await?;
+        flush_dict_delta(&mut writer, &dict, &mut dict_base).await?;
+        writer.write_record(REC_CONFLICT, false, &conflicts_payload, CodecId(0)).await?;
     }
 
-    writer.commit()?;
-    Ok(writer.into_sink())
+    writer.commit().await?;
+    Ok(writer.into_sink().await)
 }
 
-fn decode_history_from(trusted: &[u8], options: &DecodeOptions) -> Result<HistoryLog, ProtocolError> {
-    let mut dict = DictReader::new();
+async fn decode_history_from(trusted: &[u8], options: &DecodeOptions) -> Result<HistoryLog, ProtocolError> {
+    let mut dict = DictReader::new().await;
     let mut edit_ids: Vec<String> = Vec::new();
     let mut log = HistoryLog::default();
-    let mut cursor = FrameCursor::new(trusted, HEADER_SIZE as u64);
+    let mut cursor = FrameCursor::new(trusted, HEADER_SIZE as u64).await;
     let hasher = Blake3Hasher;
     let full = options.verification == VerificationLevel::Full;
-    let mut running_chain = if full { hasher.hash(&trusted[..HEADER_SIZE]) } else { [0u8; 32] };
+    let mut running_chain = if full { hasher.hash(&trusted[..HEADER_SIZE]).await } else { [0u8; 32] };
     let mut pending_digests: Vec<[u8; 32]> = Vec::new();
     let mut saw_conflicts = false;
 
-    while let Some(frame) = cursor.next_frame()? {
+    while let Some(frame) = cursor.next_frame().await? {
         if full && frame.kind != crate::os_spr::REC_COMMIT {
-            let frame_bytes = &trusted[frame.offset as usize..(frame.offset + frame.frame_len()) as usize];
-            pending_digests.push(hasher.hash(frame_bytes));
+            let frame_bytes = &trusted[frame.offset as usize..(frame.offset + frame.frame_len().await) as usize];
+            pending_digests.push(hasher.hash(frame_bytes).await);
         }
         match frame.kind {
-            crate::os_spr::REC_STR_DICT => apply_dict_record(&mut dict, frame.payload())?,
+            crate::os_spr::REC_STR_DICT => apply_dict_record(&mut dict, frame.payload().await).await?,
             crate::os_spr::REC_ACTOR_DICT => {} // v1 never splits an actor dictionary — see 🔖️Payloads note
             crate::os_spr::REC_DOC => {
-                let (doc_id, schema) = decode_doc(frame.payload(), &dict)?;
+                let (doc_id, schema) = decode_doc(frame.payload().await, &dict).await?;
                 log.doc_id = doc_id;
                 log.schema = schema;
             }
             crate::os_spr::REC_EDIT => {
                 let edit_ids_ref = &edit_ids;
-                let edit = decode_edit(frame.payload(), &dict, |ord| edit_ids_ref.get(ord as usize).map(String::as_str).ok_or(ProtocolError::DictMiss(ord as u32)))?;
+                let edit = decode_edit(frame.payload().await, &dict, |ord| edit_ids_ref.get(ord as usize).map(String::as_str).ok_or(ProtocolError::DictMiss(ord as u32))).await?;
                 edit_ids.push(edit.id.clone());
                 log.edits.push(edit);
             }
             crate::os_spr::REC_CHANGE => {
                 let edit_ids_ref = &edit_ids;
-                let change = decode_change(frame.payload(), &dict, |ord| edit_ids_ref.get(ord as usize).map(String::as_str).ok_or(ProtocolError::DictMiss(ord as u32)))?;
+                let change = decode_change(frame.payload().await, &dict, |ord| edit_ids_ref.get(ord as usize).map(String::as_str).ok_or(ProtocolError::DictMiss(ord as u32))).await?;
                 log.changes.push(change);
             }
-            crate::os_spr::REC_CHECKPOINT => log.checkpoints.push(decode_checkpoint(frame.payload(), &dict)?),
-            crate::os_spr::REC_ALTERNATIVE => log.alternatives.push(decode_alternative(frame.payload(), &dict)?),
-            crate::os_spr::REC_ACTIVE => log.active_alternative_id = decode_active(frame.payload(), &dict)?,
+            crate::os_spr::REC_CHECKPOINT => log.checkpoints.push(decode_checkpoint(frame.payload().await, &dict).await?),
+            crate::os_spr::REC_ALTERNATIVE => log.alternatives.push(decode_alternative(frame.payload().await, &dict).await?),
+            crate::os_spr::REC_ACTIVE => log.active_alternative_id = decode_active(frame.payload().await, &dict).await?,
             REC_CURSOR => {
                 let edit_ids_ref = &edit_ids;
-                log.cursor = Some(decode_cursor(frame.payload(), &dict, |ord| edit_ids_ref.get(ord as usize).map(String::as_str).ok_or(ProtocolError::DictMiss(ord as u32)))?);
+                log.cursor = Some(decode_cursor(frame.payload().await, &dict, |ord| edit_ids_ref.get(ord as usize).map(String::as_str).ok_or(ProtocolError::DictMiss(ord as u32))).await?);
             }
-            REC_COMPOSITION => log.composition = Some(decode_composition(frame.payload(), &dict)?),
+            REC_COMPOSITION => log.composition = Some(decode_composition(frame.payload().await, &dict).await?),
             REC_CONFLICT => {
                 if saw_conflicts {
                     return Err(ProtocolError::Malformed { what: "history", offset: frame.offset, detail: "duplicate conflict record".to_string() });
                 }
                 let edit_ids_ref = &edit_ids;
-                log.conflicts = decode_conflicts(frame.payload(), &dict, |ord| edit_ids_ref.get(ord as usize).map(String::as_str).ok_or(ProtocolError::DictMiss(ord as u32)))?;
+                log.conflicts = decode_conflicts(frame.payload().await, &dict, |ord| edit_ids_ref.get(ord as usize).map(String::as_str).ok_or(ProtocolError::DictMiss(ord as u32))).await?;
                 saw_conflicts = true;
             }
             crate::os_spr::REC_COMMIT if full => {
-                let (commit_seq, chain_hash) = parse_commit_fields(frame.payload())?;
+                let (commit_seq, chain_hash) = parse_commit_fields(frame.payload().await).await?;
                 let mut concat = running_chain.to_vec();
                 for digest in &pending_digests {
                     concat.extend_from_slice(digest);
                 }
-                let recomputed = hasher.hash(&concat);
+                let recomputed = hasher.hash(&concat).await;
                 if recomputed != chain_hash {
                     return Err(ProtocolError::ChainMismatch { commit_seq });
                 }
@@ -1580,8 +1618,8 @@ fn decode_history_from(trusted: &[u8], options: &DecodeOptions) -> Result<Histor
     Ok(log)
 }
 
-pub fn decode_history(bytes: &[u8], options: &DecodeOptions) -> Result<HistoryLog, ProtocolError> {
-    HistoryReader::open(bytes, options)?.log()
+pub async fn decode_history(bytes: &[u8], options: &DecodeOptions) -> Result<HistoryLog, ProtocolError> {
+    HistoryReader::open(bytes, options).await?.log().await
 }
 //#endregion 🔖️Codec
 
@@ -1597,64 +1635,64 @@ pub struct HistoryAppender<S: PackSink> {
 }
 
 impl<S: PackSink> HistoryAppender<S> {
-    pub fn begin(sink: S, doc_id: &str, schema: &str, options: &WriteOptions) -> Result<Self, ProtocolError> {
-        let mut writer = SprWriter::begin(sink, options)?;
-        let mut dict = DictBuilder::new();
+    pub async fn begin(sink: S, doc_id: &str, schema: &str, options: &WriteOptions) -> Result<Self, ProtocolError> {
+        let mut writer = SprWriter::begin(sink, options).await?;
+        let mut dict = DictBuilder::new().await;
         let mut dict_base = 0u32;
-        let payload = encode_doc(doc_id, schema, &mut dict);
-        flush_dict_delta(&mut writer, &dict, &mut dict_base)?;
-        writer.write_record(crate::os_spr::REC_DOC, true, &payload, CodecId(0))?;
+        let payload = encode_doc(doc_id, schema, &mut dict).await;
+        flush_dict_delta(&mut writer, &dict, &mut dict_base).await?;
+        writer.write_record(crate::os_spr::REC_DOC, true, &payload, CodecId(0)).await?;
         Ok(Self { writer, dict, dict_base, edit_ordinals: HashMap::new(), next_edit_ordinal: 0 })
     }
 
-    pub fn append_edit(&mut self, edit: &HistoryEdit) -> Result<u64, ProtocolError> {
+    pub async fn append_edit(&mut self, edit: &HistoryEdit) -> Result<u64, ProtocolError> {
         let ordinals = &self.edit_ordinals;
-        let payload = encode_edit(edit, &mut self.dict, |id| ordinals.get(id).copied())?;
-        flush_dict_delta(&mut self.writer, &self.dict, &mut self.dict_base)?;
-        let offset = self.writer.write_record(crate::os_spr::REC_EDIT, true, &payload, CodecId(0))?;
+        let payload = encode_edit(edit, &mut self.dict, |id| ordinals.get(id).copied()).await?;
+        flush_dict_delta(&mut self.writer, &self.dict, &mut self.dict_base).await?;
+        let offset = self.writer.write_record(crate::os_spr::REC_EDIT, true, &payload, CodecId(0)).await?;
         self.edit_ordinals.insert(edit.id.clone(), self.next_edit_ordinal);
         self.next_edit_ordinal += 1;
         Ok(offset)
     }
 
-    pub fn append_change(&mut self, change: &HistoryChange) -> Result<u64, ProtocolError> {
+    pub async fn append_change(&mut self, change: &HistoryChange) -> Result<u64, ProtocolError> {
         let ordinals = &self.edit_ordinals;
-        let payload = encode_change(change, &mut self.dict, |id| ordinals.get(id).copied())?;
-        flush_dict_delta(&mut self.writer, &self.dict, &mut self.dict_base)?;
-        self.writer.write_record(crate::os_spr::REC_CHANGE, true, &payload, CodecId(0))
+        let payload = encode_change(change, &mut self.dict, |id| ordinals.get(id).copied()).await?;
+        flush_dict_delta(&mut self.writer, &self.dict, &mut self.dict_base).await?;
+        self.writer.write_record(crate::os_spr::REC_CHANGE, true, &payload, CodecId(0)).await
     }
 
-    pub fn append_checkpoint(&mut self, checkpoint: &HistoryCheckpoint) -> Result<u64, ProtocolError> {
-        let payload = encode_checkpoint(checkpoint, &mut self.dict)?;
-        flush_dict_delta(&mut self.writer, &self.dict, &mut self.dict_base)?;
-        self.writer.write_record(crate::os_spr::REC_CHECKPOINT, true, &payload, CodecId(0))
+    pub async fn append_checkpoint(&mut self, checkpoint: &HistoryCheckpoint) -> Result<u64, ProtocolError> {
+        let payload = encode_checkpoint(checkpoint, &mut self.dict).await?;
+        flush_dict_delta(&mut self.writer, &self.dict, &mut self.dict_base).await?;
+        self.writer.write_record(crate::os_spr::REC_CHECKPOINT, true, &payload, CodecId(0)).await
     }
 
-    pub fn append_alternative(&mut self, alternative: &HistoryAlternative) -> Result<u64, ProtocolError> {
-        let payload = encode_alternative(alternative, &mut self.dict)?;
-        flush_dict_delta(&mut self.writer, &self.dict, &mut self.dict_base)?;
-        self.writer.write_record(crate::os_spr::REC_ALTERNATIVE, true, &payload, CodecId(0))
+    pub async fn append_alternative(&mut self, alternative: &HistoryAlternative) -> Result<u64, ProtocolError> {
+        let payload = encode_alternative(alternative, &mut self.dict).await?;
+        flush_dict_delta(&mut self.writer, &self.dict, &mut self.dict_base).await?;
+        self.writer.write_record(crate::os_spr::REC_ALTERNATIVE, true, &payload, CodecId(0)).await
     }
 
-    pub fn set_active(&mut self, alternative_id: Option<&str>) -> Result<u64, ProtocolError> {
-        let payload = encode_active(alternative_id, &mut self.dict);
-        flush_dict_delta(&mut self.writer, &self.dict, &mut self.dict_base)?;
-        self.writer.write_record(crate::os_spr::REC_ACTIVE, true, &payload, CodecId(0))
+    pub async fn set_active(&mut self, alternative_id: Option<&str>) -> Result<u64, ProtocolError> {
+        let payload = encode_active(alternative_id, &mut self.dict).await;
+        flush_dict_delta(&mut self.writer, &self.dict, &mut self.dict_base).await?;
+        self.writer.write_record(crate::os_spr::REC_ACTIVE, true, &payload, CodecId(0)).await
     }
 
-    pub fn append_cursor(&mut self, cursor: &HistoryCursor) -> Result<u64, ProtocolError> {
+    pub async fn append_cursor(&mut self, cursor: &HistoryCursor) -> Result<u64, ProtocolError> {
         let ordinals = &self.edit_ordinals;
-        let payload = encode_cursor(cursor, &mut self.dict, |id| ordinals.get(id).copied())?;
-        flush_dict_delta(&mut self.writer, &self.dict, &mut self.dict_base)?;
-        self.writer.write_record(REC_CURSOR, false, &payload, CodecId(0))
+        let payload = encode_cursor(cursor, &mut self.dict, |id| ordinals.get(id).copied()).await?;
+        flush_dict_delta(&mut self.writer, &self.dict, &mut self.dict_base).await?;
+        self.writer.write_record(REC_CURSOR, false, &payload, CodecId(0)).await
     }
 
-    pub fn commit(&mut self) -> Result<u64, ProtocolError> {
-        self.writer.commit()
+    pub async fn commit(&mut self) -> Result<u64, ProtocolError> {
+        self.writer.commit().await
     }
 
-    pub fn into_sink(self) -> S {
-        self.writer.into_sink()
+    pub async fn into_sink(self) -> S {
+        self.writer.into_sink().await
     }
 }
 //#endregion 🔖️Append
@@ -1669,23 +1707,23 @@ pub struct HistoryReader<'a> {
 }
 
 impl<'a> HistoryReader<'a> {
-    pub fn open(bytes: &'a [u8], options: &DecodeOptions) -> Result<Self, ProtocolError> {
-        let recovery = crate::os_spr::format::recover(&bytes, &options.limits, RecoveryMode::LastCommit)?;
+    pub async fn open(bytes: &'a [u8], options: &DecodeOptions) -> Result<Self, ProtocolError> {
+        let recovery = crate::os_spr::format::recover(&bytes, &options.limits, RecoveryMode::LastCommit).await?;
         let trusted = &bytes[..recovery.bytes_recovered as usize];
         Ok(Self { trusted, options: options.clone() })
     }
 
-    pub fn log(&self) -> Result<HistoryLog, ProtocolError> {
-        decode_history_from(self.trusted, &self.options)
+    pub async fn log(&self) -> Result<HistoryLog, ProtocolError> {
+        decode_history_from(self.trusted, &self.options).await
     }
 
-    pub fn edits(&self) -> EditIter<'a> {
-        EditIter { cursor: FrameCursor::new(self.trusted, HEADER_SIZE as u64), dict: DictReader::new(), edit_ids: Vec::new() }
+    pub async fn edits(&self) -> EditIter<'a> {
+        EditIter { cursor: FrameCursor::new(self.trusted, HEADER_SIZE as u64).await, dict: DictReader::new().await, edit_ids: Vec::new() }
     }
 
-    pub fn edits_rev(&self, limit: usize) -> RevEditIter<'a> {
-        match prescan_full(self.trusted) {
-            Ok((dict, edit_ids)) => RevEditIter { state: Ok(RevEditIterReady { cursor: ReverseFrameCursor::at_end(&self.trusted[HEADER_SIZE..]), dict, edit_ids, remaining: limit }) },
+    pub async fn edits_rev(&self, limit: usize) -> RevEditIter<'a> {
+        match prescan_full(self.trusted).await {
+            Ok((dict, edit_ids)) => RevEditIter { state: Ok(RevEditIterReady { cursor: ReverseFrameCursor::at_end(&self.trusted[HEADER_SIZE..]).await, dict, edit_ids, remaining: limit }) },
             Err(e) => RevEditIter { state: Err(Some(e)) },
         }
     }
@@ -1700,19 +1738,25 @@ pub struct EditIter<'a> {
 impl<'a> Iterator for EditIter<'a> {
     type Item = Result<HistoryEdit, ProtocolError>;
 
+    // 🚫️async: E1 — `Iterator::next` is an externally-declared trait method, so it must stay a
+    // plain sync `fn`. Its callees (`next_frame`/`payload`/`apply_dict_record`/`decode_edit`) are
+    // pure in-memory byte-buffer parsing with no real suspension point, so they are resolved via
+    // the crate's one sanctioned E5 bridge (`os_io::resolve_ready`) rather than awaited.
     fn next(&mut self) -> Option<Self::Item> {
         loop {
-            match self.cursor.next_frame() {
+            match crate::os_io::resolve_ready(self.cursor.next_frame()) {
                 Ok(Some(frame)) => match frame.kind {
                     crate::os_spr::REC_STR_DICT => {
-                        if let Err(e) = apply_dict_record(&mut self.dict, frame.payload()) {
+                        let payload = crate::os_io::resolve_ready(frame.payload());
+                        if let Err(e) = crate::os_io::resolve_ready(apply_dict_record(&mut self.dict, payload)) {
                             return Some(Err(e));
                         }
                     }
                     crate::os_spr::REC_EDIT => {
                         let edit_ids_ref = &self.edit_ids;
                         let dict_ref = &self.dict;
-                        let result = decode_edit(frame.payload(), dict_ref, |ord| edit_ids_ref.get(ord as usize).map(String::as_str).ok_or(ProtocolError::DictMiss(ord as u32)));
+                        let payload = crate::os_io::resolve_ready(frame.payload());
+                        let result = crate::os_io::resolve_ready(decode_edit(payload, dict_ref, |ord| edit_ids_ref.get(ord as usize).map(String::as_str).ok_or(ProtocolError::DictMiss(ord as u32))));
                         match result {
                             Ok(edit) => {
                                 self.edit_ids.push(edit.id.clone());
@@ -1747,6 +1791,8 @@ pub struct RevEditIter<'a> {
 impl<'a> Iterator for RevEditIter<'a> {
     type Item = Result<HistoryEdit, ProtocolError>;
 
+    // 🚫️async: E1 — same rationale as `EditIter::next` above: `Iterator::next` must stay sync, its
+    // callees are pure in-memory parsing, resolved via the crate's one `os_io::resolve_ready` bridge.
     fn next(&mut self) -> Option<Self::Item> {
         match &mut self.state {
             Err(pending) => pending.take().map(Err),
@@ -1755,12 +1801,13 @@ impl<'a> Iterator for RevEditIter<'a> {
                     return None;
                 }
                 loop {
-                    match ready.cursor.prev_frame() {
+                    match crate::os_io::resolve_ready(ready.cursor.prev_frame()) {
                         Ok(Some(frame)) => {
                             if frame.kind == crate::os_spr::REC_EDIT {
                                 let edit_ids_ref = &ready.edit_ids;
                                 let dict_ref = &ready.dict;
-                                let result = decode_edit(frame.payload(), dict_ref, |ord| edit_ids_ref.get(ord as usize).map(String::as_str).ok_or(ProtocolError::DictMiss(ord as u32)));
+                                let payload = crate::os_io::resolve_ready(frame.payload());
+                                let result = crate::os_io::resolve_ready(decode_edit(payload, dict_ref, |ord| edit_ids_ref.get(ord as usize).map(String::as_str).ok_or(ProtocolError::DictMiss(ord as u32))));
                                 ready.remaining -= 1;
                                 return Some(result);
                             }
@@ -1780,17 +1827,17 @@ impl<'a> Iterator for RevEditIter<'a> {
 /// @emoji 🔎️ Builds the FULL dictionary and the FULL forward-ordered edit-id table in one forward
 /// pass. Safe to reuse for decoding any earlier record: dict indices and edit ordinals are both
 /// append-only and stable once assigned, so the final state is a superset valid at every offset.
-fn prescan_full(trusted: &[u8]) -> Result<(DictReader, Vec<String>), ProtocolError> {
-    let mut dict = DictReader::new();
+async fn prescan_full(trusted: &[u8]) -> Result<(DictReader, Vec<String>), ProtocolError> {
+    let mut dict = DictReader::new().await;
     let mut edit_ids = Vec::new();
-    let mut cursor = FrameCursor::new(trusted, HEADER_SIZE as u64);
-    while let Some(frame) = cursor.next_frame()? {
+    let mut cursor = FrameCursor::new(trusted, HEADER_SIZE as u64).await;
+    while let Some(frame) = cursor.next_frame().await? {
         match frame.kind {
-            crate::os_spr::REC_STR_DICT => apply_dict_record(&mut dict, frame.payload())?,
+            crate::os_spr::REC_STR_DICT => apply_dict_record(&mut dict, frame.payload().await).await?,
             crate::os_spr::REC_EDIT => {
                 let edit_ids_ref = &edit_ids;
                 let dict_ref = &dict;
-                let edit = decode_edit(frame.payload(), dict_ref, |ord| edit_ids_ref.get(ord as usize).map(String::as_str).ok_or(ProtocolError::DictMiss(ord as u32)))?;
+                let edit = decode_edit(frame.payload().await, dict_ref, |ord| edit_ids_ref.get(ord as usize).map(String::as_str).ok_or(ProtocolError::DictMiss(ord as u32))).await?;
                 edit_ids.push(edit.id);
             }
             _ => {}
@@ -1830,7 +1877,7 @@ pub enum FrontierComparison {
 /// equal-ordinal case. `Diverged::common_edit_count` is a conservative estimate (the shared
 /// ordinal itself) — `FrontierSummary` alone carries no shared-ancestry data to verify a true
 /// common ancestor; documented "your choice" per the contract.
-pub fn frontier_delta(local: &FrontierSummary, remote: &FrontierSummary) -> FrontierComparison {
+pub async fn frontier_delta(local: &FrontierSummary, remote: &FrontierSummary) -> FrontierComparison {
     if local.head_edit_ordinal == remote.head_edit_ordinal && local.head_edit_id == remote.head_edit_id && local.chain_hash == remote.chain_hash {
         return FrontierComparison::Equal;
     }
@@ -1854,20 +1901,20 @@ pub const SEC_DICT_OFFSETS: u8 = 0x03;
 pub const SEC_SNAPSHOT_OFFSETS: u8 = 0x04;
 pub const SEC_SEALED_OFFSETS: u8 = 0x05;
 
-fn write_pair_section(out: &mut ByteWriter, kind: u8, entries: &[(u64, u64)]) {
-    out.write_u8(kind);
-    out.write_varint_u64(entries.len() as u64);
+async fn write_pair_section(out: &mut ByteWriter, kind: u8, entries: &[(u64, u64)]) {
+    out.write_u8(kind).await;
+    out.write_varint_u64(entries.len() as u64).await;
     for (a, b) in entries {
-        out.write_varint_u64(*a);
-        out.write_varint_u64(*b);
+        out.write_varint_u64(*a).await;
+        out.write_varint_u64(*b).await;
     }
 }
 
-fn write_offsets_section(out: &mut ByteWriter, kind: u8, offsets: &[u64]) {
-    out.write_u8(kind);
-    out.write_varint_u64(offsets.len() as u64);
+async fn write_offsets_section(out: &mut ByteWriter, kind: u8, offsets: &[u64]) {
+    out.write_u8(kind).await;
+    out.write_varint_u64(offsets.len() as u64).await;
     for offset in offsets {
-        out.write_varint_u64(*offset);
+        out.write_varint_u64(*offset).await;
     }
 }
 
@@ -1881,45 +1928,45 @@ pub struct IndexBuilder {
 }
 
 impl IndexBuilder {
-    pub fn new() -> Self {
+    pub async fn new() -> Self {
         Self::default()
     }
 
-    pub fn record_edit(&mut self, ordinal: u64, offset: u64) {
+    pub async fn record_edit(&mut self, ordinal: u64, offset: u64) {
         self.edits.push((ordinal, offset));
     }
 
-    pub fn record_checkpoint(&mut self, id: &str, offset: u64, edit_ordinal: u64) {
+    pub async fn record_checkpoint(&mut self, id: &str, offset: u64, edit_ordinal: u64) {
         self.checkpoints.push((id.to_string(), offset, edit_ordinal));
     }
 
-    pub fn record_dict(&mut self, offset: u64) {
+    pub async fn record_dict(&mut self, offset: u64) {
         self.dict_offsets.push(offset);
     }
 
-    pub fn record_snapshot(&mut self, edit_ordinal: u64, offset: u64) {
+    pub async fn record_snapshot(&mut self, edit_ordinal: u64, offset: u64) {
         self.snapshots.push((edit_ordinal, offset));
     }
 
-    pub fn record_sealed(&mut self, offset: u64) {
+    pub async fn record_sealed(&mut self, offset: u64) {
         self.sealed.push(offset);
     }
 
-    pub fn build(&self) -> Vec<u8> {
-        let mut out = ByteWriter::new();
-        out.write_u8(1);
-        write_pair_section(&mut out, SEC_EDIT_OFFSETS, &self.edits);
-        out.write_u8(SEC_CHECKPOINT_OFFSETS);
-        out.write_varint_u64(self.checkpoints.len() as u64);
+    pub async fn build(&self) -> Vec<u8> {
+        let mut out = ByteWriter::new().await;
+        out.write_u8(1).await;
+        write_pair_section(&mut out, SEC_EDIT_OFFSETS, &self.edits).await;
+        out.write_u8(SEC_CHECKPOINT_OFFSETS).await;
+        out.write_varint_u64(self.checkpoints.len() as u64).await;
         for (id, offset, edit_ordinal) in &self.checkpoints {
-            write_str_field(&mut out, id);
-            out.write_varint_u64(*offset);
-            out.write_varint_u64(*edit_ordinal);
+            write_str_field(&mut out, id).await;
+            out.write_varint_u64(*offset).await;
+            out.write_varint_u64(*edit_ordinal).await;
         }
-        write_offsets_section(&mut out, SEC_DICT_OFFSETS, &self.dict_offsets);
-        write_pair_section(&mut out, SEC_SNAPSHOT_OFFSETS, &self.snapshots);
-        write_offsets_section(&mut out, SEC_SEALED_OFFSETS, &self.sealed);
-        out.into_bytes()
+        write_offsets_section(&mut out, SEC_DICT_OFFSETS, &self.dict_offsets).await;
+        write_pair_section(&mut out, SEC_SNAPSHOT_OFFSETS, &self.snapshots).await;
+        write_offsets_section(&mut out, SEC_SEALED_OFFSETS, &self.sealed).await;
+        out.into_bytes().await
     }
 }
 
@@ -1930,51 +1977,51 @@ pub struct IndexReader<'a> {
 }
 
 impl<'a> IndexReader<'a> {
-    pub fn open(payload: &'a [u8]) -> Result<Self, ProtocolError> {
-        let mut input = ByteReader::new(payload);
-        let format = input.read_u8()?;
+    pub async fn open(payload: &'a [u8]) -> Result<Self, ProtocolError> {
+        let mut input = ByteReader::new(payload).await;
+        let format = input.read_u8().await?;
         if format > 1 {
-            return Err(malformed_fmt("index", format));
+            return Err(malformed_fmt("index", format).await);
         }
         let mut edits = Vec::new();
         let mut checkpoints = Vec::new();
         let mut snapshots = Vec::new();
-        while input.remaining() > 0 {
-            let kind = input.read_u8()?;
-            let count = input.read_varint_u64()?;
+        while input.remaining().await > 0 {
+            let kind = input.read_u8().await?;
+            let count = input.read_varint_u64().await?;
             match kind {
                 SEC_EDIT_OFFSETS => {
                     for _ in 0..count {
-                        let ordinal = input.read_varint_u64()?;
-                        let offset = input.read_varint_u64()?;
+                        let ordinal = input.read_varint_u64().await?;
+                        let offset = input.read_varint_u64().await?;
                         edits.push((ordinal, offset));
                     }
                 }
                 SEC_CHECKPOINT_OFFSETS => {
                     for _ in 0..count {
-                        let len = input.read_varint_u64()? as usize;
-                        let bytes = input.read_bytes(len)?;
+                        let len = input.read_varint_u64().await? as usize;
+                        let bytes = input.read_bytes(len).await?;
                         let id = std::str::from_utf8(bytes).map_err(|_| ProtocolError::Malformed { what: "index checkpoint id utf8", offset: 0, detail: "invalid utf-8".to_string() })?;
-                        let offset = input.read_varint_u64()?;
-                        let edit_ordinal = input.read_varint_u64()?;
+                        let offset = input.read_varint_u64().await?;
+                        let edit_ordinal = input.read_varint_u64().await?;
                         checkpoints.push((id, offset, edit_ordinal));
                     }
                 }
                 SEC_DICT_OFFSETS => {
                     for _ in 0..count {
-                        input.read_varint_u64()?;
+                        input.read_varint_u64().await?;
                     }
                 }
                 SEC_SNAPSHOT_OFFSETS => {
                     for _ in 0..count {
-                        let ordinal = input.read_varint_u64()?;
-                        let offset = input.read_varint_u64()?;
+                        let ordinal = input.read_varint_u64().await?;
+                        let offset = input.read_varint_u64().await?;
                         snapshots.push((ordinal, offset));
                     }
                 }
                 SEC_SEALED_OFFSETS => {
                     for _ in 0..count {
-                        input.read_varint_u64()?;
+                        input.read_varint_u64().await?;
                     }
                 }
                 other => return Err(ProtocolError::Malformed { what: "index section kind", offset: 0, detail: format!("unknown section {other:#x}") }),
@@ -1983,15 +2030,15 @@ impl<'a> IndexReader<'a> {
         Ok(Self { edits, checkpoints, snapshots })
     }
 
-    pub fn edit_offset_at_or_before(&self, ordinal: u64) -> Option<u64> {
+    pub async fn edit_offset_at_or_before(&self, ordinal: u64) -> Option<u64> {
         self.edits.iter().filter(|(o, _)| *o <= ordinal).max_by_key(|(o, _)| *o).map(|(_, offset)| *offset)
     }
 
-    pub fn checkpoint_offset(&self, checkpoint_id: &str) -> Option<(u64, u64)> {
+    pub async fn checkpoint_offset(&self, checkpoint_id: &str) -> Option<(u64, u64)> {
         self.checkpoints.iter().find(|(id, _, _)| *id == checkpoint_id).map(|(_, offset, edit_ordinal)| (*offset, *edit_ordinal))
     }
 
-    pub fn latest_snapshot_offset_at_or_before(&self, ordinal: u64) -> Option<u64> {
+    pub async fn latest_snapshot_offset_at_or_before(&self, ordinal: u64) -> Option<u64> {
         self.snapshots.iter().filter(|(o, _)| *o <= ordinal).max_by_key(|(o, _)| *o).map(|(_, offset)| *offset)
     }
 }
@@ -2002,7 +2049,7 @@ impl<'a> IndexReader<'a> {
 mod tests {
     use super::*;
 
-    fn sample_log() -> HistoryLog {
+    async fn sample_log() -> HistoryLog {
         HistoryLog {
             doc_id: "doc-1".to_string(),
             schema: "org.semio.demo.v1".to_string(),
@@ -2035,7 +2082,7 @@ mod tests {
                         hlt: Some((1, 1_700_000_000_000, 3)),
                         undo_policy: 2,
                         payload_hash: Some([9u8; 32]),
-                        // 🎯️ Non-`None` on purpose: `sample_log()` feeds every encode/decode
+                        // 🎯️ Non-`None` on purpose: `sample_log().await` feeds every encode/decode
                         // identity test below (`history_encode_decode_identity_standard` etc.), so
                         // a populated `group_id` here proves the composite-gesture stamp survives
                         // a real `.spr` byte round trip via `assert_eq!(decoded, log)`, not just a
@@ -2070,7 +2117,7 @@ mod tests {
         }
     }
 
-    fn sample_conflicts() -> Vec<HistoryConflict> {
+    async fn sample_conflicts() -> Vec<HistoryConflict> {
         vec![
             HistoryConflict {
                 id: "conflict-quarantine-1".to_string(),
@@ -2099,108 +2146,108 @@ mod tests {
     }
 
     //#region 🔖️Composition
-    #[test]
-    fn composition_overlay_round_trips_through_the_binary_log() {
+    #[semio_framework_async_macros::async_test]
+    async fn composition_overlay_round_trips_through_the_binary_log() {
         let composition = HistoryComposition {
             owner: Some(("parent-1!s.stdio.object@1/*".to_string(), "mesh".to_string(), "child-1".to_string())),
             dialect: Some(("s.stdio.mesh".to_string(), "1".to_string(), "*".to_string())),
             checkpoint_pins: vec![("ck-1".to_string(), vec![("child-1!s.stdio.mesh@1/*".to_string(), "ck-child-7".to_string())])],
         };
-        let log = HistoryLog { composition: Some(composition.clone()), ..sample_log() };
+        let log = HistoryLog { composition: Some(composition.clone()), ..sample_log().await };
 
-        let bytes = encode_history(&log, &EncodeOptions::default()).expect("encode");
-        let decoded = decode_history(&bytes, &DecodeOptions::default()).expect("decode");
+        let bytes = encode_history(&log, &EncodeOptions::default()).await.expect("encode");
+        let decoded = decode_history(&bytes, &DecodeOptions::default()).await.expect("decode");
         assert_eq!(decoded.composition, Some(composition), "the composition overlay did not survive the binary round trip");
     }
 
-    #[test]
-    fn a_log_without_composition_writes_no_composition_record() {
-        let bytes = encode_history(&sample_log(), &EncodeOptions::default()).expect("encode");
-        assert_eq!(decode_history(&bytes, &DecodeOptions::default()).expect("decode").composition, None);
+    #[semio_framework_async_macros::async_test]
+    async fn a_log_without_composition_writes_no_composition_record() {
+        let bytes = encode_history(&sample_log().await, &EncodeOptions::default()).await.expect("encode");
+        assert_eq!(decode_history(&bytes, &DecodeOptions::default()).await.expect("decode").composition, None);
         // 🎯️ The record is non-critical, so a reader that skips it must still read the whole log —
         // which is exactly what "absent" and "skipped" both look like from here.
-        assert!(!bytes.windows(1).any(|window| window == [REC_COMPOSITION]) || decode_history(&bytes, &DecodeOptions::default()).is_ok());
+        assert!(!bytes.windows(1).any(|window| window == [REC_COMPOSITION]) || decode_history(&bytes, &DecodeOptions::default()).await.is_ok());
     }
     //#endregion 🔖️Composition
 
     //#region 🔖️Conflict
-    #[test]
-    fn conflict_payload_round_trips_both_kinds_byte_identically() {
-        let log = HistoryLog { conflicts: sample_conflicts(), ..sample_log() };
-        let bytes = encode_history(&log, &EncodeOptions::default()).expect("encode");
-        let decoded = decode_history(&bytes, &DecodeOptions::default()).expect("decode");
+    #[semio_framework_async_macros::async_test]
+    async fn conflict_payload_round_trips_both_kinds_byte_identically() {
+        let log = HistoryLog { conflicts: sample_conflicts().await, ..sample_log().await };
+        let bytes = encode_history(&log, &EncodeOptions::default()).await.expect("encode");
+        let decoded = decode_history(&bytes, &DecodeOptions::default()).await.expect("decode");
         assert_eq!(decoded, log, "conflicts of both kinds must survive the binary round trip structurally");
-        let re_encoded = encode_history(&decoded, &EncodeOptions::default()).expect("re-encode");
+        let re_encoded = encode_history(&decoded, &EncodeOptions::default()).await.expect("re-encode");
         assert_eq!(re_encoded, bytes, "re-encoding the decoded log must reproduce byte-identical output");
     }
 
-    #[test]
-    fn encode_conflicts_round_trips_with_dict_and_ordinal_refs() {
-        let conflicts = sample_conflicts();
-        let mut dict = DictBuilder::new();
+    #[semio_framework_async_macros::async_test]
+    async fn encode_conflicts_round_trips_with_dict_and_ordinal_refs() {
+        let conflicts = sample_conflicts().await;
+        let mut dict = DictBuilder::new().await;
         let ordinals: HashMap<&str, u64> = [("edit-1", 0u64), ("edit-2", 1u64)].into_iter().collect();
-        let payload = encode_conflicts(&conflicts, &mut dict, |id| ordinals.get(id).copied()).unwrap();
-        let mut reader = DictReader::new();
-        reader.extend(0, dict.entries_since(0).to_vec()).unwrap();
+        let payload = encode_conflicts(&conflicts, &mut dict, |id| ordinals.get(id).copied()).await.unwrap();
+        let mut reader = DictReader::new().await;
+        reader.extend(0, dict.entries_since(0).await.to_vec()).await.unwrap();
         let edit_ids = ["edit-1".to_string(), "edit-2".to_string()];
-        let decoded = decode_conflicts(&payload, &reader, |ord| edit_ids.get(ord as usize).map(String::as_str).ok_or(ProtocolError::DictMiss(ord as u32))).unwrap();
+        let decoded = decode_conflicts(&payload, &reader, |ord| edit_ids.get(ord as usize).map(String::as_str).ok_or(ProtocolError::DictMiss(ord as u32))).await.unwrap();
         assert_eq!(decoded, conflicts);
     }
 
-    #[test]
-    fn encode_conflicts_round_trips_empty() {
-        let mut dict = DictBuilder::new();
-        let payload = encode_conflicts(&Vec::new(), &mut dict, |_| None).unwrap();
-        let mut reader = DictReader::new();
-        reader.extend(0, dict.entries_since(0).to_vec()).unwrap();
-        let decoded = decode_conflicts(&payload, &reader, |ord| Err(ProtocolError::DictMiss(ord as u32))).unwrap();
+    #[semio_framework_async_macros::async_test]
+    async fn encode_conflicts_round_trips_empty() {
+        let mut dict = DictBuilder::new().await;
+        let payload = encode_conflicts(&Vec::new(), &mut dict, |_| None).await.unwrap();
+        let mut reader = DictReader::new().await;
+        reader.extend(0, dict.entries_since(0).await.to_vec()).await.unwrap();
+        let decoded = decode_conflicts(&payload, &reader, |ord| Err(ProtocolError::DictMiss(ord as u32))).await.unwrap();
         assert_eq!(decoded, Vec::new());
     }
 
-    #[test]
-    fn conflict_decoder_rejects_duplicate_ids_and_trailing_payload_bytes() {
-        let conflict = sample_conflicts().remove(0);
-        let mut dict = DictBuilder::new();
+    #[semio_framework_async_macros::async_test]
+    async fn conflict_decoder_rejects_duplicate_ids_and_trailing_payload_bytes() {
+        let conflict = sample_conflicts().await.remove(0);
+        let mut dict = DictBuilder::new().await;
         let ordinals: HashMap<&str, u64> = [("edit-1", 0u64), ("edit-2", 1u64)].into_iter().collect();
-        let duplicate_payload = encode_conflicts(&vec![conflict.clone(), conflict], &mut dict, |id| ordinals.get(id).copied()).expect("encode duplicate fixture");
-        let mut reader = DictReader::new();
-        reader.extend(0, dict.entries_since(0).to_vec()).expect("dictionary");
+        let duplicate_payload = encode_conflicts(&vec![conflict.clone(), conflict], &mut dict, |id| ordinals.get(id).copied()).await.expect("encode duplicate fixture");
+        let mut reader = DictReader::new().await;
+        reader.extend(0, dict.entries_since(0).await.to_vec()).await.expect("dictionary");
         let edit_ids = ["edit-1".to_string(), "edit-2".to_string()];
-        assert!(matches!(decode_conflicts(&duplicate_payload, &reader, |ord| edit_ids.get(ord as usize).map(String::as_str).ok_or(ProtocolError::DictMiss(ord as u32))), Err(ProtocolError::Malformed { .. })));
+        assert!(matches!(decode_conflicts(&duplicate_payload, &reader, |ord| edit_ids.get(ord as usize).map(String::as_str).ok_or(ProtocolError::DictMiss(ord as u32))).await, Err(ProtocolError::Malformed { .. })));
 
-        let mut trailing_dict = DictBuilder::new();
-        let mut trailing_payload = encode_conflicts(&sample_conflicts(), &mut trailing_dict, |_| None).expect("encode trailing fixture");
+        let mut trailing_dict = DictBuilder::new().await;
+        let mut trailing_payload = encode_conflicts(&sample_conflicts().await, &mut trailing_dict, |_| None).await.expect("encode trailing fixture");
         trailing_payload.push(0);
-        let mut trailing_reader = DictReader::new();
-        trailing_reader.extend(0, trailing_dict.entries_since(0).to_vec()).expect("dictionary");
-        assert!(matches!(decode_conflicts(&trailing_payload, &trailing_reader, |_| Err(ProtocolError::DictMiss(0))), Err(ProtocolError::Malformed { .. })));
+        let mut trailing_reader = DictReader::new().await;
+        trailing_reader.extend(0, trailing_dict.entries_since(0).await.to_vec()).await.expect("dictionary");
+        assert!(matches!(decode_conflicts(&trailing_payload, &trailing_reader, |_| Err(ProtocolError::DictMiss(0))).await, Err(ProtocolError::Malformed { .. })));
     }
 
-    #[test]
-    fn conflict_codec_rejects_unknown_kind_and_status_tags() {
-        let mut dict = DictBuilder::new();
-        let mut conflicts = sample_conflicts();
+    #[semio_framework_async_macros::async_test]
+    async fn conflict_codec_rejects_unknown_kind_and_status_tags() {
+        let mut dict = DictBuilder::new().await;
+        let mut conflicts = sample_conflicts().await;
         conflicts[0].kind = 9;
-        assert!(matches!(encode_conflicts(&conflicts, &mut dict, |_| None), Err(ProtocolError::Malformed { what: "conflict", .. })));
+        assert!(matches!(encode_conflicts(&conflicts, &mut dict, |_| None).await, Err(ProtocolError::Malformed { what: "conflict", .. })));
 
-        let mut dict = DictBuilder::new();
-        let mut payload = encode_conflicts(&sample_conflicts()[..1], &mut dict, |_| None).expect("encode valid conflict");
+        let mut dict = DictBuilder::new().await;
+        let mut payload = encode_conflicts(&sample_conflicts().await[..1], &mut dict, |_| None).await.expect("encode valid conflict");
         let tag_offset = payload.windows(3).position(|window| window == [0, 0, 2]).expect("kind/status/actor-count tags");
         payload[tag_offset + 1] = 9;
-        let mut reader = DictReader::new();
-        reader.extend(0, dict.entries_since(0).to_vec()).expect("dictionary");
-        assert!(matches!(decode_conflicts(&payload, &reader, |_| Err(ProtocolError::DictMiss(0))), Err(ProtocolError::Malformed { what: "conflict", .. })));
+        let mut reader = DictReader::new().await;
+        reader.extend(0, dict.entries_since(0).await.to_vec()).await.expect("dictionary");
+        assert!(matches!(decode_conflicts(&payload, &reader, |_| Err(ProtocolError::DictMiss(0))).await, Err(ProtocolError::Malformed { what: "conflict", .. })));
     }
 
-    #[test]
-    fn a_log_without_conflicts_writes_no_conflict_record() {
-        let bytes = encode_history(&sample_log(), &EncodeOptions::default()).expect("encode");
-        assert_eq!(decode_history(&bytes, &DecodeOptions::default()).expect("decode").conflicts, Vec::new());
+    #[semio_framework_async_macros::async_test]
+    async fn a_log_without_conflicts_writes_no_conflict_record() {
+        let bytes = encode_history(&sample_log().await, &EncodeOptions::default()).await.expect("encode");
+        assert_eq!(decode_history(&bytes, &DecodeOptions::default()).await.expect("decode").conflicts, Vec::new());
         // 🎯️ Scans actual frames (not a raw byte-window guess like the composition precedent
         // above) — the rigorous form of "no conflicts ⇒ no REC_CONFLICT record emitted".
-        let mut cursor = FrameCursor::new(&bytes, HEADER_SIZE as u64);
+        let mut cursor = FrameCursor::new(&bytes, HEADER_SIZE as u64).await;
         let mut saw_conflict_record = false;
-        while let Some(frame) = cursor.next_frame().expect("scan") {
+        while let Some(frame) = cursor.next_frame().await.expect("scan") {
             if frame.kind == REC_CONFLICT {
                 saw_conflict_record = true;
             }
@@ -2210,8 +2257,8 @@ mod tests {
     //#endregion 🔖️Conflict
 
     //#region 🔖️Message
-    #[test]
-    fn op_meta_messages_round_trip_every_severity_and_target_shape() {
+    #[semio_framework_async_macros::async_test]
+    async fn op_meta_messages_round_trip_every_severity_and_target_shape() {
         let meta = HistoryOpMeta {
             op_id: Some("op-9".to_string()),
             dependencies: Vec::new(),
@@ -2240,67 +2287,67 @@ mod tests {
             inverse: Vec::new(),
             meta: Some(vec![meta.clone()]),
         };
-        let mut dict = DictBuilder::new();
-        let payload = encode_edit(&edit, &mut dict, |_| None).unwrap();
-        let mut reader = DictReader::new();
-        reader.extend(0, dict.entries_since(0).to_vec()).unwrap();
-        let decoded = decode_edit(&payload, &reader, |ord| Err(ProtocolError::DictMiss(ord as u32))).unwrap();
+        let mut dict = DictBuilder::new().await;
+        let payload = encode_edit(&edit, &mut dict, |_| None).await.unwrap();
+        let mut reader = DictReader::new().await;
+        reader.extend(0, dict.entries_since(0).await.to_vec()).await.unwrap();
+        let decoded = decode_edit(&payload, &reader, |ord| Err(ProtocolError::DictMiss(ord as u32))).await.unwrap();
         assert_eq!(decoded.meta, Some(vec![meta]));
     }
 
-    #[test]
-    fn op_meta_without_messages_writes_no_messages_section() {
+    #[semio_framework_async_macros::async_test]
+    async fn op_meta_without_messages_writes_no_messages_section() {
         let meta = HistoryOpMeta { op_id: None, dependencies: Vec::new(), base_version: 0, author_id: None, hlt: None, undo_policy: 0, payload_hash: None, group_id: None, origin: crate::os_spr::command::MutationOrigin::Owner, messages: Vec::new() };
-        let mut dict = DictBuilder::new();
-        let mut out = ByteWriter::new();
-        write_op_meta(&mut out, &meta, &mut dict, &|_: &str| None).unwrap();
-        let payload = out.into_bytes();
+        let mut dict = DictBuilder::new().await;
+        let mut out = ByteWriter::new().await;
+        write_op_meta(&mut out, &meta, &mut dict, &|_: &str| None).await.unwrap();
+        let payload = out.into_bytes().await;
         // presence byte is the very first byte written by write_op_meta; bit6 (0x40) must be unset.
         assert_eq!(payload[0] & 0b0100_0000, 0, "bit6 must be unset for empty messages");
-        let mut reader = DictReader::new();
-        reader.extend(0, dict.entries_since(0).to_vec()).unwrap();
-        let mut input = ByteReader::new(&payload);
-        let decoded = read_op_meta(&mut input, &reader, &|ord: u64| Err(ProtocolError::DictMiss(ord as u32))).unwrap();
+        let mut reader = DictReader::new().await;
+        reader.extend(0, dict.entries_since(0).await.to_vec()).await.unwrap();
+        let mut input = ByteReader::new(&payload).await;
+        let decoded = read_op_meta(&mut input, &reader, &|ord: u64| Err(ProtocolError::DictMiss(ord as u32))).await.unwrap();
         assert_eq!(decoded.messages, Vec::new());
     }
 
-    #[test]
-    fn history_message_decoder_rejects_invalid_severity_presence_and_index_width() {
+    #[semio_framework_async_macros::async_test]
+    async fn history_message_decoder_rejects_invalid_severity_presence_and_index_width() {
         let message = HistoryMessage { level: 1, code: "mutation.clamped".to_string(), message: "clamped".to_string(), target: Vec::new(), op_index: None };
-        let mut dict = DictBuilder::new();
-        let mut out = ByteWriter::new();
-        write_history_message(&mut out, &message, &mut dict).expect("encode message");
-        let encoded = out.into_bytes();
-        let mut reader = DictReader::new();
-        reader.extend(0, dict.entries_since(0).to_vec()).expect("dictionary");
+        let mut dict = DictBuilder::new().await;
+        let mut out = ByteWriter::new().await;
+        write_history_message(&mut out, &message, &mut dict).await.expect("encode message");
+        let encoded = out.into_bytes().await;
+        let mut reader = DictReader::new().await;
+        reader.extend(0, dict.entries_since(0).await.to_vec()).await.expect("dictionary");
 
         let mut invalid_severity = encoded.clone();
         invalid_severity[0] = 4;
-        assert!(matches!(read_history_message(&mut ByteReader::new(&invalid_severity), &reader), Err(ProtocolError::Malformed { .. })));
+        assert!(matches!(read_history_message(&mut ByteReader::new(&invalid_severity), &reader).await, Err(ProtocolError::Malformed { .. })));
 
         let mut invalid_presence = encoded;
         *invalid_presence.last_mut().expect("presence byte") = 2;
-        assert!(matches!(read_history_message(&mut ByteReader::new(&invalid_presence), &reader), Err(ProtocolError::Malformed { .. })));
+        assert!(matches!(read_history_message(&mut ByteReader::new(&invalid_presence), &reader).await, Err(ProtocolError::Malformed { .. })));
 
         let indexed = HistoryMessage { op_index: Some(0), ..message };
-        let mut indexed_out = ByteWriter::new();
-        write_history_message(&mut indexed_out, &indexed, &mut dict).expect("encode indexed message");
-        let mut oversized_index = indexed_out.into_bytes();
+        let mut indexed_out = ByteWriter::new().await;
+        write_history_message(&mut indexed_out, &indexed, &mut dict).await.expect("encode indexed message");
+        let mut oversized_index = indexed_out.into_bytes().await;
         oversized_index.pop();
         oversized_index.extend_from_slice(&[0x80, 0x80, 0x80, 0x80, 0x10]);
-        assert!(matches!(read_history_message(&mut ByteReader::new(&oversized_index), &reader), Err(ProtocolError::Malformed { .. })));
+        assert!(matches!(read_history_message(&mut ByteReader::new(&oversized_index), &reader).await, Err(ProtocolError::Malformed { .. })));
     }
 
-    #[test]
-    fn message_code_interning_does_not_grow_the_dictionary_linearly() {
-        let mut dict = DictBuilder::new();
-        let mut out = ByteWriter::new();
+    #[semio_framework_async_macros::async_test]
+    async fn message_code_interning_does_not_grow_the_dictionary_linearly() {
+        let mut dict = DictBuilder::new().await;
+        let mut out = ByteWriter::new().await;
         for _ in 0..500 {
             let message = HistoryMessage { level: 1, code: "mutation.clamped".to_string(), message: String::new(), target: Vec::new(), op_index: None };
-            write_history_message(&mut out, &message, &mut dict).unwrap();
+            write_history_message(&mut out, &message, &mut dict).await.unwrap();
         }
-        assert_eq!(dict.len(), 1, "500 identical codes must intern to a single dictionary entry, not 500");
-        let payload_len = out.into_bytes().len();
+        assert_eq!(dict.len().await, 1, "500 identical codes must intern to a single dictionary entry, not 500");
+        let payload_len = out.into_bytes().await.len();
         let bytes_per_message = payload_len / 500;
         // 🎯️ A raw (non-interned) code string would cost len("mutation.clamped")=17 bytes alone
         // per repeat; interning collapses every repeat after the first to a small dictref (tag +
@@ -2311,159 +2358,159 @@ mod tests {
     //#endregion 🔖️Message
 
     //#region 🔖️TextGrammar
-    #[test]
-    fn ops_text_round_trips_a_full_log() {
+    #[semio_framework_async_macros::async_test]
+    async fn ops_text_round_trips_a_full_log() {
         // `HistoryEdit::meta` is derived data the text grammar never carries (see the Model
         // region note) — parse_ops_text always yields `meta: None`, so the expectation strips it
         // before comparing rather than asserting full structural equality including meta.
-        let mut log = sample_log();
+        let mut log = sample_log().await;
         for edit in &mut log.edits {
             edit.meta = None;
         }
-        let text = print_ops_text(&log).unwrap();
-        let parsed = parse_ops_text(&text).unwrap();
+        let text = print_ops_text(&log).await.unwrap();
+        let parsed = parse_ops_text(&text).await.unwrap();
         assert_eq!(parsed, log);
     }
 
-    #[test]
-    fn ops_text_is_a_fixpoint_under_reprint() {
-        let log = sample_log();
-        let text = print_ops_text(&log).unwrap();
-        let reparsed = parse_ops_text(&text).unwrap();
-        assert_eq!(print_ops_text(&reparsed).unwrap(), text);
+    #[semio_framework_async_macros::async_test]
+    async fn ops_text_is_a_fixpoint_under_reprint() {
+        let log = sample_log().await;
+        let text = print_ops_text(&log).await.unwrap();
+        let reparsed = parse_ops_text(&text).await.unwrap();
+        assert_eq!(print_ops_text(&reparsed).await.unwrap(), text);
     }
 
-    #[test]
-    fn ops_text_skips_comments_and_blank_lines() {
+    #[semio_framework_async_macros::async_test]
+    async fn ops_text_skips_comments_and_blank_lines() {
         let text = "doc doc-1 schema=s1\n\n# a comment\nactive alt-1\n";
-        let log = parse_ops_text(text).unwrap();
+        let log = parse_ops_text(text).await.unwrap();
         assert_eq!(log.doc_id, "doc-1");
         assert_eq!(log.active_alternative_id.as_deref(), Some("alt-1"));
     }
 
-    #[test]
-    fn ops_text_rejects_unknown_line_keyword() {
-        let err = parse_ops_text("doc doc-1 schema=s1\nbogus x\n").unwrap_err();
+    #[semio_framework_async_macros::async_test]
+    async fn ops_text_rejects_unknown_line_keyword() {
+        let err = parse_ops_text("doc doc-1 schema=s1\nbogus x\n").await.unwrap_err();
         assert!(matches!(err, ProtocolError::Malformed { .. }));
     }
 
-    #[test]
-    fn ops_text_edit_without_active_line_leaves_none() {
+    #[semio_framework_async_macros::async_test]
+    async fn ops_text_edit_without_active_line_leaves_none() {
         let log = HistoryLog { doc_id: "d".into(), schema: "s".into(), active_alternative_id: None, ..Default::default() };
-        let text = print_ops_text(&log).unwrap();
+        let text = print_ops_text(&log).await.unwrap();
         assert!(!text.contains("active"));
-        assert_eq!(parse_ops_text(&text).unwrap().active_alternative_id, None);
+        assert_eq!(parse_ops_text(&text).await.unwrap().active_alternative_id, None);
     }
 
-    #[test]
-    fn ops_text_round_trips_a_cursor_line_with_undo_then_apply_interleaving() {
-        let mut log = sample_log();
+    #[semio_framework_async_macros::async_test]
+    async fn ops_text_round_trips_a_cursor_line_with_undo_then_apply_interleaving() {
+        let mut log = sample_log().await;
         for edit in &mut log.edits {
             edit.meta = None;
         }
         // A single tail-edit marker cannot represent this: edit-1 undone (moved to redo), then a
         // later apply produced edit-2 — edit-1 precedes edit-2 in file order but is NOT applied.
         log.cursor = Some(HistoryCursor { applied_edit_ids: vec!["edit-2".to_string()], redo_edit_ids: vec!["edit-1".to_string()], checkpoint_id: Some("ck-1".to_string()) });
-        let text = print_ops_text(&log).unwrap();
+        let text = print_ops_text(&log).await.unwrap();
         assert!(text.contains("cursor"));
-        let parsed = parse_ops_text(&text).unwrap();
+        let parsed = parse_ops_text(&text).await.unwrap();
         assert_eq!(parsed, log);
     }
 
-    #[test]
-    fn ops_text_without_a_cursor_line_leaves_cursor_none() {
+    #[semio_framework_async_macros::async_test]
+    async fn ops_text_without_a_cursor_line_leaves_cursor_none() {
         let log = HistoryLog { doc_id: "d".into(), schema: "s".into(), ..Default::default() };
-        let text = print_ops_text(&log).unwrap();
+        let text = print_ops_text(&log).await.unwrap();
         assert!(!text.contains("cursor"));
-        assert_eq!(parse_ops_text(&text).unwrap().cursor, None);
+        assert_eq!(parse_ops_text(&text).await.unwrap().cursor, None);
     }
     //#endregion 🔖️TextGrammar
 
     //#region 🔖️Payloads
-    #[test]
-    fn doc_payload_round_trips() {
-        let mut dict = DictBuilder::new();
-        let payload = encode_doc("doc-1", "org.semio.demo.v1", &mut dict);
-        let mut reader = DictReader::new();
-        reader.extend(0, dict.entries_since(0).to_vec()).unwrap();
-        let (id, schema) = decode_doc(&payload, &reader).unwrap();
+    #[semio_framework_async_macros::async_test]
+    async fn doc_payload_round_trips() {
+        let mut dict = DictBuilder::new().await;
+        let payload = encode_doc("doc-1", "org.semio.demo.v1", &mut dict).await;
+        let mut reader = DictReader::new().await;
+        reader.extend(0, dict.entries_since(0).await.to_vec()).await.unwrap();
+        let (id, schema) = decode_doc(&payload, &reader).await.unwrap();
         assert_eq!(id, "doc-1");
         assert_eq!(schema, "org.semio.demo.v1");
     }
 
-    #[test]
-    fn edit_payload_round_trips_with_all_optionals_and_meta() {
-        let log = sample_log();
+    #[semio_framework_async_macros::async_test]
+    async fn edit_payload_round_trips_with_all_optionals_and_meta() {
+        let log = sample_log().await;
         let edit = &log.edits[1];
-        let mut dict = DictBuilder::new();
+        let mut dict = DictBuilder::new().await;
         let ordinals: HashMap<&str, u64> = [("edit-1", 0u64)].into_iter().collect();
-        let payload = encode_edit(edit, &mut dict, |id| ordinals.get(id).copied()).unwrap();
-        let mut reader = DictReader::new();
-        reader.extend(0, dict.entries_since(0).to_vec()).unwrap();
+        let payload = encode_edit(edit, &mut dict, |id| ordinals.get(id).copied()).await.unwrap();
+        let mut reader = DictReader::new().await;
+        reader.extend(0, dict.entries_since(0).await.to_vec()).await.unwrap();
         let edit_ids = ["edit-1".to_string()];
-        let decoded = decode_edit(&payload, &reader, |ord| edit_ids.get(ord as usize).map(String::as_str).ok_or(ProtocolError::DictMiss(ord as u32))).unwrap();
+        let decoded = decode_edit(&payload, &reader, |ord| edit_ids.get(ord as usize).map(String::as_str).ok_or(ProtocolError::DictMiss(ord as u32))).await.unwrap();
         assert_eq!(decoded, *edit);
     }
 
-    #[test]
-    fn edit_payload_round_trips_minimal_edit() {
+    #[semio_framework_async_macros::async_test]
+    async fn edit_payload_round_trips_minimal_edit() {
         let edit = HistoryEdit { id: "edit-x".to_string(), actor: None, started_at: "2024-01-01T00:00:00Z".to_string(), finished_at: None, coalesce_key: None, description: None, ops: Vec::new(), inverse: Vec::new(), meta: None };
-        let mut dict = DictBuilder::new();
-        let payload = encode_edit(&edit, &mut dict, |_| None).unwrap();
-        let mut reader = DictReader::new();
-        reader.extend(0, dict.entries_since(0).to_vec()).unwrap();
-        let decoded = decode_edit(&payload, &reader, |ord| Err(ProtocolError::DictMiss(ord as u32))).unwrap();
+        let mut dict = DictBuilder::new().await;
+        let payload = encode_edit(&edit, &mut dict, |_| None).await.unwrap();
+        let mut reader = DictReader::new().await;
+        reader.extend(0, dict.entries_since(0).await.to_vec()).await.unwrap();
+        let decoded = decode_edit(&payload, &reader, |ord| Err(ProtocolError::DictMiss(ord as u32))).await.unwrap();
         assert_eq!(decoded, edit);
     }
 
-    #[test]
-    fn change_payload_round_trips_and_references_edit_ordinals() {
+    #[semio_framework_async_macros::async_test]
+    async fn change_payload_round_trips_and_references_edit_ordinals() {
         let change = HistoryChange { id: "change-1".to_string(), saved_at: "2024-01-01T00:00:00Z".to_string(), edit_ids: vec!["edit-1".to_string(), "edit-2".to_string()], description: Some("d".to_string()) };
-        let mut dict = DictBuilder::new();
+        let mut dict = DictBuilder::new().await;
         let ordinals: HashMap<&str, u64> = [("edit-1", 0u64), ("edit-2", 1u64)].into_iter().collect();
-        let payload = encode_change(&change, &mut dict, |id| ordinals.get(id).copied()).unwrap();
-        let mut reader = DictReader::new();
-        reader.extend(0, dict.entries_since(0).to_vec()).unwrap();
+        let payload = encode_change(&change, &mut dict, |id| ordinals.get(id).copied()).await.unwrap();
+        let mut reader = DictReader::new().await;
+        reader.extend(0, dict.entries_since(0).await.to_vec()).await.unwrap();
         let edit_ids = ["edit-1".to_string(), "edit-2".to_string()];
-        let decoded = decode_change(&payload, &reader, |ord| edit_ids.get(ord as usize).map(String::as_str).ok_or(ProtocolError::DictMiss(ord as u32))).unwrap();
+        let decoded = decode_change(&payload, &reader, |ord| edit_ids.get(ord as usize).map(String::as_str).ok_or(ProtocolError::DictMiss(ord as u32))).await.unwrap();
         assert_eq!(decoded, change);
     }
 
-    #[test]
-    fn checkpoint_payload_round_trips_with_authors() {
-        let checkpoint = sample_log().checkpoints.remove(0);
-        let mut dict = DictBuilder::new();
-        let payload = encode_checkpoint(&checkpoint, &mut dict).unwrap();
-        let mut reader = DictReader::new();
-        reader.extend(0, dict.entries_since(0).to_vec()).unwrap();
-        let decoded = decode_checkpoint(&payload, &reader).unwrap();
+    #[semio_framework_async_macros::async_test]
+    async fn checkpoint_payload_round_trips_with_authors() {
+        let checkpoint = sample_log().await.checkpoints.remove(0);
+        let mut dict = DictBuilder::new().await;
+        let payload = encode_checkpoint(&checkpoint, &mut dict).await.unwrap();
+        let mut reader = DictReader::new().await;
+        reader.extend(0, dict.entries_since(0).await.to_vec()).await.unwrap();
+        let decoded = decode_checkpoint(&payload, &reader).await.unwrap();
         assert_eq!(decoded, checkpoint);
     }
 
-    #[test]
-    fn alternative_payload_round_trips() {
-        let alternative = sample_log().alternatives.remove(0);
-        let mut dict = DictBuilder::new();
-        let payload = encode_alternative(&alternative, &mut dict).unwrap();
-        let mut reader = DictReader::new();
-        reader.extend(0, dict.entries_since(0).to_vec()).unwrap();
-        let decoded = decode_alternative(&payload, &reader).unwrap();
+    #[semio_framework_async_macros::async_test]
+    async fn alternative_payload_round_trips() {
+        let alternative = sample_log().await.alternatives.remove(0);
+        let mut dict = DictBuilder::new().await;
+        let payload = encode_alternative(&alternative, &mut dict).await.unwrap();
+        let mut reader = DictReader::new().await;
+        reader.extend(0, dict.entries_since(0).await.to_vec()).await.unwrap();
+        let decoded = decode_alternative(&payload, &reader).await.unwrap();
         assert_eq!(decoded, alternative);
     }
 
-    #[test]
-    fn active_payload_round_trips_some_and_none() {
-        let mut dict = DictBuilder::new();
-        let payload_some = encode_active(Some("alt-1"), &mut dict);
-        let payload_none = encode_active(None, &mut dict);
-        let mut reader = DictReader::new();
-        reader.extend(0, dict.entries_since(0).to_vec()).unwrap();
-        assert_eq!(decode_active(&payload_some, &reader).unwrap(), Some("alt-1".to_string()));
-        assert_eq!(decode_active(&payload_none, &reader).unwrap(), None);
+    #[semio_framework_async_macros::async_test]
+    async fn active_payload_round_trips_some_and_none() {
+        let mut dict = DictBuilder::new().await;
+        let payload_some = encode_active(Some("alt-1"), &mut dict).await;
+        let payload_none = encode_active(None, &mut dict).await;
+        let mut reader = DictReader::new().await;
+        reader.extend(0, dict.entries_since(0).await.to_vec()).await.unwrap();
+        assert_eq!(decode_active(&payload_some, &reader).await.unwrap(), Some("alt-1".to_string()));
+        assert_eq!(decode_active(&payload_none, &reader).await.unwrap(), None);
     }
 
-    #[test]
-    fn edit_payload_round_trips_a_backwards_section_mixing_text_and_binary_payloads() {
+    #[semio_framework_async_macros::async_test]
+    async fn edit_payload_round_trips_a_backwards_section_mixing_text_and_binary_payloads() {
         let edit = HistoryEdit {
             id: "edit-y".to_string(),
             actor: Some("bob".to_string()),
@@ -2475,18 +2522,18 @@ mod tests {
             inverse: vec![OpPayload { text: Some("set n=0".to_string()), binary: Some(vec![0]) }, OpPayload { text: Some("set n=1".to_string()), binary: None }],
             meta: None,
         };
-        let mut dict = DictBuilder::new();
-        let payload = encode_edit(&edit, &mut dict, |_| None).unwrap();
-        let mut reader = DictReader::new();
-        reader.extend(0, dict.entries_since(0).to_vec()).unwrap();
-        let decoded = decode_edit(&payload, &reader, |ord| Err(ProtocolError::DictMiss(ord as u32))).unwrap();
+        let mut dict = DictBuilder::new().await;
+        let payload = encode_edit(&edit, &mut dict, |_| None).await.unwrap();
+        let mut reader = DictReader::new().await;
+        reader.extend(0, dict.entries_since(0).await.to_vec()).await.unwrap();
+        let decoded = decode_edit(&payload, &reader, |ord| Err(ProtocolError::DictMiss(ord as u32))).await.unwrap();
         assert_eq!(decoded, edit);
         assert_eq!(decoded.ops[0].binary, Some(vec![1, 2, 3]));
         assert_eq!(decoded.inverse[0].binary, Some(vec![0]));
     }
 
-    #[test]
-    fn edit_payload_with_empty_backwards_omits_the_section_and_decodes_empty() {
+    #[semio_framework_async_macros::async_test]
+    async fn edit_payload_with_empty_backwards_omits_the_section_and_decodes_empty() {
         let edit = HistoryEdit {
             id: "edit-z".to_string(),
             actor: None,
@@ -2498,86 +2545,86 @@ mod tests {
             inverse: Vec::new(),
             meta: None,
         };
-        let mut dict = DictBuilder::new();
-        let payload = encode_edit(&edit, &mut dict, |_| None).unwrap();
+        let mut dict = DictBuilder::new().await;
+        let payload = encode_edit(&edit, &mut dict, |_| None).await.unwrap();
         // presence byte is the 2nd byte (offset 1); bit5 (0x20) must be unset when inverse is empty.
         assert_eq!(payload[1] & 0b0010_0000, 0, "bit5 must be unset for empty inverse");
-        let mut reader = DictReader::new();
-        reader.extend(0, dict.entries_since(0).to_vec()).unwrap();
-        let decoded = decode_edit(&payload, &reader, |ord| Err(ProtocolError::DictMiss(ord as u32))).unwrap();
+        let mut reader = DictReader::new().await;
+        reader.extend(0, dict.entries_since(0).await.to_vec()).await.unwrap();
+        let decoded = decode_edit(&payload, &reader, |ord| Err(ProtocolError::DictMiss(ord as u32))).await.unwrap();
         assert_eq!(decoded.inverse, Vec::new());
     }
 
-    #[test]
-    fn cursor_payload_round_trips_with_dict_and_ordinal_refs() {
+    #[semio_framework_async_macros::async_test]
+    async fn cursor_payload_round_trips_with_dict_and_ordinal_refs() {
         let cursor = HistoryCursor { applied_edit_ids: vec!["edit-1".to_string(), "edit-2".to_string()], redo_edit_ids: vec!["edit-3".to_string()], checkpoint_id: Some("ck-1".to_string()) };
-        let mut dict = DictBuilder::new();
+        let mut dict = DictBuilder::new().await;
         let ordinals: HashMap<&str, u64> = [("edit-1", 0u64), ("edit-2", 1u64)].into_iter().collect();
-        let payload = encode_cursor(&cursor, &mut dict, |id| ordinals.get(id).copied()).unwrap();
-        let mut reader = DictReader::new();
-        reader.extend(0, dict.entries_since(0).to_vec()).unwrap();
+        let payload = encode_cursor(&cursor, &mut dict, |id| ordinals.get(id).copied()).await.unwrap();
+        let mut reader = DictReader::new().await;
+        reader.extend(0, dict.entries_since(0).await.to_vec()).await.unwrap();
         let edit_ids = ["edit-1".to_string(), "edit-2".to_string()];
-        let decoded = decode_cursor(&payload, &reader, |ord| edit_ids.get(ord as usize).map(String::as_str).ok_or(ProtocolError::DictMiss(ord as u32))).unwrap();
+        let decoded = decode_cursor(&payload, &reader, |ord| edit_ids.get(ord as usize).map(String::as_str).ok_or(ProtocolError::DictMiss(ord as u32))).await.unwrap();
         assert_eq!(decoded, cursor);
     }
 
-    #[test]
-    fn cursor_payload_round_trips_without_a_checkpoint() {
+    #[semio_framework_async_macros::async_test]
+    async fn cursor_payload_round_trips_without_a_checkpoint() {
         let cursor = HistoryCursor { applied_edit_ids: Vec::new(), redo_edit_ids: Vec::new(), checkpoint_id: None };
-        let mut dict = DictBuilder::new();
-        let payload = encode_cursor(&cursor, &mut dict, |_| None).unwrap();
-        let mut reader = DictReader::new();
-        reader.extend(0, dict.entries_since(0).to_vec()).unwrap();
-        let decoded = decode_cursor(&payload, &reader, |ord| Err(ProtocolError::DictMiss(ord as u32))).unwrap();
+        let mut dict = DictBuilder::new().await;
+        let payload = encode_cursor(&cursor, &mut dict, |_| None).await.unwrap();
+        let mut reader = DictReader::new().await;
+        reader.extend(0, dict.entries_since(0).await.to_vec()).await.unwrap();
+        let decoded = decode_cursor(&payload, &reader, |ord| Err(ProtocolError::DictMiss(ord as u32))).await.unwrap();
         assert_eq!(decoded, cursor);
     }
 
-    #[test]
-    fn cursor_decoder_rejects_unknown_presence_bits_and_trailing_payload() {
-        let dict = DictReader::new();
-        assert!(matches!(decode_cursor(&[1, 2], &dict, |_| Err(ProtocolError::DictMiss(0))), Err(ProtocolError::Malformed { .. })));
-        assert!(matches!(decode_cursor(&[1, 0, 0, 0, 0], &dict, |_| Err(ProtocolError::DictMiss(0))), Err(ProtocolError::Malformed { .. })));
+    #[semio_framework_async_macros::async_test]
+    async fn cursor_decoder_rejects_unknown_presence_bits_and_trailing_payload() {
+        let dict = DictReader::new().await;
+        assert!(matches!(decode_cursor(&[1, 2], &dict, |_| Err(ProtocolError::DictMiss(0))).await, Err(ProtocolError::Malformed { .. })));
+        assert!(matches!(decode_cursor(&[1, 0, 0, 0, 0], &dict, |_| Err(ProtocolError::DictMiss(0))).await, Err(ProtocolError::Malformed { .. })));
     }
 
-    #[test]
-    fn decode_rejects_unsupported_format() {
-        let payload = vec![2u8, 0, 0];
-        let dict = DictReader::new();
-        let err = decode_doc(&payload, &dict).unwrap_err();
+    #[semio_framework_async_macros::async_test]
+    async fn decode_rejects_unsupported_format() {
+        let payload = vec![2u8, 0, 0].await;
+        let dict = DictReader::new().await;
+        let err = decode_doc(&payload, &dict).await.unwrap_err();
         assert!(matches!(err, ProtocolError::Malformed { .. }));
     }
     //#endregion 🔖️Payloads
 
     //#region 🔖️Codec
-    #[test]
-    fn history_encode_decode_identity_standard() {
-        let log = sample_log();
-        let bytes = encode_history(&log, &EncodeOptions::default()).unwrap();
-        let decoded = decode_history(&bytes, &DecodeOptions::default()).unwrap();
+    #[semio_framework_async_macros::async_test]
+    async fn history_encode_decode_identity_standard() {
+        let log = sample_log().await;
+        let bytes = encode_history(&log, &EncodeOptions::default()).await.unwrap();
+        let decoded = decode_history(&bytes, &DecodeOptions::default()).await.unwrap();
         assert_eq!(decoded, log);
     }
 
-    #[test]
-    fn history_encode_decode_identity_full_verification() {
-        let log = sample_log();
-        let bytes = encode_history(&log, &EncodeOptions::default()).unwrap();
+    #[semio_framework_async_macros::async_test]
+    async fn history_encode_decode_identity_full_verification() {
+        let log = sample_log().await;
+        let bytes = encode_history(&log, &EncodeOptions::default()).await.unwrap();
         let options = DecodeOptions { verification: VerificationLevel::Full, limits: ProtocolLimits::default() };
-        let decoded = decode_history(&bytes, &options).unwrap();
+        let decoded = decode_history(&bytes, &options).await.unwrap();
         assert_eq!(decoded, log);
     }
 
-    #[test]
-    fn history_encode_is_canonically_stable() {
-        let log = sample_log();
-        let a = encode_history(&log, &EncodeOptions::default()).unwrap();
-        let b = encode_history(&log, &EncodeOptions::default()).unwrap();
+    #[semio_framework_async_macros::async_test]
+    async fn history_encode_is_canonically_stable() {
+        let log = sample_log().await;
+        let a = encode_history(&log, &EncodeOptions::default()).await.unwrap();
+        let b = encode_history(&log, &EncodeOptions::default()).await.unwrap();
         assert_eq!(a, b);
     }
 
-    #[test]
-    fn history_full_verification_detects_tampering() {
-        let log = sample_log();
-        let mut bytes = encode_history(&log, &EncodeOptions::default()).unwrap();
+    #[semio_framework_async_macros::async_test]
+    async fn history_full_verification_detects_tampering() {
+        let log = sample_log().await;
+        let mut bytes = encode_history(&log, &EncodeOptions::default()).await.unwrap();
         let last = bytes.len();
         bytes[last - 10] ^= 0xFF;
         let options = DecodeOptions { verification: VerificationLevel::Full, limits: ProtocolLimits::default() };
@@ -2586,108 +2633,108 @@ mod tests {
         // before the corrupted frame — here that means before the file's only commit, so the
         // decoded log comes back empty rather than as an `Err`. Either outcome is an acceptable
         // "tamper never goes unnoticed": the result must never silently equal the original log.
-        let result = decode_history(&bytes, &options);
+        let result = decode_history(&bytes, &options).await;
         assert!(result.is_err() || result.unwrap() != log);
     }
 
-    #[test]
-    fn history_round_trips_backwards_and_binary_payloads_and_cursor_when_write_backwards_section_is_set() {
-        let mut log = sample_log();
+    #[semio_framework_async_macros::async_test]
+    async fn history_round_trips_backwards_and_binary_payloads_and_cursor_when_write_backwards_section_is_set() {
+        let mut log = sample_log().await;
         log.edits[0].inverse = vec![OpPayload { text: Some("unset foo".to_string()), binary: Some(vec![9, 9]) }, OpPayload { text: Some("unset bar".to_string()), binary: None }];
         log.edits[1].ops[0].binary = Some(vec![7]);
         log.cursor = Some(HistoryCursor { applied_edit_ids: vec!["edit-1".to_string(), "edit-2".to_string()], redo_edit_ids: Vec::new(), checkpoint_id: Some("ck-1".to_string()) });
         let options = EncodeOptions { write_backwards_section: true, ..EncodeOptions::default() };
-        let bytes = encode_history(&log, &options).unwrap();
-        let decoded = decode_history(&bytes, &DecodeOptions::default()).unwrap();
+        let bytes = encode_history(&log, &options).await.unwrap();
+        let decoded = decode_history(&bytes, &DecodeOptions::default()).await.unwrap();
         assert_eq!(decoded, log);
         assert_eq!(decoded.edits[0].inverse[0].binary, Some(vec![9, 9]));
         assert_eq!(decoded.edits[1].ops[0].binary, Some(vec![7]));
         assert_eq!(decoded.cursor, log.cursor);
     }
 
-    #[test]
-    fn history_strips_backwards_when_write_backwards_section_is_unset_even_if_populated() {
-        let mut log = sample_log();
+    #[semio_framework_async_macros::async_test]
+    async fn history_strips_backwards_when_write_backwards_section_is_unset_even_if_populated() {
+        let mut log = sample_log().await;
         log.edits[0].inverse = vec![OpPayload { text: Some("unset foo".to_string()), binary: None }];
-        let bytes = encode_history(&log, &EncodeOptions::default()).unwrap();
-        let decoded = decode_history(&bytes, &DecodeOptions::default()).unwrap();
+        let bytes = encode_history(&log, &EncodeOptions::default()).await.unwrap();
+        let decoded = decode_history(&bytes, &DecodeOptions::default()).await.unwrap();
         assert_eq!(decoded.edits[0].inverse, Vec::new(), "write_backwards_section defaults false and must strip populated inverse");
     }
     //#endregion 🔖️Codec
 
     //#region 🔖️Append
-    #[test]
-    fn streamed_append_equals_buffered_encode() {
-        let log = sample_log();
+    #[semio_framework_async_macros::async_test]
+    async fn streamed_append_equals_buffered_encode() {
+        let log = sample_log().await;
         let options = WriteOptions { required_flags: crate::os_spr::REQUIRED_HASH_CHAIN, optional_flags: crate::os_spr::OPTIONAL_CANONICAL };
-        let mut appender = HistoryAppender::begin(Vec::<u8>::new(), &log.doc_id, &log.schema, &options).unwrap();
+        let mut appender = HistoryAppender::begin(Vec::<u8>::new(), &log.doc_id, &log.schema, &options).await.unwrap();
         for edit in &log.edits {
-            appender.append_edit(edit).unwrap();
+            appender.append_edit(edit).await.unwrap();
         }
         for change in &log.changes {
-            appender.append_change(change).unwrap();
+            appender.append_change(change).await.unwrap();
         }
         for checkpoint in &log.checkpoints {
-            appender.append_checkpoint(checkpoint).unwrap();
+            appender.append_checkpoint(checkpoint).await.unwrap();
         }
         for alternative in &log.alternatives {
-            appender.append_alternative(alternative).unwrap();
+            appender.append_alternative(alternative).await.unwrap();
         }
-        appender.set_active(log.active_alternative_id.as_deref()).unwrap();
-        appender.commit().unwrap();
-        let streamed_bytes = appender.into_sink();
+        appender.set_active(log.active_alternative_id.as_deref()).await.unwrap();
+        appender.commit().await.unwrap();
+        let streamed_bytes = appender.into_sink().await;
 
-        let decoded = decode_history(&streamed_bytes, &DecodeOptions::default()).unwrap();
+        let decoded = decode_history(&streamed_bytes, &DecodeOptions::default()).await.unwrap();
         assert_eq!(decoded, log);
     }
 
-    #[test]
-    fn append_cursor_then_decode_recovers_it() {
-        let mut log = sample_log();
+    #[semio_framework_async_macros::async_test]
+    async fn append_cursor_then_decode_recovers_it() {
+        let mut log = sample_log().await;
         for edit in &mut log.edits {
             edit.meta = None;
         }
         let cursor = HistoryCursor { applied_edit_ids: vec!["edit-1".to_string()], redo_edit_ids: vec!["edit-2".to_string()], checkpoint_id: Some("ck-1".to_string()) };
         let options = WriteOptions { required_flags: crate::os_spr::REQUIRED_HASH_CHAIN, optional_flags: crate::os_spr::OPTIONAL_CANONICAL };
-        let mut appender = HistoryAppender::begin(Vec::<u8>::new(), &log.doc_id, &log.schema, &options).unwrap();
+        let mut appender = HistoryAppender::begin(Vec::<u8>::new(), &log.doc_id, &log.schema, &options).await.unwrap();
         for edit in &log.edits {
-            appender.append_edit(edit).unwrap();
+            appender.append_edit(edit).await.unwrap();
         }
-        appender.append_cursor(&cursor).unwrap();
-        appender.commit().unwrap();
-        let bytes = appender.into_sink();
+        appender.append_cursor(&cursor).await.unwrap();
+        appender.commit().await.unwrap();
+        let bytes = appender.into_sink().await;
 
-        let decoded = decode_history(&bytes, &DecodeOptions::default()).unwrap();
+        let decoded = decode_history(&bytes, &DecodeOptions::default()).await.unwrap();
         assert_eq!(decoded.cursor, Some(cursor));
     }
     //#endregion 🔖️Append
 
     //#region 🔖️Scan
-    #[test]
-    fn reader_edits_forward_matches_log() {
-        let log = sample_log();
-        let bytes = encode_history(&log, &EncodeOptions::default()).unwrap();
-        let reader = HistoryReader::open(&bytes, &DecodeOptions::default()).unwrap();
-        let edits: Vec<HistoryEdit> = reader.edits().map(|r| r.unwrap()).collect();
+    #[semio_framework_async_macros::async_test]
+    async fn reader_edits_forward_matches_log() {
+        let log = sample_log().await;
+        let bytes = encode_history(&log, &EncodeOptions::default()).await.unwrap();
+        let reader = HistoryReader::open(&bytes, &DecodeOptions::default()).await.unwrap();
+        let edits: Vec<HistoryEdit> = reader.edits().await.map(|r| r.unwrap()).collect();
         assert_eq!(edits, log.edits);
     }
 
-    #[test]
-    fn reader_edits_rev_matches_tail_in_reverse() {
-        let log = sample_log();
-        let bytes = encode_history(&log, &EncodeOptions::default()).unwrap();
-        let reader = HistoryReader::open(&bytes, &DecodeOptions::default()).unwrap();
-        let rev: Vec<HistoryEdit> = reader.edits_rev(1).map(|r| r.unwrap()).collect();
+    #[semio_framework_async_macros::async_test]
+    async fn reader_edits_rev_matches_tail_in_reverse() {
+        let log = sample_log().await;
+        let bytes = encode_history(&log, &EncodeOptions::default()).await.unwrap();
+        let reader = HistoryReader::open(&bytes, &DecodeOptions::default()).await.unwrap();
+        let rev: Vec<HistoryEdit> = reader.edits_rev(1).await.map(|r| r.unwrap()).collect();
         assert_eq!(rev.len(), 1);
         assert_eq!(rev[0], log.edits[1]);
     }
 
-    #[test]
-    fn reader_edits_rev_full_matches_reversed_forward() {
-        let log = sample_log();
-        let bytes = encode_history(&log, &EncodeOptions::default()).unwrap();
-        let reader = HistoryReader::open(&bytes, &DecodeOptions::default()).unwrap();
-        let rev: Vec<HistoryEdit> = reader.edits_rev(usize::MAX).map(|r| r.unwrap()).collect();
+    #[semio_framework_async_macros::async_test]
+    async fn reader_edits_rev_full_matches_reversed_forward() {
+        let log = sample_log().await;
+        let bytes = encode_history(&log, &EncodeOptions::default()).await.unwrap();
+        let reader = HistoryReader::open(&bytes, &DecodeOptions::default()).await.unwrap();
+        let rev: Vec<HistoryEdit> = reader.edits_rev(usize::MAX).await.map(|r| r.unwrap()).collect();
         let mut expected = log.edits;
         expected.reverse();
         assert_eq!(rev, expected);
@@ -2695,44 +2742,44 @@ mod tests {
     //#endregion 🔖️Scan
 
     //#region 🔖️Frontier
-    fn frontier(head_edit_ordinal: u64, head_edit_id: &str, chain_hash: [u8; 32]) -> FrontierSummary {
+    async fn frontier(head_edit_ordinal: u64, head_edit_id: &str, chain_hash: [u8; 32]) -> FrontierSummary {
         FrontierSummary { document_id: "doc-1".to_string(), head_edit_ordinal, head_edit_id: head_edit_id.to_string(), alternatives: Vec::new(), last_commit_seq: 1, chain_hash }
     }
 
-    #[test]
-    fn frontier_delta_reports_equal_ahead_behind_diverged() {
-        let a = frontier(5, "edit-5", [1u8; 32]);
-        let b = frontier(5, "edit-5", [1u8; 32]);
-        assert_eq!(frontier_delta(&a, &b), FrontierComparison::Equal);
+    #[semio_framework_async_macros::async_test]
+    async fn frontier_delta_reports_equal_ahead_behind_diverged() {
+        let a = frontier(5, "edit-5", [1u8; 32]).await;
+        let b = frontier(5, "edit-5", [1u8; 32]).await;
+        assert_eq!(frontier_delta(&a, &b).await, FrontierComparison::Equal);
 
-        let ahead = frontier(6, "edit-6", [2u8; 32]);
-        assert_eq!(frontier_delta(&ahead, &a), FrontierComparison::Ahead);
-        assert_eq!(frontier_delta(&a, &ahead), FrontierComparison::Behind);
+        let ahead = frontier(6, "edit-6", [2u8; 32]).await;
+        assert_eq!(frontier_delta(&ahead, &a).await, FrontierComparison::Ahead);
+        assert_eq!(frontier_delta(&a, &ahead).await, FrontierComparison::Behind);
 
-        let diverged = frontier(5, "edit-5-alt", [3u8; 32]);
-        assert_eq!(frontier_delta(&a, &diverged), FrontierComparison::Diverged { common_edit_count: 5 });
+        let diverged = frontier(5, "edit-5-alt", [3u8; 32]).await;
+        assert_eq!(frontier_delta(&a, &diverged).await, FrontierComparison::Diverged { common_edit_count: 5 });
     }
     //#endregion 🔖️Frontier
 
     //#region 🔖️Index
-    #[test]
-    fn index_round_trips_edits_checkpoints_and_snapshots() {
-        let mut builder = IndexBuilder::new();
-        builder.record_edit(0, 100);
-        builder.record_edit(5, 300);
-        builder.record_edit(10, 500);
-        builder.record_checkpoint("ck-1", 700, 10);
-        builder.record_snapshot(5, 250);
-        builder.record_sealed(50);
-        let payload = builder.build();
+    #[semio_framework_async_macros::async_test]
+    async fn index_round_trips_edits_checkpoints_and_snapshots() {
+        let mut builder = IndexBuilder::new().await;
+        builder.record_edit(0, 100).await;
+        builder.record_edit(5, 300).await;
+        builder.record_edit(10, 500).await;
+        builder.record_checkpoint("ck-1", 700, 10).await;
+        builder.record_snapshot(5, 250).await;
+        builder.record_sealed(50).await;
+        let payload = builder.build().await;
 
-        let reader = IndexReader::open(&payload).unwrap();
-        assert_eq!(reader.edit_offset_at_or_before(7), Some(300));
-        assert_eq!(reader.edit_offset_at_or_before(0), Some(100));
-        assert_eq!(reader.edit_offset_at_or_before(10), Some(500));
-        assert_eq!(reader.checkpoint_offset("ck-1"), Some((700, 10)));
-        assert_eq!(reader.checkpoint_offset("missing"), None);
-        assert_eq!(reader.latest_snapshot_offset_at_or_before(9), Some(250));
+        let reader = IndexReader::open(&payload).await.unwrap();
+        assert_eq!(reader.edit_offset_at_or_before(7).await, Some(300));
+        assert_eq!(reader.edit_offset_at_or_before(0).await, Some(100));
+        assert_eq!(reader.edit_offset_at_or_before(10).await, Some(500));
+        assert_eq!(reader.checkpoint_offset("ck-1").await, Some((700, 10)));
+        assert_eq!(reader.checkpoint_offset("missing").await, None);
+        assert_eq!(reader.latest_snapshot_offset_at_or_before(9).await, Some(250));
     }
     //#endregion 🔖️Index
 }

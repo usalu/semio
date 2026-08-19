@@ -45,7 +45,7 @@ pub struct IndexedTripleDiff<D, T> {
 }
 
 impl<D, T> Default for IndexedTripleDiff<D, T> {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { removed: Vec::new(), modified: Vec::new(), added: Vec::new() }
     }
 }
@@ -73,7 +73,7 @@ pub struct NamedTripleDiff<K, D, T> {
 }
 
 impl<K, D, T> Default for NamedTripleDiff<K, D, T> {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { removed: Vec::new(), modified: Vec::new(), added: Vec::new() }
     }
 }
@@ -281,7 +281,7 @@ mod tests {
         Ok(s.to_string())
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn indexed_triple_round_trips_through_hex_shape() {
         let diff: IndexedTripleDiff<u32, String> = IndexedTripleDiff { removed: vec![2, 5], modified: vec![IndexModified { index: 1, diff: 7 }], added: vec![IndexAdded { index: 3, item: "new".to_string() }] };
         let encoded = enc_indexed_triple(&diff, enc_u32, enc_str);
@@ -289,7 +289,7 @@ mod tests {
         assert_eq!(decoded, diff);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn named_triple_round_trips_through_hex_shape() {
         let diff: NamedTripleDiff<String, u32, String> = NamedTripleDiff { removed: vec!["gone".to_string()], modified: vec![NamedModified { key: "kept".to_string(), diff: 9 }], added: vec!["fresh".to_string()] };
         let encoded = enc_named_triple(&diff, enc_str, enc_u32, enc_str);
@@ -297,7 +297,7 @@ mod tests {
         assert_eq!(decoded, diff);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn named_added_round_trips_through_hex_shape() {
         let diff: NamedTripleDiff<String, u32, NamedAdded<String>> = NamedTripleDiff { removed: vec![], modified: vec![], added: vec![NamedAdded { index: 2, item: "reinserted".to_string() }] };
         let encoded = enc_named_triple(&diff, enc_str, enc_u32, |a| enc_named_added(a, enc_str));
@@ -312,7 +312,7 @@ mod tests {
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
     struct NoDefault(u32);
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn serde_json_round_trips_a_non_default_item_type() {
         let diff: NamedTripleDiff<String, NoDefault, NoDefault> = NamedTripleDiff { removed: vec!["gone".to_string()], modified: vec![NamedModified { key: "kept".to_string(), diff: NoDefault(9) }], added: vec![NoDefault(3)] };
         let json = serde_json::to_string(&diff).expect("serialize");
@@ -325,7 +325,7 @@ mod tests {
         assert_eq!(idecoded, idiff);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn empty_triples_round_trip_to_empty_brackets() {
         let diff: IndexedTripleDiff<u32, String> = IndexedTripleDiff::default();
         let encoded = enc_indexed_triple(&diff, enc_u32, enc_str);
@@ -334,7 +334,7 @@ mod tests {
         assert_eq!(decoded, diff);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn nested_bracket_payload_does_not_confuse_the_top_level_split() {
         // 🧪️ Depth-awareness proof: an item whose own encoding contains "[a,b]" must not be torn
         // apart by the outer added-list comma split.
@@ -353,7 +353,7 @@ mod tests {
         assert_eq!(decoded, diff);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn indexed_preflight_rejects_missing_and_clamped_targets() {
         let missing: IndexedTripleDiff<(), ()> = IndexedTripleDiff { removed: vec![2], modified: Vec::new(), added: Vec::new() };
         let error = validate_indexed_triple(&missing, 1, ["items"]).unwrap_err();
@@ -365,7 +365,7 @@ mod tests {
         assert_eq!(error.code, "mutation.apply.invalid-add-index");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn named_preflight_rejects_missing_and_colliding_keys() {
         let missing: NamedTripleDiff<String, (), String> = NamedTripleDiff { removed: Vec::new(), modified: vec![NamedModified { key: "absent".into(), diff: () }], added: Vec::new() };
         let error = validate_named_triple(&["present".to_string()], &missing, Clone::clone, Clone::clone, ["items"]).unwrap_err();

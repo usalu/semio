@@ -38,7 +38,7 @@ mod tests {
     use crate::artifacts::layout::LayoutSnapshot;
     use crate::artifacts::layout::mutations::rename_layout;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_binary_round_trips_and_agrees_with_text() {
         let operation = LayoutMutation::RenameLayout(rename_layout::mutation::RenameLayout { new_name: "Renamed".into() });
         store::os_store::test_support::assert_op_text_binary_equivalence(&operation);
@@ -46,7 +46,7 @@ mod tests {
         assert_eq!(decode_op(&bytes).expect("decode"), operation);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn document_binary_round_trips_a_store_with_applied_operations() {
         use crate::artifacts::layout::LAYOUT_DOCUMENT_SCHEMA;
 

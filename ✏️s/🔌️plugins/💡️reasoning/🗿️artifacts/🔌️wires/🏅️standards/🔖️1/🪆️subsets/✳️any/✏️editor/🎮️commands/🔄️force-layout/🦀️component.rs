@@ -48,7 +48,7 @@ mod tests {
     use crate::editor::wires::testkit::{dispatch, metabolism_app};
     use crate::editor::wires::WiresCommand;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn force_layout_action_repositions_metabolism_nodes() {
         let mut app = metabolism_app();
         let before: Vec<(f64, f64)> = fixture_nodes(&crate::artifacts::wires::wires_working_board(&app.snapshot().expect("snapshot"))).iter().map(node_position).collect();
@@ -58,7 +58,7 @@ mod tests {
         assert_ne!(before, after, "force layout should move at least one node");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn reorganize_repositions_metabolism_nodes() {
         let mut app = metabolism_app();
         let before: Vec<(f64, f64)> = fixture_nodes(&crate::artifacts::wires::wires_working_board(&app.snapshot().expect("snapshot"))).iter().map(node_position).collect();

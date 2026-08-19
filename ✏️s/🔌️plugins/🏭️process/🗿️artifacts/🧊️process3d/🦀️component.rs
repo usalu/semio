@@ -10,6 +10,7 @@
 //! old role as the plugin's own editable in-memory geometry vocabulary.
 
 use protocol::{Identified, Patchable};
+use semio_framework_dispatch_macros::dyn_enum;
 use semio_framework_plugin::{ArtifactKindSpec, Dialect, MediaClass, MediaForm, MediaType, OsMediaCapability, StandardId, SubsetId};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint2;
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::{
@@ -214,7 +215,7 @@ pub struct Workshop {
 }
 
 impl Default for Workshop {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { machines: generic_machines() }
     }
 }
@@ -278,12 +279,37 @@ pub async fn generic_machines() -> Vec<WorkshopMachine> {
 /// install into a document's workshop. Implemented by the built-in generic/domain catalogs
 /// (`crate::artifacts::process3d::schema::{GenericCatalog, MetalCatalog, WoodCatalog, RoboticCatalog,
 /// ConcreteCatalog}`) and by the app's runtime-contributed `ContributedMachineCatalog`
-/// (the sibling `editor` module).
+/// (`crate::editor::process3d::ContributedMachineCatalog`) — closed into `MachineCatalogs` below
+/// (O1: dyn dispatch is banned from trait-method return position; R11: closed implementor set ⇒
+/// `dyn_enum_close!`, never a box).
+#[dyn_enum]
 pub trait MachineCatalog {
     async fn catalog_id(&self) -> &'static str;
     async fn label(&self) -> &'static str;
     async fn icon_id(&self) -> &'static str;
     async fn machines(&self) -> Vec<WorkshopMachine>;
+}
+
+/// 🗃️ The closed set of `MachineCatalog` implementors. Closed HERE, in the same module as `#[dyn_enum]`
+/// (not at the `editor::installed_catalogs` call site that gathers them): the generated
+/// `__semio_dispatch_MachineCatalog!` is `#[macro_export]`ed, and rustc rejects any reference to a
+/// `macro_export`ed macro produced by expansion IN THE SAME CRATE via an absolute/`crate::`-qualified
+/// path (rust-lang/rust#52234) — verified directly against real rustc: even the documented
+/// `use crate::__semio_dispatch_MachineCatalog;` cross-module recipe (`📓️terra-dyn-enum-macro-report.md`
+/// finding 1) still hits this error when the closing site is a genuine sibling module tree (`editor` is
+/// a top-level sibling of `artifacts`, not a descendant of `process3d`), because that `use` is itself an
+/// absolute path. Only a BARE invocation in the trait's OWN literal module resolves it, via ordinary
+/// `macro_rules!` textual scoping — so the enum lives here, and `editor::installed_catalogs` imports
+/// `MachineCatalogs` like any other type.
+semio_framework_dispatch_macros::dyn_enum_close! {
+    pub enum MachineCatalogs: MachineCatalog {
+        Generic(crate::artifacts::process3d::schema::GenericCatalog),
+        Metal(crate::artifacts::process3d::schema::MetalCatalog),
+        Wood(crate::artifacts::process3d::schema::WoodCatalog),
+        Robotic(crate::artifacts::process3d::schema::RoboticCatalog),
+        Concrete(crate::artifacts::process3d::schema::ConcreteCatalog),
+        Contributed(crate::editor::process3d::ContributedMachineCatalog),
+    }
 }
 //#endregion 🔖️Workshop
 
@@ -312,7 +338,7 @@ pub struct Pose {
 }
 
 impl Default for Pose {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { position: [0.0, 0.0, 0.0], axis: default_axis_z(), angle: 0.0 }
     }
 }
@@ -371,7 +397,7 @@ pub enum WorkingSolid {
 }
 
 impl Default for WorkingSolid {
-    async fn default() -> Self {
+    fn default() -> Self {
         WorkingSolid::Box { width: 1.0, depth: 1.0, height: 1.0 }
     }
 }
@@ -388,7 +414,7 @@ pub struct Stock {
 }
 
 impl Default for Stock {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { id: "stock".into(), label: "Stock".into(), solid: WorkingSolid::default(), pose: Pose::default() }
     }
 }
@@ -844,7 +870,7 @@ mod tests {
 
     /// 🔤️ The legacy enum-typed `export_formats`/`import_formats` are retired in favor of the
     /// string-id `export_stdio_kinds`/`import_stdio_kinds` peers below — both stay empty.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn artifact_kind_declares_the_expected_media_surface() {
         let kind = artifact_kind();
         assert_eq!(kind.id, "3d.process");
@@ -873,13 +899,13 @@ mod tests {
 
     /// 📜️ The document's deepest new nesting (workshop → machines → capabilities → parameters/rules,
     /// 3 `Vec` levels deep) must round-trip through the DSL text codec — the riskiest new grammar surface.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn workshop_dsl_round_trips_through_document() {
         let snapshot = Process3dSnapshot { workshop: sample_workshop(), ..empty_process3d_snapshot() };
         store::os_store::test_support::assert_dsl_round_trip(&snapshot);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn default_workshop_has_the_three_generic_machines() {
         let workshop = Workshop::default();
         let ids: Vec<&str> = workshop.machines.iter().map(|machine| machine.id.as_str()).collect();
@@ -887,7 +913,7 @@ mod tests {
         assert!(workshop.machines.iter().all(|machine| machine.catalog_id.is_none()));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn workshop_machine_patch_apply_and_diff_round_trip() {
         let mut machine = WorkshopMachine { id: "circularSaw".into(), label: "Circular Saw".into(), icon_id: "scissors".into(), catalog_id: Some("wood".into()), capabilities: vec![sample_capability()] };
         let original = machine.clone();
@@ -899,7 +925,7 @@ mod tests {
         assert_eq!(diff, patch);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn workshop_machine_patch_diff_is_none_for_identical_machines() {
         let machine = WorkshopMachine { id: "circularSaw".into(), label: "Circular Saw".into(), icon_id: "scissors".into(), catalog_id: None, capabilities: vec![] };
         assert!(machine.diff_patch(&machine).is_none());
@@ -911,7 +937,7 @@ mod tests {
     /// full `ProcessWorkingScene` → `Process3dSnapshot` → back-through-the-brep-content path
     /// (content-level, not handle-level — resolving `working_solid_from_brep_snapshot` is the
     /// documented gap, so this asserts on the minted `SemioBrepSnapshot` content directly).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn box_working_solid_mints_a_real_six_face_one_solid_brep() {
         let content = brep_snapshot_for_working_solid(&WorkingSolid::Box { width: 2.0, depth: 3.0, height: 4.0 });
         assert_eq!(content.vertices.len(), 8);
@@ -920,21 +946,21 @@ mod tests {
         assert_eq!(content.solids.len(), 1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn cylinder_working_solid_mints_a_real_three_face_brep() {
         let content = brep_snapshot_for_working_solid(&WorkingSolid::Cylinder { radius: 1.0, height: 2.0 });
         assert_eq!(content.faces.len(), 3);
         assert_eq!(content.solids.len(), 1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn sphere_working_solid_mints_a_real_one_face_untrimmed_brep() {
         let content = brep_snapshot_for_working_solid(&WorkingSolid::Sphere { radius: 1.5 });
         assert_eq!(content.faces.len(), 1);
         assert!(content.loops[0].edges.is_empty(), "sphere's single face loop must be untrimmed");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn brep_snapshot_for_working_solid_round_trips_pack_and_dsl() {
         for solid in [WorkingSolid::Box { width: 1.0, depth: 2.0, height: 3.0 }, WorkingSolid::Cylinder { radius: 1.0, height: 2.0 }, WorkingSolid::Sphere { radius: 1.0 }] {
             let content = brep_snapshot_for_working_solid(&solid);
@@ -950,7 +976,7 @@ mod tests {
     /// ⚖️ Flow round-trip law: `enabled`/`origin`/pose/measure-scalar fields survive
     /// `ProcessStep → FlowNode → ProcessStep` exactly (the `WorkingSolid` tool/component is the
     /// documented gap, asserted separately below).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn process_step_flow_round_trips_scalar_fields() {
         let step = sample_step("s1", ProcessMeasure::Drill { radius: 0.02, depth: 0.3, pose: Pose { position: [1.0, 2.0, 3.0], axis: [0.0, 1.0, 0.0], angle: 0.5 } });
         let node = flow_node_from_process_step(&step, 0, None);
@@ -962,7 +988,7 @@ mod tests {
         assert_eq!(back.measure, step.measure);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn flow_snapshot_for_steps_is_a_real_linear_chain() {
         let steps = vec![sample_step("a", ProcessMeasure::Drill { radius: 0.1, depth: 0.1, pose: Pose::default() }), sample_step("b", ProcessMeasure::Drill { radius: 0.1, depth: 0.1, pose: Pose::default() })];
         let flow = flow_snapshot_for_steps(&steps, &Default::default());
@@ -974,7 +1000,7 @@ mod tests {
         assert_eq!(recovered.iter().map(|s| s.id.clone()).collect::<Vec<_>>(), vec!["a".to_string(), "b".to_string()]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn empty_process3d_snapshot_mints_real_stock_and_steps_children() {
         let snapshot = empty_process3d_snapshot();
         assert!(!snapshot.stock_solid.child_id.is_empty());

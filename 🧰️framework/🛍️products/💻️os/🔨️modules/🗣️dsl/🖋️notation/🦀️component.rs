@@ -37,7 +37,7 @@ pub struct EdgeLabel {
 }
 
 impl EdgeLabel {
-    pub fn is_empty(&self) -> bool {
+    pub async fn is_empty(&self) -> bool {
         self.id.is_none() && self.kind.is_none()
     }
 }
@@ -79,20 +79,20 @@ struct Cursor {
 }
 
 impl Cursor {
-    fn new(tokens: Vec<SpannedToken>) -> Self {
+    async fn new(tokens: Vec<SpannedToken>) -> Self {
         let tokens = tokens.into_iter().filter(|t| !t.kind.is_trivia()).collect();
         Self { tokens, pos: 0 }
     }
 
-    fn peek(&self) -> &SpannedToken {
+    async fn peek(&self) -> &SpannedToken {
         &self.tokens[self.pos.min(self.tokens.len() - 1)]
     }
 
-    fn peek_at(&self, offset: usize) -> Option<&SpannedToken> {
+    async fn peek_at(&self, offset: usize) -> Option<&SpannedToken> {
         self.tokens.get(self.pos + offset)
     }
 
-    fn advance(&mut self) -> SpannedToken {
+    async fn advance(&mut self) -> SpannedToken {
         let token = self.tokens[self.pos.min(self.tokens.len() - 1)].clone();
         if self.pos < self.tokens.len() - 1 {
             self.pos += 1;
@@ -100,37 +100,37 @@ impl Cursor {
         token
     }
 
-    fn expect(&mut self, kind: TokenKind) -> Result<SpannedToken, TextError> {
-        if self.peek().kind == kind {
-            Ok(self.advance())
+    async fn expect(&mut self, kind: TokenKind) -> Result<SpannedToken, TextError> {
+        if self.peek().await.kind == kind {
+            Ok(self.advance().await)
         } else {
-            Err(TextError::new(format!("expected {kind:?}, found {:?}", self.peek().kind), self.peek().span.clone()))
+            Err(TextError::new(format!("expected {kind:?}, found {:?}", self.peek().await.kind), self.peek().await.span.clone()))
         }
     }
 
-    fn span(&self) -> TextSpan {
-        self.peek().span.clone()
+    async fn span(&self) -> TextSpan {
+        self.peek().await.span.clone()
     }
 }
 
-fn parse_edge_node(cursor: &mut Cursor) -> Result<EdgeNode, TextError> {
-    let id = cursor.expect(TokenKind::Ident)?.text.as_str().to_string();
-    let kind = if cursor.peek().kind == TokenKind::Colon {
+async fn parse_edge_node(cursor: &mut Cursor) -> Result<EdgeNode, TextError> {
+    let id = cursor.expect(TokenKind::Ident).await?.text.as_str().to_string();
+    let kind = if cursor.peek().await.kind == TokenKind::Colon {
         cursor.advance();
-        Some(cursor.expect(TokenKind::Ident)?.text.as_str().to_string())
+        Some(cursor.expect(TokenKind::Ident).await?.text.as_str().to_string())
     } else {
         None
     };
-    let port = if cursor.peek().kind == TokenKind::At {
+    let port = if cursor.peek().await.kind == TokenKind::At {
         cursor.advance();
-        Some(cursor.expect(TokenKind::Ident)?.text.as_str().to_string())
+        Some(cursor.expect(TokenKind::Ident).await?.text.as_str().to_string())
     } else {
         None
     };
     Ok(EdgeNode { id, kind, port })
 }
 
-pub fn decode_fused_edge_arrow(text: &str) -> Result<(bool, EdgeLabel), TextError> {
+pub async fn decode_fused_edge_arrow(text: &str) -> Result<(bool, EdgeLabel), TextError> {
     let body = text.strip_prefix('-').ok_or_else(|| TextError::new("fused edge must start with `-`", TextSpan::at(1, 1)))?;
     let (core, directed) = if let Some(core) = body.strip_suffix('>') {
         (core, true)
@@ -152,7 +152,7 @@ pub fn decode_fused_edge_arrow(text: &str) -> Result<(bool, EdgeLabel), TextErro
     Ok((directed, EdgeLabel { id, kind }))
 }
 
-fn print_fused_edge_arrow(label: &EdgeLabel, directed: bool) -> String {
+async fn print_fused_edge_arrow(label: &EdgeLabel, directed: bool) -> String {
     let mut out = String::from('-');
     if let Some(id) = &label.id {
         out.push_str(id);
@@ -165,58 +165,58 @@ fn print_fused_edge_arrow(label: &EdgeLabel, directed: bool) -> String {
     out
 }
 
-fn parse_edge_label(cursor: &mut Cursor) -> Result<EdgeLabel, TextError> {
-    cursor.expect(TokenKind::LBracket)?;
-    let id = if cursor.peek().kind == TokenKind::Ident {
-        Some(cursor.advance().text.as_str().to_string())
+async fn parse_edge_label(cursor: &mut Cursor) -> Result<EdgeLabel, TextError> {
+    cursor.expect(TokenKind::LBracket).await?;
+    let id = if cursor.peek().await.kind == TokenKind::Ident {
+        Some(cursor.advance().await.text.as_str().to_string())
     } else {
         None
     };
-    let kind = if cursor.peek().kind == TokenKind::Colon {
+    let kind = if cursor.peek().await.kind == TokenKind::Colon {
         cursor.advance();
-        Some(cursor.expect(TokenKind::Ident)?.text.as_str().to_string())
+        Some(cursor.expect(TokenKind::Ident).await?.text.as_str().to_string())
     } else {
         None
     };
     let label = EdgeLabel { id, kind };
-    if label.is_empty() {
-        return Err(TextError::new("edge label `[...]` must name an id and/or a `:kind`", cursor.span()));
+    if label.is_empty().await {
+        return Err(TextError::new("edge label `[...]` must name an id and/or a `:kind`", cursor.span().await));
     }
-    cursor.expect(TokenKind::RBracket)?;
+    cursor.expect(TokenKind::RBracket).await?;
     Ok(label)
 }
 
 /// @emoji 🕸️ Parses one edge (or bare node) statement from an already-lexed cursor.
-fn parse_edge(cursor: &mut Cursor) -> Result<EdgeValue, TextError> {
-    let mut from = parse_edge_node(cursor)?;
-    let link = match cursor.peek().kind {
+async fn parse_edge(cursor: &mut Cursor) -> Result<EdgeValue, TextError> {
+    let mut from = parse_edge_node(cursor).await?;
+    let link = match cursor.peek().await.kind {
         TokenKind::Arrow => {
             cursor.advance();
-            let to = parse_edge_node(cursor)?;
+            let to = parse_edge_node(cursor).await?;
             Some(EdgeLink { directed: true, label: EdgeLabel::default(), to })
         }
         TokenKind::DashArrow => {
             cursor.advance();
-            let to = parse_edge_node(cursor)?;
+            let to = parse_edge_node(cursor).await?;
             Some(EdgeLink { directed: false, label: EdgeLabel::default(), to })
         }
         TokenKind::BackArrow => {
             cursor.advance();
-            let label = if cursor.peek().kind == TokenKind::LBracket {
-                let label = parse_edge_label(cursor)?;
-                cursor.expect(TokenKind::Minus)?;
+            let label = if cursor.peek().await.kind == TokenKind::LBracket {
+                let label = parse_edge_label(cursor).await?;
+                cursor.expect(TokenKind::Minus).await?;
                 label
             } else {
                 EdgeLabel::default()
             };
-            let to = parse_edge_node(cursor)?;
+            let to = parse_edge_node(cursor).await?;
             let swapped_to = std::mem::replace(&mut from, to);
             Some(EdgeLink { directed: true, label, to: swapped_to })
         }
-        TokenKind::Minus if cursor.peek_at(1).map(|t| t.kind) == Some(TokenKind::LBracket) => {
+        TokenKind::Minus if cursor.peek_at(1).await.map(|t| t.kind) == Some(TokenKind::LBracket) => {
             cursor.advance();
-            let label = parse_edge_label(cursor)?;
-            let directed = match cursor.peek().kind {
+            let label = parse_edge_label(cursor).await?;
+            let directed = match cursor.peek().await.kind {
                 TokenKind::Arrow => {
                     cursor.advance();
                     true
@@ -225,15 +225,15 @@ fn parse_edge(cursor: &mut Cursor) -> Result<EdgeValue, TextError> {
                     cursor.advance();
                     false
                 }
-                other => return Err(TextError::new(format!("expected `->` or `-` to close a labeled edge, found {other:?}"), cursor.span())),
+                other => return Err(TextError::new(format!("expected `->` or `-` to close a labeled edge, found {other:?}"), cursor.span().await)),
             };
-            let to = parse_edge_node(cursor)?;
+            let to = parse_edge_node(cursor).await?;
             Some(EdgeLink { directed, label, to })
         }
         TokenKind::EdgeArrow => {
             let token = cursor.advance();
-            let (directed, label) = decode_fused_edge_arrow(&token.text.as_str())?;
-            let to = parse_edge_node(cursor)?;
+            let (directed, label) = decode_fused_edge_arrow(&token.await.text.as_str()).await?;
+            let to = parse_edge_node(cursor).await?;
             Some(EdgeLink { directed, label, to })
         }
         _ => None,
@@ -243,18 +243,18 @@ fn parse_edge(cursor: &mut Cursor) -> Result<EdgeValue, TextError> {
 
 /// @emoji 🔌️ Lexes + parses one standalone edge literal — the entry point family/app grammars
 /// call for the `edge` macro-production.
-pub fn parse_edge_text(text: &str) -> Result<EdgeValue, TextError> {
+pub async fn parse_edge_text(text: &str) -> Result<EdgeValue, TextError> {
     let limits = Limits::default();
-    let tokens = lex(text, &limits, false)?;
-    let mut cursor = Cursor::new(tokens);
-    let edge = parse_edge(&mut cursor)?;
-    if cursor.peek().kind != TokenKind::Eof {
-        return Err(TextError::new(format!("unexpected trailing {:?} after edge literal", cursor.peek().kind), cursor.span()));
+    let tokens = lex(text, &limits, false).await?;
+    let mut cursor = Cursor::new(tokens).await;
+    let edge = parse_edge(&mut cursor).await?;
+    if cursor.peek().await.kind != TokenKind::Eof {
+        return Err(TextError::new(format!("unexpected trailing {:?} after edge literal", cursor.peek().await.kind), cursor.span().await));
     }
     Ok(edge)
 }
 
-fn print_edge_node(node: &EdgeNode, out: &mut String) {
+async fn print_edge_node(node: &EdgeNode, out: &mut String) {
     out.push_str(&node.id);
     if let Some(kind) = &node.kind {
         out.push(':');
@@ -276,15 +276,15 @@ fn print_edge_node(node: &EdgeNode, out: &mut String) {
 /// `"a-"` followed by `[`, not `a` then a fresh `-`. A leading space sidesteps this by ending the
 /// identifier at whitespace instead, with no change to the shared lexer needed. The unlabeled
 /// forms (`->`/`--`) are unaffected by this and keep the original no-space style unchanged.
-pub fn print_edge(edge: &EdgeValue) -> String {
+pub async fn print_edge(edge: &EdgeValue) -> String {
     let mut out = String::new();
     print_edge_node(&edge.from, &mut out);
     if let Some(link) = &edge.link {
-        if link.label.is_empty() {
+        if link.label.is_empty().await {
             out.push_str(if link.directed { "->" } else { "--" });
         } else {
             out.push(' ');
-            out.push_str(&print_fused_edge_arrow(&link.label, link.directed));
+            out.push_str(&print_fused_edge_arrow(&link.label, link.directed).await);
         }
         print_edge_node(&link.to, &mut out);
     }
@@ -301,9 +301,9 @@ pub fn print_edge(edge: &EdgeValue) -> String {
 /// rather than the start of the next statement. A number with no suffix at all is accepted too,
 /// read as already being in `native`'s unit. Rejects a suffix whose dimension doesn't match
 /// `native`'s (a length unit on an angle field, say) rather than silently reinterpreting it.
-pub fn parse_quantity_text(text: &str, native: &'static crate::os_dsl::UnitSpec) -> Result<f64, TextError> {
+pub async fn parse_quantity_text(text: &str, native: &'static crate::os_dsl::UnitSpec) -> Result<f64, TextError> {
     let limits = Limits::default();
-    let tokens: Vec<_> = lex(text, &limits, false)?.into_iter().filter(|t| !t.kind.is_trivia() && t.kind != TokenKind::Eof).collect();
+    let tokens: Vec<_> = lex(text, &limits, false).await?.into_iter().filter(|t| !t.kind.is_trivia() && t.kind != TokenKind::Eof).collect();
     let number = tokens.first().ok_or_else(|| TextError::new("expected a quantity", TextSpan::at(1, 1)))?;
     if !matches!(number.kind, TokenKind::Float | TokenKind::Int) {
         return Err(TextError::new(format!("expected a number, found {:?}", number.kind), number.span));
@@ -314,8 +314,8 @@ pub fn parse_quantity_text(text: &str, native: &'static crate::os_dsl::UnitSpec)
     let value = match suffix {
         Some(suffix_token) => {
             let symbol = suffix_token.text.as_str();
-            let unit = crate::os_dsl::unit_by_symbol(&symbol).ok_or_else(|| TextError::new(format!("unknown unit `{symbol}`"), suffix_token.span))?;
-            crate::os_dsl::convert(raw, unit, native).ok_or_else(|| TextError::new(format!("unit `{symbol}` is not compatible with `{}`", native.symbol), suffix_token.span))?
+            let unit = crate::os_dsl::unit_by_symbol(&symbol).await.ok_or_else(|| TextError::new(format!("unknown unit `{symbol}`"), suffix_token.span))?;
+            crate::os_dsl::convert(raw, unit, native).await.ok_or_else(|| TextError::new(format!("unit `{symbol}` is not compatible with `{}`", native.symbol), suffix_token.span))?
         }
         None => raw,
     };
@@ -330,7 +330,7 @@ pub fn parse_quantity_text(text: &str, native: &'static crate::os_dsl::UnitSpec)
 /// @emoji 🖨️ Canonical printer — always suffixes in `native`'s own unit (never the alien unit a
 /// value might have been parsed from), so re-parsing the printed form is always a same-unit,
 /// lossless round trip.
-pub fn print_quantity(value: f64, native: &'static crate::os_dsl::UnitSpec) -> String {
+pub async fn print_quantity(value: f64, native: &'static crate::os_dsl::UnitSpec) -> String {
     format!("{}{}", crate::os_dsl::format_f64(value), native.symbol)
 }
 
@@ -338,14 +338,14 @@ pub fn print_quantity(value: f64, native: &'static crate::os_dsl::UnitSpec) -> S
 /// as degrees (unlike `parse_quantity_text`'s general "no suffix = already-native-unit" rule,
 /// this pins the no-suffix case specifically, since degrees are what the architecture calls the
 /// canonical angle unit); `rad`/`turn` suffixes convert in.
-pub fn parse_angle_text(text: &str) -> Result<f64, TextError> {
-    let deg = crate::os_dsl::unit_by_symbol("deg").expect("`deg` is a built-in unit");
-    parse_quantity_text(text, deg)
+pub async fn parse_angle_text(text: &str) -> Result<f64, TextError> {
+    let deg = crate::os_dsl::unit_by_symbol("deg").await.expect("`deg` is a built-in unit");
+    parse_quantity_text(text, deg).await
 }
 
 /// @emoji 🖨️ Canonical printer for an angle in degrees — `45°` (the `°` symbol, not `deg`).
-pub fn print_angle(value_deg: f64) -> String {
-    let degree_symbol = crate::os_dsl::unit_by_symbol("°").expect("`°` is a built-in unit");
+pub async fn print_angle(value_deg: f64) -> String {
+    let degree_symbol = crate::os_dsl::unit_by_symbol("°").await.expect("`°` is a built-in unit");
     format!("{}{}", crate::os_dsl::format_f64(value_deg), degree_symbol.symbol)
 }
 //#endregion 🔖️Quantity
@@ -355,33 +355,33 @@ pub fn print_angle(value_deg: f64) -> String {
 mod tests {
     use super::*;
 
-    fn node(id: &str) -> EdgeNode {
+    async fn node(id: &str) -> EdgeNode {
         EdgeNode { id: id.to_string(), kind: None, port: None }
     }
 
-    #[test]
-    fn parses_a_bare_node_with_no_link() {
+    #[semio_framework_async_macros::async_test]
+    async fn parses_a_bare_node_with_no_link() {
         let value = parse_edge_text("branch-root").expect("parse_edge_text");
         assert_eq!(value, EdgeValue { from: node("branch-root"), link: None });
     }
 
-    #[test]
-    fn parses_plain_directed_arrow() {
+    #[semio_framework_async_macros::async_test]
+    async fn parses_plain_directed_arrow() {
         let value = parse_edge_text("a->b").expect("parse_edge_text");
         assert_eq!(value.link.as_ref().unwrap().directed, true);
         assert!(value.link.as_ref().unwrap().label.is_empty());
         assert_eq!(print_edge(&value), "a->b");
     }
 
-    #[test]
-    fn parses_plain_undirected_dash() {
+    #[semio_framework_async_macros::async_test]
+    async fn parses_plain_undirected_dash() {
         let value = parse_edge_text("a--b").expect("parse_edge_text");
         assert_eq!(value.link.as_ref().unwrap().directed, false);
         assert_eq!(print_edge(&value), "a--b");
     }
 
-    #[test]
-    fn back_arrow_is_sugar_normalized_by_endpoint_swap() {
+    #[semio_framework_async_macros::async_test]
+    async fn back_arrow_is_sugar_normalized_by_endpoint_swap() {
         let value = parse_edge_text("b<-a").expect("parse_edge_text");
         assert_eq!(value.from, node("a"));
         assert_eq!(value.link.as_ref().unwrap().to, node("b"));
@@ -390,8 +390,8 @@ mod tests {
         assert_eq!(print_edge(&value), "a->b");
     }
 
-    #[test]
-    fn parses_labeled_directed_edge_with_id_and_kind() {
+    #[semio_framework_async_macros::async_test]
+    async fn parses_labeled_directed_edge_with_id_and_kind() {
         let value = parse_edge_text("a -e1:Connection>b").expect("parse_edge_text");
         let link = value.link.expect("link");
         assert_eq!(link.directed, true);
@@ -400,8 +400,8 @@ mod tests {
         assert_eq!(print_edge(&EdgeValue { from: node("a"), link: Some(link) }), "a -e1:Connection>b");
     }
 
-    #[test]
-    fn parses_labeled_undirected_edge_id_only() {
+    #[semio_framework_async_macros::async_test]
+    async fn parses_labeled_undirected_edge_id_only() {
         let value = parse_edge_text("a -e1-b").expect("parse_edge_text");
         let link = value.link.expect("link");
         assert_eq!(link.directed, false);
@@ -409,23 +409,23 @@ mod tests {
         assert_eq!(print_edge(&EdgeValue { from: node("a"), link: Some(link) }), "a -e1-b");
     }
 
-    #[test]
-    fn parses_labeled_edge_kind_only() {
+    #[semio_framework_async_macros::async_test]
+    async fn parses_labeled_edge_kind_only() {
         let value = parse_edge_text("a -:Connection>b").expect("parse_edge_text");
         let link = value.link.expect("link");
         assert_eq!(link.label, EdgeLabel { id: None, kind: Some("Connection".to_string()) });
         assert_eq!(print_edge(&EdgeValue { from: node("a"), link: Some(link) }), "a -:Connection>b");
     }
 
-    #[test]
-    fn bracket_labeled_edge_still_parses() {
+    #[semio_framework_async_macros::async_test]
+    async fn bracket_labeled_edge_still_parses() {
         let value = parse_edge_text("a -[e1:Connection]->b").expect("parse_edge_text");
         let link = value.link.expect("link");
         assert_eq!(link.label.id.as_deref(), Some("e1"));
     }
 
-    #[test]
-    fn labeled_back_arrow_is_sugar_normalized_by_endpoint_swap() {
+    #[semio_framework_async_macros::async_test]
+    async fn labeled_back_arrow_is_sugar_normalized_by_endpoint_swap() {
         let value = parse_edge_text("b<-[e1:Connection]-a").expect("parse_edge_text");
         assert_eq!(value.from, node("a"));
         let printed = print_edge(&value);
@@ -436,28 +436,28 @@ mod tests {
         assert_eq!(printed, "a -e1:Connection>b");
     }
 
-    #[test]
-    fn endpoints_carry_kind_and_port() {
+    #[semio_framework_async_macros::async_test]
+    async fn endpoints_carry_kind_and_port() {
         let value = parse_edge_text("capsule@in-a -c1:Connection>tower@out-b").expect("parse_edge_text");
         assert_eq!(value.from, EdgeNode { id: "capsule".to_string(), kind: None, port: Some("in-a".to_string()) });
         let link = value.link.expect("link");
         assert_eq!(link.to, EdgeNode { id: "tower".to_string(), kind: None, port: Some("out-b".to_string()) });
     }
 
-    #[test]
-    fn node_kind_and_port_round_trip() {
+    #[semio_framework_async_macros::async_test]
+    async fn node_kind_and_port_round_trip() {
         let value = parse_edge_text("v1:Vertex@p0->v2:Vertex@p1").expect("parse_edge_text");
         assert_eq!(print_edge(&value), "v1:Vertex@p0->v2:Vertex@p1");
     }
 
-    #[test]
-    fn empty_label_is_rejected() {
+    #[semio_framework_async_macros::async_test]
+    async fn empty_label_is_rejected() {
         let err = parse_edge_text("a -[]->b").unwrap_err();
         assert!(err.message.contains("must name an id"), "unexpected message: {}", err.message);
     }
 
-    #[test]
-    fn round_trip_matrix_over_representative_values() {
+    #[semio_framework_async_macros::async_test]
+    async fn round_trip_matrix_over_representative_values() {
         let cases = vec![
             EdgeValue { from: node("a"), link: None },
             EdgeValue { from: node("a"), link: Some(EdgeLink { directed: true, label: EdgeLabel::default(), to: node("b") }) },
@@ -474,52 +474,52 @@ mod tests {
         }
     }
 
-    #[test]
-    fn parses_quantity_in_native_unit() {
+    #[semio_framework_async_macros::async_test]
+    async fn parses_quantity_in_native_unit() {
         let gpa = crate::os_dsl::unit_by_symbol("GPa").unwrap();
         let value = parse_quantity_text("210GPa", gpa).expect("parse_quantity_text");
         assert!((value - 210.0).abs() < 1e-9);
         assert_eq!(print_quantity(value, gpa), "210GPa");
     }
 
-    #[test]
-    fn converts_a_compatible_alien_unit_into_native_scale() {
+    #[semio_framework_async_macros::async_test]
+    async fn converts_a_compatible_alien_unit_into_native_scale() {
         let gpa = crate::os_dsl::unit_by_symbol("GPa").unwrap();
         // 210000 MPa == 210 GPa
         let value = parse_quantity_text("210000MPa", gpa).expect("parse_quantity_text");
         assert!((value - 210.0).abs() < 1e-6, "got {value}");
     }
 
-    #[test]
-    fn bare_number_with_no_suffix_is_read_in_native_unit() {
+    #[semio_framework_async_macros::async_test]
+    async fn bare_number_with_no_suffix_is_read_in_native_unit() {
         let gpa = crate::os_dsl::unit_by_symbol("GPa").unwrap();
         let value = parse_quantity_text("210", gpa).expect("parse_quantity_text");
         assert!((value - 210.0).abs() < 1e-9);
     }
 
-    #[test]
-    fn rejects_a_dimensionally_incompatible_unit() {
+    #[semio_framework_async_macros::async_test]
+    async fn rejects_a_dimensionally_incompatible_unit() {
         let gpa = crate::os_dsl::unit_by_symbol("GPa").unwrap();
         let err = parse_quantity_text("210m", gpa).unwrap_err();
         assert!(err.message.contains("not compatible"), "unexpected message: {}", err.message);
     }
 
-    #[test]
-    fn rejects_an_unknown_unit_symbol() {
+    #[semio_framework_async_macros::async_test]
+    async fn rejects_an_unknown_unit_symbol() {
         let gpa = crate::os_dsl::unit_by_symbol("GPa").unwrap();
         let err = parse_quantity_text("210Zorkels", gpa).unwrap_err();
         assert!(err.message.contains("unknown unit"), "unexpected message: {}", err.message);
     }
 
-    #[test]
-    fn parses_and_prints_angles_in_degrees() {
+    #[semio_framework_async_macros::async_test]
+    async fn parses_and_prints_angles_in_degrees() {
         let value = parse_angle_text("45").expect("parse_angle_text");
         assert!((value - 45.0).abs() < 1e-9);
         assert_eq!(print_angle(value), "45°");
     }
 
-    #[test]
-    fn angle_accepts_radians_and_converts_to_degrees() {
+    #[semio_framework_async_macros::async_test]
+    async fn angle_accepts_radians_and_converts_to_degrees() {
         let value = parse_angle_text("3.14159265358979rad").expect("parse_angle_text");
         assert!((value - 180.0).abs() < 1e-6, "got {value}");
     }

@@ -423,7 +423,7 @@ mod tests {
     //#region field_sweep
     /// 🧪️ THE acceptance criterion: `sweep_a`/`sweep_b` differ in EVERY mutable field (incl. the
     /// tri-state `dict_id` exercising `Some(None)` in the b→a direction).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn field_sweep_between_covers_every_field() {
         let a = sweep_a();
         let b = sweep_b();
@@ -452,7 +452,7 @@ mod tests {
     //#endregion field_sweep
 
     //#region mutation_diff_law
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mutation_diff_law_every_variant() {
         let base = sweep_a();
         let variants = vec![
@@ -473,7 +473,7 @@ mod tests {
     //#endregion mutation_diff_law
 
     //#region inverse_law
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inverse_law_mutation_and_diff_level() {
         let base = sweep_a();
         let variants = vec![
@@ -505,7 +505,7 @@ mod tests {
     /// 🧪️ `DeflateSnapshot` has no keyed collections, so absorb reduces to the recipe's plain
     /// "Scalars: LWW" rule -- these cases cover disjoint-field composition, same-field LWW
     /// override, and associativity over a triple.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_law_scalar_lww_and_associativity() {
         let base = sweep_a();
 
@@ -547,7 +547,7 @@ mod tests {
     //#endregion absorb_law
 
     //#region between_roundtrip_law
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn between_roundtrip_law_synthetic_and_real_fixture() {
         let a = sweep_a();
         let b = sweep_b();
@@ -567,7 +567,7 @@ mod tests {
     //#endregion between_roundtrip_law
 
     //#region codec_retention_law
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn codec_retention_law_self_round_trip_is_byte_exact() {
         // 🔁️ Encoding with OUR OWN encoder and decoding back must be exactly byte- and
         // field-preserving (both directions use the same codec, so there is no cross-encoder
@@ -585,7 +585,7 @@ mod tests {
     /// wave must not touch), so re-encoding a dynamic-Huffman original will not reproduce the
     /// same raw DEFLATE bytes. What must be preserved exactly is the typed header fields and the
     /// decompressed PAYLOAD across a decode -> re-encode -> re-decode cycle.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn codec_retention_law_real_fixture_normal_form() {
         let decoded = decode_deflate_snapshot(REAL_FIXTURE_ZLIB).expect("decode real fixture");
         let re_encoded = encode_deflate_snapshot(&decoded);
@@ -602,7 +602,7 @@ mod tests {
     /// 🧪️ F6: `DiffCodec::print_diff`/`parse_diff`/`encode_diff`/`decode_diff` round-trip law —
     /// exercises real `between()` results covering every field AND both `dict_id` tri-state
     /// transitions (`Some(None)` = cleared, `Some(Some(_))` = set/changed), plus the empty diff.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn diff_codec_text_binary_roundtrip_law() {
         let a = sweep_a();
         let b = sweep_b();

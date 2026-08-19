@@ -35,7 +35,7 @@ impl protocol::Inference<FlowSnapshot> for FlowInference {
 /// default, don't derive structurally" trick as `AddInference`'s hand-written `Default` in
 /// `📡️spr/🎮️command/🦀️component.rs`.
 impl Default for FlowInference {
-    async fn default() -> Self {
+    fn default() -> Self {
         <Self as protocol::Inference<FlowSnapshot>>::infer(&FlowSnapshot::default())
     }
 }
@@ -94,18 +94,18 @@ mod tests {
         FlowSnapshot::from_fixture(fixture)
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = chain_snapshot();
         assert_eq!(FlowInference::infer(&snapshot), FlowInference::infer(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(FlowInference::infer(&FlowSnapshot::default()), FlowInference::default());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn topology_counts_every_widget_exactly_once() {
         let snapshot = chain_snapshot();
         let inferred = FlowInference::infer(&snapshot);

@@ -92,7 +92,7 @@ mod tests {
     /// @emoji 🧭️ `(app label, envelope_id, check fn)` — dispatch is by sniffed `plugin.artifact` from `.semio` content.
     type CheckFn = fn(&str) -> Result<(), String>;
 
-    fn registry() -> Vec<(&'static str, &'static str, CheckFn)> {
+    async fn registry() -> Vec<(&'static str, &'static str, CheckFn)> {
         vec![
             ("writer", <WriterSnapshot as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<WriterSnapshot>),
             ("mathematical", <MathematicalSnapshot as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<MathematicalSnapshot>),
@@ -160,7 +160,7 @@ mod tests {
     //#region 🔖️Walk
     /// @emoji 🏠️ Ascends from `CARGO_MANIFEST_DIR` looking for `nx.json` (a repo-root-only marker)
     /// rather than hardcoding a `../..` depth — robust to this crate ever moving.
-    fn repo_root() -> PathBuf {
+    async fn repo_root() -> PathBuf {
         let mut dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
         loop {
             if dir.join("nx.json").is_file() {
@@ -176,14 +176,14 @@ mod tests {
     const ASSETS_DIR_NAME: &str = "🖼️assets";
     const LEGACY_KIND_DIRS: &[&str] = &["🗣️dsls", "🎒️packs", "🔧️ops", "📡️sprs"];
 
-    fn skip_dir_name(name: &str) -> bool {
+    async fn skip_dir_name(name: &str) -> bool {
         name == "node_modules" || name == "target" || name.starts_with('.') || name == "🦑️repo"
     }
 
     /// @emoji 📚️ Recursively finds every directory literally named `📚️examples` under `root`,
     /// skipping `node_modules`/`target`/hidden/ticket-scratch directories.
-    fn example_dirs(root: &Path) -> Vec<PathBuf> {
-        fn walk(dir: &Path, out: &mut Vec<PathBuf>) {
+    async fn example_dirs(root: &Path) -> Vec<PathBuf> {
+        async fn walk(dir: &Path, out: &mut Vec<PathBuf>) {
             let entries = match std::fs::read_dir(dir) {
                 Ok(entries) => entries,
                 Err(_) => return,
@@ -210,7 +210,7 @@ mod tests {
     }
 
     /// @emoji 🏷️ Direct child directories of a `📚️examples` root — one per example slug.
-    fn example_slug_dirs(examples_dir: &Path) -> Vec<PathBuf> {
+    async fn example_slug_dirs(examples_dir: &Path) -> Vec<PathBuf> {
         let mut out = Vec::new();
         let entries = match std::fs::read_dir(examples_dir) {
             Ok(entries) => entries,
@@ -227,7 +227,7 @@ mod tests {
     }
 
     /// @emoji 📄️ Recursively collects every FILE under `dir`.
-    fn collect_files(dir: &Path, out: &mut Vec<PathBuf>) {
+    async fn collect_files(dir: &Path, out: &mut Vec<PathBuf>) {
         let entries = match std::fs::read_dir(dir) {
             Ok(entries) => entries,
             Err(_) => return,
@@ -244,7 +244,7 @@ mod tests {
 
     /// @emoji 🖼️ Collects `.semio` assets for one example slug.
     /// Prefers `🖼️assets/` (new layout); soft-migrates by walking the slug tree when assets are absent.
-    fn collect_slug_semio_files(slug_dir: &Path) -> Vec<PathBuf> {
+    async fn collect_slug_semio_files(slug_dir: &Path) -> Vec<PathBuf> {
         let assets = slug_dir.join(ASSETS_DIR_NAME);
         let mut files = Vec::new();
         if assets.is_dir() {
@@ -258,7 +258,7 @@ mod tests {
     }
 
     /// @emoji 📚️ Repo-wide `.semio` example assets under every `📚️examples/<slug>/` (assets-first).
-    fn collect_example_semio_files(root: &Path) -> Vec<PathBuf> {
+    async fn collect_example_semio_files(root: &Path) -> Vec<PathBuf> {
         let mut out = Vec::new();
         for examples in example_dirs(root) {
             for slug in example_slug_dirs(&examples) {
@@ -268,20 +268,20 @@ mod tests {
         out
     }
 
-    fn has_semio_under(dir: &Path) -> bool {
+    async fn has_semio_under(dir: &Path) -> bool {
         let mut files = Vec::new();
         collect_files(dir, &mut files);
         files.iter().any(|path| path.extension().and_then(|e| e.to_str()) == Some("semio"))
     }
 
-    fn slug_has_legacy_kind_dirs(slug_dir: &Path) -> bool {
+    async fn slug_has_legacy_kind_dirs(slug_dir: &Path) -> bool {
         LEGACY_KIND_DIRS.iter().any(|kind| slug_dir.join(kind).is_dir())
     }
     //#endregion 🔖️Walk
 
     //#region 🔖️Sweep
-    #[test]
-    fn repo_wide_dsl_fixture_law_sweep() {
+    #[semio_framework_async_macros::async_test]
+    async fn repo_wide_dsl_fixture_law_sweep() {
         let root = repo_root();
         let dirs = example_dirs(&root);
         assert!(!dirs.is_empty(), "found zero 📚️examples directories under {root:?} — sweep would vacuously pass");
@@ -332,8 +332,8 @@ mod tests {
         assert!(failures.is_empty(), "dsl fixture law sweep failed for {} check(s) across {} fixture file(s):\n\n{}", failures.len(), fixture_files.len(), failures.join("\n\n"));
     }
 
-    #[test]
-    fn repo_wide_semio_example_kind_coverage() {
+    #[semio_framework_async_macros::async_test]
+    async fn repo_wide_semio_example_kind_coverage() {
         // Target: each artifact `📚️examples/<slug>/` has `🖼️assets/` with ≥1 `.semio`.
         // Mid-migration (W1b→W3): soft-skip slugs that still lack `🖼️assets/` with a clear message.
         // Empty `🖼️assets/` after the dir exists is a hard gap.
@@ -399,7 +399,7 @@ mod example_asset_discovery {
     pub const ASSETS_DIR_NAME: &str = "🖼️assets";
 
     /// @emoji 🏠️ Ascends from `CARGO_MANIFEST_DIR` to the repo root (`nx.json`).
-    pub fn repo_root() -> PathBuf {
+    pub async fn repo_root() -> PathBuf {
         let mut dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
         loop {
             if dir.join("nx.json").is_file() {
@@ -411,7 +411,7 @@ mod example_asset_discovery {
         }
     }
 
-    fn collect_files(dir: &Path, out: &mut Vec<PathBuf>) {
+    async fn collect_files(dir: &Path, out: &mut Vec<PathBuf>) {
         let entries = match std::fs::read_dir(dir) {
             Ok(entries) => entries,
             Err(_) => return,
@@ -428,7 +428,7 @@ mod example_asset_discovery {
 
     /// @emoji 🔎 Finds the first `.semio` under an artifact's examples whose file name ends with `suffix`
     /// (e.g. `.dsl.semio`, `.pack.semio`). Assets-first, then legacy walk.
-    pub fn find_example_asset(artifact_dir: &Path, suffix: &str) -> Option<PathBuf> {
+    pub async fn find_example_asset(artifact_dir: &Path, suffix: &str) -> Option<PathBuf> {
         let examples = artifact_dir.join(EXAMPLES_DIR_NAME);
         if !examples.is_dir() {
             return None;
@@ -465,19 +465,19 @@ mod example_asset_discovery {
     }
 
     /// @emoji 📄️ Reads UTF-8 text for the first matching example asset under `artifact_dir`.
-    pub fn read_example_asset_text(artifact_dir: &Path, suffix: &str) -> Option<String> {
+    pub async fn read_example_asset_text(artifact_dir: &Path, suffix: &str) -> Option<String> {
         let path = find_example_asset(artifact_dir, suffix)?;
         std::fs::read_to_string(&path).ok()
     }
 
     /// @emoji 📒️ Reads bytes for the first matching example asset under `artifact_dir`.
-    pub fn read_example_asset_bytes(artifact_dir: &Path, suffix: &str) -> Option<Vec<u8>> {
+    pub async fn read_example_asset_bytes(artifact_dir: &Path, suffix: &str) -> Option<Vec<u8>> {
         let path = find_example_asset(artifact_dir, suffix)?;
         std::fs::read(&path).ok()
     }
 
     /// @emoji 🗺️ Resolves `✏️s/🔌️plugins/<plugin>/🗿️artifacts/<artifact>`.
-    pub fn artifact_dir(plugin: &str, artifact: &str) -> PathBuf {
+    pub async fn artifact_dir(plugin: &str, artifact: &str) -> PathBuf {
         repo_root().join("✏️s").join("🔌️plugins").join(plugin).join("🗿️artifacts").join(artifact)
     }
 }
@@ -501,7 +501,7 @@ mod pilot_resolve {
     const STANDARDS_DIR: &str = "🏅️standards";
 
     /// 🏠️ Ascends from `CARGO_MANIFEST_DIR` looking for `nx.json`.
-    pub fn repo_root() -> PathBuf {
+    pub async fn repo_root() -> PathBuf {
         let mut dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
         loop {
             if dir.join("nx.json").is_file() {
@@ -513,11 +513,11 @@ mod pilot_resolve {
         }
     }
 
-    fn skip_dir_name(name: &str) -> bool {
+    async fn skip_dir_name(name: &str) -> bool {
         name == "node_modules" || name == "target" || name.starts_with('.') || name == "🦑️repo"
     }
 
-    fn collect_files(dir: &Path, out: &mut Vec<PathBuf>) {
+    async fn collect_files(dir: &Path, out: &mut Vec<PathBuf>) {
         let entries = match std::fs::read_dir(dir) {
             Ok(entries) => entries,
             Err(_) => return,
@@ -537,7 +537,7 @@ mod pilot_resolve {
         }
     }
 
-    fn name_matches_kind(path: &Path, kind_suffix: &str) -> bool {
+    async fn name_matches_kind(path: &Path, kind_suffix: &str) -> bool {
         path.file_name().and_then(|n| n.to_str()).map(|n| n.ends_with(kind_suffix)).unwrap_or(false)
     }
 
@@ -545,7 +545,7 @@ mod pilot_resolve {
     /// `kind_suffix` (e.g. `.dsl.semio`, `.pack.semio`, `.spr.semio`). Assets-dir hits win over
     /// legacy nested hits. Extracted from the old single-slot `find_example_semio` so the
     /// (artifact, standard)-aware wrapper below can try more than one `examples_dir` candidate.
-    fn find_example_semio_under(examples: &Path, kind_suffix: &str) -> Option<PathBuf> {
+    async fn find_example_semio_under(examples: &Path, kind_suffix: &str) -> Option<PathBuf> {
         if !examples.is_dir() {
             return None;
         }
@@ -595,7 +595,7 @@ mod pilot_resolve {
     /// matching fixture, so every single-standard artifact (the overwhelming majority, and every
     /// non-stdio caller which never has a `standard`) keeps resolving byte-for-byte as before —
     /// additive/widening, never a narrowing of what used to resolve.
-    pub fn find_example_semio(artifact_rel: &str, standard: Option<&str>, kind_suffix: &str) -> Option<PathBuf> {
+    pub async fn find_example_semio(artifact_rel: &str, standard: Option<&str>, kind_suffix: &str) -> Option<PathBuf> {
         if let Some(standard) = standard {
             let per_standard = repo_root().join(artifact_rel).join(STANDARDS_DIR).join(standard).join(EXAMPLES_DIR_NAME);
             if let Some(found) = find_example_semio_under(&per_standard, kind_suffix) {
@@ -606,13 +606,13 @@ mod pilot_resolve {
     }
 
     /// 📄️ Reads example fixture text; `None` soft-skips the pilot when missing mid-migration.
-    pub fn read_example_text(artifact_rel: &str, standard: Option<&str>, kind_suffix: &str) -> Option<String> {
+    pub async fn read_example_text(artifact_rel: &str, standard: Option<&str>, kind_suffix: &str) -> Option<String> {
         let path = find_example_semio(artifact_rel, standard, kind_suffix)?;
         std::fs::read_to_string(&path).ok()
     }
 
     /// 🎒️ Reads example binary/text bytes; `None` soft-skips the pilot when missing mid-migration.
-    pub fn read_example_bytes(artifact_rel: &str, standard: Option<&str>, kind_suffix: &str) -> Option<Vec<u8>> {
+    pub async fn read_example_bytes(artifact_rel: &str, standard: Option<&str>, kind_suffix: &str) -> Option<Vec<u8>> {
         let path = find_example_semio(artifact_rel, standard, kind_suffix)?;
         std::fs::read(&path).ok()
     }
@@ -689,7 +689,7 @@ mod m5_auto_discovery {
     const PROTOCOL_FILE: &str = "📡️component.protocol.semio";
     const STDIO_PLUGIN: &str = "🗄️stdio";
 
-    fn skip_dir_name(name: &str) -> bool {
+    async fn skip_dir_name(name: &str) -> bool {
         name == "node_modules" || name == "target" || name.starts_with('.') || name == "🦑️repo"
     }
 
@@ -719,7 +719,7 @@ mod m5_auto_discovery {
         "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d",
     ];
 
-    fn discovery_roots(repo_root: &Path) -> Vec<PathBuf> {
+    async fn discovery_roots(repo_root: &Path) -> Vec<PathBuf> {
         let mut roots = vec![repo_root.join(STDIO_ROOT)];
         roots.extend(PILOT_ARTIFACT_ROOTS.iter().map(|rel| repo_root.join(rel)));
         roots
@@ -728,7 +728,7 @@ mod m5_auto_discovery {
     /// @emoji 🔎️ True when `path`'s immediate parent/grandparent/great-grandparent directory names
     /// are exactly `chain` (in that order, nearest first) — the structural fingerprint of one facet
     /// location (e.g. `.../🧬️schema/📸️snapshot/📝️text/<file>`).
-    fn parent_chain_is(path: &Path, chain: &[&str]) -> bool {
+    async fn parent_chain_is(path: &Path, chain: &[&str]) -> bool {
         let mut ancestor = path.parent();
         for expected in chain {
             let Some(dir) = ancestor else { return false };
@@ -747,7 +747,7 @@ mod m5_auto_discovery {
         protocol_spr: Vec<PathBuf>,
     }
 
-    fn walk(dir: &Path, hits: &mut RawHits) {
+    async fn walk(dir: &Path, hits: &mut RawHits) {
         let entries = match std::fs::read_dir(dir) {
             Ok(entries) => entries,
             Err(_) => return,
@@ -779,7 +779,7 @@ mod m5_auto_discovery {
     /// doesn't actually sit under a `🗿️artifacts/<artifact>` directory (defensive; every matched
     /// facet path does by construction of the walk root, but a repo layout change should soft-skip
     /// here rather than panic).
-    fn derive_identity(file_path: &Path, repo_root: &Path) -> Option<(String, String, Option<String>, bool, String, String)> {
+    async fn derive_identity(file_path: &Path, repo_root: &Path) -> Option<(String, String, Option<String>, bool, String, String)> {
         let rel = file_path.strip_prefix(repo_root).ok()?;
         let components: Vec<String> = rel.components().map(|c| c.as_os_str().to_string_lossy().to_string()).collect();
         let artifacts_idx = components.iter().position(|c| c == ARTIFACTS_DIR)?;
@@ -799,7 +799,7 @@ mod m5_auto_discovery {
     }
 
     /// @emoji 📖️ Every `🧬️schema/📸️snapshot/📝️text/📖️component.grammar.semio` under [`discovery_roots`].
-    pub fn discover_grammar_snapshot_facets() -> Vec<DiscoveredGrammarFacet> {
+    pub async fn discover_grammar_snapshot_facets() -> Vec<DiscoveredGrammarFacet> {
         let repo_root = pilot_resolve::repo_root();
         let mut hits = RawHits::default();
         for root in discovery_roots(&repo_root) {
@@ -819,7 +819,7 @@ mod m5_auto_discovery {
 
     /// @emoji 📡️ Every `🧬️schema/📸️snapshot/💾️binary/📡️component.protocol.semio` (pack) and
     /// `🧬️schema/🧬️mutations/💾️binary/📡️component.protocol.semio` (spr) under [`discovery_roots`].
-    pub fn discover_protocol_facets() -> Vec<DiscoveredProtocolFacet> {
+    pub async fn discover_protocol_facets() -> Vec<DiscoveredProtocolFacet> {
         let repo_root = pilot_resolve::repo_root();
         let mut hits = RawHits::default();
         for root in discovery_roots(&repo_root) {
@@ -1078,7 +1078,7 @@ mod m5_auto_discovery {
     ];
 
     /// @emoji 🛟️ Whether a stdio `(artifact, standard)` pair is still exempt (soft) for `facet`.
-    pub fn stdio_is_exempt(facet: ConformanceFacet, artifact: &str, standard: Option<&str>) -> bool {
+    pub async fn stdio_is_exempt(facet: ConformanceFacet, artifact: &str, standard: Option<&str>) -> bool {
         let standard = standard.unwrap_or("");
         !STDIO_CONFORMANCE_GRADUATED.iter().any(|(a, s, f)| *a == artifact && *s == standard && *f == facet)
     }
@@ -1102,7 +1102,7 @@ mod m5_auto_discovery {
 
     /// @emoji 🛟️ Whether a NON-stdio `(plugin, artifact, standard)` triple is a known, documented,
     /// out-of-this-wave's-ownership gap for `facet` — see [`KNOWN_NON_STDIO_GAPS`].
-    pub fn non_stdio_is_known_gap(facet: ConformanceFacet, plugin: &str, artifact: &str, standard: Option<&str>) -> bool {
+    pub async fn non_stdio_is_known_gap(facet: ConformanceFacet, plugin: &str, artifact: &str, standard: Option<&str>) -> bool {
         let standard = standard.unwrap_or("");
         KNOWN_NON_STDIO_GAPS.iter().any(|(p, a, s, f)| *p == plugin && *a == artifact && *s == standard && *f == facet)
     }
@@ -1117,7 +1117,7 @@ mod m5_auto_discovery {
 #[cfg(test)]
 mod m5_soft_skip {
     /// @emoji ⏭️ Returns true when the pilot constant/spec text is missing or still a stub.
-    pub fn soft_skip_missing(label: &str, text: &str) -> bool {
+    pub async fn soft_skip_missing(label: &str, text: &str) -> bool {
         let trimmed = text.trim();
         if trimmed.is_empty() || (trimmed.contains("TODO") && trimmed.lines().count() < 4) {
             eprintln!("[DEBUG] soft-skip {label}: pilot constant/spec missing or stub");
@@ -1127,7 +1127,7 @@ mod m5_soft_skip {
     }
 
     /// @emoji ⏭️ Soft-skip when binary example payload is empty after unwrap.
-    pub fn soft_skip_empty_bytes(label: &str, bytes: &[u8]) -> bool {
+    pub async fn soft_skip_empty_bytes(label: &str, bytes: &[u8]) -> bool {
         if bytes.is_empty() {
             eprintln!("[DEBUG] soft-skip {label}: empty payload");
             return true;
@@ -1155,7 +1155,7 @@ mod m5_handcrafted_grammar_conformance {
     use crate::os_dsl::{parse_grammar, Recognizer, SemioDialect};
     use crate::os_store::semio_format::split_text_preamble;
 
-    pub(super) fn dsl_body_from_fixture(text: &str) -> String {
+    pub(super) async fn dsl_body_from_fixture(text: &str) -> String {
         if text.trim_start().starts_with("semio ") {
             split_text_preamble(text).map(|(env, body)| format!("{}\n{body}", env.envelope_id())).unwrap_or_else(|_| text.to_string())
         } else {
@@ -1164,7 +1164,7 @@ mod m5_handcrafted_grammar_conformance {
     }
 
     /// @emoji ✅️ Real check, no panics — lets the caller choose hard-assert vs. soft-log per facet.
-    fn check_grammar_recognizes(grammar_semio: &str, fixture_semio: &str) -> Result<(), String> {
+    async fn check_grammar_recognizes(grammar_semio: &str, fixture_semio: &str) -> Result<(), String> {
         let grammar = parse_grammar(grammar_semio).map_err(|error| format!("parse grammar.semio: {error:?}"))?;
         if grammar.dialect != SemioDialect::Grammar {
             return Err("expected grammar dialect".to_string());
@@ -1178,8 +1178,8 @@ mod m5_handcrafted_grammar_conformance {
         Ok(())
     }
 
-    #[test]
-    fn all_discovered_snapshot_grammars_recognize_their_shipped_fixtures() {
+    #[semio_framework_async_macros::async_test]
+    async fn all_discovered_snapshot_grammars_recognize_their_shipped_fixtures() {
         let facets = m5_auto_discovery::discover_grammar_snapshot_facets();
         assert!(
             !facets.is_empty(),
@@ -1253,7 +1253,7 @@ mod m5_handcrafted_protocol_conformance {
     use crate::os_dsl::{parse_protocol, verify_protocol_source, walk_protocol};
     use crate::os_store::semio_format::unwrap_binary;
 
-    fn inner_payload_from_semio_example(bytes: &[u8], label: &str) -> Option<Vec<u8>> {
+    async fn inner_payload_from_semio_example(bytes: &[u8], label: &str) -> Option<Vec<u8>> {
         match unwrap_binary(bytes) {
             Ok((_, inner)) => Some(inner.to_vec()),
             Err(error) => {
@@ -1264,14 +1264,14 @@ mod m5_handcrafted_protocol_conformance {
     }
 
     /// @emoji ✅️ Real check, no panics — lets the caller choose hard-assert vs. soft-log per facet.
-    fn check_protocol_conformance(protocol_semio: &str, bytes: &[u8]) -> Result<(), String> {
+    async fn check_protocol_conformance(protocol_semio: &str, bytes: &[u8]) -> Result<(), String> {
         verify_protocol_source(protocol_semio, bytes)?;
         let spec = parse_protocol(protocol_semio).map_err(|error| format!("parse_protocol: {error:?}"))?;
         walk_protocol(&spec, bytes).map(|_| ()).map_err(|error| format!("walk_protocol @{}: {}", error.offset, error.message))
     }
 
-    #[test]
-    fn all_discovered_snapshot_protocols_walk_their_shipped_fixtures() {
+    #[semio_framework_async_macros::async_test]
+    async fn all_discovered_snapshot_protocols_walk_their_shipped_fixtures() {
         let facets = m5_auto_discovery::discover_protocol_facets();
         assert!(
             !facets.is_empty(),
@@ -1360,7 +1360,7 @@ mod m5_cross_artifact_rejection {
     use crate::os_dsl::{parse_grammar, Recognizer, SemioDialect};
     use crate::os_store::semio_format::split_text_preamble;
 
-    fn dsl_body_from_fixture(text: &str) -> String {
+    async fn dsl_body_from_fixture(text: &str) -> String {
         if text.trim_start().starts_with("semio ") {
             split_text_preamble(text).map(|(env, body)| format!("{}\n{body}", env.envelope_id())).unwrap_or_else(|_| text.to_string())
         } else {
@@ -1368,8 +1368,8 @@ mod m5_cross_artifact_rejection {
         }
     }
 
-    #[test]
-    fn all_non_stdio_grammars_reject_each_others_shipped_fixtures() {
+    #[semio_framework_async_macros::async_test]
+    async fn all_non_stdio_grammars_reject_each_others_shipped_fixtures() {
         let facets = m5_auto_discovery::discover_grammar_snapshot_facets();
         let mut usable: Vec<(String, Recognizer, String)> = Vec::new();
         for facet in &facets {
@@ -1440,7 +1440,7 @@ mod m5_production_coverage {
     use crate::os_dsl::{parse_grammar, Recognizer};
     use crate::os_store::semio_format::split_text_preamble;
 
-    fn dsl_body_from_fixture(text: &str) -> String {
+    async fn dsl_body_from_fixture(text: &str) -> String {
         if text.trim_start().starts_with("semio ") {
             split_text_preamble(text).map(|(env, body)| format!("{}\n{body}", env.envelope_id())).unwrap_or_else(|_| text.to_string())
         } else {
@@ -1448,8 +1448,8 @@ mod m5_production_coverage {
         }
     }
 
-    #[test]
-    fn all_discovered_grammars_report_uncovered_productions_for_their_shipped_fixture() {
+    #[semio_framework_async_macros::async_test]
+    async fn all_discovered_grammars_report_uncovered_productions_for_their_shipped_fixture() {
         let facets = m5_auto_discovery::discover_grammar_snapshot_facets();
         assert!(!facets.is_empty(), "auto-discovery found zero snapshot grammar.semio files — discovery walk is broken");
 
@@ -1527,15 +1527,15 @@ mod m5_semio_envelope_protocol {
 
     const PROTOCOL: &str = include_str!("../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/📡️protocol/📡️component.protocol.semio");
 
-    #[test]
-    fn semio_envelope_protocol_parses_under_the_real_dialect() {
+    #[semio_framework_async_macros::async_test]
+    async fn semio_envelope_protocol_parses_under_the_real_dialect() {
         let spec = parse_protocol(PROTOCOL).expect("semio envelope protocol.semio must parse under dsl_grammar's real parser");
         assert_eq!(spec.id, "semio.envelope");
         assert_eq!(spec.schema, "semio.envelope");
     }
 
-    #[test]
-    fn semio_envelope_protocol_walks_a_real_wrap_binary_payload() {
+    #[semio_framework_async_macros::async_test]
+    async fn semio_envelope_protocol_walks_a_real_wrap_binary_payload() {
         let envelope = SemioEnvelope::from_envelope_id("stdio.gif", Component::Pack, 1).expect("valid envelope id");
         let payload = b"real gif89a pack payload bytes, not a fabricated placeholder".to_vec();
         let wrapped = wrap_binary(&envelope, &payload);
@@ -1546,8 +1546,8 @@ mod m5_semio_envelope_protocol {
         assert_eq!(trace.consumed, wrapped.len(), "walk_protocol must consume every byte of the envelope + payload, consumed == len");
     }
 
-    #[test]
-    fn semio_envelope_protocol_walks_a_different_token_length_and_an_empty_payload() {
+    #[semio_framework_async_macros::async_test]
+    async fn semio_envelope_protocol_walks_a_different_token_length_and_an_empty_payload() {
         // A different plugin/artifact/component/version -> a different token length (proves the
         // length-prefixed `token` segment genuinely reads `token_len`, not a hardcoded width), and
         // a genuinely empty inner payload (proves `chain bytes` tolerates zero trailing bytes).

@@ -41,7 +41,7 @@ pub struct VcsArtifact {
 
 //#region 🔖️Conversions
 impl Default for VcsArtifact {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self {
             schema: crate::artifacts::vcs::VCS_DOCUMENT_SCHEMA.into(),
             title: "VCS Demo".into(),
@@ -143,7 +143,7 @@ pub type Construction = semio_framework_plugin::app::SnapshotBuilder<crate::arti
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn empty_snapshot_matches_schema() {
         let snapshot = empty_vcs_snapshot();
         assert_eq!(snapshot.schema, crate::artifacts::vcs::VCS_DOCUMENT_SCHEMA);

@@ -137,7 +137,7 @@ pub async fn window_measures(config: &SpaceConfig, nodes: &[semio_framework_os::
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn renders_workflow_scene() {
         use semio_framework_plugin::{PluginApp, ViewModel, VcsArtifactApp};
         let mut app = VcsArtifactApp::new(crate::engine::space::SpaceApp::default());
@@ -145,7 +145,7 @@ mod tests {
         assert!(serde_json::to_string(&node).unwrap().contains("node-graph"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn workflow_scene_uses_flow_engine_with_fixture() {
         use semio_framework_plugin::{PluginApp, ViewModel, VcsArtifactApp};
         let mut app = VcsArtifactApp::new(crate::engine::space::SpaceApp::default());

@@ -35,7 +35,7 @@ impl protocol::Inference<StepSnapshot> for StepInference {
 /// 🌱 Defined in terms of `infer` (not derived) — keeps the law correct regardless of whether
 /// `StepSnapshot::default()`'s `entities` ever stops being empty.
 impl Default for StepInference {
-    async fn default() -> Self {
+    fn default() -> Self {
         <Self as protocol::Inference<StepSnapshot>>::infer(&StepSnapshot::default())
     }
 }
@@ -87,13 +87,13 @@ mod tests {
     use super::*;
     use protocol::Inference;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = StepSnapshot::default();
         assert_eq!(StepInference::infer(&snapshot), StepInference::infer(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(StepInference::infer(&StepSnapshot::default()), StepInference::default());
     }

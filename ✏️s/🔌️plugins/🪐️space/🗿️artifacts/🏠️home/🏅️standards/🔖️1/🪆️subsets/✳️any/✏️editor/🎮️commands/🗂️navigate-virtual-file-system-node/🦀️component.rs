@@ -25,7 +25,7 @@ pub async fn handle(payload: &NavigateVirtualFileSystemNode, _doc: &ArtifactView
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn home_command_op_text_round_trips_every_variant() {
         use crate::editor::home::HomeCommand;
         store::os_store::test_support::assert_op_line_round_trip(&HomeCommand::NavigateVirtualFileSystemNode(NavigateVirtualFileSystemNode { node_id: "studio:s1".into() }));

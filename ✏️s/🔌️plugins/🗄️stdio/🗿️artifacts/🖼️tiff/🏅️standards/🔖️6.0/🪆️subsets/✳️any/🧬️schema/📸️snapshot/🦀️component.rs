@@ -231,7 +231,7 @@ pub struct TiffSnapshot {
 }
 
 impl Default for TiffSnapshot {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { schema: STDIO_TIFF_DOCUMENT_SCHEMA.into(), byte_order: TiffByteOrder::LittleEndian, ifds: Vec::new(), pixels: Vec::new() }
     }
 }

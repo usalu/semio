@@ -38,13 +38,13 @@ pub enum JsonValue {
 }
 
 impl Default for JsonValue {
-    async fn default() -> Self {
+    fn default() -> Self {
         JsonValue::Null
     }
 }
 
 impl From<serde_json::Value> for JsonValue {
-    async fn from(v: serde_json::Value) -> Self {
+    fn from(v: serde_json::Value) -> Self {
         match v {
             serde_json::Value::Null => JsonValue::Null,
             serde_json::Value::Bool(b) => JsonValue::Bool { value: b },
@@ -57,7 +57,7 @@ impl From<serde_json::Value> for JsonValue {
 }
 
 impl From<&serde_json::Value> for JsonValue {
-    async fn from(v: &serde_json::Value) -> Self {
+    fn from(v: &serde_json::Value) -> Self {
         match v {
             serde_json::Value::Null => JsonValue::Null,
             serde_json::Value::Bool(b) => JsonValue::Bool { value: *b },
@@ -70,7 +70,7 @@ impl From<&serde_json::Value> for JsonValue {
 }
 
 impl From<JsonValue> for serde_json::Value {
-    async fn from(v: JsonValue) -> Self {
+    fn from(v: JsonValue) -> Self {
         match v {
             JsonValue::Null => serde_json::Value::Null,
             JsonValue::Bool { value } => serde_json::Value::Bool(value),
@@ -97,7 +97,7 @@ impl From<JsonValue> for serde_json::Value {
 }
 
 impl From<&JsonValue> for serde_json::Value {
-    async fn from(v: &JsonValue) -> Self {
+    fn from(v: &JsonValue) -> Self {
         match v {
             JsonValue::Null => serde_json::Value::Null,
             JsonValue::Bool { value } => serde_json::Value::Bool(*value),
@@ -531,7 +531,7 @@ pub struct JsonSnapshot {
 }
 
 impl Default for JsonSnapshot {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { schema: STDIO_JSON_DOCUMENT_SCHEMA.into(), value: JsonValue::Null }
     }
 }
@@ -638,7 +638,7 @@ mod tests {
         JsonValue::Object { members: pairs.into_iter().map(|(k, v)| JsonMember { key: k.into(), value: v }).collect() }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn parses_all_scalar_kinds() {
         assert_eq!(parse_json_text("null").unwrap(), JsonValue::Null);
         assert_eq!(parse_json_text("true").unwrap(), JsonValue::Bool { value: true });
@@ -647,7 +647,7 @@ mod tests {
         assert_eq!(parse_json_text("42").unwrap(), JsonValue::Number { lexeme: "42".into() });
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn preserves_number_lexeme_verbatim() {
         for lexeme in ["0", "-0", "3.140", "1e10", "1E+10", "-1.5e-3", "9007199254740993", "100000000000000000000000000000"] {
             let value = parse_json_text(lexeme).unwrap();
@@ -656,12 +656,12 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn rejects_leading_zero_number() {
         assert!(parse_json_text("01").is_err());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn preserves_object_member_insertion_order() {
         let value = parse_json_text(r#"{"z": 1, "a": 2, "m": 3}"#).unwrap();
         match &value {
@@ -674,13 +674,13 @@ mod tests {
         assert_eq!(write_json_text(&value), r#"{"z":1,"a":2,"m":3}"#);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn decodes_string_escapes_incl_surrogate_pair() {
         let value = parse_json_text(r#""a\tb\nc\"\\ A 😀""#).unwrap();
         assert_eq!(value, JsonValue::String { value: "a\tb\nc\"\\ A 😀".into() });
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn nested_structure_round_trips() {
         let text = r#"{"name":"semio","count":42,"ratio":3.5,"active":true,"missing":null,"tags":["a","b","c"],"nested":{"deep":{"deeper":[1,2,3]}}}"#;
         let value = parse_json_text(text).unwrap();
@@ -690,14 +690,14 @@ mod tests {
         assert_eq!(reparsed, value);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn empty_snapshot_matches_schema() {
         let snapshot = JsonSnapshot::default();
         assert_eq!(snapshot.schema, STDIO_JSON_DOCUMENT_SCHEMA);
         assert_eq!(snapshot.value, JsonValue::Null);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn snapshot_dsl_and_pack_round_trip() {
         let snapshot = JsonSnapshot { schema: STDIO_JSON_DOCUMENT_SCHEMA.into(), value: obj(vec![("a", JsonValue::Number { lexeme: "1".into() }), ("b", JsonValue::Array { items: vec![JsonValue::Bool { value: true }, JsonValue::Null] })]) };
         let text = store::ArtifactDsl::print_dsl(&snapshot);
@@ -713,7 +713,7 @@ mod tests {
     // former assertion (`empty_json_snapshot().schema == STDIO_JSON_DOCUMENT_SCHEMA`) already
     // survives via `empty_snapshot_matches_schema` above (same fact, `JsonSnapshot::default()`).
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn codec_round_trip() {
         let snap = empty_json_snapshot();
         let text = store::ArtifactDsl::print_dsl(&snap);
@@ -724,7 +724,7 @@ mod tests {
         assert_eq!(decoded, snap);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn nontrivial_nested_value_round_trip() {
         let snap = demo_json_snapshot();
         let text = store::ArtifactDsl::print_dsl(&snap);

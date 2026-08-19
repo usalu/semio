@@ -23,7 +23,7 @@ pub struct SemioCadArtifact {
 }
 
 impl Default for SemioCadArtifact {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self::from_snapshot(SemioCadSnapshot::default())
     }
 }

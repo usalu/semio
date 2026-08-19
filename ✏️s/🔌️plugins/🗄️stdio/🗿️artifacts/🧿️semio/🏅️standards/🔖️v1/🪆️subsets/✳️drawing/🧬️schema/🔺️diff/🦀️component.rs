@@ -102,7 +102,7 @@ pub enum DrawNodeDiff {
 /// transitively as the `D` of `triples::IndexedTripleDiff<DrawNodeDiff, DrawNode>`'s generated
 /// `Deserialize` impl (see `DrawStyle`'s doc comment in the snapshot facet for why).
 impl Default for DrawNodeDiff {
-    async fn default() -> Self {
+    fn default() -> Self {
         DrawNodeDiff::Group(DrawGroupDiff::default())
     }
 }
@@ -1163,7 +1163,7 @@ mod tests {
     use super::*;
     use protocol::DiffCodec;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn field_sweep_every_field_and_every_collection_shape() {
         let a = sweep_a();
         let b = sweep_b();
@@ -1211,7 +1211,7 @@ mod tests {
         assert!(<SemioDrawingDiff as DiffAlgebra<SemioDrawingSnapshot>>::between(&a, &a).is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inverse_law_round_trips() {
         let a = sweep_a();
         let b = sweep_b();
@@ -1220,7 +1220,7 @@ mod tests {
         assert_eq!(inv.apply(&d.apply(&a).expect("apply must succeed for a well-formed fixture")).expect("apply must succeed for a well-formed fixture"), a);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_law_composes_two_sequential_diffs() {
         let a = sweep_a();
         let mid = sweep_b();
@@ -1236,7 +1236,7 @@ mod tests {
         assert_eq!(d1.apply(&a).expect("apply must succeed for a well-formed fixture"), after);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_insert_then_remove_annihilates_the_add() {
         // 📐️ Canonical correctness case (schema-design.md): Insert(2)+Remove(index-of-that-insert)
         // must annihilate the add entirely, never leave a dangling modified/removed entry.
@@ -1250,7 +1250,7 @@ mod tests {
         assert_eq!(applied, base);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn diff_codec_text_binary_roundtrip_law() {
         let a = sweep_a();
         let b = sweep_b();

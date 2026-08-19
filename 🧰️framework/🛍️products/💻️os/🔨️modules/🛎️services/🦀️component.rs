@@ -80,9 +80,8 @@ async fn await_live_or_cancelled(cancel: &CancelToken) -> bool {
 /// Every [`TokioHostRuntime`] scope method delegates here. Deliberately NOT `pub`: this is
 /// `TokioHostRuntime`'s own bookkeeping, which is what lets `tokio::runtime::Handle` live in its
 /// constructor without that type ever reaching this crate's public API surface. Wraps its state in
-/// an `Arc` so [`TokioHostRuntime::cancel_scope`] can hand out a `'static` future without borrowing
-/// `&self` — the trait requires a boxed `'static` future, and a plain `&self`-borrowing `async fn`
-/// cannot produce one.
+/// an `Arc` so [`TokioHostRuntime::cancel_scope`] can clone [`ScopeTable`] and `.await` the drain
+/// without borrowing `&self` across the async body.
 #[derive(Clone)]
 struct ScopeTable(Arc<ScopeTableInner>);
 
@@ -287,15 +286,13 @@ impl HostAsyncRuntime for TokioHostRuntime {
         self.scopes.run_blocking(scope, &ctx, work);
     }
 
-    fn sleep_until(&self, deadline_ms: u64) -> HostFuture<()> {
+    async fn sleep_until(&self, deadline_ms: u64) {
         let target = self.epoch + Duration::from_millis(deadline_ms);
-        Box::pin(async move { tokio::time::sleep_until(target).await })
+        tokio::time::sleep_until(target).await;
     }
 
-    fn cancel_scope(&self, owner: &ScopeOwner, grace_ms: u64) -> HostFuture<ScopeDrainReport> {
-        let scopes = self.scopes.clone();
-        let owner = owner.clone();
-        Box::pin(async move { scopes.cancel_scope(owner, grace_ms).await })
+    async fn cancel_scope(&self, owner: &ScopeOwner, grace_ms: u64) -> ScopeDrainReport {
+        self.scopes.clone().cancel_scope(owner.clone(), grace_ms).await
     }
 
     fn now_ms(&self) -> u64 {

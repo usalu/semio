@@ -103,13 +103,13 @@ mod tests {
     use super::*;
     use crate::editor::sequence::testkit::{new_app, render as render_body};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn document_lists_steps() {
         let mut app = new_app();
         assert!(render_body(&mut app, SEQUENCE_PLAY_BODY_DOCUMENT).contains("sequence-play-document.steps"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn definition_binds_the_framework_document_tab_to_this_body_key() {
         let definition = definition();
         assert_eq!(definition.id(), FRAMEWORK_PANEL_TAB_ARTIFACT_ID);

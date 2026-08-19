@@ -105,7 +105,7 @@ mod tests {
         )
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn maps_shapes_and_drops_other() {
         let semio = semio_framework_plugin::resolve_ready(SemioPresentationFromPptx::deserialize(&sample_pptx())).expect("deserialize");
         assert!(semio.masters.is_empty() && semio.layouts.is_empty());

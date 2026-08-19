@@ -102,7 +102,7 @@ crate::impl_norm_artifact_record!(En1991Snapshot, extension = "en1991", envelope
 //#endregion 🔖️HandcraftedArtifactCodecs
 
 impl Default for En1991Snapshot {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self {
             area_m2: 50.0,
             category: ImposedCategory::B,

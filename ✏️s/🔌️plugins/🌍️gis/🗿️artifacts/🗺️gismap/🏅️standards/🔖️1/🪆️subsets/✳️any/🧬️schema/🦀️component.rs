@@ -45,7 +45,7 @@ pub struct GisMapArtifact {
 
 //#region 🔹Conversions
 impl Default for GisMapArtifact {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self {
             positions: Vec::new(),
             routes: Vec::new(),
@@ -620,7 +620,7 @@ mod relocated_engine_tests {
     use super::*;
     use semio_s_plugin_stdio::artifacts::dwg::{DwgColor, DwgEntity};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dwg_import_collects_point_and_line_vertices() {
         let mut drawing = DwgDrawing::default();
         let layer = drawing.ensure_layer("0");
@@ -631,7 +631,7 @@ mod relocated_engine_tests {
         assert_eq!(positions.len(), 3);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dwg_import_falls_back_to_default_document_when_empty() {
         let drawing = DwgDrawing::default();
         let value = gis2d_document_json_from_dwg(&drawing).expect("import empty dwg");
@@ -639,7 +639,7 @@ mod relocated_engine_tests {
         assert!(!snapshot.positions.is_empty(), "fallback seeds the reuse-map document");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dwg_import_lowers_a_closed_polyline_through_a_draw_node_and_carries_the_close_segment() {
         let mut drawing = DwgDrawing::default();
         let layer = drawing.ensure_layer("0");
@@ -670,7 +670,7 @@ mod relocated_engine_tests {
         });
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn gis_map_snapshot_to_drawing_builds_markers_and_polylines() {
         let mut document = GisMapSnapshot::default();
         document.positions.push(MapFeature { id: "p0".into(), data: value_to_dsl(&json!({ "id": "p0", "lon": 5.5818, "lat": 50.603 })) });
@@ -695,7 +695,7 @@ mod relocated_engine_tests {
         assert!(matches!(region_segments.last(), Some(PathSegment::Close)), "regions close");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn svg_export_renders_real_svg_text_through_the_stdio_drawing_bridge() {
         ensure_stdio_semio_registered_for_tests();
         let document = default_document();
@@ -706,7 +706,7 @@ mod relocated_engine_tests {
         assert!(width > 0 && height > 0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn svg_export_of_an_empty_document_still_renders_a_bare_canvas() {
         ensure_stdio_semio_registered_for_tests();
         let value = serde_json::to_value(GisMapSnapshot::default()).expect("empty document json");
@@ -716,7 +716,7 @@ mod relocated_engine_tests {
         assert_eq!(height, 256);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn feature_collection_diffing_emits_create_replace_and_delete() {
         let feature = |id: &str, label: &str| MapFeature { id: id.into(), data: value_to_dsl(&json!({ "id": id, "label": label })) };
         let before = vec![feature("keep", "a"), feature("gone", "b")];

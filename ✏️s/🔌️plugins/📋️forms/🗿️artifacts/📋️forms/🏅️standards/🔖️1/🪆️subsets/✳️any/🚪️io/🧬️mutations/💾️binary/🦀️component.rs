@@ -35,7 +35,7 @@ pub async fn decode_op(bytes: &[u8]) -> Result<FormMutation, protocol::ProtocolE
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_binary_round_trips_and_agrees_with_text() {
         let operation = FormMutation::ChangeFormTitle(crate::artifacts::forms::mutations::change_form_title::mutation::ChangeFormTitle { new_title: Some("Renamed".into()) });
         store::os_store::test_support::assert_op_text_binary_equivalence(&operation);

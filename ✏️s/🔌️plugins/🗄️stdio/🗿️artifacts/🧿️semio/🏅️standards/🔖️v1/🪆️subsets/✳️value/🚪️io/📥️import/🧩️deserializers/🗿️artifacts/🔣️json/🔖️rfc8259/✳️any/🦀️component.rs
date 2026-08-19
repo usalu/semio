@@ -63,7 +63,7 @@ mod tests {
     use super::*;
     use crate::artifacts::json::schema::snapshot::JsonMember;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn number_lexeme_splits_into_int_or_float_by_grammar_shape() {
         assert_eq!(semio_value_from_json(&JsonValue::Number { lexeme: "42".into() }), SemioValue::Int { lexeme: "42".into() });
         assert_eq!(semio_value_from_json(&JsonValue::Number { lexeme: "-7".into() }), SemioValue::Int { lexeme: "-7".into() });
@@ -72,7 +72,7 @@ mod tests {
         assert_eq!(semio_value_from_json(&JsonValue::Number { lexeme: "9007199254740993".into() }), SemioValue::Int { lexeme: "9007199254740993".into() }, "arbitrary-precision int lexeme untouched");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn nested_structure_maps_directly() {
         let json = JsonValue::Object {
             members: vec![JsonMember { key: "name".into(), value: JsonValue::String { value: "semio".into() } }, JsonMember { key: "tags".into(), value: JsonValue::Array { items: vec![JsonValue::Bool { value: true }, JsonValue::Null] } }],

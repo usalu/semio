@@ -26,7 +26,7 @@ pub struct GltfArtifact {
 
 //#region 🔖️Conversions
 impl Default for GltfArtifact {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self::from_snapshot(GltfSnapshot::default())
     }
 }
@@ -300,7 +300,7 @@ pub mod derived_construction {
     mod tests {
         use super::*;
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn typed_constructors_build_a_decodable_triangle() {
             let mut b = GltfBuilderConstruction::empty();
             b.set_asset_version("2.0");
@@ -437,7 +437,7 @@ pub mod derived_analysis {
     mod tests {
         use super::*;
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn sniff_recognizes_glb_magic() {
             let mut bytes = vec![b'g', b'l', b'T', b'F'];
             bytes.extend_from_slice(&2u32.to_le_bytes());
@@ -446,13 +446,13 @@ pub mod derived_analysis {
             assert_eq!(GltfAnalyzerAnalysis::sniff(&AnalyzeSource::Binary(b"not a glb")), IoConfidence::Low);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn sniff_recognizes_gltf_json() {
             assert_eq!(GltfAnalyzerAnalysis::sniff(&AnalyzeSource::Text(r#"{"asset":{"version":"2.0"}}"#)), IoConfidence::High);
             assert_eq!(GltfAnalyzerAnalysis::sniff(&AnalyzeSource::Text("not json")), IoConfidence::Medium);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn analyze_decodes_real_gltf_json_text_directly() {
             let text = r#"{"asset":{"version":"2.0"},"scenes":[]}"#;
             let analysis = GltfAnalyzerAnalysis::analyze(&[AnalyzeSource::Text(text)]);

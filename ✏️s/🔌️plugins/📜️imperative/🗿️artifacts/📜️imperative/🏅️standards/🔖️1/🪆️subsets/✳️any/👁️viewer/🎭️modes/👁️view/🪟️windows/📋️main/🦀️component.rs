@@ -38,14 +38,14 @@ pub async fn render(document: &ImperativeSnapshot) -> UiNode {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn definition_declares_a_table_window() {
         let def = definition();
         assert_eq!(def.id, WINDOW_KIND_ID);
         assert_eq!(def.body_key, BODY_KEY);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn render_lists_one_row_per_top_level_step() {
         let document = crate::artifacts::imperative::schema::default_snapshot();
         let expected = crate::artifacts::imperative::imperative_working_scene(&document).path.steps.len();

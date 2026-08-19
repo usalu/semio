@@ -72,13 +72,13 @@ mod tests {
     use super::*;
     use protocol::Inference;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = Din4108Snapshot::default();
         assert_eq!(Din4108Inference::infer(&snapshot), Din4108Inference::infer(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(Din4108Inference::infer(&Din4108Snapshot::default()), Din4108Inference::default());
     }
@@ -249,13 +249,13 @@ mod compliance_report_tests {
         vec![part_3::MoistureLayer { thickness_m: 0.24, lambda_w_mk: 0.81, mu: 15.0 }, part_3::MoistureLayer { thickness_m: 0.14, lambda_w_mk: 0.035, mu: 1.3 }]
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn opaque_wall_passes_din_4108_suite() {
         let report = check_opaque_wall(part_2::BuildingCategory::Residential, &sample_wall(), ClimateZoneDe::Zone2, 2.5).expect("inputs complete");
         assert!(report.all_pass(), "checks: {:?}", report.checks);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn full_envelope_evaluate_covers_all_eight_parts() {
         let document = Din4108Snapshot::default();
         let report = evaluate(&document);

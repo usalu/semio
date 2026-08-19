@@ -302,12 +302,12 @@ impl Patchable<FigureTileDraftPatch> for FigureTileDraft {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn present_snapshot_schema_is_animate_present() {
         assert_eq!(default_present_snapshot().schema, PRESENT_DOCUMENT_SCHEMA);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn artifact_kind_matches_the_store_schema() {
         assert_eq!(artifact_kind().schema, PRESENT_DOCUMENT_SCHEMA);
         assert_eq!(artifact_kind().id, PRESENT_DOCUMENT_SCHEMA);

@@ -52,7 +52,7 @@ mod tests {
     use super::*;
     use crate::editor::puzzle2d::engine::canvas::Point;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn computes_handle_positions_and_edge_curves() {
         let mut engine = BoardEngine::new();
         engine.create_node(1, 0.0, 0.0, 40.0, true);
@@ -81,7 +81,7 @@ mod tests {
         assert!(align1 > 0.99);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn drags_nodes_without_rebuilding_the_scene_catalog() {
         let mut engine = BoardEngine::new();
         engine.create_node(1, 0.0, 0.0, 30.0, true);
@@ -98,7 +98,7 @@ mod tests {
         assert!(events.iter().any(|event| matches!(event, BoardEvent::NodeMoved { id: 1, x, y } if (*x - 60.0).abs() < 0.001 && (*y - 25.0).abs() < 0.001)));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn hit_tests_handles_before_nodes_and_edges() {
         let mut engine = BoardEngine::new();
         engine.create_node(1, 0.0, 0.0, 40.0, true);
@@ -114,7 +114,7 @@ mod tests {
         assert!(events.iter().any(|event| matches!(event, BoardEvent::SelectionChanged { handle_ids, .. } if handle_ids == &vec![10])));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn renders_snapshot_for_nodes_handles_and_edges() {
         let mut engine = BoardEngine::new();
         engine.create_node(1, 10.0, 20.0, 18.0, true);
@@ -129,7 +129,7 @@ mod tests {
         assert_eq!(snapshot.edges.len(), 1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn engine_extend_pick_keeps_node_when_adding_handle() {
         let mut engine = BoardEngine::new();
         engine.create_node(1, 0.0, 0.0, 40.0, true);

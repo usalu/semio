@@ -260,7 +260,7 @@ mod tests {
         GltfSnapshot { schema: "stdio.gltf".into(), document, buffers: vec![buf], source_form: crate::artifacts::gltf::schema::snapshot::GltfSourceForm::Json }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn deserialize_maps_geometry_material_and_topology() {
         let semio = semio_framework_plugin::resolve_ready(SemioMeshFromGltf::deserialize(&sample_gltf())).expect("deserialize");
         assert_eq!(semio.meshes.len(), 1);
@@ -281,7 +281,7 @@ mod tests {
         assert_eq!(semio.materials[0].base_color, SemioRgba { r: 0.8, g: 0.1, b: 0.1, a: 1.0 });
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn line_loop_mode_is_a_hard_error_not_a_silent_downgrade() {
         let mut gltf = sample_gltf();
         gltf.document.meshes[0].primitives[0].mode = Some(2);
@@ -289,7 +289,7 @@ mod tests {
         assert!(format!("{err:?}").contains("LINE_LOOP"), "got {err:?}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn missing_position_attribute_is_a_hard_error() {
         let mut gltf = sample_gltf();
         gltf.document.meshes[0].primitives[0].attributes.retain(|(name, _)| name != "POSITION");

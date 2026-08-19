@@ -101,7 +101,7 @@ impl MdOutline {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn collects_headings_and_counts_words_and_blocks() {
         let snapshot = MdSnapshot {
             schema: "stdio.md".into(),
@@ -117,7 +117,7 @@ mod tests {
         assert_eq!(outline.word_count, 6); // Hello World + one two three + Nested
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn outline_is_deterministic() {
         let snapshot = MdSnapshot::default();
         assert_eq!(MdOutline::compute(&snapshot), MdOutline::compute(&snapshot));

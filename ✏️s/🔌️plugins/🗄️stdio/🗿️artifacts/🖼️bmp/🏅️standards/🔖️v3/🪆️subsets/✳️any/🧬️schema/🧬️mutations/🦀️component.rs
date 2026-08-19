@@ -321,7 +321,7 @@ mod tests {
     use protocol::command::DiffAlgebra;
 
     //#region 🔖️MutationDiffLaw
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mutation_diff_law() {
         let base = base_snapshot();
         for m in demo_mutation_cases() {
@@ -338,7 +338,7 @@ mod tests {
     //#endregion 🔖️MutationDiffLaw
 
     //#region 🔖️InverseLaw
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inverse_law() {
         let base = base_snapshot();
         for m in demo_mutation_cases() {
@@ -360,7 +360,7 @@ mod tests {
     //#endregion 🔖️InverseLaw
 
     //#region 🔖️AbsorbLaw
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_law() {
         let base = base_snapshot();
 
@@ -427,7 +427,7 @@ mod tests {
     //#endregion 🔖️AbsorbLaw
 
     //#region 🔖️BetweenRoundtripLaw
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn between_roundtrip_law() {
         let a = base_snapshot();
         let b = sweep_b();
@@ -438,7 +438,7 @@ mod tests {
     //#endregion 🔖️BetweenRoundtripLaw
 
     //#region 🔖️FieldSweep
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn field_sweep_covers_every_mutable_field() {
         let a = sweep_a();
         let b = sweep_b();
@@ -493,7 +493,7 @@ mod tests {
     /// 🧪️ F6: `op_text_binary_roundtrip_law` — every variant, incl. the struct-payload
     /// (`SetSnapshot`/`InsertPaletteEntry`/`SetPaletteEntry`) and bare-`Vec<u8>`
     /// (`SetPixelData`) cases (`f6-recon-report.md` §9 STEP-3's mandated shape).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_text_binary_roundtrip_law() {
         use protocol::{OpBinary, OpText};
 

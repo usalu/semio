@@ -58,7 +58,7 @@ mod tests {
         crate::artifacts::remodel::remodel_mesh_workspace(&snapshot.results.mesh.mesh).map_or(0, |mesh| mesh.vertex_count())
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn clear_result_resets_all_seven_result_fields_and_reset_placeholder_restores_the_box() {
         let mut app = app();
         let result = dispatch(&mut app, RemodelCommand::ClearResult(clear_result::ClearResult {}));
@@ -69,7 +69,7 @@ mod tests {
         assert!(mesh_vertex_count(&app.snapshot().expect("materialize projection")) > 0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn undo_redo_round_trip_through_the_wrapper() {
         let mut app = app();
         let placeholder_vertex_count = mesh_vertex_count(&app.snapshot().expect("materialize projection"));
@@ -77,7 +77,7 @@ mod tests {
         testkit::assert_undo_redo_round_trip(&mut app, RemodelCommand::ClearResult(clear_result::ClearResult {}), |app| mesh_vertex_count(&app.snapshot().expect("materialize projection")), placeholder_vertex_count, 0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn each_narrow_clear_touches_exactly_one_result_field() {
         let mut app = app();
         for command in [

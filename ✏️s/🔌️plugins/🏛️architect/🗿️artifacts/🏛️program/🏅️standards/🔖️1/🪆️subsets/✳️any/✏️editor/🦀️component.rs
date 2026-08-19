@@ -908,7 +908,7 @@ pub mod behavior {
         use crate::artifacts::program::sample_plugin;
         use crate::artifacts::program::standards::v1::subsets::any::schema::inferences::{export_registers_csv, export_registers_tsv};
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn apply_template_returns_plugin_operations() {
             let mut program = crate::artifacts::program::empty_plugin();
             let template = TemplateRecord {
@@ -940,7 +940,7 @@ pub mod behavior {
             assert_eq!(program.requirements.len(), 1);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn template_ops_replay_on_empty_plugin() {
             let mut source = crate::artifacts::program::empty_plugin();
             let template = TemplateRecord {
@@ -978,7 +978,7 @@ pub mod behavior {
             assert_eq!(target.functions.len(), 1);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn build_report_and_record_persists() {
             let mut program = sample_plugin();
             let before = program.reports.len();
@@ -986,7 +986,7 @@ pub mod behavior {
             assert_eq!(program.reports.len(), before + 1);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn run_analysis_and_record_persists() {
             let mut program = sample_plugin();
             let before = program.analyses.len();
@@ -994,7 +994,7 @@ pub mod behavior {
             assert_eq!(program.analyses.len(), before + 1);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn csv_round_trip_preserves_element_names() {
             let program = sample_plugin();
             let csv = export_registers_csv(&program).expect("csv export");
@@ -1003,7 +1003,7 @@ pub mod behavior {
             assert_eq!(reloaded.elements.len(), program.elements.len());
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn quoted_csv_parses_commas_in_name() {
             let csv = "register,id,name,status,priority,tags,source\nelements,e1,\"Room, A\",Draft,Preferred,,src\n";
             let snapshot = stdio_csv::schema::snapshot::decode_csv_with(csv, true);
@@ -1012,14 +1012,14 @@ pub mod behavior {
             assert_eq!(rows[0].source, "src");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn duplicate_import_is_rejected() {
             let csv = "register,id,name,status,priority,tags,source\nelements,e1,A,Draft,Preferred,,\nelements,e1,B,Draft,Preferred,,\n";
             let mut program = crate::artifacts::program::empty_plugin();
             assert!(import_registers_csv(&mut program, csv, MergeStrategy::Upsert).is_err());
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn tsv_round_trip_preserves_element_names() {
             let program = sample_plugin();
             let tsv = export_registers_tsv(&program).expect("tsv export");
@@ -1028,7 +1028,7 @@ pub mod behavior {
             assert_eq!(reloaded.elements.len(), program.elements.len());
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn trace_chain_follows_links() {
             let mut program = sample_plugin();
             let a = program.elements[0].header.id.clone();
@@ -1039,7 +1039,7 @@ pub mod behavior {
             assert_eq!(chain.links[0].to_id, b);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn trace_impact_collects_upstream() {
             let mut program = sample_plugin();
             let req_id = EntityId::new_serial("requirement", "requirement");
@@ -1450,7 +1450,7 @@ mod tests {
         ]
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn command_ids_are_unique_and_cover_every_row() {
         let commands = every_command();
         let ids: Vec<&str> = commands.iter().map(ArchitectCommand::command_id).collect();
@@ -1461,7 +1461,7 @@ mod tests {
         assert_eq!(ids.len(), 21, "every ArchitectCommand row must be covered by every_command()");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn every_command_round_trips_text_and_binary_under_its_declared_wire_keyword() {
         for command in every_command() {
             semio_framework_os_kernel::os_store::test_support::assert_op_text_binary_equivalence(&command);
@@ -1474,7 +1474,7 @@ mod tests {
     /// 🧷️ Pins the exact pre-migration bytes for every row whose `Option`/`bool` fields make the
     /// `None`/`Some` cases distinct on the wire — copied verbatim out of the ticket's
     /// `🧪️wire-baseline-before.txt`, captured from the pre-migration hand-written `ArchitectCommand`.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn optional_field_rows_keep_their_pre_migration_bytes() {
         let hex = |command: &ArchitectCommand| protocol::OpBinary::encode_op(command).expect("encode").iter().map(|byte| format!("{byte:02x}")).collect::<String>();
         assert_eq!(hex(&ArchitectCommand::AddRegisterItem(add_register_item::AddRegisterItem { register_id: "elements".into(), name: "Room".into(), template_id: None })), "01010204526f6f6d08656c656d656e747302000601010600");
@@ -1494,7 +1494,7 @@ mod tests {
 
     /// 🎯️ Every app-declared action must bridge through `command_from_action` and round-trip
     /// `command_id`.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn command_from_action_covers_every_declared_action_and_rejects_unknown_ones() {
         semio_framework_plugin::testkit::assert_declared_actions_bridge_to_commands::<semio_framework_plugin::EditorApp<ArchitectPlayApp>>(testkit::architect_app_manifest_for_testkit);
         assert!(ArchitectPlayApp::command_from_action("notARealAction", None).is_err());
@@ -1502,7 +1502,7 @@ mod tests {
 
     /// 🎯️ Spot-check a representative sample of action ids round-tripping into the expected typed
     /// `ArchitectCommand` variant.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn command_from_action_bridges_declared_actions() {
         let app = ArchitectPlayApp;
         assert!(matches!(ArchitectPlayApp::command_from_action("runValidation", None), Ok(ArchitectCommand::RunValidation(_))));
@@ -1515,7 +1515,7 @@ mod tests {
     //#endregion 🔖️CommandSurface
 
     //#region 🔖️Manifest
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn the_manifest_stitches_every_taxonomy_node() {
         let definition = create_architect_app().definition;
         assert_eq!(definition.modes.len(), 3);
@@ -1528,7 +1528,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn an_unknown_body_key_falls_back_to_a_text_node() {
         let mut app = testkit::new_app();
         assert!(testkit::render(&mut app, "architect.nope").contains("Unknown body"));
@@ -1536,7 +1536,7 @@ mod tests {
     //#endregion 🔖️Manifest
 
     //#region 🔖️Behavior
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn adjacency_matrix_renders_triangle_strip() {
         let program = sample_plugin();
         let json = serde_json::to_string(&testkit::render_direct(adjacency_window::ARCHITECT_BODY_ADJACENCY, &program, &ArchitectPlayApp::initial_config())).expect("json");
@@ -1544,14 +1544,14 @@ mod tests {
         assert!(json.contains("Reception"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn graph_body_emits_node_graph_scene() {
         let program = sample_plugin();
         let json = serde_json::to_string(&testkit::render_direct(graph_window::ARCHITECT_BODY_GRAPH, &program, &ArchitectPlayApp::initial_config())).expect("json");
         assert!(json.contains("node-graph"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_adjacency_kind_cycles_required_to_preferred() {
         let program = sample_plugin();
         let adjacency = program.adjacencies.first().expect("adjacency");
@@ -1562,7 +1562,7 @@ mod tests {
         ));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn run_validation_populates_last_result_json() {
         let program = sample_plugin();
         let initial = ArchitectPlayApp::initial_config();
@@ -1575,7 +1575,7 @@ mod tests {
     /// framework's own injected `interactionSelect` handling, never by an app command's `Emit` —
     /// mirrors `note`'s `add-block` precedent) — it still records the hits in `last_result_json` and
     /// the query in `search_history_json`.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn search_finds_sample_elements() {
         let program = sample_plugin();
         let initial = ArchitectPlayApp::initial_config();
@@ -1585,7 +1585,7 @@ mod tests {
         assert!(!config.search_history_json.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn select_register_switches_active_register() {
         let program = sample_plugin();
         let initial = ArchitectPlayApp::initial_config();
@@ -1594,7 +1594,7 @@ mod tests {
         assert!(!register_entities(&program, "stakeholders").is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn patch_register_item_updates_element_name() {
         let program = sample_plugin();
         let element_id = program.elements[0].header.id.clone();
@@ -1605,7 +1605,7 @@ mod tests {
         ));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn formatted_report_renders_section_headings() {
         let program = sample_plugin();
         let initial = ArchitectPlayApp::initial_config();
@@ -1616,7 +1616,7 @@ mod tests {
         assert!(json.contains("architect-report.section"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn analysis_kind_picker_maps_all_variants() {
         let options = analysis_kind_picker_options();
         assert_eq!(options.len(), 20);
@@ -1627,7 +1627,7 @@ mod tests {
         assert_eq!(analysis_kind_from_str("relationshipAnalysis"), AnalysisKind::RelationshipAnalysis);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn import_registers_csv_action_sets_plugin() {
         let program = sample_plugin();
         let csv = export_registers_csv(&program).expect("export csv");
@@ -1636,7 +1636,7 @@ mod tests {
         assert!(matches!(emit.effects.first(), Some(semio_framework_plugin::Effect::LoadDocument { .. })), "importRegistersCsv must emit a LoadDocument effect");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn undo_redo_round_trips_through_the_wrapper() {
         let mut app = testkit::new_app();
         let before = app.snapshot().expect("projection").elements.len();
@@ -1656,7 +1656,7 @@ mod tests {
     /// app-declared View action this test used to dispatch) is deleted — selection is the
     /// framework's own injected `interactionSelect` verb now, never an app command. `selectRegister`
     /// is the remaining view action closest in shape (config-only, no document mutation).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn view_actions_never_emit_artifact_mutations_under_the_real_registry() {
         let mut app = testkit::app_with_registry();
         let result = testkit::dispatch(&mut app, ArchitectCommand::SelectRegister(select_register::SelectRegister { register_id: "risks".into() }));
@@ -1668,7 +1668,7 @@ mod tests {
     /// injected `interactionSelect` — dispatches it directly (the only way a downstream crate can
     /// populate a genuine `InteractionView`, see `testkit::drive`'s own doc comment), then confirms
     /// the SAME element row renders `"selected":true` (mirrors `note`'s `select_blocks` proof).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn interaction_select_stamps_the_picked_element_as_selected_in_the_document_panel() {
         let mut app = testkit::app_with_registry();
         let element_id = app.snapshot().expect("snapshot").elements[0].header.id.to_string();

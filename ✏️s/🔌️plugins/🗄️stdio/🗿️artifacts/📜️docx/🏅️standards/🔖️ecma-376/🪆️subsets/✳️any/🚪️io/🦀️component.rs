@@ -19,7 +19,7 @@ pub enum DocxError {
 }
 
 impl std::fmt::Display for DocxError {
-    async fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Opc(e) => write!(f, "docx: {e}"),
             Self::MissingMainDocumentRelationship => write!(f, "docx: package root has no officeDocument relationship"),
@@ -33,7 +33,7 @@ impl std::fmt::Display for DocxError {
 impl std::error::Error for DocxError {}
 
 impl From<crate::artifacts::zip::opc::OpcError> for DocxError {
-    async fn from(e: crate::artifacts::zip::opc::OpcError) -> Self {
+    fn from(e: crate::artifacts::zip::opc::OpcError) -> Self {
         Self::Opc(e)
     }
 }

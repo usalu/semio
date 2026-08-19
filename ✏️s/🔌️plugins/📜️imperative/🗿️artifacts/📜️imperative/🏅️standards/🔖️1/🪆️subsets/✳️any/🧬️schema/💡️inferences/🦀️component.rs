@@ -36,7 +36,7 @@ impl protocol::Inference<ImperativeSnapshot> for ImperativeInference {
 /// scene `path` is already empty, but the explicit `infer`-based impl keeps every inference family
 /// in this fan-out consistent regardless of which artifacts' defaults are trivial.
 impl Default for ImperativeInference {
-    async fn default() -> Self {
+    fn default() -> Self {
         <Self as protocol::Inference<ImperativeSnapshot>>::infer(&ImperativeSnapshot::default())
     }
 }
@@ -97,18 +97,18 @@ mod tests {
         crate::artifacts::imperative::imperative_snapshot_with_content("imperative.document", &path, &BTreeMap::new())
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = chain_snapshot();
         assert_eq!(ImperativeInference::infer(&snapshot), ImperativeInference::infer(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(ImperativeInference::infer(&ImperativeSnapshot::default()), ImperativeInference::default());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn topology_counts_every_step_exactly_once() {
         let snapshot = chain_snapshot();
         let inferred = ImperativeInference::infer(&snapshot);

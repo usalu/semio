@@ -854,27 +854,27 @@ mod tests {
     use super::*;
 
     // #region 🔖️SpecialTests
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn erf_matches_known_values() {
         assert!((erf(1.0) - 0.842_700_792_949_714_9).abs() < 1e-9);
         assert!((erf(0.5) - 0.520_499_877_813_046_5).abs() < 1e-9);
         assert!((erfc(2.0) - 0.004_677_734_981_063_127).abs() < 1e-9);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn erf_is_odd() {
         for x in [0.1, 0.5, 1.0, 1.5, 2.0, 3.0] {
             assert!((erf(-x) + erf(x)).abs() < 1e-12, "erf not odd at x={x}");
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn ln_gamma_matches_known_values() {
         assert!((ln_gamma(0.5) - std::f64::consts::PI.sqrt().ln()).abs() < 1e-9);
         assert!((ln_gamma(5.0) - 24.0_f64.ln()).abs() < 1e-9);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn ln_gamma_satisfies_recurrence() {
         for x in [0.3, 0.7, 1.5, 2.5, 4.2, 8.9] {
             let lhs = ln_gamma(x + 1.0) - ln_gamma(x);
@@ -882,7 +882,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn gamma_p_matches_analytic_identity_for_a_one() {
         for x in [0.1_f64, 0.5, 1.0, 2.0, 5.0, 10.0] {
             let expected = 1.0 - (-x).exp();
@@ -890,7 +890,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn gamma_p_and_q_sum_to_one() {
         for a in [0.5, 1.0, 2.5, 5.0, 10.0] {
             for x in [0.1, 1.0, 3.0, 8.0, 20.0] {
@@ -900,7 +900,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn beta_inc_symmetry_identity() {
         for (a, b, x) in [(2.0, 3.0, 0.3), (1.5, 4.5, 0.6), (5.0, 5.0, 0.5)] {
             let lhs = beta_inc(a, b, x) + beta_inc(b, a, 1.0 - x);
@@ -908,34 +908,34 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn beta_inc_uniform_case_is_identity() {
         for x in [0.1, 0.4, 0.7, 0.9] {
             assert!((beta_inc(1.0, 1.0, x) - x).abs() < 1e-9);
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn beta_inc_symmetric_midpoint() {
         assert!((beta_inc(2.0, 2.0, 0.5) - 0.5).abs() < 1e-9);
     }
     // #endregion 🔖️SpecialTests
 
     // #region 🔖️NormalTests
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn normal_cdf_matches_known_value() {
         let n = Normal::STANDARD;
         assert!((n.cdf(1.959_963_984_540_054) - 0.975).abs() < 1e-9);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn normal_quantile_matches_known_value() {
         let n = Normal::STANDARD;
         let q = n.quantile(0.975).unwrap();
         assert!((q - 1.959_963_984_540_054).abs() < 1e-9);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn normal_quantile_cdf_round_trip() {
         let n = Normal::new(3.0, 2.0).unwrap();
         for x in [-5.0, -1.0, 0.0, 1.0, 2.5, 6.0, 10.0] {
@@ -945,13 +945,13 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn normal_rejects_nonpositive_std_dev() {
         assert!(Normal::new(0.0, 0.0).is_err());
         assert!(Normal::new(0.0, -1.0).is_err());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn normal_sample_mean_and_variance_within_band() {
         let n = Normal::new(5.0, 3.0).unwrap();
         let mut rng = semio_framework_geometry::random::Rng::from_seed(42);
@@ -966,7 +966,7 @@ mod tests {
     // #endregion 🔖️NormalTests
 
     // #region 🔖️UniformTests
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn uniform_pdf_cdf_quantile_consistency() {
         let u = Uniform::new(2.0, 6.0).unwrap();
         assert!((u.pdf(4.0) - 0.25).abs() < 1e-12);
@@ -976,13 +976,13 @@ mod tests {
         assert_eq!(u.cdf(10.0), 1.0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn uniform_rejects_invalid_bounds() {
         assert!(Uniform::new(5.0, 5.0).is_err());
         assert!(Uniform::new(5.0, 2.0).is_err());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn uniform_sample_mean_and_variance_within_band() {
         let u = Uniform::new(0.0, 10.0).unwrap();
         let mut rng = semio_framework_geometry::random::Rng::from_seed(7);
@@ -994,7 +994,7 @@ mod tests {
     // #endregion 🔖️UniformTests
 
     // #region 🔖️ChiSquaredTests
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn chi_squared_quantiles_match_standard_table() {
         let expected = [3.841_458_820_694_124, 5.991_464_547_107_979, 7.814_727_903_251_179, 9.487_729_036_781_154, 11.070_497_693_516_351];
         for (i, &exp) in expected.iter().enumerate() {
@@ -1005,7 +1005,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn chi_squared_quantile_cdf_round_trip() {
         let c = ChiSquared::new(4.0).unwrap();
         for p in [0.05, 0.25, 0.5, 0.75, 0.95, 0.99] {
@@ -1015,7 +1015,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn chi_squared_sample_mean_within_band() {
         let c = ChiSquared::new(6.0).unwrap();
         let mut rng = semio_framework_geometry::random::Rng::from_seed(11);
@@ -1028,20 +1028,20 @@ mod tests {
     // #endregion 🔖️ChiSquaredTests
 
     // #region 🔖️StudentTTests
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn student_t_cdf_matches_known_value() {
         let t = StudentT::new(10.0).unwrap();
         assert!((t.cdf(2.0) - 0.963_305_982_614_629_9).abs() < 1e-9);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn student_t_quantile_matches_known_value() {
         let t = StudentT::new(10.0).unwrap();
         let q = t.quantile(0.975).unwrap();
         assert!((q - 2.228_138_851_986_273).abs() < 1e-6);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn student_t_quantile_cdf_round_trip() {
         let t = StudentT::new(7.0).unwrap();
         for p in [0.05, 0.25, 0.5, 0.75, 0.95] {
@@ -1051,7 +1051,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn student_t_sample_mean_within_band() {
         let t = StudentT::new(15.0).unwrap();
         let mut rng = semio_framework_geometry::random::Rng::from_seed(13);
@@ -1063,7 +1063,7 @@ mod tests {
     // #endregion 🔖️StudentTTests
 
     // #region 🔖️FisherFTests
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fisher_f_cdf_symmetry_point() {
         for k in [2.0, 5.0, 10.0, 20.0] {
             let f = FisherF::new(k, k).unwrap();
@@ -1071,7 +1071,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fisher_f_quantile_cdf_round_trip() {
         let f = FisherF::new(5.0, 10.0).unwrap();
         for p in [0.1, 0.5, 0.9, 0.95] {
@@ -1081,7 +1081,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fisher_f_sample_is_nonnegative() {
         let f = FisherF::new(4.0, 8.0).unwrap();
         let mut rng = semio_framework_geometry::random::Rng::from_seed(17);
@@ -1092,7 +1092,7 @@ mod tests {
     // #endregion 🔖️FisherFTests
 
     // #region 🔖️BernoulliTests
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn bernoulli_pmf_cdf_quantile() {
         let b = Bernoulli::new(0.3).unwrap();
         assert!((b.pmf(0) - 0.7).abs() < 1e-12);
@@ -1103,7 +1103,7 @@ mod tests {
         assert_eq!(b.quantile(0.8).unwrap(), 1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn bernoulli_sample_frequency_matches_p() {
         let b = Bernoulli::new(0.7).unwrap();
         let mut rng = semio_framework_geometry::random::Rng::from_seed(21);
@@ -1115,13 +1115,13 @@ mod tests {
     // #endregion 🔖️BernoulliTests
 
     // #region 🔖️BinomialTests
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn binomial_pmf_matches_known_value() {
         let b = Binomial::new(10, 0.5).unwrap();
         assert!((b.pmf(5) - 252.0 / 1024.0).abs() < 1e-9);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn binomial_cdf_matches_manual_partial_sum() {
         let b = Binomial::new(8, 0.4).unwrap();
         for k in 0..=8 {
@@ -1130,7 +1130,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn binomial_cdf_matches_beta_identity() {
         for (n, p, k) in [(10u64, 0.3, 4u64), (20, 0.6, 12), (15, 0.5, 7)] {
             let b = Binomial::new(n, p).unwrap();
@@ -1139,7 +1139,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn binomial_quantile_cdf_consistency() {
         let b = Binomial::new(20, 0.35).unwrap();
         for p in [0.1, 0.3, 0.5, 0.7, 0.9] {
@@ -1148,7 +1148,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn binomial_sample_mean_within_band() {
         let b = Binomial::new(50, 0.4).unwrap();
         let mut rng = semio_framework_geometry::random::Rng::from_seed(23);
@@ -1161,7 +1161,7 @@ mod tests {
     // #endregion 🔖️BinomialTests
 
     // #region 🔖️MultinomialTests
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn multinomial_pmf_matches_hand_computation() {
         let m = Multinomial::new(4, vec![0.2, 0.3, 0.5]).unwrap();
         let counts = [1u64, 1, 2];
@@ -1170,12 +1170,12 @@ mod tests {
         assert!((m.pmf(&counts) - expected).abs() < 1e-9, "pmf={}", m.pmf(&counts));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn multinomial_rejects_probs_not_summing_to_one() {
         assert!(Multinomial::new(4, vec![0.2, 0.3, 0.4]).is_err());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn multinomial_sample_counts_sum_to_n() {
         let m = Multinomial::new(30, vec![0.2, 0.3, 0.5]).unwrap();
         let mut rng = semio_framework_geometry::random::Rng::from_seed(29);
@@ -1186,7 +1186,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn multinomial_sample_category_means_within_band() {
         let m = Multinomial::new(100, vec![0.2, 0.3, 0.5]).unwrap();
         let mut rng = semio_framework_geometry::random::Rng::from_seed(31);

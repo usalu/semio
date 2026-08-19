@@ -26,7 +26,7 @@ pub struct LayoutPresence {
 }
 
 impl Default for LayoutPresence {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self {
             active_page_id: "page-1".into(),
             drop_preview: LayoutDropPreviewState::default(),

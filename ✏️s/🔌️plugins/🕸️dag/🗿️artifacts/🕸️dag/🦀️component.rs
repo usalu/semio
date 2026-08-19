@@ -199,19 +199,19 @@ pub struct DagCamera {
 }
 
 impl Default for DagCamera {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { x: 0.0, y: 0.0, zoom: 1.0 }
     }
 }
 
 impl From<DagCamera> for infinite_board_port_directed_dag::DagCamera {
-    async fn from(value: DagCamera) -> Self {
+    fn from(value: DagCamera) -> Self {
         Self { x: value.x, y: value.y, zoom: value.zoom }
     }
 }
 
 impl From<infinite_board_port_directed_dag::DagCamera> for DagCamera {
-    async fn from(value: infinite_board_port_directed_dag::DagCamera) -> Self {
+    fn from(value: infinite_board_port_directed_dag::DagCamera) -> Self {
         Self { x: value.x, y: value.y, zoom: value.zoom }
     }
 }
@@ -299,18 +299,18 @@ pub async fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDe
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn artifact_kind_declares_the_graph_dag_component_kind() {
         assert_eq!(artifact_kind().id, "graph.dag");
         assert_eq!(artifact_kind().schema, DAG_DOCUMENT_SCHEMA);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn default_snapshot_matches_document_schema() {
         assert_eq!(default_snapshot().schema, DAG_DOCUMENT_SCHEMA);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn node_edge_content_round_trips_through_the_composed_child_snapshot() {
         let document = default_snapshot();
         let scene = dag_working_scene(&document);

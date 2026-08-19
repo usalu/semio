@@ -31,7 +31,7 @@ impl protocol::Inference<SvgSnapshot> for SvgInference {
 /// `#[derive(Default)]` — same "match `infer` of the real default, don't derive structurally"
 /// trick as `AddInference`'s hand-written `Default` in `📡️spr/🎮️command/🦀️component.rs`.
 impl Default for SvgInference {
-    async fn default() -> Self {
+    fn default() -> Self {
         <Self as protocol::Inference<SvgSnapshot>>::infer(&SvgSnapshot::default())
     }
 }
@@ -81,13 +81,13 @@ mod tests {
     use super::*;
     use protocol::Inference;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = SvgSnapshot::default();
         assert_eq!(SvgInference::infer(&snapshot), SvgInference::infer(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(SvgInference::infer(&SvgSnapshot::default()), SvgInference::default());
     }

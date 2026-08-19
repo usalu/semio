@@ -272,7 +272,7 @@ pub struct LowpolyScratch {
 }
 
 impl Default for LowpolyScratch {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self {
             stroke: None,
             stroke_drag_active: false,
@@ -582,13 +582,13 @@ mod tests {
     use super::*;
     use crate::artifacts::lowpoly::schema::default_snapshot;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn gesture_preview_is_none_without_an_active_transform_drag() {
         let scratch = LowpolyScratch::default();
         assert!(scratch.gesture_preview().is_none(), "no live gumball drag, nothing to preview");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn gesture_preview_reflects_the_live_gumball_drag_and_clears_on_commit() {
         let mut scratch = LowpolyScratch::default();
         let projection = default_snapshot();
@@ -614,7 +614,7 @@ mod tests {
         assert!(scratch.gesture_preview().is_none(), "the drag ended: nothing left to preview, and the commit above already carried the real operation");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn gesture_preview_is_a_pure_read_never_mutating_the_transform_session() {
         let mut scratch = LowpolyScratch::default();
         let projection = default_snapshot();

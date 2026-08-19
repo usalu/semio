@@ -1286,7 +1286,7 @@ mod tests {
     /// (superseded by the semantic `🧬️mutations` triads' own diff leaves) — per the ticket's banned-
     /// vocabulary final sweep. `apply_to_artifact` (the one real, still-live function in this file)
     /// keeps its own coverage here instead.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn apply_to_artifact_applies_a_scalar_field() {
         let artifact = ProgramArtifact::default();
         let mut renamed_meta = artifact.meta.clone();
@@ -1298,7 +1298,7 @@ mod tests {
         assert_eq!(next.meta.title, "Renamed");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn apply_to_artifact_full_replacement_wins_over_field_entries() {
         let artifact = ProgramArtifact::default();
         let mut replacement = artifact.clone();

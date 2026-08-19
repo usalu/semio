@@ -43,7 +43,7 @@ mod tests {
         ArtifactView::new(doc_snapshot, history)
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn empty_name_opens_the_dialog_instead_of_relaying() {
         let history = semio_framework_plugin::HistoryView::empty();
         let doc_snapshot = SHomeSnapshot::default();
@@ -54,7 +54,7 @@ mod tests {
         assert!(matches!(emit.effects.as_slice(), [Effect::OpenDialog { dialog_id, args: None, .. }] if dialog_id == "createSpace"), "empty name must open the dialog, not relay: {:?}", emit.effects);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn valid_name_emits_the_replay_shell_command_with_the_right_action_id_and_args() {
         let history = semio_framework_plugin::HistoryView::empty();
         let doc_snapshot = SHomeSnapshot::default();
@@ -77,7 +77,7 @@ mod tests {
         assert_eq!(args_value["visibility"], "private");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn blank_kind_and_visibility_default_to_atelier_and_private() {
         let history = semio_framework_plugin::HistoryView::empty();
         let doc_snapshot = SHomeSnapshot::default();

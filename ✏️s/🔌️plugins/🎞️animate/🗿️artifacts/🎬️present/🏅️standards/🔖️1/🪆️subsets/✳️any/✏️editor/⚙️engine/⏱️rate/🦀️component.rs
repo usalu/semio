@@ -320,7 +320,7 @@ pub mod rate {
     mod tests {
         use super::*;
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn endpoints_are_zero_and_one() {
             for f in [linear as RateFunc, smooth, ease_in_out_cubic, ease_out_bounce] {
                 assert!((f(0.0) - 0.0).abs() < 1e-6);
@@ -328,20 +328,20 @@ pub mod rate {
             }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn map_child_alpha_splits_interval() {
             assert_eq!(map_child_alpha(0.25, 0.0, 0.5), 0.5);
             assert_eq!(map_child_alpha(0.75, 0.5, 1.0), 0.5);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn map_child_alpha_degenerate_interval_is_step() {
             assert_eq!(map_child_alpha(0.4, 0.5, 0.5), 0.0);
             assert_eq!(map_child_alpha(0.6, 0.5, 0.5), 1.0);
             assert_eq!(map_child_alpha(0.5, 0.7, 0.2), 1.0);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn simple_easing_functions_are_monotonic_within_range() {
             for f in [rush_from as RateFunc, slow_into, running_start, lingering] {
                 assert!((f(0.0) - 0.0).abs() < 1e-6, "expected 0 at t=0");
@@ -351,14 +351,14 @@ pub mod rate {
             }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn rush_into_overshoots_past_one_at_t_equals_one() {
             assert!((rush_into(0.0) - 0.0).abs() < 1e-9);
             assert!((rush_into(1.0) - 2.0).abs() < 1e-9);
             assert!(rush_into(0.5) < 1.0);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn double_smooth_covers_both_branches() {
             assert!(double_smooth(0.25) > 0.0 && double_smooth(0.25) < 0.5);
             assert!(double_smooth(0.75) > 0.5 && double_smooth(0.75) < 1.0);
@@ -366,14 +366,14 @@ pub mod rate {
             assert!((double_smooth(1.0) - 1.0).abs() < 1e-9);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn there_and_back_returns_to_start() {
             assert!((there_and_back(0.0) - 0.0).abs() < 1e-9);
             assert!((there_and_back(0.5) - 1.0).abs() < 1e-6);
             assert!((there_and_back(1.0) - 0.0).abs() < 1e-9);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn there_and_back_with_pause_has_flat_middle() {
             assert!((there_and_back_with_pause(0.0, 0.4) - 0.0).abs() < 1e-9);
             assert!((there_and_back_with_pause(0.5, 0.4) - 1.0).abs() < 1e-9);
@@ -382,7 +382,7 @@ pub mod rate {
             assert!((0.0..=1.0).contains(&clamped));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn wiggle_oscillates_around_linear() {
             let w0 = wiggle(0.0, 2.0);
             let w1 = wiggle(1.0, 2.0);
@@ -390,7 +390,7 @@ pub mod rate {
             assert!((w1 - 1.0).abs() < 1e-6);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn exponential_decay_approaches_one() {
             assert!((exponential_decay(0.0, 1.0) - 0.0).abs() < 1e-9);
             assert!(exponential_decay(1.0, 0.01) > 0.999);
@@ -399,7 +399,7 @@ pub mod rate {
             assert!((0.0..=1.0).contains(&clamped_half_life));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn sine_family_endpoints() {
             for f in [ease_in_sine as RateFunc, ease_out_sine, ease_in_out_sine] {
                 assert!((f(0.0) - 0.0).abs() < 1e-6);
@@ -407,7 +407,7 @@ pub mod rate {
             }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn power_family_both_branches_of_in_out() {
             for f in [ease_in_out_quad as RateFunc, ease_in_out_cubic, ease_in_out_quart, ease_in_out_quint] {
                 let low = f(0.25);
@@ -423,7 +423,7 @@ pub mod rate {
             }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn exp_family_handles_boundary_and_branches() {
             assert_eq!(ease_in_exp(0.0), 0.0);
             assert!(ease_in_exp(1.0) > 0.99);
@@ -435,7 +435,7 @@ pub mod rate {
             assert!(ease_in_out_exp(0.75) > 0.5);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn circ_family_both_branches() {
             for f in [ease_in_circ as RateFunc, ease_out_circ] {
                 assert!((f(0.0) - 0.0).abs() < 1e-6);
@@ -445,14 +445,14 @@ pub mod rate {
             assert!(ease_in_out_circ(0.75) > 0.5);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn back_family_overshoots() {
             assert!(ease_in_back(0.1) < 0.0, "ease-in-back should dip negative early");
             assert!(ease_out_back(0.9) > 1.0, "ease-out-back should overshoot past one");
             assert!(ease_in_out_back(0.25) != ease_in_out_back(0.75));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn elastic_family_boundary_and_branches() {
             for f in [ease_in_elastic as fn(f64) -> f64, ease_out_elastic, ease_in_out_elastic] {
                 assert_eq!(f(0.0), 0.0);
@@ -463,7 +463,7 @@ pub mod rate {
             assert!(low.is_finite() && high.is_finite());
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn bounce_family_all_segments() {
             let samples = [0.05, 0.3, 0.55, 0.9];
             for t in samples {
@@ -478,7 +478,7 @@ pub mod rate {
             assert!(ease_in_out_bounce(0.75) > 0.5);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn rate_functions_clamp_out_of_range_input() {
             assert_eq!(linear(-1.0), 0.0);
             assert_eq!(linear(2.0), 1.0);
@@ -491,7 +491,7 @@ pub mod rate {
 pub mod updater {
     //! 🔄️ Runtime updaters, value trackers, and always-redraw helpers.
 
-    use crate::editor::animate::engine::scene::sobject::Sobject;
+    use crate::editor::animate::engine::scene::sobject::{Sobject, Sobjects};
     use std::sync::{Arc, Mutex};
 
     /// 🎚️ Scalar animated parameter with get/set hooks.
@@ -526,19 +526,19 @@ pub mod updater {
         pub name: String,
         pub active: bool,
         pub dt_scale: f64,
-        callback: Arc<dyn Fn(&mut dyn Sobject, f64) + Send + Sync>,
+        callback: Arc<dyn Fn(&mut Sobjects, f64) + Send + Sync>,
     }
 
 
     impl Updater {
         pub async fn new<F>(name: impl Into<String>, callback: F) -> Self
         where
-            F: Fn(&mut dyn Sobject, f64) + Send + Sync + 'static,
+            F: Fn(&mut Sobjects, f64) + Send + Sync + 'static,
         {
             Self { id: ({ u64::from_str_radix(&blake3::hash(concat!(file!(), line!()).as_bytes()).to_hex()[..8], 16).unwrap_or(1) }), name: name.into(), active: true, dt_scale: 1.0, callback: Arc::new(callback) }
         }
 
-        pub async fn invoke(&self, target: &mut dyn Sobject, dt: f64) {
+        pub async fn invoke(&self, target: &mut Sobjects, dt: f64) {
             if self.active {
                 (self.callback)(target, dt * self.dt_scale);
             }
@@ -546,22 +546,22 @@ pub mod updater {
     }
 
     /// ➕️ Attach an updater to an Sobject.
-    pub async fn add_updater(target: &mut dyn Sobject, updater: Updater) {
+    pub async fn add_updater(target: &mut Sobjects, updater: Updater) {
         target.updaters_mut().push(updater);
     }
 
     /// ♾️ Attach an updater that runs every frame.
-    pub async fn always<F>(target: &mut dyn Sobject, name: impl Into<String>, f: F)
+    pub async fn always<F>(target: &mut Sobjects, name: impl Into<String>, f: F)
     where
-        F: Fn(&mut dyn Sobject, f64) + Send + Sync + 'static,
+        F: Fn(&mut Sobjects, f64) + Send + Sync + 'static,
     {
         add_updater(target, Updater::new(name, f));
     }
 
     /// 🎯️ Attach an updater driven by a ValueTracker.
-    pub async fn f_always<F>(target: &mut dyn Sobject, tracker: &ValueTracker, name: impl Into<String>, f: F)
+    pub async fn f_always<F>(target: &mut Sobjects, tracker: &ValueTracker, name: impl Into<String>, f: F)
     where
-        F: Fn(&mut dyn Sobject, f64) + Send + Sync + 'static,
+        F: Fn(&mut Sobjects, f64) + Send + Sync + 'static,
     {
         let t = tracker.clone();
         add_updater(
@@ -574,9 +574,9 @@ pub mod updater {
     }
 
     /// 🔃️ Rebuild an Sobject every frame from a factory closure.
-    pub async fn always_redraw<F>(target: &mut dyn Sobject, name: impl Into<String>, factory: F)
+    pub async fn always_redraw<F>(target: &mut Sobjects, name: impl Into<String>, factory: F)
     where
-        F: Fn() -> Box<dyn Sobject> + Send + Sync + 'static,
+        F: Fn() -> Sobjects + Send + Sync + 'static,
     {
         let factory = Arc::new(factory);
         add_updater(
@@ -595,7 +595,7 @@ pub mod updater {
     }
 
     /// 🏃️ Run all updaters on a scene object tree.
-    pub async fn run_updaters(target: &mut dyn Sobject, dt: f64) {
+    pub async fn run_updaters(target: &mut Sobjects, dt: f64) {
         let updaters: Vec<Updater> = target.updaters().to_vec();
         for u in updaters {
             u.invoke(target, dt);
@@ -609,16 +609,16 @@ pub mod updater {
         use crate::editor::animate::engine::scene::sobject::VSobject;
         use geometry::BezPath;
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn value_tracker_mutates() {
             let t = ValueTracker::new(1.0);
             t.increment(2.0);
             assert!((t.get() - 3.0).abs() < 1e-9);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn updater_runs_on_object() {
-            let mut v = VSobject::new();
+            let mut v: Sobjects = VSobject::new().into();
             let flag = Arc::new(Mutex::new(false));
             let f = Arc::clone(&flag);
             add_updater(
@@ -631,9 +631,9 @@ pub mod updater {
             assert!(*flag.lock().unwrap());
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn inactive_updater_does_not_invoke_callback() {
-            let mut v = VSobject::new();
+            let mut v: Sobjects = VSobject::new().into();
             let flag = Arc::new(Mutex::new(false));
             let f = Arc::clone(&flag);
             let mut u = Updater::new("mark", move |_o, _dt| {
@@ -644,9 +644,9 @@ pub mod updater {
             assert!(!*flag.lock().unwrap());
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn always_helper_attaches_updater_that_runs() {
-            let mut v = VSobject::new();
+            let mut v: Sobjects = VSobject::new().into();
             let flag = Arc::new(Mutex::new(false));
             let f = Arc::clone(&flag);
             always(&mut v, "always-mark", move |_o, _dt| {
@@ -657,9 +657,9 @@ pub mod updater {
             assert!(*flag.lock().unwrap());
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn f_always_helper_reads_tracker_and_runs() {
-            let mut v = VSobject::new();
+            let mut v: Sobjects = VSobject::new().into();
             let tracker = ValueTracker::new(2.0);
             let flag: Arc<Mutex<f64>> = Arc::new(Mutex::new(0.0));
             let f = Arc::clone(&flag);
@@ -671,22 +671,22 @@ pub mod updater {
             assert!((*flag.lock().unwrap() - 1.0_f64).abs() < 1e-9);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn always_redraw_rebuilds_paths_from_factory() {
-            let mut v = VSobject::new();
+            let mut v: Sobjects = VSobject::new().into();
             always_redraw(&mut v, "redraw", || {
                 let mut fresh = VSobject::new();
                 fresh.paths.push(BezPath::new());
-                Box::new(fresh) as Box<dyn Sobject>
+                fresh.into()
             });
-            assert!(v.paths.is_empty());
+            assert!(v.paths().is_empty());
             run_updaters(&mut v, 1.0 / 60.0);
-            assert_eq!(v.paths.len(), 1);
+            assert_eq!(v.paths().len(), 1);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn run_updaters_recurses_into_group_children() {
-            let mut child = VSobject::new();
+            let mut child: Sobjects = VSobject::new().into();
             let flag = Arc::new(Mutex::new(false));
             let f = Arc::clone(&flag);
             add_updater(
@@ -695,7 +695,7 @@ pub mod updater {
                     *f.lock().unwrap() = true;
                 }),
             );
-            let mut group = crate::editor::animate::engine::scene::sobject::Group::new(vec![Box::new(child)]);
+            let mut group: Sobjects = crate::editor::animate::engine::scene::sobject::Group::new(vec![child]).into();
             run_updaters(&mut group, 1.0 / 60.0);
             assert!(*flag.lock().unwrap());
         }

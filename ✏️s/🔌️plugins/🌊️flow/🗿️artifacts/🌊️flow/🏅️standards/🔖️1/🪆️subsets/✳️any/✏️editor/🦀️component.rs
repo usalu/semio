@@ -649,7 +649,7 @@ mod tests {
     //#region 🔖️CommandSurface
     /// 🏷️ Every declared manifest action id must be reachable as exactly one command row, and every row's
     /// wire keyword must be distinct — the cross-cutting invariant `app_commands!` is there to hold.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn command_ids_are_unique_and_match_the_declared_manifest_actions() {
         let commands = every_command();
         let ids: Vec<&str> = commands.iter().map(|command| command.command_id()).collect();
@@ -661,7 +661,7 @@ mod tests {
     }
 
     /// ⚖️ LAW: text and binary are two projections of the same command, for every single row.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn every_command_round_trips_through_text_and_binary() {
         for command in every_command() {
             store::os_store::test_support::assert_op_text_binary_equivalence(&command);
@@ -672,7 +672,7 @@ mod tests {
     /// kebab-cased command id, except for the one documented divergence (`setLocale` → `locale`, an
     /// undeclared host-pushed command). This is what a missing `#[dsl(keyword = ..)]` on a payload struct
     /// silently breaks (the record prints with no keyword at all and no longer parses).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
         for command in every_command() {
             let id = command.command_id();
@@ -685,7 +685,7 @@ mod tests {
     /// ⚖️ The two rows whose `Option` fields make `None`/`Some` distinct wire cases, pinned to the exact
     /// bytes captured from the pre-merge `flow_protocol` crate. A regression here is a real format break,
     /// not a test-fixture mismatch.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn optional_field_rows_keep_their_pre_migration_bytes() {
         let cases: [(FlowCommand, &str, &str); 3] = [
             (FlowCommand::AddWidget(add_widget::AddWidget { kind: "neuron".into(), neuron_kind: Some("math.add".into()), x: None, y: None }), "add-widget kind=neuron neuron-kind=math.add", "010002086d6174682e616464066e6575726f6e02000601010600"),
@@ -755,7 +755,7 @@ mod tests {
     //#endregion 🔖️CommandSurface
 
     //#region 🔖️ManifestSanity
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn the_manifest_stitches_every_taxonomy_node() {
         let json = serde_json::to_string(&create_flow_app()).expect("app definition json");
         for id in [main::FLOW_PLAY_WINDOW_MAIN, compiled::FLOW_PLAY_WINDOW_COMPILED, generations::FLOW_PLAY_WINDOW_GENERATIONS, form::FLOW_PLAY_WINDOW_GENERATE_FORM, preview::FLOW_PLAY_WINDOW_GENERATE_PREVIEW] {
@@ -775,7 +775,7 @@ mod tests {
     /// 🕹️ The "graph" domain is declared `HierarchyProvider::Topology`, scoped to the main canvas window
     /// kind, non-transitive (see the `.interaction(...)` doc comment for why), with node/edge/handle
     /// granularities and all five merges.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn graph_interaction_domain_is_declared_topology_and_scoped_to_the_main_window() {
         let definition = create_flow_app();
         let graph = definition.interactions.iter().find(|interaction| interaction.id == FLOW_INTERACTION_GRAPH).expect("graph interaction domain declared");
@@ -791,7 +791,7 @@ mod tests {
     /// 🌳️ `interaction_topology` registers every widget/synapse as a root at its own granularity —
     /// the same row-id-prefixed targets the document panel tree renders (see
     /// `document_panel::render`'s doc comment).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn interaction_topology_registers_every_widget_and_synapse_as_a_root() {
         let document = FlowSnapshot::default();
         let config = FlowConfig::default();
@@ -809,7 +809,7 @@ mod tests {
     //#endregion 🔖️Interaction
 
     //#region 🔖️CrossCutting
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn undo_restores_fixture_after_add_widget() {
         let mut app = flow_app();
         let before = app.snapshot().expect("snapshot").to_fixture().widgets.len();
@@ -822,7 +822,7 @@ mod tests {
         );
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn generate_mode_renders_three_surfaces() {
         let mut app = flow_app();
         use crate::editor::flow::testkit::render;
@@ -831,14 +831,14 @@ mod tests {
         assert!(render(&mut app, FLOW_PLAY_BODY_GENERATE_PREVIEW).contains("text-editor"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
         use crate::editor::flow::testkit::render;
         let mut app = flow_app();
         assert!(render(&mut app, "flow.play.nope").contains("Unknown body"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn host_from_snapshot_deletes_edge_selected_by_synapse_domain() {
         let config = FlowConfig::default();
         let fixture = FlowSnapshot::default();
@@ -850,7 +850,7 @@ mod tests {
         assert!(!host.fixture.synapses.iter().any(|synapse| synapse.id == "s1"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn two_instances_converge_on_disjoint_edits() {
         use crate::artifacts::flow::schema::widget_id;
         use semio_framework_plugin::testkit::paired_apps;
@@ -872,7 +872,7 @@ mod tests {
     //#endregion 🔖️CrossCutting
 
     //#region 🔖️ContextMenu
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn context_menu_includes_select_all_when_empty() {
         let mut app = flow_app_with_registry();
         let menu = context_menu_items(&mut app, Some(semio_framework_plugin::ContextMenuSurfaceTarget { surface_id: "main".into(), kind: "nodeGraph".into(), hits: vec![], selection: vec![], text: None }));
@@ -898,7 +898,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn context_menu_includes_hide_preview_for_selection_and_set_preview_off_mutates_scene() {
         let mut app = flow_app_with_registry();
         let menu = context_menu_items(&mut app, Some(node_selection_surface(&["slider"]))).to_string();
@@ -915,7 +915,7 @@ mod tests {
     /// selection (a genuine no-operation now, see `context_menu_at::apply`'s doc comment) — the request's
     /// own `surface.selection` groups carry the clicked target instead, mirroring what the real caller
     /// (right-clicking a node) supplies alongside the `contextMenuAt` dispatch.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn context_menu_at_selects_target_and_enables_preview() {
         let mut app = flow_app_with_registry();
         let before = context_menu_items(&mut app, None).to_string();
@@ -926,7 +926,7 @@ mod tests {
         assert!(after.contains(r#""ids":["slider"]"#) || after.contains("slider"), "preview args target the clicked node: {after}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn context_menu_annotates_mixed_selection_counts_and_omits_delete_without_selection() {
         let mut app = flow_app_with_registry();
         let empty = context_menu_items(&mut app, Some(semio_framework_plugin::ContextMenuSurfaceTarget { surface_id: "main".into(), kind: "nodeGraph".into(), hits: vec![], selection: vec![], text: None })).to_string();
@@ -951,7 +951,7 @@ mod tests {
         assert!(menu.contains("deleteSelection"), "delete action missing: {menu}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn context_menu_for_edge_hit_uses_surface_edge_selection() {
         let mut app = flow_app_with_registry();
         let menu = context_menu_items(
@@ -969,7 +969,7 @@ mod tests {
         assert!(menu.contains("1 edge") || menu.contains("1 Kante"), "edge count phrase missing: {menu}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn context_menu_grouped_disclosure_stays_within_budget_and_keeps_destructive_last() {
         let mut app = flow_app_with_registry();
         let request = ContextMenuRequest {

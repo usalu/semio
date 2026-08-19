@@ -475,7 +475,7 @@ mod tests {
     use protocol::command::DiffAlgebra;
     use protocol::{Mutation, MutationDiff};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn missing_element_target_is_rejected_before_mutation() {
         let base = PlySnapshot::default();
         let diff = PlyDiff { elements: Some(PlyElementsDiff { removed: vec!["missing".into()], ..Default::default() }), ..Default::default() };
@@ -485,13 +485,13 @@ mod tests {
         assert_eq!(base, PlySnapshot::default());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn empty_snapshot_matches_schema() {
         let snapshot = empty_ply_snapshot();
         assert_eq!(snapshot.schema, STDIO_PLY_DOCUMENT_SCHEMA);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn codec_round_trip() {
         let snap = empty_ply_snapshot();
         let text = store::ArtifactDsl::print_dsl(&snap);
@@ -520,7 +520,7 @@ mod tests {
     }
     //#endregion 🔖️MeshFixture
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn ascii_tetrahedron_round_trip() {
         let snap = tetrahedron();
         let bytes = encode_ply_with_format(&snap, PlyFormat::Ascii).expect("encode ascii");
@@ -529,7 +529,7 @@ mod tests {
         assert_eq!(decoded.format, PlyFormat::Ascii);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn binary_little_endian_tetrahedron_round_trip() {
         let snap = tetrahedron();
         let bytes = encode_ply_with_format(&snap, PlyFormat::BinaryLittleEndian).expect("encode binary LE");
@@ -538,7 +538,7 @@ mod tests {
         assert_eq!(decoded.elements, snap.elements, "binary LE elements must exactly match the original");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn binary_big_endian_tetrahedron_round_trip() {
         let snap = tetrahedron();
         let bytes = encode_ply_with_format(&snap, PlyFormat::BinaryBigEndian).expect("encode binary BE");
@@ -546,7 +546,7 @@ mod tests {
         assert_eq!(decoded.elements, snap.elements, "binary BE elements must exactly match the original");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn binary_decode_skips_unmodeled_properties() {
         let header = "ply\nformat binary_little_endian 1.0\nelement vertex 1\nproperty float x\nproperty float y\nproperty float z\nproperty float nx\nproperty float ny\nproperty float nz\nend_header\n";
         let mut bytes = header.as_bytes().to_vec();
@@ -561,27 +561,27 @@ mod tests {
         assert_eq!(vertex.rows[0].values[3], PlyValue::Float(9.0), "nx retained, not silently discarded");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn ascii_decode_rejects_truncated_body() {
         let header = "ply\nformat ascii 1.0\nelement vertex 2\nproperty float x\nproperty float y\nproperty float z\nend_header\n1 2 3\n";
         let err = decode_ply(header.as_bytes()).unwrap_err();
         assert!(err.contains("eof"), "unexpected error: {err}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn missing_end_header_is_rejected() {
         let err = decode_ply(b"ply\nformat ascii 1.0\n").unwrap_err();
         assert!(err.contains("end_header"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn comments_are_retained_in_order() {
         let text = "ply\nformat ascii 1.0\ncomment first\ncomment second\nelement vertex 0\nproperty float x\nend_header\n";
         let decoded = decode_ply(text.as_bytes()).expect("decode with comments");
         assert_eq!(decoded.comments, vec!["first".to_string(), "second".to_string()]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn arbitrary_named_element_round_trips() {
         let props = vec![PlyProperty::Scalar { name: "weight".into(), kind: PlyScalarType::Double }, PlyProperty::List { name: "endpoints".into(), count_kind: PlyScalarType::UChar, value_kind: PlyScalarType::UShort }];
         let rows = vec![PlyRow { values: vec![PlyValue::Double(2.5), PlyValue::List(vec![PlyValue::UShort(3), PlyValue::UShort(7)])] }];
@@ -601,7 +601,7 @@ mod tests {
     //#region 🔖️MutationDiffLaw
     /// 1️⃣ `mutation_diff_law`: ∀ variant, `m.diff(base).diff().apply(base)` matches
     /// `apply_ply_mutation`'s in-place result, and the returned diff equals `m.diff(base)`.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mutation_diff_law() {
         let base = law_base();
         let variants = vec![
@@ -631,7 +631,7 @@ mod tests {
     //#region 🔖️InverseLaw
     /// 2️⃣ `inverse_law`: mutation-level round trip for every variant, plus diff-level
     /// `d.diff().inverse(base).apply(&d.diff().apply(base)) == base`.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inverse_law() {
         let base = law_base();
         let variants = vec![
@@ -661,7 +661,7 @@ mod tests {
     //#region 🔖️AbsorbLaw
     /// 3️⃣ `absorb_law`: curated op pairs (Insert+Remove-before, Insert+Insert-same-index,
     /// Add+SetField, Modify+Remove per key kind) plus associativity.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_law_insert_then_remove_before() {
         let base = law_base();
         let m1 = PlyMutation::InsertRow { element_name: "vertex".into(), index: 2, row: PlyRow { values: vec![PlyValue::Float(9.0), PlyValue::Float(9.0), PlyValue::Float(9.0)] } };
@@ -679,7 +679,7 @@ mod tests {
         assert_eq!(rows_diff.added[0].index, 1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_law_insert_insert_same_index_both_survive() {
         let base = law_base();
         let m1 = PlyMutation::InsertRow { element_name: "vertex".into(), index: 2, row: PlyRow { values: vec![PlyValue::Float(1.0), PlyValue::Float(1.0), PlyValue::Float(1.0)] } };
@@ -695,7 +695,7 @@ mod tests {
         assert_eq!(rows_diff.added.len(), 2, "both inserts survive (fixes the op-slot LWW bug the recipe bans)");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_law_add_element_then_set_row_property_patches_into_added() {
         let base = law_base();
         let new_element = PlyElement { name: "material".into(), count: 1, properties: vec![PlyProperty::Scalar { name: "shininess".into(), kind: PlyScalarType::Float }], rows: vec![PlyRow { values: vec![PlyValue::Float(0.1)] }] };
@@ -714,7 +714,7 @@ mod tests {
         assert_eq!(added.element.rows[0].values[0], PlyValue::Float(0.9), "patched directly into the carried added payload");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_law_modify_then_remove_name_keyed() {
         let base = law_base();
         let m1 = PlyMutation::SetRowProperty { element_name: "face".into(), row_index: 0, property_name: "vertex_indices".into(), value: PlyValue::List(vec![PlyValue::Int(0), PlyValue::Int(1), PlyValue::Int(2)]) };
@@ -731,7 +731,7 @@ mod tests {
         assert!(ed.removed.contains(&"face".to_string()));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_law_modify_then_remove_index_keyed() {
         let base = law_base();
         let m1 = PlyMutation::SetRowProperty { element_name: "vertex".into(), row_index: 1, property_name: "x".into(), value: PlyValue::Float(5.0) };
@@ -748,7 +748,7 @@ mod tests {
         assert!(rows_diff.removed.contains(&1));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_law_associativity() {
         let base = law_base();
         let m1 = PlyMutation::SetFormat { format: PlyFormat::BinaryLittleEndian };
@@ -777,7 +777,7 @@ mod tests {
 
     //#region 🔖️BetweenRoundtripLaw
     /// 4️⃣ `between_roundtrip_law`: `between(a,b).apply(a) == b` on synthetic fixtures.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn between_roundtrip_law() {
         let a = law_base();
         let mut b = a.clone();
@@ -796,7 +796,7 @@ mod tests {
 
     //#region 🔖️CodecRetentionLaw
     /// 5️⃣ `codec_retention_law`: decode→encode is byte-preserving for ascii/binary fixtures.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn codec_retention_law() {
         for format in [PlyFormat::Ascii, PlyFormat::BinaryLittleEndian, PlyFormat::BinaryBigEndian] {
             let snap = tetrahedron();
@@ -849,7 +849,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn field_sweep_covers_every_mutable_field() {
         let a = sweep_a();
         let b = sweep_b();
@@ -877,7 +877,7 @@ mod tests {
     }
 
     /// 🧪 Direct row-level triple sweep (not routed through the schema-change scope cut).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn field_sweep_row_triple_both_directions() {
         let common_props = vec![PlyProperty::Scalar { name: "x".into(), kind: PlyScalarType::Int }];
         let a = PlySnapshot {
@@ -915,7 +915,7 @@ mod tests {
         use crate::artifacts::ply::schema::{diff, mutations, snapshot};
         use protocol::{DiffCodec, OpBinary, OpText};
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn committed_facet_files_parse() {
             for (label, text) in [("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO)] {
                 let grammar = dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
@@ -926,7 +926,7 @@ mod tests {
             }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn grammar_conformance_law() {
             let grammar = dsl::parse_grammar(snapshot::text::COMPONENT_GRAMMAR_SEMIO).expect("parse snapshot grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
@@ -936,7 +936,7 @@ mod tests {
             assert!(recognizer.recognize(&reconstructed).expect("recognize"), "grammar did not recognize demo dsl body:\n{reconstructed}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn ops_grammar_conformance_law() {
             let grammar = dsl::parse_grammar(mutations::text::COMPONENT_GRAMMAR_SEMIO).expect("parse mutations grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
@@ -946,7 +946,7 @@ mod tests {
             }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn diff_grammar_conformance_law() {
             let grammar = dsl::parse_grammar(diff::text::COMPONENT_GRAMMAR_SEMIO).expect("parse diff grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
@@ -956,7 +956,7 @@ mod tests {
             }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn protocol_walk_law() {
             let pack_spec = dsl::parse_protocol(snapshot::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
             let demo = demo_ply_snapshot();
@@ -986,7 +986,7 @@ mod tests {
             }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn fixture_honesty_law() {
             const FIXTURE_DSL: &str = include_str!("../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
             const FIXTURE_PACK: &[u8] = include_bytes!("../📚️examples/🎬️demo/🖼️assets/🎒️example.pack.semio");

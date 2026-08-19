@@ -444,7 +444,7 @@ mod tests {
     //#region 🔖️CommandSurface
     /// 🏷️ Every declared manifest action id must be reachable as exactly one command row, and every row's
     /// wire keyword must be distinct — the cross-cutting invariant `app_commands!` is there to hold.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn command_ids_are_unique_and_match_the_declared_manifest_actions() {
         let commands = every_command();
         let ids: Vec<&str> = commands.iter().map(|command| command.command_id()).collect();
@@ -456,7 +456,7 @@ mod tests {
     }
 
     /// ⚖️ LAW: text and binary are two projections of the same command, for every single row.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn every_command_round_trips_through_text_and_binary() {
         for command in every_command() {
             store::os_store::test_support::assert_op_text_binary_equivalence(&command);
@@ -469,7 +469,7 @@ mod tests {
     /// pre-existing `📡️protocol` crate deliberately shortened every `set*` view command's wire keyword
     /// (`setActivePage` → `active-page`, `setCamera` → `camera`, `setLocale` → `locale`) — carried
     /// forward verbatim, not a drift.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
         let expected_keyword = |id: &str| -> &'static str {
             match id {
@@ -508,7 +508,7 @@ mod tests {
     /// identically either way — the enum's binary ordinal shifted when `setSelection`/`setHover`
     /// were deleted (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM), so this no longer
     /// pins exact historical bytes (greenfield: no back-compat), only text/binary equivalence.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn optional_field_rows_round_trip_text_and_binary_either_way() {
         use crate::artifacts::layout::LayoutCamera;
         let cases: [(LayoutCommand, &str); 3] = [
@@ -554,7 +554,7 @@ mod tests {
     //#endregion 🔖️CommandSurface
 
     //#region 🔖️ManifestSanity
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn the_manifest_stitches_every_taxonomy_node() {
         let json = serde_json::to_string(&create_layout_app()).expect("app definition json");
         for id in [LAYOUT_PLAY_WINDOW_BLUEPRINT, LAYOUT_PLAY_WINDOW_PREVIEW] {
@@ -567,7 +567,7 @@ mod tests {
         assert!(json.contains("2d.layout"), "artifact kind missing from the manifest");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn window_kind_actions_scope_authoring_to_blueprint_only() {
         let definition = create_layout_app();
         let resolve = |window_id: &str| -> Vec<String> {
@@ -587,14 +587,14 @@ mod tests {
     //#endregion 🔖️ManifestSanity
 
     //#region 🔖️CrossCutting
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn sample_fixture_parses() {
         let doc = crate::artifacts::layout::dsl::parse_dsl(crate::artifacts::layout::dsl::LAYOUT_SAMPLE_TEXT).expect("sample fixture");
         assert_eq!(doc.schema, crate::artifacts::layout::LAYOUT_DOCUMENT_SCHEMA);
         assert!(!doc.pages.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
         let mut app = layout_app();
         assert!(render(&mut app, "layout.play.nope").contains("Unknown body"));
@@ -606,7 +606,7 @@ mod tests {
     // `InteractionView` (a known SDK gap, same as gis2d's/puzzle3d's inspection panels — see this
     // ticket's w3b-summary.md) — flagged, not fixed here (framework file, out of this crate's remit).
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn window_engagements_cover_both_windows() {
         let mut app = layout_app();
         let engagements = app.window_engagements();
@@ -618,7 +618,7 @@ mod tests {
         assert!(engagements.contains_key(LAYOUT_PLAY_WINDOW_PREVIEW));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn registry_backed_add_frame_emits_operation() {
         // 🧬️ addFrame is declared `Mutation`: the registry-backed wrapper must let its operations through.
         let mut app = layout_app_with_registry();
@@ -626,7 +626,7 @@ mod tests {
         assert_eq!(result.mutations.len(), 1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn registry_backed_pointer_move_is_view_only() {
         // 🧬️ canvasPointerMove is declared `View`: it mutates only config hover state and must never emit
         // an operation, which the registry kind-discipline check enforces.
@@ -638,7 +638,7 @@ mod tests {
     //#endregion 🔖️CrossCutting
 
     //#region 🔖️MediaPorts
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn export_media_layout_out_returns_svg_of_first_page() {
         // 🌉️ Same pre-existing per-process registration gap as `🎮️commands/🐚️export`'s
         // `export_actions_wire_to_real_layout_exporters` test — see that test's comment.
@@ -655,7 +655,7 @@ mod tests {
         assert!(json.starts_with("<svg"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn export_media_document_out_round_trips_through_pack() {
         let app = layout_app();
         let document = app.snapshot().expect("projection");
@@ -670,7 +670,7 @@ mod tests {
         assert_eq!(decoded, document);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn import_media_fields_in_sets_data_fields_json() {
         let mut app = layout_app();
         let media = Media { media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value }, payload: MediaPayload::Structured { schema: "form.dictionary".into(), json: r#"{"name":"Ada"}"#.into() } };
@@ -679,14 +679,14 @@ mod tests {
         assert_eq!(document.data_fields_json.as_deref(), Some(r#"{"name":"Ada"}"#));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn layout_io_exposes_declared_ports() {
         let io = LayoutPlayApp::io().expect("layout declares io");
         assert!(io.ports.iter().any(|port| port.id == "fields:in"));
         assert!(io.ports.iter().any(|port| port.id == "layout:out"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn layout_io_declares_fields_in_and_layout_out_ports() {
         let io = crate::editor::layout::engine::layout_io();
         assert_eq!(io.document_schema, "layout.layout");

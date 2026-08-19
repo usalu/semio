@@ -172,25 +172,25 @@ mod tests {
     use super::*;
     use geometry::Mat4;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn unit_square_area() {
         let verts = [[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [1.0, 1.0, 0.0], [0.0, 1.0, 0.0]];
         assert!((surface_area_m2(&verts) - 1.0).abs() < 1e-6);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn horizontal_roof_tilt_zero() {
         let ta = surface_tilt_azimuth([0.0, 0.0, 1.0], 0.0);
         assert!(ta.tilt_deg.abs() < 1e-6);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn vertical_wall_tilt_ninety() {
         let ta = surface_tilt_azimuth([1.0, 0.0, 0.0], 0.0);
         assert!((ta.tilt_deg - 90.0).abs() < 1e-6);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn box_volume() {
         let floor = [[0.0, 0.0, 0.0], [0.0, 3.0, 0.0], [4.0, 3.0, 0.0], [4.0, 0.0, 0.0]];
         let ceiling = [[0.0, 0.0, 3.0], [4.0, 0.0, 3.0], [4.0, 3.0, 3.0], [0.0, 3.0, 3.0]];
@@ -208,13 +208,13 @@ mod tests {
         assert!((vol - 36.0).abs() < 0.5);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn planar_validation_ok() {
         let verts = [[0.0, 0.0, 0.0], [2.0, 0.0, 0.0], [1.0, 2.0, 0.0]];
         assert_eq!(validate_polygon_planar(&verts, 1e-6), PlanarValidation::Ok);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn identity_transform_preserves_vertices() {
         let verts = [[1.0, 2.0, 3.0]];
         let out = transform_vertices(&verts, Mat4::identity());

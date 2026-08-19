@@ -81,14 +81,14 @@ mod tests {
     use super::*;
     use crate::editor::sourcing::testkit::{new_app, render as render_body};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn definition_declares_the_table_surface_and_body_key() {
         let def = definition();
         assert_eq!(def.body_key, SOURCING_CURATE_BODY_CURATED);
         assert!(matches!(def.surface_kind, SurfaceKind::Table));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn renders_curated_table_scene() {
         let mut app = new_app();
         assert!(render_body(&mut app, SOURCING_CURATE_BODY_CURATED).contains("table"));

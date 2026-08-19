@@ -87,7 +87,7 @@ mod tests {
     use crate::editor::lowpoly::LowpolyCommand;
     use semio_framework_plugin::PluginApp;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn toggle_sun_flips_enabled() {
         let mut a = app();
         dispatch(&mut a, LowpolyCommand::ToggleSun(super::toggle_sun::ToggleSun {}));

@@ -167,23 +167,23 @@ pub struct DirectoryClient<T: DirectoryTransport> {
 }
 
 impl<T: DirectoryTransport> DirectoryClient<T> {
-    pub fn new(transport: T, base_url: impl Into<String>) -> Self {
+    pub async fn new(transport: T, base_url: impl Into<String>) -> Self {
         Self { transport, base_url: base_url.into(), token: RwLock::new(None) }
     }
 
-    pub fn base_url(&self) -> &str {
+    pub async fn base_url(&self) -> &str {
         &self.base_url
     }
 
-    pub fn token(&self) -> Option<String> {
+    pub async fn token(&self) -> Option<String> {
         self.token.read().unwrap_or_else(PoisonError::into_inner).clone()
     }
 
-    pub fn set_token(&self, token: Option<String>) {
+    pub async fn set_token(&self, token: Option<String>) {
         *self.token.write().unwrap_or_else(PoisonError::into_inner) = token;
     }
 
-    fn url(&self, path: &str) -> String {
+    async fn url(&self, path: &str) -> String {
         format!("{}{}", self.base_url.trim_end_matches('/'), path)
     }
 
@@ -191,11 +191,11 @@ impl<T: DirectoryTransport> DirectoryClient<T> {
     /// builds a request at all (`TransportError::Cancelled`, via the SAME transport call, is the
     /// other half: cancelled WHILE the call was in flight — see that variant's own doc).
     async fn request_json<R: DeserializeOwned>(&self, ctx: &OperationContext, method: HttpMethod, path: &str, body: Option<Vec<u8>>) -> Result<R, DirectoryClientError> {
-        if ctx.cancel.is_cancelled() {
+        if ctx.cancel.is_cancelled().await {
             return Err(DirectoryClientError::Cancelled);
         }
         let bearer = self.token();
-        let response = self.transport.http(ctx, method, &self.url(path), bearer.as_deref(), body).await?;
+        let response = self.transport.http(ctx, method, &self.url(path).await, bearer.await.as_deref(), body).await?;
         match response.status {
             200..=299 => Ok(serde_json::from_slice(&response.body)?),
             401 => Err(DirectoryClientError::Unauthorized),
@@ -232,8 +232,8 @@ impl<T: DirectoryTransport> DirectoryClient<T> {
         self.request_json(ctx, HttpMethod::Post, "/directory/commands", Some(body)).await
     }
 
-    pub fn stream(&self, since: u64) -> DirectoryStream<'_, T> {
-        DirectoryStream::new(self, since)
+    pub async fn stream(&self, since: u64) -> DirectoryStream<'_, T> {
+        DirectoryStream::new(self, since).await
     }
 }
 //#endregion 🔖️Client
@@ -246,17 +246,17 @@ pub const HUB_RECONNECT_MAX_MS: u64 = 30_000;
 
 /// 🔗️ `remote://host:port` / `http(s)://…` → `ws(s)://host:port/directory/ws?token=&since=`
 /// (contract §C2). Pure and independently testable, mirroring `🏪️store/🔄️sync`'s `hub_ws_url`.
-pub fn directory_ws_url(base_url: &str, token: &str, since: u64) -> String {
+pub async fn directory_ws_url(base_url: &str, token: &str, since: u64) -> String {
     let secure = base_url.starts_with("https://") || base_url.starts_with("wss://");
     let authority = base_url.split_once("://").map(|(_, rest)| rest).unwrap_or(base_url).split('/').next().unwrap_or(base_url);
     let scheme = if secure { "wss" } else { "ws" };
-    let encoded_token = urlencoding_component(token);
+    let encoded_token = urlencoding_component(token).await;
     format!("{scheme}://{authority}/directory/ws?token={encoded_token}&since={since}")
 }
 
 /// 🔤️ Minimal percent-encoding for the one query-string slot (`token`) that can carry
 /// characters `&`/`=`/`#`/space — avoids a new dependency for a three-character rule.
-fn urlencoding_component(value: &str) -> String {
+async fn urlencoding_component(value: &str) -> String {
     let mut encoded = String::with_capacity(value.len());
     for byte in value.bytes() {
         match byte {
@@ -268,7 +268,7 @@ fn urlencoding_component(value: &str) -> String {
 }
 
 /// ⏱️ Doubling backoff capped at `HUB_RECONNECT_MAX_MS`, floored at `HUB_RECONNECT_MIN_MS`.
-pub fn next_backoff_ms(current_ms: u64) -> u64 {
+pub async fn next_backoff_ms(current_ms: u64) -> u64 {
     current_ms.saturating_mul(2).clamp(HUB_RECONNECT_MIN_MS, HUB_RECONNECT_MAX_MS)
 }
 
@@ -294,15 +294,15 @@ pub struct DirectoryStream<'a, T: DirectoryTransport> {
 }
 
 impl<'a, T: DirectoryTransport> DirectoryStream<'a, T> {
-    fn new(client: &'a DirectoryClient<T>, since: u64) -> Self {
+    async fn new(client: &'a DirectoryClient<T>, since: u64) -> Self {
         Self { client, since, connection: None, backoff_ms: HUB_RECONNECT_MIN_MS, closed: false }
     }
 
-    pub fn since(&self) -> u64 {
+    pub async fn since(&self) -> u64 {
         self.since
     }
 
-    pub fn close(&mut self) {
+    pub async fn close(&mut self) {
         self.closed = true;
         self.connection = None;
     }
@@ -315,22 +315,22 @@ impl<'a, T: DirectoryTransport> DirectoryStream<'a, T> {
             return None;
         }
         loop {
-            if ctx.cancel.is_cancelled() {
+            if ctx.cancel.is_cancelled().await {
                 self.close();
                 return None;
             }
             if self.connection.is_none() {
-                let token = self.client.token().unwrap_or_default();
-                let url = directory_ws_url(self.client.base_url(), &token, self.since);
+                let token = self.client.token().await.unwrap_or_default();
+                let url = directory_ws_url(self.client.base_url().await, &token, self.since).await;
                 match self.client.transport.open_ws(ctx, &url).await {
                     Ok(connection) => {
                         self.connection = Some(connection);
                         self.backoff_ms = HUB_RECONNECT_MIN_MS;
                     }
-                    Err(_) => return Some(self.reconnecting()),
+                    Err(_) => return Some(self.reconnecting().await),
                 }
             }
-            let Some(connection) = self.connection.as_mut() else { return Some(self.reconnecting()) };
+            let Some(connection) = self.connection.as_mut() else { return Some(self.reconnecting().await) };
             match connection.recv_text().await {
                 Ok(Some(text)) => match serde_json::from_str::<DirectoryStreamMessage>(&text) {
                     Ok(message) => {
@@ -341,19 +341,19 @@ impl<'a, T: DirectoryTransport> DirectoryStream<'a, T> {
                 },
                 Ok(None) | Err(_) => {
                     self.connection = None;
-                    return Some(self.reconnecting());
+                    return Some(self.reconnecting().await);
                 }
             }
         }
     }
 
-    fn reconnecting(&mut self) -> DirectoryStreamEvent {
+    async fn reconnecting(&mut self) -> DirectoryStreamEvent {
         let after_ms = self.backoff_ms;
-        self.backoff_ms = next_backoff_ms(self.backoff_ms);
+        self.backoff_ms = next_backoff_ms(self.backoff_ms).await;
         DirectoryStreamEvent::Reconnecting { after_ms }
     }
 
-    fn track(&mut self, message: &DirectoryStreamMessage) {
+    async fn track(&mut self, message: &DirectoryStreamMessage) {
         match message {
             DirectoryStreamMessage::Event { event } => self.since = self.since.max(event.seq),
             DirectoryStreamMessage::Heartbeat { head_seq } => self.since = self.since.max(*head_seq),
@@ -392,7 +392,7 @@ pub mod native {
     }
 
     impl HttpTransport for UreqHttpTransport {
-        fn call(&self, request: PoolHttpRequest) -> Result<PoolHttpResponse, std::io::Error> {
+        async fn call(&self, request: PoolHttpRequest) -> Result<PoolHttpResponse, std::io::Error> {
             let mut builder = match request.method.as_str() {
                 "GET" => self.agent.get(&request.url),
                 "POST" => self.agent.post(&request.url),
@@ -419,7 +419,7 @@ pub mod native {
         }
     }
 
-    fn http_method_str(method: HttpMethod) -> &'static str {
+    async fn http_method_str(method: HttpMethod) -> &'static str {
         match method {
             HttpMethod::Get => "GET",
             HttpMethod::Post => "POST",
@@ -475,14 +475,14 @@ pub mod native {
     }
 
     impl NativeDirectoryTransport {
-        pub fn new(runtime: Arc<dyn HostAsyncRuntime>, scope: ScopeHandle, http_pool: Arc<HttpPool>, package: PackageId, actor: ActorId) -> Self {
+        pub async fn new(runtime: Arc<dyn HostAsyncRuntime>, scope: ScopeHandle, http_pool: Arc<HttpPool>, package: PackageId, actor: ActorId) -> Self {
             Self { runtime, scope, http_pool, package, actor }
         }
 
         /// 🐎️ Convenience constructor: builds its own `HttpPool` (and the one `ureq::Agent` behind
         /// it) over a caller-supplied `runtime`/`scope`/`ComputePool` — still never constructs the
         /// runtime itself.
-        pub fn with_new_http_pool(runtime: Arc<dyn HostAsyncRuntime>, scope: ScopeHandle, compute: Arc<ComputePool>, bytes_per_minute_cap: u64, outstanding_cap: u32, package: PackageId, actor: ActorId) -> Self {
+        pub async fn with_new_http_pool(runtime: Arc<dyn HostAsyncRuntime>, scope: ScopeHandle, compute: Arc<ComputePool>, bytes_per_minute_cap: u64, outstanding_cap: u32, package: PackageId, actor: ActorId) -> Self {
             let transport: Arc<dyn HttpTransport> = Arc::new(UreqHttpTransport { agent: ureq::Agent::new() });
             Self::new(runtime, scope, Arc::new(HttpPool::new(transport, compute, bytes_per_minute_cap, outstanding_cap)), package, actor)
         }
@@ -645,15 +645,15 @@ pub mod test_support {
     }
 
     impl FakeTransport {
-        pub fn push_response(&self, response: Result<HttpResponse, TransportError>) {
+        pub async fn push_response(&self, response: Result<HttpResponse, TransportError>) {
             self.responses.lock().unwrap().push_back(response);
         }
 
-        pub fn push_ws(&self, outcome: Result<VecDeque<Result<Option<String>, TransportError>>, TransportError>) {
+        pub async fn push_ws(&self, outcome: Result<VecDeque<Result<Option<String>, TransportError>>, TransportError>) {
             self.ws_outcomes.lock().unwrap().push_back(outcome);
         }
 
-        pub fn json_response(status: u16, body: &serde_json::Value) -> Result<HttpResponse, TransportError> {
+        pub async fn json_response(status: u16, body: &serde_json::Value) -> Result<HttpResponse, TransportError> {
             Ok(HttpResponse { status, body: serde_json::to_vec(body).unwrap() })
         }
     }
@@ -706,18 +706,18 @@ mod tests {
     use super::*;
     use semio_framework_async::{CancelToken, TraceId};
 
-    fn root_ctx() -> OperationContext {
+    async fn root_ctx() -> OperationContext {
         OperationContext { actor: 0, generation: 0, trace: TraceId(0), lane: 0, deadline_ms: None, cancel: CancelToken::root(), capability: None }
     }
 
     #[test]
-    fn ws_url_switches_scheme_and_encodes_query() {
+    async fn ws_url_switches_scheme_and_encodes_query() {
         assert_eq!(directory_ws_url("http://127.0.0.1:8787", "tok en", 0), "ws://127.0.0.1:8787/directory/ws?token=tok%20en&since=0");
         assert_eq!(directory_ws_url("https://hub.example", "abc", 42), "wss://hub.example/directory/ws?token=abc&since=42");
     }
 
     #[test]
-    fn backoff_doubles_and_caps() {
+    async fn backoff_doubles_and_caps() {
         assert_eq!(next_backoff_ms(500), 1000);
         assert_eq!(next_backoff_ms(20_000), 30_000);
         assert_eq!(next_backoff_ms(30_000), 30_000);
@@ -725,7 +725,7 @@ mod tests {
     }
 
     #[test]
-    fn spaces_decodes_and_sends_bearer() {
+    async fn spaces_decodes_and_sends_bearer() {
         let transport = FakeTransport::default();
         transport.push_response(FakeTransport::json_response(200, &serde_json::json!([])));
         let client = DirectoryClient::new(transport.clone(), "http://hub.local");
@@ -739,7 +739,7 @@ mod tests {
     }
 
     #[test]
-    fn unauthorized_status_maps_to_unauthorized_error() {
+    async fn unauthorized_status_maps_to_unauthorized_error() {
         let transport = FakeTransport::default();
         transport.push_response(Ok(HttpResponse { status: 401, body: Vec::new() }));
         let client = DirectoryClient::new(transport, "http://hub.local");
@@ -749,7 +749,7 @@ mod tests {
     }
 
     #[test]
-    fn stream_reconnects_and_resumes_from_last_seq() {
+    async fn stream_reconnects_and_resumes_from_last_seq() {
         let transport = FakeTransport::default();
         transport.push_ws(Err(TransportError::Io("refused".to_string())));
         let event = serde_json::json!({ "kind": "event", "event": { "seq": 7, "id": "e1", "hlc": { "physicalMs": 1, "logical": 0 }, "actor": { "kind": "system", "id": "sys" }, "body": { "kind": "space.archived", "spaceId": "sp-1" }, "recordedAtMs": 1 } }).to_string();
@@ -787,7 +787,7 @@ mod tests {
     /// 🧪️ A `ctx` that is ALREADY cancelled before the call starts must never reach the transport
     /// at all — `request_json`'s own up-front check (see `DirectoryClientError::Cancelled`'s doc).
     #[test]
-    fn a_request_with_an_already_cancelled_context_never_reaches_the_transport() {
+    async fn a_request_with_an_already_cancelled_context_never_reaches_the_transport() {
         let transport = FakeTransport::default();
         transport.push_response(FakeTransport::json_response(200, &serde_json::json!([])));
         let client = DirectoryClient::new(transport.clone(), "http://hub.local");
@@ -806,7 +806,7 @@ mod tests {
     /// the request future and a "canceller" future that cancels after ONE yield in lockstep on the
     /// SAME thread — no real time, no real thread, fully deterministic.
     #[test]
-    fn an_in_flight_request_is_cancelled_when_its_context_is_cancelled() {
+    async fn an_in_flight_request_is_cancelled_when_its_context_is_cancelled() {
         let transport = FakeTransport::default();
         transport.yields_before_response.store(2, std::sync::atomic::Ordering::SeqCst);
         transport.push_response(FakeTransport::json_response(200, &serde_json::json!([])));
@@ -826,7 +826,7 @@ mod tests {
     /// 🧪️ `DirectoryStream::recv` checks `ctx` at the top of its own loop too — cancelling mid-
     /// stream must close it (same as `DirectoryStream::close`) rather than reconnecting forever.
     #[test]
-    fn cancelling_the_context_closes_an_open_stream() {
+    async fn cancelling_the_context_closes_an_open_stream() {
         let transport = FakeTransport::default();
         let client = DirectoryClient::new(transport, "http://hub.local");
         let mut stream = client.stream(0);

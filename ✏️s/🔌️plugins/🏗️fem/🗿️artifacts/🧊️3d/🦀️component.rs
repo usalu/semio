@@ -184,7 +184,7 @@ pub struct FemCamera {
 }
 
 impl Default for FemCamera {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { json: "{}".to_string() }
     }
 }
@@ -351,14 +351,14 @@ mod tests {
     use super::*;
     use crate::model::Dof;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fem_dof_round_trips_through_core_dof() {
         for dof in FemDof::ALL {
             assert_eq!(FemDof::from(Dof::from(dof)), dof);
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fem_analysis_settings_default_matches_pre_migration_values() {
         let settings = FemAnalysisSettings::default();
         assert_eq!(settings.modal_count, 3);
@@ -366,12 +366,12 @@ mod tests {
         assert_eq!(settings.deformation_scale, 50.0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fem_camera_default_is_empty_json_object() {
         assert_eq!(FemCamera::default().json, "{}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn computation_artifact_kind_matches_computation_fem3d() {
         let kind = computation_artifact_kind();
         assert_eq!(kind.id, "computation.fem3d");

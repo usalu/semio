@@ -295,7 +295,7 @@ mod tests {
         })
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn insert_then_remove_slide_apply_and_inverse() {
         let base = fixture();
         let insert = PptxMutation::InsertSlide { index: 1, slide: PptxSlide { shapes: vec![PptxShape::TextBox { text_frame: vec![PptxParagraph::text("inserted")], position: PptxTransform::default() }] } };
@@ -311,7 +311,7 @@ mod tests {
         assert_eq!(restored, base);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn remove_slide_inverse_restores_removed_slide() {
         let base = fixture();
         let remove = PptxMutation::RemoveSlide { index: 0 };
@@ -324,7 +324,7 @@ mod tests {
         assert_eq!(after, base);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn move_slide_apply_and_inverse() {
         let base = fixture();
         let mv = PptxMutation::MoveSlide { from: 0, to: 1 };
@@ -338,7 +338,7 @@ mod tests {
         assert_eq!(after, base);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn insert_then_remove_shape_apply_and_inverse() {
         let base = fixture();
         let shape = PptxShape::Picture { blip_rel_id: "rId9".into(), position: PptxTransform { x: 1, y: 2, cx: 3, cy: 4 } };
@@ -362,7 +362,7 @@ mod tests {
         assert_eq!(after2, base);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_shape_text_and_position_apply_and_inverse() {
         let base = fixture();
         let mutation = PptxMutation::SetShapeText { slide_index: 0, shape_index: 0, text_frame: vec![PptxParagraph::text("changed")] };
@@ -387,7 +387,7 @@ mod tests {
         assert_eq!(after2, base);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_shape_text_on_picture_is_a_no_op() {
         let mut base = fixture();
         base.presentation.slides[0].shapes.push(PptxShape::Picture { blip_rel_id: "rId5".into(), position: PptxTransform::default() });
@@ -516,7 +516,7 @@ mod tests {
         ]
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mutation_diff_law() {
         for mutation in sample_mutations() {
             let base = fixture();
@@ -533,7 +533,7 @@ mod tests {
     //#endregion 🔖️MutationDiffLaw
 
     //#region 🔖️InverseLaw
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inverse_law() {
         for mutation in sample_mutations() {
             let base = fixture();
@@ -567,7 +567,7 @@ mod tests {
         diff.presentation.as_ref().expect("presentation diff present").slides.as_ref().expect("slides diff present")
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_law() {
         // Canonical: Insert(2)+Remove(0) -> {removed:[0], added:[(1,f)]}.
         {
@@ -654,7 +654,7 @@ mod tests {
     //#endregion 🔖️AbsorbLaw
 
     //#region 🔖️BetweenRoundtripLaw
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn between_roundtrip_law() {
         let a = sweep_a();
         let b = sweep_b();
@@ -680,7 +680,7 @@ mod tests {
     //#endregion 🔖️BetweenRoundtripLaw
 
     //#region 🔖️CodecRetentionLaw
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn codec_retention_law() {
         let authored = crate::artifacts::pptx::standards::v_ecma_376::subsets::any::io::export::serializers::build_minimal_pptx(PptxPresentation {
             slides: vec![PptxSlide {
@@ -711,7 +711,7 @@ mod tests {
     /// exercised and split across the two `between()` directions per this ticket's "known
     /// structural trap" note, which this test found applies recursively at every level, not just
     /// the top one.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn field_sweep() {
         let a = sweep_a();
         let b = sweep_b();
@@ -801,7 +801,7 @@ mod tests {
     /// exercises every variant incl. `SetSnapshot`'s full `PptxSnapshot` (OPC package + typed
     /// slides), `InsertShape`'s bare `PptxShape` enum payload (every `TextBox`/`Picture`/
     /// `Placeholder`/`Other` variant), and `SetShapeText`'s `Vec<PptxParagraph>`.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_text_binary_roundtrip_law() {
         let base = fixture();
         let mutations = vec![

@@ -1,11 +1,11 @@
-#[test]
+#[semio_framework_async_macros::async_test]
 async fn primary_asset_is_nonempty() {
     let text = include_str!("../🖼️assets/🗣️example.dsl.semio");
     assert!(text.len() > 8);
 }
 
 //#region 🧪️InferenceLaws
-#[test]
+#[semio_framework_async_macros::async_test]
 async fn inference_determinism_law() {
     use protocol::Inference;
     let text = include_str!("../🖼️assets/🗣️example.dsl.semio");
@@ -14,7 +14,7 @@ async fn inference_determinism_law() {
     assert_eq!(inference, crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::CadInference::infer(&snapshot));
 }
 
-#[test]
+#[semio_framework_async_macros::async_test]
 async fn inference_default_law() {
     use protocol::Inference;
     assert_eq!(
@@ -90,7 +90,7 @@ impl SubsetRoundtripSpec for CadAnyRoundtrip {
     }
 }
 
-#[test]
+#[semio_framework_async_macros::async_test]
 async fn demo_subset_integrated_roundtrip() {
     let text = include_str!("../🖼️assets/🗣️example.dsl.semio");
     let asset = ExampleAsset { bytes: text.as_bytes(), text: Some(text), provenance: "../../🖼️assets/🗣️example.dsl.semio" };

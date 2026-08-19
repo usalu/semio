@@ -35,7 +35,7 @@ impl protocol::Inference<PresentSnapshot> for PresentInference {
 /// own `Default` ever stops being the empty tile list — see the sibling artifacts' inference
 /// families for the same trick where the default snapshot is NOT the zero value.
 impl Default for PresentInference {
-    async fn default() -> Self {
+    fn default() -> Self {
         <Self as protocol::Inference<PresentSnapshot>>::infer(&PresentSnapshot::default())
     }
 }
@@ -104,18 +104,18 @@ mod tests {
     //#endregion 🧸️Fixtures
 
     //#region 🧪️InferenceLaws
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = sample_snapshot();
         assert_eq!(PresentInference::infer(&snapshot), PresentInference::infer(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(PresentInference::infer(&PresentSnapshot::default()), PresentInference::default());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn topology_orders_tiles_by_persisted_position() {
         let snapshot = sample_snapshot();
         let inferred = PresentInference::infer(&snapshot);

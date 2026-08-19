@@ -45,7 +45,7 @@ pub enum GltfInferenceTextError {
 }
 
 impl fmt::Display for GltfInferenceTextError {
-    async fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Serialization(error) => write!(formatter, "inference leaf serialization failed: {error}"),
             Self::CarriageReturn => formatter.write_str("text envelope must be LF-only"),
@@ -226,7 +226,7 @@ pub(crate) async fn crc32_iso_hdlc(bytes: &[u8]) -> u32 {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn canonical_leaf_roundtrip_is_id_bound() {
         let value = GltfInferenceLeafEnvelope {
             id: "s.stdio.gltf.inference.overall-size.v1".into(),

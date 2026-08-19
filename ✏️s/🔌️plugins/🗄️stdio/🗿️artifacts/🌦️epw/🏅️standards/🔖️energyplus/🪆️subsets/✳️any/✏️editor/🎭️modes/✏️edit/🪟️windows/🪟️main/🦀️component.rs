@@ -77,14 +77,14 @@ pub async fn render(document: &EpwSnapshot) -> UiNode {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn definition_declares_a_table_window() {
         let def = definition();
         assert_eq!(def.id, WINDOW_KIND_ID);
         assert_eq!(def.body_key, BODY_KEY);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn render_lists_one_row_per_record_with_35_columns() {
         let mut document = EpwSnapshot::default();
         document.records.push(Default::default());

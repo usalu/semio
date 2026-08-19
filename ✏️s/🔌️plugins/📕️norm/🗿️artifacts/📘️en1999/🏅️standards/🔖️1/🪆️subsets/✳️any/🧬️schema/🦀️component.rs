@@ -70,13 +70,13 @@ pub struct En1999Artifact {
 
 //#region 🔖️Conversions
 impl Default for En1999Artifact {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self::from_snapshot(En1999Snapshot::default())
     }
 }
 
 impl From<En1999Snapshot> for En1999Artifact {
-    async fn from(snapshot: En1999Snapshot) -> Self {
+    fn from(snapshot: En1999Snapshot) -> Self {
         Self::from_snapshot(snapshot)
     }
 }
@@ -654,7 +654,7 @@ pub async fn check_aluminium_member(n_ed_kn: f64, m_ed_knm: f64, a_mm2: f64, w_e
 mod compliance_helpers_tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn alloy_6060_t6_m_c_rd() {
         let alloy = part_1_1::Alloy::Aw6060T6;
         let w_el = 24_000.0;
@@ -662,14 +662,14 @@ mod compliance_helpers_tests {
         assert!((m_rd - 4.145454545).abs() < 1e-6);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn section_classification_6060() {
         let alloy = part_1_1::Alloy::Aw6060T6;
         let class = part_1_1::classify_flange_outstand(10.0, 3.0, alloy);
         assert_eq!(class, part_1_1::SectionClass::Class1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn haz_reduced_strength() {
         let alloy = part_1_1::Alloy::Aw6060T6;
         let f_haz = part_1_1::haz_strength_mpa(alloy);
@@ -677,7 +677,7 @@ mod compliance_helpers_tests {
         assert!((na_de::HAZ_ZONE_MM - 25.0).abs() < 1e-9);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn haz_reduction_factor_6082_t6_table_6_2() {
         // 📖️ EN 1999-1-1 Table 6.2 representative GMAW HAZ value for 6082-T6: f_o,haz ≈ 185 MPa vs f_o = 260 MPa ⇒ ρ_o,haz ≈ 0.71.
         let alloy = part_1_1::Alloy::Aw6082T6;
@@ -686,7 +686,7 @@ mod compliance_helpers_tests {
         assert!((rho_o_haz - 0.711).abs() < 1e-3);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fatigue_cutoff_at_2e6() {
         let strength = part_1_3::fatigue_strength_mpa(80.0, 8.0, 2_000_000.0);
         assert!((strength - 0.0).abs() < 1e-9);
@@ -694,14 +694,14 @@ mod compliance_helpers_tests {
         assert!(below > 0.0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn aluminium_member_e2e() {
         let alloy = part_1_1::Alloy::Aw6082T6;
         let report = check_aluminium_member(80.0, 12.0, 1200.0, 15_000.0, alloy, 0.8, 5000.0, 3000.0, AnnexChoice::De);
         assert_eq!(report.checks.len(), 3);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn weld_resistance_worked() {
         let a_w = part_1_1::weld_throat_area_mm2(4.0, 120.0);
         assert!((a_w - 480.0).abs() < 1e-9);
@@ -710,7 +710,7 @@ mod compliance_helpers_tests {
         assert!((v_rd - 480.0 * 215.0 / (0.63 * gamma_m2 * 1000.0)).abs() < 1e-6);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fire_critical_temperature_6060() {
         let theta_cr = part_1_2::critical_temperature_c(190.0);
         assert!((theta_cr - 246.0).abs() < 0.1);
@@ -718,20 +718,20 @@ mod compliance_helpers_tests {
         assert!(k_theta < 1.0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn cold_formed_effective_width_factor_worked() {
         // 📖️ EN 1999-1-4 §5.4: ρ(λ_p=1.0) = (1 − 0.22/1.0)/1.0 = 0.78.
         let rho = part_1_4::effective_width_factor(1.0);
         assert!((rho - 0.78).abs() < 1e-9);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn cold_formed_effective_width_factor_below_limit_is_unity() {
         let rho = part_1_4::effective_width_factor(0.5);
         assert!((rho - 1.0).abs() < 1e-9);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn check_cold_formed_sheeting_worked() {
         let alloy = part_1_1::Alloy::Aw6060T6;
         let gamma_m1 = na_de::AnnexParams::de().gamma_m1;
@@ -741,14 +741,14 @@ mod compliance_helpers_tests {
         assert!((result.limit.value / 1_000_000.0 - expected_m_rd_knm).abs() < 1e-9);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn shell_critical_axial_stress_worked() {
         // 📖️ EN 1999-1-5 §5: σ_cr = 0.605·E·t/r = 0.605·70000·4/500 = 338.8 MPa.
         let sigma_cr = part_1_5::critical_axial_stress_mpa(4.0, 500.0);
         assert!((sigma_cr - 338.8).abs() < 1e-6);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn shell_buckling_pipeline_worked() {
         let alloy = part_1_1::Alloy::Aw6060T6;
         let gamma_m1 = na_de::AnnexParams::de().gamma_m1;

@@ -79,7 +79,7 @@ pub enum TrinityRamError {
 
 /// 🔀️ [`ManifestValidationError`] carries no `std::error::Error` impl of its own (plain path/message struct), so this is a manual conversion rather than `#[from]`.
 impl From<ManifestValidationError> for TrinityRamError {
-    async fn from(error: ManifestValidationError) -> Self {
+    fn from(error: ManifestValidationError) -> Self {
         Self::Manifest(error)
     }
 }
@@ -323,7 +323,7 @@ pub struct Camera {
 }
 
 impl Default for Camera {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { x: 0.0, y: 0.0, zoom: 1.0 }
     }
 }
@@ -807,21 +807,21 @@ mod tests {
         )
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn manifest_nakagin_has_piece_and_connection() {
         let m = Manifest::nakagin_default();
         assert!(m.node_kind("Piece").is_some());
         assert!(m.edge_kind("Connection").is_some());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fixture_loads_manifest_id_only() {
         let json = r#"{"schema":"trinity.graph","name":"mini","manifestId":"nakagin","camera":{"x":0,"y":0,"zoom":1},"nodes":[],"edges":[]}"#;
         let graph = Graph::load_json(json).unwrap();
         assert!(graph.manifest.node_kind("Piece").is_some());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fixture_round_trip() {
         let fixture = mini_fixture();
         let json = fixture.to_json().unwrap();
@@ -830,7 +830,7 @@ mod tests {
         assert_eq!(back.edges().len(), 1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn remove_node_cascades_edges() {
         let mut g = Graph::from_fixture(mini_fixture()).unwrap();
         assert!(g.remove_node("root"));
@@ -838,7 +838,7 @@ mod tests {
         assert!(g.nodes.contains_key("child"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn graph_op_create_node_and_undo() {
         let fixture = mini_fixture();
         let mut store = crate::artifacts::jack::op::TrinityGraphStore::new(crate::artifacts::jack::op::create_trinity_graph_envelope("test", fixture));
@@ -849,7 +849,7 @@ mod tests {
         assert_eq!(store.snapshot().expect("projection").nodes().len(), 2);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn graph_op_dispatch_validates_create_edge_batch_incrementally() {
         let fixture = mini_fixture();
         let mut nodes = fixture.nodes();
@@ -892,7 +892,7 @@ mod tests {
         assert_eq!(projection.edges().len(), 2);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn graph_op_rejects_unknown_node_kind() {
         let fixture = mini_fixture();
         let err = validate_trinity_graph_operation(&create_node(Node { id: "new".into(), kind: "Piece2".into(), name: "x".into(), x: 0.0, y: 0.0, width: 80.0, height: 40.0, properties: PropertyBag::new(), ports: vec![] }), &fixture)
@@ -900,28 +900,28 @@ mod tests {
         assert!(err.to_string().contains("unknown node kind"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn from_json_rejects_wrong_schema() {
         let json = r#"{"schema":"bogus","name":"x","camera":{"x":0,"y":0,"zoom":1},"nodes":[],"edges":[]}"#;
         let err = JackSnapshot::from_json(json).expect_err("schema mismatch");
         assert!(err.to_string().contains("expected schema trinity.graph"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn resolve_manifest_errors_when_missing_and_empty() {
         let mut fixture = JackSnapshot::with_content(JackSnapshot::SCHEMA.into(), "x".into(), None, Manifest::default(), Camera::default(), vec![], vec![], None);
         let err = fixture.resolve_manifest().expect_err("missing manifest");
         assert!(matches!(err, TrinityRamError::ManifestMissing));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn resolve_manifest_errors_on_unknown_id() {
         let mut fixture = JackSnapshot::with_content(JackSnapshot::SCHEMA.into(), "x".into(), Some("nope".into()), Manifest::default(), Camera::default(), vec![], vec![], None);
         let err = fixture.resolve_manifest().expect_err("unknown manifest id");
         assert!(err.to_string().contains("unknown manifest id nope"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn graph_from_fixture_rejects_port_kind_not_declared_on_node_kind() {
         let fixture = mini_fixture();
         let mut nodes = fixture.nodes();
@@ -932,7 +932,7 @@ mod tests {
         assert!(err.to_string().contains("root"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn graph_accessors_and_mutators() {
         let mut g = Graph::from_fixture(mini_fixture()).unwrap();
         assert!(g.node("root").is_some());
@@ -950,7 +950,7 @@ mod tests {
         assert!(!g.remove_edge("e2"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn graph_remove_node_clears_root_node_id() {
         let mut g = Graph::from_fixture(mini_fixture()).unwrap();
         assert!(g.remove_node("root"));
@@ -960,7 +960,7 @@ mod tests {
         assert!(!g.remove_node("root"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn graph_set_property_success_and_errors() {
         let mut g = Graph::from_fixture(mini_fixture()).unwrap();
         g.set_property(EntityRef::Node("root".into()), "label", PropertyValue::String("hi".into())).expect("set node prop");
@@ -974,7 +974,7 @@ mod tests {
         assert!(matches!(err, TrinityRamError::EdgeNotFound(_)));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn graph_to_fixture_and_fixture_json() {
         let g = Graph::from_fixture(mini_fixture()).unwrap();
         let fixture = g.to_fixture();
@@ -984,7 +984,7 @@ mod tests {
         assert!(json.contains("\"schema\""));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn subgraph_fixture_filters_entities_and_keeps_root_when_included() {
         let g = Graph::from_fixture(mini_fixture()).unwrap();
         let node_ids: BTreeSet<String> = ["root".to_string()].into_iter().collect();
@@ -995,7 +995,7 @@ mod tests {
         assert!(sub.name.contains("subgraph"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn subgraph_fixture_drops_root_when_not_included() {
         let g = Graph::from_fixture(mini_fixture()).unwrap();
         let node_ids: BTreeSet<String> = ["child".to_string()].into_iter().collect();
@@ -1003,7 +1003,7 @@ mod tests {
         assert!(sub.root_node_id.is_none());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn port_key_helpers_handle_malformed_keys() {
         assert_eq!(parse_port_key("node@port"), Some(("node", "port")));
         assert_eq!(parse_port_key("noport"), None);

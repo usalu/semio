@@ -57,7 +57,7 @@ pub struct TxtSnapshot {
 }
 
 impl Default for TxtSnapshot {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { schema: STDIO_TXT_DOCUMENT_SCHEMA.into(), lines: Vec::new(), trailing_newline: false, line_ending: LineEnding::Lf }
     }
 }

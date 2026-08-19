@@ -419,7 +419,7 @@ mod tests {
         assert_eq!(&restored, base, "inverse must restore the original base for {mutation:?}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mutation_diff_law_and_inverse_law_cover_every_collection() {
         let base = fixture();
 
@@ -460,7 +460,7 @@ mod tests {
     /// 🧪️ op_text_binary_roundtrip_law: real hand-rolled `OpText`/`OpBinary` round trip, one
     /// instance of every variant (`demo_mutation_cases()` — single source of truth also shared with
     /// the composer's `ops_grammar_conformance_law`/`protocol_walk_law`).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_text_binary_roundtrip_law() {
         for m in demo_mutation_cases() {
             let printed = m.print_op();

@@ -424,7 +424,7 @@ mod tests {
         ]
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mutation_diff_law() {
         let base = base_snapshot();
         for m in all_variants(&base) {
@@ -434,7 +434,7 @@ mod tests {
     //#endregion 🔖️mutation_diff_law
 
     //#region 🔖️inverse_law
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inverse_law() {
         let base = base_snapshot();
         for m in all_variants(&base) {
@@ -467,7 +467,7 @@ mod tests {
         assert_eq!(merged.apply(base).unwrap(), sequential, "absorb(d1,d2).apply(base) must equal sequential application for {m1:?} + {m2:?}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_law() {
         let base = base_snapshot();
 
@@ -497,7 +497,7 @@ mod tests {
         assert_absorb_law(&base, TiffMutation::SetByteOrder { byte_order: TiffByteOrder::BigEndian }, TiffMutation::SetByteOrder { byte_order: TiffByteOrder::LittleEndian });
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_law_associativity() {
         let base = base_snapshot();
         let d1 = TiffMutation::SetTag { ifd_index: 0, tag: 315, kind: TiffFieldType::Ascii, values: TiffValues::Ascii("a".into()) }.diff(&base);
@@ -525,7 +525,7 @@ mod tests {
     //#endregion 🔖️absorb_law
 
     //#region 🔖️between_roundtrip_law
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn between_roundtrip_law() {
         let a = base_snapshot();
         let mut b = base_snapshot();
@@ -542,7 +542,7 @@ mod tests {
     //#endregion 🔖️between_roundtrip_law
 
     //#region 🔖️codec_retention_law
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn codec_retention_law() {
         let bytes = crate::artifacts::tiff::engine::encode_tiff(&base_snapshot()).expect("encode synthetic fixture");
         let decoded = crate::artifacts::tiff::engine::decode_tiff(&bytes).expect("decode fixture");
@@ -558,7 +558,7 @@ mod tests {
     //#endregion 🔖️codec_retention_law
 
     //#region 🔖️field_sweep
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn field_sweep_covers_every_mutable_field() {
         let a = sweep_a();
         let b = sweep_b();
@@ -603,7 +603,7 @@ mod tests {
     }
     //#endregion 🔖️field_sweep
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn out_of_range_mutation_is_noop_not_panic() {
         let base = base_snapshot();
         let mut snap = base.clone();
@@ -622,7 +622,7 @@ mod tests {
     /// exercises every variant incl. `SetTag`/`SetSnapshot`'s bare `TiffValues` payload across
     /// every one of the 12 field-type variants (`Rational`/`SRational` pair lists, `Ascii`/`Byte`/
     /// `Undefined` hex, signed and unsigned numeric lists, `Float`/`Double`).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_text_binary_roundtrip_law() {
         let base = base_snapshot();
         let mutations = vec![

@@ -84,12 +84,12 @@ mod tests {
         dsl::to_dsl_value(&value).unwrap_or(dsl::DslValue::Null)
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn empty_snapshot_has_no_bounds() {
         assert!(lon_lat_bounds(&all_lon_lat_pairs(&GisMapSnapshot::default())).is_none());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn positions_routes_and_regions_all_contribute_points() {
         let snapshot = GisMapSnapshot {
             positions: vec![MapFeature { id: "p1".into(), data: dsl_of(serde_json::json!({ "id": "p1", "lon": -0.1427, "lat": 51.5142 })) }],

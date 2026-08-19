@@ -981,7 +981,7 @@ mod tests {
     use semio_framework_plugin::PluginApp;
 
     //#region 🔖️CommandSurface
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn command_ids_are_unique_and_cover_every_row() {
         let _serial = test_support::lock();
         let commands = every_command();
@@ -993,7 +993,7 @@ mod tests {
         assert_eq!(ids.len(), 31, "every Procedural3dCommand row must be covered by every_command()");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn every_command_round_trips_through_text_and_binary() {
         let _serial = test_support::lock();
         for command in every_command() {
@@ -1004,7 +1004,7 @@ mod tests {
     /// ⚖️ LAW: the leading token of every printed op line is the row's `dsl` wire keyword — pinned
     /// explicitly per row since procedural3d's wire keys frequently diverge from a mechanical
     /// kebab-case of the command id (e.g. `nodeGraphViewport` → `viewport`, `setLocale` → `locale`).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
         let _serial = test_support::lock();
         let expected_keywords = [
@@ -1084,13 +1084,13 @@ mod tests {
     }
     //#endregion 🔖️CommandSurface
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn declared_actions_bridge_to_commands() {
         let _serial = test_support::lock();
         semio_framework_plugin::testkit::assert_declared_actions_bridge_to_commands::<semio_framework_plugin::EditorApp<Procedural3dPlayApp>>(testkit::procedural3d_app_manifest_for_testkit);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn the_manifest_stitches_every_taxonomy_node() {
         let _serial = test_support::lock();
         let json = serde_json::to_string(&create_procedural3d_app()).expect("app definition json");
@@ -1103,7 +1103,7 @@ mod tests {
         assert!(json.contains("3d.procedural"), "artifact kind missing from the manifest");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn each_example_loads_distinct_fixture_and_preview_geometry() {
         use crate::artifacts::procedural3d::schema::*;
         use crate::artifacts::procedural3d::widget_id;
@@ -1127,7 +1127,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn refresh_pending_effects_arms_flow_eval_tick_chain() {
         let _serial = test_support::lock();
         let mut app = app();
@@ -1138,7 +1138,7 @@ mod tests {
         drain_flow_eval_ticks(&mut app);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn undo_redo_round_trips_flow_graph_edits() {
         let _serial = test_support::lock();
         let mut app = app();
@@ -1146,7 +1146,7 @@ mod tests {
         semio_framework_plugin::testkit::assert_undo_redo_round_trip(&mut app, Procedural3dCommand::AddWidget(add_widget::AddWidget { kind: "inputNote".into(), x: None, y: None }), |app| app.snapshot().expect("snapshot").fixture.widgets.len(), before, before + 1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn two_instances_converge_disjoint_widget_moves() {
         let _serial = test_support::lock();
         let widgets: Vec<String> = app().snapshot().expect("snapshot").fixture.widgets.iter().map(|widget| crate::artifacts::procedural3d::widget_id(widget).to_string()).collect();
@@ -1163,7 +1163,7 @@ mod tests {
         );
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn procedural3d_labels_translate_catalogue_and_inspector_in_german() {
         let _serial = test_support::lock();
         let mut app = app();
@@ -1178,7 +1178,7 @@ mod tests {
     /// same discovered gap as `render`), so `has_selection` is always false now and the destructive
     /// `delete-selection` row (conditioned on a real selection) never appears; this test now only pins
     /// the disclosure budget.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn context_menu_grouped_disclosure_stays_within_budget() {
         let _serial = test_support::lock();
         let mut app = app_with_registry();
@@ -1190,7 +1190,7 @@ mod tests {
         assert!(!menu.is_empty(), "grouped disclosure menu should not be empty");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn sun_measures_are_exposed_on_preview_windows() {
         let _serial = test_support::lock();
         let mut app = app();
@@ -1218,7 +1218,7 @@ mod tests {
         preview_payload_from_eval(&eval_json, fixture, cfg)
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn preview_payload_has_meshes_and_instances() {
         let _serial = test_serial();
         let projection = crate::artifacts::procedural3d::schema::default_snapshot();
@@ -1265,7 +1265,7 @@ mod tests {
         assert!(visible > 0, "no preview instances intersect camera frustum");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn document_from_mesh_returns_valid_default_snapshot() {
         let _serial = test_serial();
         let mesh = semio_framework_plugin::MeshData::default();
@@ -1274,7 +1274,7 @@ mod tests {
         assert_eq!(projection.fixture.schema, "flow.fixture");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn procedural3d_mesh_bridges_round_trip_through_obj_glb_stl_codecs() {
         let _serial = test_serial();
         use semio_framework_plugin::{GlbExporter, GlbImporter, MeshExporter, MeshImporter, ObjExporter, ObjImporter, StlExporter, StlImporter};
@@ -1298,7 +1298,7 @@ mod tests {
         let _: Procedural3dSnapshot = serde_json::from_value(stl_document).expect("parseable stl projection");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn rectangle_wire_preview_emits_edge_only_mesh() {
         let _serial = test_serial();
         let projection = Procedural3dSnapshot::parse_dsl(crate::artifacts::procedural3d::dsl::PROCEDURAL3D_EXAMPLE_RECTANGLE_WIRE_TEXT).expect("rectangle wire example");
@@ -1312,7 +1312,7 @@ mod tests {
         assert!(!instances_json.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn all_bundled_examples_emit_preview_meshes() {
         let _serial = test_serial();
         let config = Procedural3dConfig::default();
@@ -1336,14 +1336,14 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn preview_tolerance_follows_lod_mode() {
         assert!((preview_tolerance("coarse") - 0.15).abs() < 1e-9);
         assert!((preview_tolerance("fine") - 0.02).abs() < 1e-9);
         assert!((preview_tolerance("") - 0.05).abs() < 1e-9);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn wireframe_show_mode_strips_shaded_triangles() {
         let _serial = test_serial();
         let projection = crate::artifacts::procedural3d::schema::default_snapshot();
@@ -1356,7 +1356,7 @@ mod tests {
         assert!(!data.edge_positions.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn procedural3d_io_declares_the_params_and_geometry_ports() {
         let io = procedural3d_io();
         assert_eq!(io.document_schema, "procedural.3d");

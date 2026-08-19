@@ -186,7 +186,7 @@ pub async fn describe_video_probe(probe: &remodel_video::VideoProbe) -> (remodel
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn raster_to_png_asset_normalizes_valid_cells_only() {
         let mut raster = remodel_geo::Raster::new(2, 2, 1.0, [0.0, 0.0]);
         raster.set(0, 0, 0.0);

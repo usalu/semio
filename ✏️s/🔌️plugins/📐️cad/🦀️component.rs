@@ -68,12 +68,12 @@ mod surface_tests {
         assert_eq!(E::DIALECT, V::DIALECT, "an editor and viewer over the same subset must share one Dialect coordinate");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn cad_viewer_never_mutates() {
         assert_viewer_never_mutates::<crate::viewer::cad::CadViewer>();
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn cad_editor_and_viewer_share_dialect() {
         assert_editor_and_viewer_share_dialect::<crate::editor::cad::CadPlayApp, crate::viewer::cad::CadViewer>();
     }
@@ -87,7 +87,7 @@ mod surface_tests {
 /// editor and viewer app surfaces.
 #[cfg(test)]
 mod assembly_tests {
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn cad_plugin_assembles_with_editor_and_viewer_apps() {
         let bundle = super::plugin().expect("cad plugin() must assemble; see require_declared_capability_or_record for the exact missing/misdeclared capability claim");
         let manifest = <semio_framework_plugin::Plugin as semio_framework_plugin::PluginProgram>::manifest(&bundle);
@@ -102,7 +102,7 @@ mod assembly_tests {
     /// claim `require_declared_capability_or_record` derives from it and whether cad's own
     /// `definition()` declares a matching composer capability — pinpoints which entry (not just
     /// "some composer") is responsible when `cad_plugin_assembles_with_editor_and_viewer_apps` fails.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn cad_composer_entries_have_declared_capabilities() {
         let definition = crate::artifacts::cad::definition().expect("cad definition() must build");
         let entries = crate::artifacts::cad::standards::v1::subsets::any::io::io_registry::entries();

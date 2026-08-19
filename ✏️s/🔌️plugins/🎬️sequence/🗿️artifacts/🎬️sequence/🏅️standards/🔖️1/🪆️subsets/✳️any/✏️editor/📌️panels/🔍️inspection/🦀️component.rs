@@ -68,7 +68,7 @@ mod tests {
     use crate::editor::sequence::testkit::{new_app, render as render_body};
     use semio_framework_plugin::PluginApp;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inspection_shows_prompt_when_nothing_selected() {
         let mut app = new_app();
         assert!(render_body(&mut app, SEQUENCE_PLAY_BODY_INSPECTOR).contains("Select a step"));
@@ -80,7 +80,7 @@ mod tests {
     /// `SequencePlayApp::render` always calls this with an empty slice, a documented framework gap
     /// (the same one `space`'s node-graph canvas rendering and context menu carry). This exercises
     /// `render`'s own selected-step branch directly instead of through the app's dispatch/render loop.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inspection_shows_selected_step_kind() {
         let mut app = new_app();
         let fixture = app.snapshot().expect("projection").to_fixture();

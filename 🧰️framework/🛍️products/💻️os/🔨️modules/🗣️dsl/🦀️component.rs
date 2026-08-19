@@ -32,21 +32,25 @@ pub use crate::os_dsl::grammar::{
 /// for technology-declared nested types, so composition (a record field whose type is another
 /// derived record or enum) works transparently through the same trait.
 pub trait DslField: Sized {
+    // 🚫️async: E4 fn-pointer transitivity — `Shape::Record`/`Table`/`Statements` hold
+    // `fn() -> RecordSpec`; every `shape()` implementation ultimately feeds one, directly or
+    // through a derived `__dsl_spec` — see R9.
     fn shape() -> Shape;
-    fn to_value(&self) -> FieldValue;
-    fn from_value(value: &FieldValue) -> Result<Self, String>;
+    async fn to_value(&self) -> FieldValue;
+    async fn from_value(value: &FieldValue) -> Result<Self, String>;
 }
 
 macro_rules! impl_dsl_field_int {
     ($ty:ty, $shape:expr, $variant:ident, $as_ty:ty) => {
         impl DslField for $ty {
+            // 🚫️async: E4 — see `DslField::shape`'s tag above.
             fn shape() -> Shape {
                 $shape
             }
-            fn to_value(&self) -> FieldValue {
+            async fn to_value(&self) -> FieldValue {
                 FieldValue::$variant(*self as $as_ty)
             }
-            fn from_value(value: &FieldValue) -> Result<Self, String> {
+            async fn from_value(value: &FieldValue) -> Result<Self, String> {
                 match value {
                     FieldValue::$variant(v) => Ok(*v as $ty),
                     other => Err(format!("expected {}, found {other:?}", stringify!($variant))),
@@ -68,13 +72,14 @@ impl_dsl_field_int!(u64, Shape::UInt, UInt, u64);
 impl_dsl_field_int!(usize, Shape::UInt, UInt, u64);
 
 impl DslField for bool {
+    // 🚫️async: E4 — see `DslField::shape`'s tag above.
     fn shape() -> Shape {
         Shape::Bool
     }
-    fn to_value(&self) -> FieldValue {
+    async fn to_value(&self) -> FieldValue {
         FieldValue::Bool(*self)
     }
-    fn from_value(value: &FieldValue) -> Result<Self, String> {
+    async fn from_value(value: &FieldValue) -> Result<Self, String> {
         match value {
             FieldValue::Bool(b) => Ok(*b),
             other => Err(format!("expected Bool, found {other:?}")),
@@ -83,13 +88,14 @@ impl DslField for bool {
 }
 
 impl DslField for f32 {
+    // 🚫️async: E4 — see `DslField::shape`'s tag above.
     fn shape() -> Shape {
         Shape::Float
     }
-    fn to_value(&self) -> FieldValue {
+    async fn to_value(&self) -> FieldValue {
         FieldValue::Float(*self as f64)
     }
-    fn from_value(value: &FieldValue) -> Result<Self, String> {
+    async fn from_value(value: &FieldValue) -> Result<Self, String> {
         match value {
             FieldValue::Float(f) => Ok(*f as f32),
             other => Err(format!("expected Float, found {other:?}")),
@@ -98,13 +104,14 @@ impl DslField for f32 {
 }
 
 impl DslField for f64 {
+    // 🚫️async: E4 — see `DslField::shape`'s tag above.
     fn shape() -> Shape {
         Shape::Float
     }
-    fn to_value(&self) -> FieldValue {
+    async fn to_value(&self) -> FieldValue {
         FieldValue::Float(*self)
     }
-    fn from_value(value: &FieldValue) -> Result<Self, String> {
+    async fn from_value(value: &FieldValue) -> Result<Self, String> {
         match value {
             FieldValue::Float(f) => Ok(*f),
             other => Err(format!("expected Float, found {other:?}")),
@@ -117,13 +124,14 @@ impl DslField for f64 {
 /// (unquoted) whenever `crate::os_dsl::is_bare_ident` holds for the value, quoted+escaped otherwise —
 /// so bare-vs-quoted is entirely a printing decision now, not a separate shape a field opts into.
 impl DslField for String {
+    // 🚫️async: E4 — see `DslField::shape`'s tag above.
     fn shape() -> Shape {
         Shape::Text
     }
-    fn to_value(&self) -> FieldValue {
+    async fn to_value(&self) -> FieldValue {
         FieldValue::Text(self.clone())
     }
-    fn from_value(value: &FieldValue) -> Result<Self, String> {
+    async fn from_value(value: &FieldValue) -> Result<Self, String> {
         match value {
             FieldValue::Text(s) => Ok(s.clone()),
             other => Err(format!("expected Text, found {other:?}")),
@@ -138,13 +146,14 @@ impl DslField for String {
 pub struct Wire(pub WireValue);
 
 impl DslField for Wire {
+    // 🚫️async: E4 — see `DslField::shape`'s tag above.
     fn shape() -> Shape {
         Shape::Wire
     }
-    fn to_value(&self) -> FieldValue {
+    async fn to_value(&self) -> FieldValue {
         FieldValue::Wire(self.0.clone())
     }
-    fn from_value(value: &FieldValue) -> Result<Self, String> {
+    async fn from_value(value: &FieldValue) -> Result<Self, String> {
         match value {
             FieldValue::Wire(w) => Ok(Wire(w.clone())),
             other => Err(format!("expected Wire, found {other:?}")),
@@ -157,15 +166,29 @@ impl DslField for Wire {
 /// satisfy `DslField` itself. These two blanket impls close that gap generically instead of adding
 /// a special-cased `FieldKind` for every depth of nesting.
 impl<T: DslField> DslField for Vec<T> {
+    // 🚫️async: E4 — see `DslField::shape`'s tag above.
     fn shape() -> Shape {
         Shape::List(Box::new(T::shape()))
     }
-    fn to_value(&self) -> FieldValue {
-        FieldValue::List(self.iter().map(DslField::to_value).collect())
+    // 🔁 `Iterator::map` cannot await per-element (residue shape 1) and `T::to_value`/`from_value`
+    // are AFIT over an arbitrary implementor, so — unlike a known-pure leaf fn — R9 does not apply;
+    // the fix is a plain sequential loop that awaits each element in turn.
+    async fn to_value(&self) -> FieldValue {
+        let mut items = Vec::with_capacity(self.len());
+        for item in self {
+            items.push(item.to_value().await);
+        }
+        FieldValue::List(items)
     }
-    fn from_value(value: &FieldValue) -> Result<Self, String> {
+    async fn from_value(value: &FieldValue) -> Result<Self, String> {
         match value {
-            FieldValue::List(items) => items.iter().map(T::from_value).collect(),
+            FieldValue::List(items) => {
+                let mut out = Vec::with_capacity(items.len());
+                for item in items {
+                    out.push(T::from_value(item).await?);
+                }
+                Ok(out)
+            }
             other => Err(format!("expected List, found {other:?}")),
         }
     }
@@ -176,15 +199,27 @@ impl<T: DslField> DslField for Vec<T> {
 /// classifies a *bare* `BTreeMap<String, T>` field directly via its own dedicated `FieldKind`
 /// (same `Shape::Map` this produces), so the two never conflict.
 impl<T: DslField> DslField for std::collections::BTreeMap<String, T> {
+    // 🚫️async: E4 — see `DslField::shape`'s tag above.
     fn shape() -> Shape {
         Shape::Map(Box::new(T::shape()))
     }
-    fn to_value(&self) -> FieldValue {
-        FieldValue::Map(self.iter().map(|(k, v)| (k.clone(), v.to_value())).collect())
+    // 🔁 Same R9-doesn't-apply reasoning as `Vec<T>` above: sequential loop, not `.map().collect()`.
+    async fn to_value(&self) -> FieldValue {
+        let mut entries = Vec::with_capacity(self.len());
+        for (k, v) in self {
+            entries.push((k.clone(), v.to_value().await));
+        }
+        FieldValue::Map(entries)
     }
-    fn from_value(value: &FieldValue) -> Result<Self, String> {
+    async fn from_value(value: &FieldValue) -> Result<Self, String> {
         match value {
-            FieldValue::Map(entries) => entries.iter().map(|(k, v)| Ok((k.clone(), T::from_value(v)?))).collect(),
+            FieldValue::Map(entries) => {
+                let mut out = Self::new();
+                for (k, v) in entries {
+                    out.insert(k.clone(), T::from_value(v).await?);
+                }
+                Ok(out)
+            }
             other => Err(format!("expected Map, found {other:?}")),
         }
     }
@@ -192,16 +227,25 @@ impl<T: DslField> DslField for std::collections::BTreeMap<String, T> {
 
 /// @emoji 📐️ Fixed-arity `Shape::Tuple(_, Some(N))` — a packed `x,y,z`-style literal for any `N`.
 impl<T: DslField, const N: usize> DslField for [T; N] {
+    // 🚫️async: E4 — see `DslField::shape`'s tag above.
     fn shape() -> Shape {
         Shape::Tuple(Box::new(T::shape()), Some(N))
     }
-    fn to_value(&self) -> FieldValue {
-        FieldValue::Tuple(self.iter().map(DslField::to_value).collect())
+    // 🔁 Same R9-doesn't-apply reasoning as `Vec<T>` above: sequential loop, not `.map().collect()`.
+    async fn to_value(&self) -> FieldValue {
+        let mut items = Vec::with_capacity(N);
+        for item in self {
+            items.push(item.to_value().await);
+        }
+        FieldValue::Tuple(items)
     }
-    fn from_value(value: &FieldValue) -> Result<Self, String> {
+    async fn from_value(value: &FieldValue) -> Result<Self, String> {
         match value {
             FieldValue::Tuple(items) if items.len() == N => {
-                let converted: Vec<T> = items.iter().map(T::from_value).collect::<Result<_, _>>()?;
+                let mut converted: Vec<T> = Vec::with_capacity(N);
+                for item in items {
+                    converted.push(T::from_value(item).await?);
+                }
                 converted.try_into().map_err(|_| format!("expected {N} items, got a length mismatch"))
             }
             other => Err(format!("expected a {N}-item Tuple, found {other:?}")),
@@ -211,13 +255,14 @@ impl<T: DslField, const N: usize> DslField for [T; N] {
 
 /// @emoji 🌱️ Schema-less dynamic literal — binds as `Shape::Value`.
 impl DslField for DslValue {
+    // 🚫️async: E4 — see `DslField::shape`'s tag above.
     fn shape() -> Shape {
         Shape::Value
     }
-    fn to_value(&self) -> FieldValue {
+    async fn to_value(&self) -> FieldValue {
         FieldValue::Value(self.clone())
     }
-    fn from_value(value: &FieldValue) -> Result<Self, String> {
+    async fn from_value(value: &FieldValue) -> Result<Self, String> {
         match value {
             FieldValue::Value(dsl_value) => Ok(dsl_value.clone()),
             other => Err(format!("expected Value, found {other:?}")),
@@ -234,13 +279,15 @@ pub trait DslVariants: Sized {
     /// @emoji 🐌️ Lazy: each entry is a zero-capture `fn` pointer, not an eagerly-built `RecordSpec`
     /// — a self-referential grammar's own `variants()` would otherwise need to recurse infinitely
     /// just to construct this list. See [`Shape::Statements`]'s doc comment for the full rationale.
+    // 🚫️async: E4 — the returned `Vec<(String, fn() -> RecordSpec)>` IS a fn-pointer table, and
+    // `Shape::Statements(<T>::variants())` is itself called from inside a sync `__dsl_spec` — see R9.
     fn variants() -> Vec<(String, fn() -> RecordSpec)>;
-    fn to_named_record(&self) -> (String, RecordValue);
+    async fn to_named_record(&self) -> (String, RecordValue);
     /// @emoji ⚠️ Returns `TextError` (not `String`, unlike [`DslField::from_value`]) so
     /// generated bodies can `?`-propagate it directly — this is the same error type
     /// `crate::os_spr::OpText::parse_op`/`crate::os_store::ArtifactDsl::parse_dsl` already return, and the derive's
     /// `#[dsl(statements)]` field codegen composes it without any conversion at every nesting depth.
-    fn from_named_record(keyword: &str, record: &RecordValue) -> Result<Self, TextError>;
+    async fn from_named_record(keyword: &str, record: &RecordValue) -> Result<Self, TextError>;
 }
 //#endregion 🔖️Variants
 
@@ -249,6 +296,8 @@ pub trait DslVariants: Sized {
 pub mod __rt {
     use super::*;
 
+    // 🚫️async: E1 pure error constructor, consumed by `Option::ok_or_else` sync closures in every
+    // `#[derive(DslRecord)]`-generated body (`✨️derive/🦀️component.rs`'s `quote!{}` templates) — see R9
     pub fn field_error(message: impl Into<String>) -> TextError {
         TextError::new(message, TextSpan::at(1, 1))
     }
@@ -258,8 +307,8 @@ pub mod __rt {
     /// the generated `__dsl_spec` runs — every RecordSpec-law test exercises this), so it panics
     /// rather than threading a `Result` through the whole spec-building call chain, matching
     /// `newtype_variant_spec`'s convention above.
-    pub fn unit_for_derive(symbol: &'static str) -> &'static UnitSpec {
-        unit_by_symbol(symbol).unwrap_or_else(|| panic!("dsl: unknown unit symbol '{symbol}' in #[dsl(unit = ...)]/#[dsl(angle = ...)]"))
+    pub async fn unit_for_derive(symbol: &'static str) -> &'static UnitSpec {
+        unit_by_symbol(symbol).await.unwrap_or_else(|| panic!("dsl: unknown unit symbol '{symbol}' in #[dsl(unit = ...)]/#[dsl(angle = ...)]"))
     }
 
     /// @emoji 📦️ Single-field tuple ("newtype") enum variant support — `Variant(Body)` delegates its
@@ -268,6 +317,8 @@ pub mod __rt {
     /// its own. `Body` must have `Shape::Record` (i.e. itself come from `#[derive(DslRecord)]` or
     /// `#[derive(DslArtifact)]`) — anything else is a derive-time misuse, hence the panic rather than
     /// a `Result` (there is no sensible recoverable path for a grammar that's wrong at compile time).
+    // 🚫️async: E4 — this fn's VALUE is cast `as fn() -> RecordSpec` at every newtype-variant call
+    // site (`✨️derive/📦️glue.rs`'s `dsl_variants_codegen`), and it calls the now-sync `DslField::shape`.
     pub fn newtype_variant_spec<T: DslField>() -> RecordSpec {
         match T::shape() {
             Shape::Record(spec_fn) => spec_fn(),
@@ -275,15 +326,15 @@ pub mod __rt {
         }
     }
 
-    pub fn newtype_variant_to_record<T: DslField>(inner: &T) -> RecordValue {
-        match inner.to_value() {
+    pub async fn newtype_variant_to_record<T: DslField>(inner: &T) -> RecordValue {
+        match inner.to_value().await {
             FieldValue::Record(record) => record,
             other => panic!("newtype variant's inner type must produce a Record value, found {other:?}"),
         }
     }
 
-    pub fn newtype_variant_from_record<T: DslField>(record: &RecordValue) -> Result<T, TextError> {
-        T::from_value(&FieldValue::Record(record.clone())).map_err(field_error)
+    pub async fn newtype_variant_from_record<T: DslField>(record: &RecordValue) -> Result<T, TextError> {
+        T::from_value(&FieldValue::Record(record.clone())).await.map_err(field_error)
     }
 }
 
@@ -300,8 +351,8 @@ pub mod variants_binary {
 
     pub const OP_BINARY_FORMAT: u8 = 1;
 
-    pub fn encode_op<T: DslVariants>(op: &T) -> Result<Vec<u8>, ProtocolError> {
-        let (keyword, record) = op.to_named_record();
+    pub async fn encode_op<T: DslVariants>(op: &T) -> Result<Vec<u8>, ProtocolError> {
+        let (keyword, record) = op.to_named_record().await;
         let variants = T::variants();
         let ordinal = variants.iter().position(|(k, _)| k == &keyword).ok_or(ProtocolError::Malformed {
             what: "op variant",
@@ -309,17 +360,17 @@ pub mod variants_binary {
             detail: format!("keyword '{keyword}' missing from variants()"),
         })?;
         let spec = variants[ordinal].1();
-        let body = encode_record_body(&spec, &record, &EncodeOptions::default()).map_err(ProtocolError::from)?;
+        let body = encode_record_body(&spec, &record, &EncodeOptions::default()).await.map_err(ProtocolError::from)?;
         let mut out = Vec::with_capacity(body.len() + 3);
         out.push(OP_BINARY_FORMAT);
-        write_varint_u64(&mut out, ordinal as u64);
+        write_varint_u64(&mut out, ordinal as u64).await;
         out.extend_from_slice(&body);
         Ok(out)
     }
 
-    pub fn decode_op<T: DslVariants>(bytes: &[u8]) -> Result<T, ProtocolError> {
-        let mut reader = ByteReader::new(bytes);
-        let format = reader.read_u8()?;
+    pub async fn decode_op<T: DslVariants>(bytes: &[u8]) -> Result<T, ProtocolError> {
+        let mut reader = ByteReader::new(bytes).await;
+        let format = reader.read_u8().await?;
         if format != OP_BINARY_FORMAT {
             return Err(ProtocolError::Malformed {
                 what: "op format",
@@ -327,7 +378,7 @@ pub mod variants_binary {
                 detail: format!("unsupported op format {format}"),
             });
         }
-        let ordinal = reader.read_varint_u64()?;
+        let ordinal = reader.read_varint_u64().await?;
         let variants = T::variants();
         let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or(ProtocolError::Malformed {
             what: "op variant",
@@ -335,11 +386,12 @@ pub mod variants_binary {
             detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()),
         })?;
         let spec = spec_fn();
-        let body = &bytes[reader.position()..];
-        let (record, _report) = decode_record_body(body, &spec, &DecodeOptions::default()).map_err(ProtocolError::from)?;
-        T::from_named_record(keyword, &record).map_err(|error| ProtocolError::Malformed {
+        let body = &bytes[reader.position().await..];
+        let (record, _report) = decode_record_body(body, &spec, &DecodeOptions::default()).await.map_err(ProtocolError::from)?;
+        let record_offset = reader.position().await as u64;
+        T::from_named_record(keyword, &record).await.map_err(|error| ProtocolError::Malformed {
             what: "op record",
-            offset: reader.position() as u64,
+            offset: record_offset,
             detail: error.to_string(),
         })
     }
@@ -365,12 +417,18 @@ pub trait DslIdiom {
     const LANG: &'static str;
     type Ast: Clone + PartialEq + Send + Sync;
 
+    // 🚫️async: E4 fn-pointer slot — every method here is coerced into `IdiomHooks`'s plain `fn`
+    // fields (`canonicalize`/`classify`/`complete`) in `hooks_for` below; an `async fn` item's
+    // pointer type is unnameable, so this whole trait must stay sync. See R2 E4.
     fn parse(text: &str) -> Result<Self::Ast, TextError>;
     /// LAW: `Self::parse(&Self::print(ast)) == Ok(ast)` for every `ast` the idiom can produce —
     /// the idiom's own round-trip law, the direct analogue of this engine's `parse ∘ print = id`
     /// for `RecordSpec` grammars.
+    // 🚫️async: E4 fn-pointer slot — see `parse` above
     fn print(ast: &Self::Ast) -> String;
+    // 🚫️async: E4 fn-pointer slot — see `parse` above
     fn classify(text: &str) -> Vec<(TokenClass, TextSpan)>;
+    // 🚫️async: E4 fn-pointer slot — see `parse` above
     fn complete(_text: &str, _offset: usize) -> Vec<CompletionItem> {
         Vec::new()
     }
@@ -400,12 +458,15 @@ pub struct IdiomHooks {
 
 /// @emoji 🏗️ Derives an `IdiomHooks` vtable from a `DslIdiom` impl — the one place `Self::Ast`
 /// needs to be named, so every other caller works with the type-erased `IdiomHooks` instead.
+// 🚫️async: E4 fn-pointer slot — builds an `IdiomHooks` whose fields are plain `fn` pointers; an
+// `async fn`'s captured closure cannot coerce to `fn`, so this stays sync. See R2 E4.
 pub fn hooks_for<I: DslIdiom>() -> IdiomHooks {
     IdiomHooks { lang: I::LANG, canonicalize: |text| I::parse(text).map(|ast| I::print(&ast)), classify: I::classify, complete: I::complete }
 }
 
 /// @emoji 🪞 Minimal hooks for binary/text facets that register a [`LanguageSpec`] without a custom
 /// [`DslIdiom`] front-end — canonicalize is identity; classify/complete are empty.
+// 🚫️async: E4 fn-pointer slot — see `hooks_for` above
 pub fn passthrough_hooks(lang: &'static str) -> IdiomHooks {
     IdiomHooks { lang, canonicalize: |text| Ok(text.to_string()), classify: |_| Vec::new(), complete: |_, _| Vec::new() }
 }
@@ -413,6 +474,7 @@ pub fn passthrough_hooks(lang: &'static str) -> IdiomHooks {
 
 static IDIOM_REGISTRY: OnceLock<Mutex<HashMap<&'static str, IdiomHooks>>> = OnceLock::new();
 
+// 🚫️async: E1 pure accessor consumed by the E4 `IdiomHooks` cluster — see R9
 fn idiom_registry() -> &'static Mutex<HashMap<&'static str, IdiomHooks>> {
     IDIOM_REGISTRY.get_or_init(|| Mutex::new(HashMap::new()))
 }
@@ -420,6 +482,7 @@ fn idiom_registry() -> &'static Mutex<HashMap<&'static str, IdiomHooks>> {
 /// @emoji 📌️ Registers an idiom's hooks under its `LANG` id — called once at host/plugin init.
 /// Re-registering the same `lang` overwrites the previous hooks rather than erroring, so a
 /// hot-reloaded dev build never deadlocks on itself.
+// 🚫️async: E1 pure accessor consumed by the E4 `IdiomHooks` cluster — see R9
 pub fn register_idiom(hooks: IdiomHooks) {
     let mut registry = idiom_registry().lock().unwrap_or_else(|poison| poison.into_inner());
     registry.insert(hooks.lang, hooks);
@@ -429,6 +492,7 @@ pub fn register_idiom(hooks: IdiomHooks) {
 /// unregistered (or not-yet-registered) lang — callers must treat that as "pass through verbatim",
 /// never as an error, since `Shape::Embed` text must remain parseable before any plugin has run
 /// its own registration.
+// 🚫️async: E1 pure accessor consumed by the E4 `IdiomHooks` cluster — see R9
 pub fn idiom(lang: &str) -> Option<IdiomHooks> {
     let registry = idiom_registry().lock().unwrap_or_else(|poison| poison.into_inner());
     registry.get(lang).copied()
@@ -471,21 +535,23 @@ pub struct LanguageSpec {
 
 impl LanguageSpec {
     /// @emoji 📝 Whether this role is a text grammar surface (dsl/op/diff/config/embed).
+    // 🚫️async: E1 pure accessor — trivial enum match, no suspension point — see R9
     pub fn is_text_role(self) -> bool {
         matches!(self.role, LanguageRole::Document | LanguageRole::Config | LanguageRole::Ops | LanguageRole::Embedded | LanguageRole::Diff)
     }
 
     /// @emoji 📡️ Whether this role is a binary protocol surface (pack/spr).
+    // 🚫️async: E1 pure accessor — trivial enum match, no suspension point — see R9
     pub fn is_binary_role(self) -> bool {
         matches!(self.role, LanguageRole::Pack | LanguageRole::Spr)
     }
 
     /// @emoji 📖️ Parses `grammar` via [`parse_grammar`], requiring [`SemioDialect::Grammar`].
-    pub fn parsed_grammar(&self) -> Result<Option<GrammarFile>, TextError> {
+    pub async fn parsed_grammar(&self) -> Result<Option<GrammarFile>, TextError> {
         let Some(text) = self.grammar else {
             return Ok(None);
         };
-        let file = parse_grammar(text)?;
+        let file = parse_grammar(text).await?;
         if file.dialect != SemioDialect::Grammar {
             return Err(TextError::new("LanguageSpec.grammar requires dialect grammar", TextSpan::at(1, 1)));
         }
@@ -493,19 +559,19 @@ impl LanguageSpec {
     }
 
     /// @emoji 📡️ Parses `protocol` via [`parse_protocol`].
-    pub fn parsed_protocol(&self) -> Result<Option<ProtocolFile>, TextError> {
+    pub async fn parsed_protocol(&self) -> Result<Option<ProtocolFile>, TextError> {
         let Some(text) = self.protocol else {
             return Ok(None);
         };
-        Ok(Some(parse_protocol(text)?))
+        Ok(Some(parse_protocol(text).await?))
     }
 
     /// @emoji ✅ Verifies encoded bytes against this language's protocol when protocol text is present.
-    pub fn verify_protocol(&self, bytes: &[u8]) -> Result<(), String> {
+    pub async fn verify_protocol(&self, bytes: &[u8]) -> Result<(), String> {
         let Some(text) = self.protocol else {
             return Ok(());
         };
-        verify_protocol_source(text, bytes)
+        verify_protocol_source(text, bytes).await
     }
 }
 
@@ -515,6 +581,11 @@ impl LanguageSpec {
 
 static LANGUAGE_REGISTRY: OnceLock<Mutex<HashMap<&'static str, LanguageSpec>>> = OnceLock::new();
 
+// 🚫️async: E1 pure accessor — plain `OnceLock`/`Mutex` init, no suspension point — see R9. Its two
+// PUBLIC callers that cross into `🔌️plugin/🦀️component.rs` (a live ATOMIC packet's file, not mine to
+// touch) stay `async fn` themselves — see `preflight_languages`/`register_languages` below — so that
+// external `.await` call shape needs no change; only this private accessor and the purely-local
+// lookups (`language`/`language_for_extension`/…) revert to sync.
 fn language_registry() -> &'static Mutex<HashMap<&'static str, LanguageSpec>> {
     LANGUAGE_REGISTRY.get_or_init(|| Mutex::new(HashMap::new()))
 }
@@ -548,8 +619,11 @@ fn same_language(left: LanguageSpec, right: LanguageSpec) -> bool {
 }
 
 /// 🔬️ Verifies language specifications against established and intra-batch identities without mutation.
+/// Stays `async fn` — no internal suspension point (`language_registry` is sync, R9), but
+/// `🔌️plugin/🦀️component.rs` (a live ATOMIC packet's file, not mine to touch) already awaits this,
+/// so per R9 rule 3 the external `.await` call shape wins over reverting it to match a leaf helper.
 #[must_use]
-pub fn preflight_languages(specs: &[LanguageSpec]) -> Result<(), LanguageRegistryError> {
+pub async fn preflight_languages(specs: &[LanguageSpec]) -> Result<(), LanguageRegistryError> {
     let mut proposed = HashMap::new();
     for spec in specs {
         match proposed.insert(spec.id, *spec) {
@@ -570,9 +644,10 @@ pub fn preflight_languages(specs: &[LanguageSpec]) -> Result<(), LanguageRegistr
 }
 
 /// 📌️ Registers language specifications only after the whole candidate set is conflict-free.
+/// Stays `async fn` — see `preflight_languages` above, same external-caller reason.
 #[must_use]
-pub fn register_languages(specs: Vec<LanguageSpec>) -> Result<(), LanguageRegistryError> {
-    preflight_languages(&specs)?;
+pub async fn register_languages(specs: Vec<LanguageSpec>) -> Result<(), LanguageRegistryError> {
+    preflight_languages(&specs).await?;
     let mut registry = language_registry().lock().unwrap_or_else(|poison| poison.into_inner());
     for spec in specs {
         registry.entry(spec.id).or_insert(spec);
@@ -583,18 +658,21 @@ pub fn register_languages(specs: Vec<LanguageSpec>) -> Result<(), LanguageRegist
 /// @emoji 📌️ Registers one grammar under its `id` — called once per grammar at plugin init,
 /// alongside (not instead of) `register_document_codec_for_app`. Overwrites on re-registration,
 /// matching `register_idiom`'s hot-reload-safe behavior.
+// 🚫️async: E1 pure accessor — see `language_registry` above
 pub fn register_language(spec: LanguageSpec) {
     let mut registry = language_registry().lock().unwrap_or_else(|poison| poison.into_inner());
     registry.insert(spec.id, spec);
 }
 
 /// @emoji 🔍️ Looks up a registered grammar by its `id` (e.g. `"fem2d"`, `"fem2dcfg"`, `"jack"`).
+// 🚫️async: E1 pure accessor — see `language_registry` above
 pub fn language(id: &str) -> Option<LanguageSpec> {
     let registry = language_registry().lock().unwrap_or_else(|poison| poison.into_inner());
     registry.get(id).copied()
 }
 
 /// @emoji 🔍️ Looks up a registered grammar by legacy file-extension suffix (e.g. `"note"`, `"jack"`).
+// 🚫️async: E1 pure accessor — see `language_registry` above
 pub fn language_for_extension(extension: &str) -> Option<LanguageSpec> {
     let suffix = extension.strip_prefix('.').unwrap_or(extension);
     let registry = language_registry().lock().unwrap_or_else(|poison| poison.into_inner());
@@ -604,6 +682,7 @@ pub fn language_for_extension(extension: &str) -> Option<LanguageSpec> {
 /// @emoji 🔍️ Resolves a registered language from `.semio` file bytes (content-derived envelope).
 /// Text components (`dsl`/`op`) prefer grammar registrations; binary components (`pack`/`spr`)
 /// prefer protocol registrations.
+// 🚫️async: E1 pure accessor — see `language_registry` above
 pub fn language_for_semio_content(bytes: &[u8]) -> Option<LanguageSpec> {
     let envelope = semio_format::sniff(bytes).ok()?;
     let base = envelope.envelope_id();
@@ -622,6 +701,7 @@ pub fn language_for_semio_content(bytes: &[u8]) -> Option<LanguageSpec> {
     }
 }
 
+// 🚫️async: E1 pure accessor — see `language_registry` above
 fn language_for_suffix_candidates(base: &str, plugin: &str, artifact: &str, suffix: &str) -> Option<LanguageSpec> {
     language(&format!("{base}.{suffix}"))
         .or_else(|| language(&format!("{plugin}.{suffix}")))
@@ -638,27 +718,27 @@ pub mod test_support {
     use super::*;
 
     /// @emoji 🔁️ `parse(print(value)) == value` for a `RecordSpec` and an already-built `RecordValue`.
-    pub fn assert_schema_round_trip(value: &RecordValue, spec: &RecordSpec) {
-        let printed = print(value, spec, JoinMode::Document);
+    pub async fn assert_schema_round_trip(value: &RecordValue, spec: &RecordSpec) {
+        let printed = print(value, spec, JoinMode::Document).await;
         let opts = ParseOptions::default();
-        let reparsed = parse(&printed, spec, &opts).unwrap_or_else(|e| panic!("reparse failed: {e}\nprinted:\n{printed}"));
+        let reparsed = parse(&printed, spec, &opts).await.unwrap_or_else(|e| panic!("reparse failed: {e}\nprinted:\n{printed}"));
         assert_eq!(value, &reparsed, "schema round trip diverged;\nprinted:\n{printed}");
     }
 
     /// @emoji ♻️ `canonicalize(canonicalize(x)) == canonicalize(x)`.
-    pub fn assert_idempotent(text: &str, spec: &RecordSpec) {
-        let once = canonicalize(text, spec, &ParseOptions::default()).unwrap_or_else(|e| panic!("canonicalize failed: {e}"));
-        let twice = canonicalize(&once, spec, &ParseOptions::default()).unwrap_or_else(|e| panic!("second canonicalize failed: {e}"));
+    pub async fn assert_idempotent(text: &str, spec: &RecordSpec) {
+        let once = canonicalize(text, spec, &ParseOptions::default()).await.unwrap_or_else(|e| panic!("canonicalize failed: {e}"));
+        let twice = canonicalize(&once, spec, &ParseOptions::default()).await.unwrap_or_else(|e| panic!("second canonicalize failed: {e}"));
         assert_eq!(once, twice, "canonicalization must be idempotent");
     }
 
     /// @emoji 📏️ Document and Inline renders of the same value must parse back to equal values,
     /// and the Inline render must be exactly one line — the newline law, checked generically.
-    pub fn assert_document_inline_agree(value: &RecordValue, spec: &RecordSpec) {
-        let inline_text = print(value, spec, JoinMode::Inline);
+    pub async fn assert_document_inline_agree(value: &RecordValue, spec: &RecordSpec) {
+        let inline_text = print(value, spec, JoinMode::Inline).await;
         assert!(!inline_text.contains('\n'), "inline render must be one line: {inline_text:?}");
         let inline_opts = ParseOptions { limits: Limits::default(), mode: SourceMode::Inline };
-        let reparsed = parse(&inline_text, spec, &inline_opts).unwrap_or_else(|e| panic!("inline reparse failed: {e}\ninline:\n{inline_text}"));
+        let reparsed = parse(&inline_text, spec, &inline_opts).await.unwrap_or_else(|e| panic!("inline reparse failed: {e}\ninline:\n{inline_text}"));
         assert_eq!(value, &reparsed, "Document and Inline renders must parse to the same value");
     }
 }
@@ -669,8 +749,8 @@ pub mod test_support {
 mod tests {
     use super::*;
 
-    #[test]
-    fn primitive_dsl_field_impls_round_trip() {
+    #[semio_framework_async_macros::async_test]
+    async fn primitive_dsl_field_impls_round_trip() {
         assert_eq!(i32::from_value(&42i32.to_value()), Ok(42));
         assert_eq!(u64::from_value(&7u64.to_value()), Ok(7));
         assert_eq!(bool::from_value(&true.to_value()), Ok(true));
@@ -678,8 +758,8 @@ mod tests {
         assert_eq!(String::from_value(&"hi".to_string().to_value()), Ok("hi".to_string()));
     }
 
-    #[test]
-    fn wire_field_dsl_field_impl_round_trips() {
+    #[semio_framework_async_macros::async_test]
+    async fn wire_field_dsl_field_impl_round_trips() {
         let literal = parse_wire_text("a:Kind@out->b:Kind2@in").expect("parse_wire_text");
         assert!(matches!(Wire::shape(), Shape::Wire));
         let wire = Wire(literal.clone());
@@ -701,29 +781,29 @@ mod tests {
         const LANG: &'static str = "greet";
         type Ast = GreetAst;
 
-        fn parse(text: &str) -> Result<Self::Ast, TextError> {
+        async fn parse(text: &str) -> Result<Self::Ast, TextError> {
             text.strip_prefix("hello ").map(|name| GreetAst { name: name.trim().to_string() }).ok_or_else(|| TextError::new("expected 'hello <name>'", TextSpan::at(1, 1)))
         }
 
-        fn print(ast: &Self::Ast) -> String {
+        async fn print(ast: &Self::Ast) -> String {
             format!("hello {}", ast.name)
         }
 
-        fn classify(_text: &str) -> Vec<(TokenClass, TextSpan)> {
+        async fn classify(_text: &str) -> Vec<(TokenClass, TextSpan)> {
             Vec::new()
         }
     }
 
-    #[test]
-    fn dsl_idiom_round_trips_through_its_own_parse_and_print() {
+    #[semio_framework_async_macros::async_test]
+    async fn dsl_idiom_round_trips_through_its_own_parse_and_print() {
         let ast = GreetIdiom::parse("hello world").expect("parse");
         assert_eq!(ast, GreetAst { name: "world".to_string() });
         assert_eq!(GreetIdiom::print(&ast), "hello world");
         assert_eq!(GreetIdiom::parse(&GreetIdiom::print(&ast)), Ok(ast), "idiom round trip law");
     }
 
-    #[test]
-    fn dsl_idiom_registry_resolves_by_lang_and_canonicalizes_through_the_hooks() {
+    #[semio_framework_async_macros::async_test]
+    async fn dsl_idiom_registry_resolves_by_lang_and_canonicalizes_through_the_hooks() {
         register_idiom(hooks_for::<GreetIdiom>());
         let hooks = idiom("greet").expect("registered idiom must be found by its LANG id");
         assert_eq!(hooks.lang, "greet");
@@ -733,8 +813,8 @@ mod tests {
         assert!(idiom("never-registered-lang").is_none(), "an unregistered lang must resolve to None, never a default/error");
     }
 
-    #[test]
-    fn language_registry_resolves_by_id_and_semio_content() {
+    #[semio_framework_async_macros::async_test]
+    async fn language_registry_resolves_by_id_and_semio_content() {
         register_language(LanguageSpec {
             id: "greet.doc",
             extension: Some("greet"),
@@ -755,8 +835,8 @@ mod tests {
         assert!(language_for_semio_content(b"semio missing.dsl v1\n").is_none());
     }
 
-    #[test]
-    fn dsl_value_dsl_field_round_trips_through_record_value() {
+    #[semio_framework_async_macros::async_test]
+    async fn dsl_value_dsl_field_round_trips_through_record_value() {
         let value = DslValue::object([("a".into(), DslValue::Number(1.0)), ("b".into(), DslValue::Array(vec![DslValue::Bool(true), DslValue::Null, DslValue::String("x".into())]))]);
         assert_eq!(DslValue::from_value(&value.to_value()), Ok(value));
 
@@ -787,10 +867,10 @@ mod tests {
 /// 📜️ Handcrafted ArtifactDsl (P6).
 impl crate::os_store::ArtifactDsl for DerivedDocument {
     const EXTENSION: &'static str = Self::__DSL_EXTENSION;
-    fn envelope_id() -> &'static str {
+    async fn envelope_id() -> &'static str {
         Self::__DSL_ENVELOPE_ID
     }
-    fn parse_dsl(text: &str) -> Result<Self, TextError> {
+    async fn parse_dsl(text: &str) -> Result<Self, TextError> {
         let body = match crate::os_store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
@@ -802,7 +882,7 @@ impl crate::os_store::ArtifactDsl for DerivedDocument {
         )?;
         Self::__dsl_from_record(&record)
     }
-    fn print_dsl(&self) -> String {
+    async fn print_dsl(&self) -> String {
         let body = print(&self.__dsl_to_record(), &Self::__dsl_spec(), JoinMode::Document);
         let envelope = crate::os_store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as crate::os_store::ArtifactDsl>::envelope_id(),
@@ -816,7 +896,7 @@ impl crate::os_store::ArtifactDsl for DerivedDocument {
 
 /// 📦️ Handcrafted ArtifactPack (P6).
 impl crate::os_store::ArtifactPack for DerivedDocument {
-    fn encode_pack_with(&self, options: &crate::os_store::PackEncodeOptions) -> Result<Vec<u8>, crate::os_store::PackError> {
+    async fn encode_pack_with(&self, options: &crate::os_store::PackEncodeOptions) -> Result<Vec<u8>, crate::os_store::PackError> {
         let inner = crate::os_store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope = crate::os_store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as crate::os_store::ArtifactDsl>::envelope_id(),
@@ -826,7 +906,7 @@ impl crate::os_store::ArtifactPack for DerivedDocument {
         .map_err(|e| crate::os_store::PackError::Schema(e.to_string()))?;
         Ok(crate::os_store::semio_format::wrap_binary(&envelope, &inner))
     }
-    fn decode_pack_with(bytes: &[u8], options: &crate::os_store::PackDecodeOptions) -> Result<Self, crate::os_store::PackError> {
+    async fn decode_pack_with(bytes: &[u8], options: &crate::os_store::PackDecodeOptions) -> Result<Self, crate::os_store::PackError> {
         let (envelope, inner) = crate::os_store::semio_format::unwrap_binary(bytes).map_err(|e| crate::os_store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as crate::os_store::ArtifactDsl>::envelope_id() {
             return Err(crate::os_store::PackError::Schema(format!(
@@ -838,15 +918,15 @@ impl crate::os_store::ArtifactPack for DerivedDocument {
         let (record, _report) = crate::os_store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
         Self::__dsl_from_record(&record).map_err(crate::os_store::text_error_to_pack_error)
     }
-    fn record_spec() -> Option<RecordSpec> {
+    async fn record_spec() -> Option<RecordSpec> {
         Some(Self::__dsl_spec())
     }
 }
 //#endregion 🔖️ArtifactCodec
 
 
-    #[test]
-    fn derived_document_round_trips_through_vcs_document_dsl() {
+    #[semio_framework_async_macros::async_test]
+    async fn derived_document_round_trips_through_vcs_document_dsl() {
         let doc = DerivedDocument { category: "external_wall".to_string(), climate: ClimateZone::Cold, airtightness_n50: 0.6, occupants: 4, note: None };
         let printed = <DerivedDocument as crate::os_store::ArtifactDsl>::print_dsl(&doc);
         assert!(!printed.contains("note"), "absent optional field must be omitted: {printed}");
@@ -854,8 +934,8 @@ impl crate::os_store::ArtifactPack for DerivedDocument {
         assert_eq!(parsed, doc, "derived ArtifactDsl round trip diverged;\nprinted:\n{printed}");
     }
 
-    #[test]
-    fn derived_document_round_trips_with_optional_field_present() {
+    #[semio_framework_async_macros::async_test]
+    async fn derived_document_round_trips_with_optional_field_present() {
         let doc = DerivedDocument { category: "roof".to_string(), climate: ClimateZone::Warm, airtightness_n50: 1.2, occupants: 2, note: Some("re-inspect in 2027".to_string()) };
         let printed = <DerivedDocument as crate::os_store::ArtifactDsl>::print_dsl(&doc);
         let parsed = <DerivedDocument as crate::os_store::ArtifactDsl>::parse_dsl(&printed).unwrap_or_else(|e| panic!("parse failed: {e}\nprinted:\n{printed}"));
@@ -877,7 +957,7 @@ impl crate::os_store::ArtifactPack for DerivedDocument {
 //#region 🔖️OpCodec
 /// 🎞️ Handcrafted OpText (P6).
 impl crate::os_spr::OpText for DerivedMutation {
-    fn parse_op(line: &str) -> Result<Self, TextError> {
+    async fn parse_op(line: &str) -> Result<Self, TextError> {
         let variants = <Self as DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
@@ -886,23 +966,23 @@ impl crate::os_spr::OpText for DerivedMutation {
                     line,
                     &spec_fn(),
                     &ParseOptions { limits: Limits::default(), mode: SourceMode::Inline },
-                )?;
-                return <Self as DslVariants>::from_named_record(keyword, &record);
+                ).await?;
+                return <Self as DslVariants>::from_named_record(keyword, &record).await;
             }
         }
         Err(__rt::field_error(format!("unknown operation line '{line}'")))
     }
-    fn print_op(&self) -> String {
-        let (keyword, record) = <Self as DslVariants>::to_named_record(self);
+    async fn print_op(&self) -> String {
+        let (keyword, record) = <Self as DslVariants>::to_named_record(self).await;
         let variants = <Self as DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        print(&record, &spec_fn(), JoinMode::Inline)
+        print(&record, &spec_fn(), JoinMode::Inline).await
     }
 }
 
 /// 🎯️ Handcrafted OpBinary (P6).
 impl crate::os_spr::OpBinary for DerivedMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, crate::os_spr::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, crate::os_spr::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let (keyword, record) = <Self as DslVariants>::to_named_record(self);
         let variants = <Self as DslVariants>::variants();
@@ -919,7 +999,7 @@ impl crate::os_spr::OpBinary for DerivedMutation {
         out.extend_from_slice(&body);
         Ok(out)
     }
-    fn decode_op(bytes: &[u8]) -> Result<Self, crate::os_spr::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, crate::os_spr::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let mut reader = crate::os_pack::ByteReader::new(bytes);
         let format = reader.read_u8()?;
@@ -946,8 +1026,8 @@ impl crate::os_spr::OpBinary for DerivedMutation {
 //#endregion 🔖️OpCodec
 
 
-    #[test]
-    fn derived_op_text_round_trips_every_variant_as_one_line() {
+    #[semio_framework_async_macros::async_test]
+    async fn derived_op_text_round_trips_every_variant_as_one_line() {
         let ops = vec![DerivedMutation::SetCategory { category: "roof".to_string() }, DerivedMutation::SetAirtightness { n50: 0.9 }, DerivedMutation::Reset];
         for op in ops {
             let printed = <DerivedMutation as crate::os_spr::OpText>::print_op(&op);
@@ -957,20 +1037,20 @@ impl crate::os_spr::OpBinary for DerivedMutation {
         }
     }
 
-    #[test]
-    fn derived_document_dsl_satisfies_vcs_test_support_helpers() {
+    #[semio_framework_async_macros::async_test]
+    async fn derived_document_dsl_satisfies_vcs_test_support_helpers() {
         let doc = DerivedDocument { category: "floor".to_string(), climate: ClimateZone::Temperate, airtightness_n50: 0.4, occupants: 3, note: None };
         crate::os_store::test_support::assert_dsl_round_trip(&doc);
         crate::os_store::test_support::assert_dsl_pack_equivalence(&doc);
     }
 
-    #[test]
-    fn derived_op_satisfies_vcs_test_support_helpers() {
+    #[semio_framework_async_macros::async_test]
+    async fn derived_op_satisfies_vcs_test_support_helpers() {
         crate::os_store::test_support::assert_op_line_round_trip(&DerivedMutation::SetCategory { category: "wall".to_string() });
     }
 
-    #[test]
-    fn derived_op_binary_round_trips_every_variant_and_matches_text() {
+    #[semio_framework_async_macros::async_test]
+    async fn derived_op_binary_round_trips_every_variant_and_matches_text() {
         let ops = vec![DerivedMutation::SetCategory { category: "roof".to_string() }, DerivedMutation::SetAirtightness { n50: 0.9 }, DerivedMutation::Reset];
         for op in ops {
             crate::os_store::test_support::assert_op_text_binary_equivalence(&op);
@@ -1018,10 +1098,10 @@ impl crate::os_spr::OpBinary for DerivedMutation {
 /// 📜️ Handcrafted ArtifactDsl (P6).
 impl crate::os_store::ArtifactDsl for SceneDocument {
     const EXTENSION: &'static str = Self::__DSL_EXTENSION;
-    fn envelope_id() -> &'static str {
+    async fn envelope_id() -> &'static str {
         Self::__DSL_ENVELOPE_ID
     }
-    fn parse_dsl(text: &str) -> Result<Self, TextError> {
+    async fn parse_dsl(text: &str) -> Result<Self, TextError> {
         let body = match crate::os_store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
@@ -1033,7 +1113,7 @@ impl crate::os_store::ArtifactDsl for SceneDocument {
         )?;
         Self::__dsl_from_record(&record)
     }
-    fn print_dsl(&self) -> String {
+    async fn print_dsl(&self) -> String {
         let body = print(&self.__dsl_to_record(), &Self::__dsl_spec(), JoinMode::Document);
         let envelope = crate::os_store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as crate::os_store::ArtifactDsl>::envelope_id(),
@@ -1047,7 +1127,7 @@ impl crate::os_store::ArtifactDsl for SceneDocument {
 
 /// 📦️ Handcrafted ArtifactPack (P6).
 impl crate::os_store::ArtifactPack for SceneDocument {
-    fn encode_pack_with(&self, options: &crate::os_store::PackEncodeOptions) -> Result<Vec<u8>, crate::os_store::PackError> {
+    async fn encode_pack_with(&self, options: &crate::os_store::PackEncodeOptions) -> Result<Vec<u8>, crate::os_store::PackError> {
         let inner = crate::os_store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope = crate::os_store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as crate::os_store::ArtifactDsl>::envelope_id(),
@@ -1057,7 +1137,7 @@ impl crate::os_store::ArtifactPack for SceneDocument {
         .map_err(|e| crate::os_store::PackError::Schema(e.to_string()))?;
         Ok(crate::os_store::semio_format::wrap_binary(&envelope, &inner))
     }
-    fn decode_pack_with(bytes: &[u8], options: &crate::os_store::PackDecodeOptions) -> Result<Self, crate::os_store::PackError> {
+    async fn decode_pack_with(bytes: &[u8], options: &crate::os_store::PackDecodeOptions) -> Result<Self, crate::os_store::PackError> {
         let (envelope, inner) = crate::os_store::semio_format::unwrap_binary(bytes).map_err(|e| crate::os_store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as crate::os_store::ArtifactDsl>::envelope_id() {
             return Err(crate::os_store::PackError::Schema(format!(
@@ -1069,15 +1149,15 @@ impl crate::os_store::ArtifactPack for SceneDocument {
         let (record, _report) = crate::os_store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
         Self::__dsl_from_record(&record).map_err(crate::os_store::text_error_to_pack_error)
     }
-    fn record_spec() -> Option<RecordSpec> {
+    async fn record_spec() -> Option<RecordSpec> {
         Some(Self::__dsl_spec())
     }
 }
 //#endregion 🔖️ArtifactCodec
 
 
-    #[test]
-    fn derived_enum_recursive_block_tree_and_map_and_nested_collections_round_trip() {
+    #[semio_framework_async_macros::async_test]
+    async fn derived_enum_recursive_block_tree_and_map_and_nested_collections_round_trip() {
         let doc = SceneDocument {
             camera: SceneCamera { x: 1.0, y: 2.0 },
             nodes: vec![SceneNode::Point { pos: [1.0, 2.0, 3.0] }, SceneNode::Grid { rows: vec![vec![1, 2], vec![3, 4, 5]] }, SceneNode::Group { id: "g1".to_string(), children: vec![SceneNode::Point { pos: [0.0, 0.0, 0.0] }] }],
@@ -1127,10 +1207,10 @@ impl crate::os_store::ArtifactPack for SceneDocument {
 /// 📜️ Handcrafted ArtifactDsl (P6).
 impl crate::os_store::ArtifactDsl for ShapeDocument {
     const EXTENSION: &'static str = Self::__DSL_EXTENSION;
-    fn envelope_id() -> &'static str {
+    async fn envelope_id() -> &'static str {
         Self::__DSL_ENVELOPE_ID
     }
-    fn parse_dsl(text: &str) -> Result<Self, TextError> {
+    async fn parse_dsl(text: &str) -> Result<Self, TextError> {
         let body = match crate::os_store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
@@ -1142,7 +1222,7 @@ impl crate::os_store::ArtifactDsl for ShapeDocument {
         )?;
         Self::__dsl_from_record(&record)
     }
-    fn print_dsl(&self) -> String {
+    async fn print_dsl(&self) -> String {
         let body = print(&self.__dsl_to_record(), &Self::__dsl_spec(), JoinMode::Document);
         let envelope = crate::os_store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as crate::os_store::ArtifactDsl>::envelope_id(),
@@ -1156,7 +1236,7 @@ impl crate::os_store::ArtifactDsl for ShapeDocument {
 
 /// 📦️ Handcrafted ArtifactPack (P6).
 impl crate::os_store::ArtifactPack for ShapeDocument {
-    fn encode_pack_with(&self, options: &crate::os_store::PackEncodeOptions) -> Result<Vec<u8>, crate::os_store::PackError> {
+    async fn encode_pack_with(&self, options: &crate::os_store::PackEncodeOptions) -> Result<Vec<u8>, crate::os_store::PackError> {
         let inner = crate::os_store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope = crate::os_store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as crate::os_store::ArtifactDsl>::envelope_id(),
@@ -1166,7 +1246,7 @@ impl crate::os_store::ArtifactPack for ShapeDocument {
         .map_err(|e| crate::os_store::PackError::Schema(e.to_string()))?;
         Ok(crate::os_store::semio_format::wrap_binary(&envelope, &inner))
     }
-    fn decode_pack_with(bytes: &[u8], options: &crate::os_store::PackDecodeOptions) -> Result<Self, crate::os_store::PackError> {
+    async fn decode_pack_with(bytes: &[u8], options: &crate::os_store::PackDecodeOptions) -> Result<Self, crate::os_store::PackError> {
         let (envelope, inner) = crate::os_store::semio_format::unwrap_binary(bytes).map_err(|e| crate::os_store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as crate::os_store::ArtifactDsl>::envelope_id() {
             return Err(crate::os_store::PackError::Schema(format!(
@@ -1178,15 +1258,15 @@ impl crate::os_store::ArtifactPack for ShapeDocument {
         let (record, _report) = crate::os_store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
         Self::__dsl_from_record(&record).map_err(crate::os_store::text_error_to_pack_error)
     }
-    fn record_spec() -> Option<RecordSpec> {
+    async fn record_spec() -> Option<RecordSpec> {
         Some(Self::__dsl_spec())
     }
 }
 //#endregion 🔖️ArtifactCodec
 
 
-    #[test]
-    fn derived_newtype_tuple_variants_round_trip() {
+    #[semio_framework_async_macros::async_test]
+    async fn derived_newtype_tuple_variants_round_trip() {
         let doc = ShapeDocument { shapes: vec![ShapeNode::Circle(CircleBody { id: "c1".to_string(), r: 2.0 }), ShapeNode::Square(SquareBody { id: "s1".to_string(), side: 3.0 })] };
         let printed = <ShapeDocument as crate::os_store::ArtifactDsl>::print_dsl(&doc);
         // `"c1"` is bare-ident-shaped, so the unified "strings bare-preferred" law prints it
@@ -1225,10 +1305,10 @@ impl crate::os_store::ArtifactPack for ShapeDocument {
 /// 📜️ Handcrafted ArtifactDsl (P6).
 impl crate::os_store::ArtifactDsl for PaintDocument {
     const EXTENSION: &'static str = Self::__DSL_EXTENSION;
-    fn envelope_id() -> &'static str {
+    async fn envelope_id() -> &'static str {
         Self::__DSL_ENVELOPE_ID
     }
-    fn parse_dsl(text: &str) -> Result<Self, TextError> {
+    async fn parse_dsl(text: &str) -> Result<Self, TextError> {
         let body = match crate::os_store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
@@ -1240,7 +1320,7 @@ impl crate::os_store::ArtifactDsl for PaintDocument {
         )?;
         Self::__dsl_from_record(&record)
     }
-    fn print_dsl(&self) -> String {
+    async fn print_dsl(&self) -> String {
         let body = print(&self.__dsl_to_record(), &Self::__dsl_spec(), JoinMode::Document);
         let envelope = crate::os_store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as crate::os_store::ArtifactDsl>::envelope_id(),
@@ -1254,7 +1334,7 @@ impl crate::os_store::ArtifactDsl for PaintDocument {
 
 /// 📦️ Handcrafted ArtifactPack (P6).
 impl crate::os_store::ArtifactPack for PaintDocument {
-    fn encode_pack_with(&self, options: &crate::os_store::PackEncodeOptions) -> Result<Vec<u8>, crate::os_store::PackError> {
+    async fn encode_pack_with(&self, options: &crate::os_store::PackEncodeOptions) -> Result<Vec<u8>, crate::os_store::PackError> {
         let inner = crate::os_store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope = crate::os_store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as crate::os_store::ArtifactDsl>::envelope_id(),
@@ -1264,7 +1344,7 @@ impl crate::os_store::ArtifactPack for PaintDocument {
         .map_err(|e| crate::os_store::PackError::Schema(e.to_string()))?;
         Ok(crate::os_store::semio_format::wrap_binary(&envelope, &inner))
     }
-    fn decode_pack_with(bytes: &[u8], options: &crate::os_store::PackDecodeOptions) -> Result<Self, crate::os_store::PackError> {
+    async fn decode_pack_with(bytes: &[u8], options: &crate::os_store::PackDecodeOptions) -> Result<Self, crate::os_store::PackError> {
         let (envelope, inner) = crate::os_store::semio_format::unwrap_binary(bytes).map_err(|e| crate::os_store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as crate::os_store::ArtifactDsl>::envelope_id() {
             return Err(crate::os_store::PackError::Schema(format!(
@@ -1276,15 +1356,15 @@ impl crate::os_store::ArtifactPack for PaintDocument {
         let (record, _report) = crate::os_store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
         Self::__dsl_from_record(&record).map_err(crate::os_store::text_error_to_pack_error)
     }
-    fn record_spec() -> Option<RecordSpec> {
+    async fn record_spec() -> Option<RecordSpec> {
         Some(Self::__dsl_spec())
     }
 }
 //#endregion 🔖️ArtifactCodec
 
 
-    #[test]
-    fn derived_option_statements_field_round_trips_present_and_absent() {
+    #[semio_framework_async_macros::async_test]
+    async fn derived_option_statements_field_round_trips_present_and_absent() {
         let with_fill = PaintDocument { attributes: PaintAttributes { fill: Some(PaintStyle::Solid { color: [1.0, 0.0, 0.0, 1.0] }) } };
         let printed = <PaintDocument as crate::os_store::ArtifactDsl>::print_dsl(&with_fill);
         let parsed = <PaintDocument as crate::os_store::ArtifactDsl>::parse_dsl(&printed).unwrap_or_else(|e| panic!("parse failed: {e}\nprinted:\n{printed}"));
@@ -1319,10 +1399,10 @@ impl crate::os_store::ArtifactPack for PaintDocument {
 /// 📜️ Handcrafted ArtifactDsl (P6).
 impl crate::os_store::ArtifactDsl for BrushDocument {
     const EXTENSION: &'static str = Self::__DSL_EXTENSION;
-    fn envelope_id() -> &'static str {
+    async fn envelope_id() -> &'static str {
         Self::__DSL_ENVELOPE_ID
     }
-    fn parse_dsl(text: &str) -> Result<Self, TextError> {
+    async fn parse_dsl(text: &str) -> Result<Self, TextError> {
         let body = match crate::os_store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
@@ -1334,7 +1414,7 @@ impl crate::os_store::ArtifactDsl for BrushDocument {
         )?;
         Self::__dsl_from_record(&record)
     }
-    fn print_dsl(&self) -> String {
+    async fn print_dsl(&self) -> String {
         let body = print(&self.__dsl_to_record(), &Self::__dsl_spec(), JoinMode::Document);
         let envelope = crate::os_store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as crate::os_store::ArtifactDsl>::envelope_id(),
@@ -1348,7 +1428,7 @@ impl crate::os_store::ArtifactDsl for BrushDocument {
 
 /// 📦️ Handcrafted ArtifactPack (P6).
 impl crate::os_store::ArtifactPack for BrushDocument {
-    fn encode_pack_with(&self, options: &crate::os_store::PackEncodeOptions) -> Result<Vec<u8>, crate::os_store::PackError> {
+    async fn encode_pack_with(&self, options: &crate::os_store::PackEncodeOptions) -> Result<Vec<u8>, crate::os_store::PackError> {
         let inner = crate::os_store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope = crate::os_store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as crate::os_store::ArtifactDsl>::envelope_id(),
@@ -1358,7 +1438,7 @@ impl crate::os_store::ArtifactPack for BrushDocument {
         .map_err(|e| crate::os_store::PackError::Schema(e.to_string()))?;
         Ok(crate::os_store::semio_format::wrap_binary(&envelope, &inner))
     }
-    fn decode_pack_with(bytes: &[u8], options: &crate::os_store::PackDecodeOptions) -> Result<Self, crate::os_store::PackError> {
+    async fn decode_pack_with(bytes: &[u8], options: &crate::os_store::PackDecodeOptions) -> Result<Self, crate::os_store::PackError> {
         let (envelope, inner) = crate::os_store::semio_format::unwrap_binary(bytes).map_err(|e| crate::os_store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as crate::os_store::ArtifactDsl>::envelope_id() {
             return Err(crate::os_store::PackError::Schema(format!(
@@ -1370,15 +1450,15 @@ impl crate::os_store::ArtifactPack for BrushDocument {
         let (record, _report) = crate::os_store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
         Self::__dsl_from_record(&record).map_err(crate::os_store::text_error_to_pack_error)
     }
-    fn record_spec() -> Option<RecordSpec> {
+    async fn record_spec() -> Option<RecordSpec> {
         Some(Self::__dsl_spec())
     }
 }
 //#endregion 🔖️ArtifactCodec
 
 
-    #[test]
-    fn derived_option_block_record_field_omits_rather_than_printing_empty_braces_when_absent() {
+    #[semio_framework_async_macros::async_test]
+    async fn derived_option_block_record_field_omits_rather_than_printing_empty_braces_when_absent() {
         let with_brush = BrushDocument { brush: Some(BrushStyle { color: [0.0, 0.0, 0.0, 1.0], width: 2.5 }) };
         let printed = <BrushDocument as crate::os_store::ArtifactDsl>::print_dsl(&with_brush);
         let parsed = <BrushDocument as crate::os_store::ArtifactDsl>::parse_dsl(&printed).unwrap_or_else(|e| panic!("parse failed: {e}\nprinted:\n{printed}"));
@@ -1408,7 +1488,7 @@ impl crate::os_store::ArtifactPack for BrushDocument {
 //#region 🔖️OpCodec
 /// 🎞️ Handcrafted OpText (P6).
 impl crate::os_spr::OpText for PaintOp {
-    fn parse_op(line: &str) -> Result<Self, TextError> {
+    async fn parse_op(line: &str) -> Result<Self, TextError> {
         let variants = <Self as DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
@@ -1417,23 +1497,23 @@ impl crate::os_spr::OpText for PaintOp {
                     line,
                     &spec_fn(),
                     &ParseOptions { limits: Limits::default(), mode: SourceMode::Inline },
-                )?;
-                return <Self as DslVariants>::from_named_record(keyword, &record);
+                ).await?;
+                return <Self as DslVariants>::from_named_record(keyword, &record).await;
             }
         }
         Err(__rt::field_error(format!("unknown operation line '{line}'")))
     }
-    fn print_op(&self) -> String {
-        let (keyword, record) = <Self as DslVariants>::to_named_record(self);
+    async fn print_op(&self) -> String {
+        let (keyword, record) = <Self as DslVariants>::to_named_record(self).await;
         let variants = <Self as DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        print(&record, &spec_fn(), JoinMode::Inline)
+        print(&record, &spec_fn(), JoinMode::Inline).await
     }
 }
 
 /// 🎯️ Handcrafted OpBinary (P6).
 impl crate::os_spr::OpBinary for PaintOp {
-    fn encode_op(&self) -> Result<Vec<u8>, crate::os_spr::ProtocolError> {
+    async fn encode_op(&self) -> Result<Vec<u8>, crate::os_spr::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let (keyword, record) = <Self as DslVariants>::to_named_record(self);
         let variants = <Self as DslVariants>::variants();
@@ -1450,7 +1530,7 @@ impl crate::os_spr::OpBinary for PaintOp {
         out.extend_from_slice(&body);
         Ok(out)
     }
-    fn decode_op(bytes: &[u8]) -> Result<Self, crate::os_spr::ProtocolError> {
+    async fn decode_op(bytes: &[u8]) -> Result<Self, crate::os_spr::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let mut reader = crate::os_pack::ByteReader::new(bytes);
         let format = reader.read_u8()?;
@@ -1477,8 +1557,8 @@ impl crate::os_spr::OpBinary for PaintOp {
 //#endregion 🔖️OpCodec
 
 
-    #[test]
-    fn derived_required_statements_boxed_field_round_trips() {
+    #[semio_framework_async_macros::async_test]
+    async fn derived_required_statements_boxed_field_round_trips() {
         let op = PaintOp::AddShape { shape: Box::new(ShapeNode::Circle(CircleBody { id: "c1".to_string(), r: 2.0 })) };
         let printed = <PaintOp as crate::os_spr::OpText>::print_op(&op);
         assert!(!printed.contains('\n'), "print_op must be one line: {printed:?}");
@@ -1514,10 +1594,10 @@ impl crate::os_spr::OpBinary for PaintOp {
 /// 📜️ Handcrafted ArtifactDsl (P6).
 impl crate::os_store::ArtifactDsl for SelfRefDocument {
     const EXTENSION: &'static str = Self::__DSL_EXTENSION;
-    fn envelope_id() -> &'static str {
+    async fn envelope_id() -> &'static str {
         Self::__DSL_ENVELOPE_ID
     }
-    fn parse_dsl(text: &str) -> Result<Self, TextError> {
+    async fn parse_dsl(text: &str) -> Result<Self, TextError> {
         let body = match crate::os_store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
@@ -1529,7 +1609,7 @@ impl crate::os_store::ArtifactDsl for SelfRefDocument {
         )?;
         Self::__dsl_from_record(&record)
     }
-    fn print_dsl(&self) -> String {
+    async fn print_dsl(&self) -> String {
         let body = print(&self.__dsl_to_record(), &Self::__dsl_spec(), JoinMode::Document);
         let envelope = crate::os_store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as crate::os_store::ArtifactDsl>::envelope_id(),
@@ -1543,7 +1623,7 @@ impl crate::os_store::ArtifactDsl for SelfRefDocument {
 
 /// 📦️ Handcrafted ArtifactPack (P6).
 impl crate::os_store::ArtifactPack for SelfRefDocument {
-    fn encode_pack_with(&self, options: &crate::os_store::PackEncodeOptions) -> Result<Vec<u8>, crate::os_store::PackError> {
+    async fn encode_pack_with(&self, options: &crate::os_store::PackEncodeOptions) -> Result<Vec<u8>, crate::os_store::PackError> {
         let inner = crate::os_store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope = crate::os_store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as crate::os_store::ArtifactDsl>::envelope_id(),
@@ -1553,7 +1633,7 @@ impl crate::os_store::ArtifactPack for SelfRefDocument {
         .map_err(|e| crate::os_store::PackError::Schema(e.to_string()))?;
         Ok(crate::os_store::semio_format::wrap_binary(&envelope, &inner))
     }
-    fn decode_pack_with(bytes: &[u8], options: &crate::os_store::PackDecodeOptions) -> Result<Self, crate::os_store::PackError> {
+    async fn decode_pack_with(bytes: &[u8], options: &crate::os_store::PackDecodeOptions) -> Result<Self, crate::os_store::PackError> {
         let (envelope, inner) = crate::os_store::semio_format::unwrap_binary(bytes).map_err(|e| crate::os_store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as crate::os_store::ArtifactDsl>::envelope_id() {
             return Err(crate::os_store::PackError::Schema(format!(
@@ -1565,15 +1645,15 @@ impl crate::os_store::ArtifactPack for SelfRefDocument {
         let (record, _report) = crate::os_store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
         Self::__dsl_from_record(&record).map_err(crate::os_store::text_error_to_pack_error)
     }
-    fn record_spec() -> Option<RecordSpec> {
+    async fn record_spec() -> Option<RecordSpec> {
         Some(Self::__dsl_spec())
     }
 }
 //#endregion 🔖️ArtifactCodec
 
 
-    #[test]
-    fn derived_self_referential_record_struct_round_trips_nested_values() {
+    #[semio_framework_async_macros::async_test]
+    async fn derived_self_referential_record_struct_round_trips_nested_values() {
         let doc = SelfRefDocument {
             root: SelfRefValue {
                 number: None,
@@ -1606,10 +1686,10 @@ impl crate::os_store::ArtifactPack for SelfRefDocument {
 /// 📜️ Handcrafted ArtifactDsl (P6).
 impl crate::os_store::ArtifactDsl for TableDocument {
     const EXTENSION: &'static str = Self::__DSL_EXTENSION;
-    fn envelope_id() -> &'static str {
+    async fn envelope_id() -> &'static str {
         Self::__DSL_ENVELOPE_ID
     }
-    fn parse_dsl(text: &str) -> Result<Self, TextError> {
+    async fn parse_dsl(text: &str) -> Result<Self, TextError> {
         let body = match crate::os_store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
@@ -1621,7 +1701,7 @@ impl crate::os_store::ArtifactDsl for TableDocument {
         )?;
         Self::__dsl_from_record(&record)
     }
-    fn print_dsl(&self) -> String {
+    async fn print_dsl(&self) -> String {
         let body = print(&self.__dsl_to_record(), &Self::__dsl_spec(), JoinMode::Document);
         let envelope = crate::os_store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as crate::os_store::ArtifactDsl>::envelope_id(),
@@ -1635,7 +1715,7 @@ impl crate::os_store::ArtifactDsl for TableDocument {
 
 /// 📦️ Handcrafted ArtifactPack (P6).
 impl crate::os_store::ArtifactPack for TableDocument {
-    fn encode_pack_with(&self, options: &crate::os_store::PackEncodeOptions) -> Result<Vec<u8>, crate::os_store::PackError> {
+    async fn encode_pack_with(&self, options: &crate::os_store::PackEncodeOptions) -> Result<Vec<u8>, crate::os_store::PackError> {
         let inner = crate::os_store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope = crate::os_store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as crate::os_store::ArtifactDsl>::envelope_id(),
@@ -1645,7 +1725,7 @@ impl crate::os_store::ArtifactPack for TableDocument {
         .map_err(|e| crate::os_store::PackError::Schema(e.to_string()))?;
         Ok(crate::os_store::semio_format::wrap_binary(&envelope, &inner))
     }
-    fn decode_pack_with(bytes: &[u8], options: &crate::os_store::PackDecodeOptions) -> Result<Self, crate::os_store::PackError> {
+    async fn decode_pack_with(bytes: &[u8], options: &crate::os_store::PackDecodeOptions) -> Result<Self, crate::os_store::PackError> {
         let (envelope, inner) = crate::os_store::semio_format::unwrap_binary(bytes).map_err(|e| crate::os_store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as crate::os_store::ArtifactDsl>::envelope_id() {
             return Err(crate::os_store::PackError::Schema(format!(
@@ -1657,15 +1737,15 @@ impl crate::os_store::ArtifactPack for TableDocument {
         let (record, _report) = crate::os_store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
         Self::__dsl_from_record(&record).map_err(crate::os_store::text_error_to_pack_error)
     }
-    fn record_spec() -> Option<RecordSpec> {
+    async fn record_spec() -> Option<RecordSpec> {
         Some(Self::__dsl_spec())
     }
 }
 //#endregion 🔖️ArtifactCodec
 
 
-    #[test]
-    fn derived_table_field_prints_compact_soa_and_round_trips() {
+    #[semio_framework_async_macros::async_test]
+    async fn derived_table_field_prints_compact_soa_and_round_trips() {
         let doc = TableDocument { nodes: vec![TableNodeRow { id: "a".to_string(), x: 1.0, y: 2.0 }, TableNodeRow { id: "b".to_string(), x: 3.0, y: 4.0 }] };
         let printed = <TableDocument as crate::os_store::ArtifactDsl>::print_dsl(&doc);
         assert!(printed.contains("nodes [id:TEXT x:NUM y:NUM]"), "#[dsl(table)] field must print compact SoA: {printed}");

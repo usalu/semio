@@ -333,7 +333,7 @@ pub async fn puzzle3d_document_delta_operations(before: &Value, after: &Value) -
 pub struct Puzzle3dPlaySnapshot(pub Value);
 
 impl PartialEq for Puzzle3dPlaySnapshot {
-    async fn eq(&self, other: &Self) -> bool {
+    fn eq(&self, other: &Self) -> bool {
         store::pack_rt::json_values_equal(&self.0, &other.0)
     }
 }
@@ -410,7 +410,7 @@ impl protocol::SemanticMutation<Puzzle3dPlaySnapshot> for Puzzle3dMutation {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn puzzle3d_delta_ops_round_trip_and_stay_granular() {
         let before = serde_json::json!({
             "schema": crate::artifacts::puzzle3d::PUZZLE_3D_SCHEMA, "domain": "architecture",
@@ -452,7 +452,7 @@ mod tests {
     use protocol::testkit::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
     use protocol::SemanticMutation;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn move_object_diff_absorb_law() {
         use crate::artifacts::puzzle3d::Puzzle3dObject;
         let base = empty();
@@ -468,7 +468,7 @@ mod tests {
         Puzzle3dSnapshot::default()
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_delete_object_inverse_law() {
         use crate::artifacts::puzzle3d::Puzzle3dObject;
         let base = empty();
@@ -478,7 +478,7 @@ mod tests {
         assert_mutation_inverse_law(&with_object, &delete_object("o1".into()));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn object_field_mutations_inverse_law() {
         use crate::artifacts::puzzle3d::{Puzzle3dObject, Puzzle3dObjectAnchor, Puzzle3dScale, Puzzle3dVortex};
         let base = empty();
@@ -502,7 +502,7 @@ mod tests {
         assert_mutation_inverse_law(&with_object, &replace_object_vortex("o1".into(), "v1".into(), Puzzle3dVortex { id: "v1".into(), vortex_kind: Some("k".into()), label: None, position: [1.0, 1.0, 1.0], direction: None, radius: None, hidden: false, locked: false }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn connect_disconnect_vortices_inverse_law_and_cascade() {
         use crate::artifacts::puzzle3d::{Puzzle3dObject, Puzzle3dVortex};
         let base = empty();
@@ -521,7 +521,7 @@ mod tests {
         assert_mutation_inverse_law(&connected, &deleted);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn target_volume_and_reference_inverse_law() {
         use crate::artifacts::puzzle3d::{Puzzle3dReference, Puzzle3dReferenceSource, Puzzle3dTargetVolume};
         let base = empty();
@@ -546,7 +546,7 @@ mod tests {
         assert_mutation_inverse_law(&with_reference, &delete_reference("r1".into()));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn document_scalar_mutations_inverse_law() {
         use crate::artifacts::puzzle3d::{Puzzle3dCompatSpecificity, Puzzle3dKindCatalogs};
         let base = empty();
@@ -557,7 +557,7 @@ mod tests {
         assert_mutation_inverse_law(&base, &replace_kind_catalogs(Some(Puzzle3dKindCatalogs::default())));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dispatch_registers_semantic_descriptors() {
         register_puzzle3d_mutation_descriptors();
         for kind in Puzzle3dMutation::kinds() {
@@ -572,7 +572,7 @@ mod tests {
     // `📓️w3-f-block-puzzle-report.md` for the `assert_outcome_policy_matrix` pending-helper note.
     use protocol::testkit::{assert_fatal_never_applies, assert_missing_target_is_error};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn missing_target_is_error_per_verb_family() {
         let base = empty();
         assert_missing_target_is_error(&base, &delete_object("missing".into())); // delete
@@ -583,7 +583,7 @@ mod tests {
         assert_missing_target_is_error(&base, &disconnect_vortices("missing".into())); // disconnect/unbind
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_duplicate_id_is_fatal_and_never_applies() {
         use crate::artifacts::puzzle3d::Puzzle3dObject;
         let mut base = empty();

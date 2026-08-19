@@ -68,19 +68,19 @@ pub mod derived_construction {
     mod tests {
         use super::*;
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn conforming_snapshot_builds_clean() {
             let snapshot = XmlValidBuilderConstruction::from_text("<!DOCTYPE root>\n<root/>").expect("parses").build().expect("conforming construction must build");
             assert_eq!(snapshot.doc.doctype.as_ref().map(|doctype| doctype.name.as_str()), Some("root"));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn missing_doctype_fails_build() {
             let err = XmlValidBuilderConstruction::from_text("<root/>").expect("parses").build().expect_err("a document without a doctype must fail build()");
             assert!(err.iter().any(|d| d.code.0 == "stdio.xml.valid.doctype-missing"));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn root_name_mismatch_injected_via_raw_mutate_still_fails_build() {
             let built = XmlValidBuilderConstruction::from_text("<!DOCTYPE root>\n<root/>").expect("parses").build().expect("clean build");
             let mut mismatched = built;
@@ -205,7 +205,7 @@ pub mod derived_analysis {
             }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn conforming_doctype_reports_only_the_always_on_advisory() {
             let snapshot = snapshot_with(Some("<!DOCTYPE html>"), None, "html");
             let diagnostics = check_valid_conformance(&snapshot);
@@ -214,35 +214,35 @@ pub mod derived_analysis {
             assert_eq!(diagnostics[0].severity, Severity::Warning);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn missing_doctype_is_hard() {
             let snapshot = snapshot_with(None, None, "html");
             let diagnostics = check_valid_conformance(&snapshot);
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_DOCTYPE_MISSING && d.severity == Severity::Error), "got {diagnostics:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn root_name_mismatch_is_hard() {
             let snapshot = snapshot_with(Some("<!DOCTYPE book>"), None, "html");
             let diagnostics = check_valid_conformance(&snapshot);
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_ROOT_NAME_MISMATCH && d.severity == Severity::Error), "got {diagnostics:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn standalone_yes_with_external_subset_is_soft() {
             let snapshot = snapshot_with(Some("<!DOCTYPE html SYSTEM \"http://example.com/html.dtd\">"), Some(true), "html");
             let diagnostics = check_valid_conformance(&snapshot);
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_STANDALONE_EXTERNAL_SUBSET && d.severity == Severity::Warning), "got {diagnostics:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn standalone_yes_without_external_subset_is_clean() {
             let snapshot = snapshot_with(Some("<!DOCTYPE html>"), Some(true), "html");
             let diagnostics = check_valid_conformance(&snapshot);
             assert!(diagnostics.iter().all(|d| d.code.0 != CODE_STANDALONE_EXTERNAL_SUBSET), "got {diagnostics:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn public_external_subset_reference_is_detected() {
             let snapshot = snapshot_with(Some("<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">"), Some(true), "html");
             let diagnostics = check_valid_conformance(&snapshot);

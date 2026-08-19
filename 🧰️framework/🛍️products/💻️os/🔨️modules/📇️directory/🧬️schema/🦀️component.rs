@@ -258,7 +258,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn event_body_kind_is_the_dotted_wire_string() {
+    async fn event_body_kind_is_the_dotted_wire_string() {
         let body = DirectoryEventBody::SpaceCreated {
             space_id: "sp-1".into(),
             name: "Studio".into(),
@@ -275,7 +275,7 @@ mod tests {
     }
 
     #[test]
-    fn command_kind_is_kebab_case() {
+    async fn command_kind_is_kebab_case() {
         let command = DirectoryCommand::CreateSpace { name: "Atelier".into(), space_kind: DirectorySpaceKind::Atelier, visibility: DirectorySpaceVisibility::Private };
         let json = serde_json::to_value(&command).expect("serialize");
         assert_eq!(json["kind"], "create-space");
@@ -283,7 +283,7 @@ mod tests {
     }
 
     #[test]
-    fn stream_message_kinds_round_trip() {
+    async fn stream_message_kinds_round_trip() {
         let heartbeat = DirectoryStreamMessage::Heartbeat { head_seq: 42 };
         let json = serde_json::to_value(&heartbeat).expect("serialize");
         assert_eq!(json["kind"], "heartbeat");

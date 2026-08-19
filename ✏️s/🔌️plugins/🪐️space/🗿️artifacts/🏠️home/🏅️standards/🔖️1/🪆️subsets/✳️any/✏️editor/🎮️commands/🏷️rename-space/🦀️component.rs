@@ -44,7 +44,7 @@ mod tests {
         handle(&payload, &doc, &cfg).expect("handle")
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn empty_name_opens_the_dialog_preseeded_with_the_current_name() {
         let event_json = serde_json::json!({
             "seq": 1, "id": "evt-1", "hlc": {"physicalMs": 0, "logical": 0}, "actor": {"kind": "user", "id": "u"}, "spaceId": "sp-1",
@@ -62,7 +62,7 @@ mod tests {
         assert_eq!(args_value["name"], "Old Name");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn non_empty_name_relays_the_rename() {
         let emit = dispatch(RenameSpace { space_id: "sp-1".into(), name: "New Name".into() }, &HomeConfig::default());
         let (action_id, args) = emit

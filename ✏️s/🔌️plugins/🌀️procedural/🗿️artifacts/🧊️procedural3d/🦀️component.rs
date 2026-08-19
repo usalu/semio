@@ -145,19 +145,19 @@ pub async fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn artifact_kind_schema_matches_the_document_schema() {
         assert_eq!(artifact_kind().schema, PROCEDURAL_3D_SCHEMA);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dialect_artifact_kind_matches_the_schema_capability_descriptor() {
         assert_eq!(PROCEDURAL3D_DIALECT.artifact_kind, "s.procedural.procedural3d");
         assert_eq!(PROCEDURAL3D_DIALECT.standard, StandardId("1"));
         assert_eq!(PROCEDURAL3D_DIALECT.subset, SubsetId::ANY);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn widget_id_covers_all_widget_kinds() {
         let widgets: Vec<Widget> = vec![
             Widget::Neuron { id: "neuron-1".into(), neuron_kind: "math.add".into(), params: Default::default(), input_ports: vec![], output_ports: vec![], preview: true },

@@ -76,7 +76,17 @@ export function ensurePreview2ShimVendorAt(preview2VendorDir: string, repoRoot: 
  * Maintenance)` — for an actor never granted one) instead of any caller-cached constant. An unknown
  * frame `kind` this worker has never heard of is acknowledged as `{ ignored: true }` rather than
  * thrown, so a future Rust-side `ShardFrame` variant can reach a live worker before its TS mirror
- * lands without wedging it.
+ * lands without wedging it. An `Envelope` whose `payload.kind` is `"effect-complete"`/`"effect-error"`
+ * is routed to `deliverEffectResult` instead of a normal turn (🧪️ terra-web-bridges, see that
+ * function's own doc) — it settles a `🟨️host-shim.js` Promise, it is never itself a turn to run.
+ *
+ * 🧪️ terra-web-bridges (async-worlds): every WIT function the target world exports/imports is now
+ * `async func`, and jco's JS glue for that ALWAYS calls `new WebAssembly.Suspending(...)`/
+ * `WebAssembly.promising(...)` regardless of `--async-mode` (📓️terra-jco-spike-report.md's VERDICT:
+ * GO-jspi — confirmed no flag produces JSPI-free output). Without JSPI the failure is hard and early:
+ * a `TypeError` at MODULE TOP-LEVEL, before any call, with no graceful degradation. The guard right
+ * below turns that opaque failure into an explicit, actionable one — a diagnostic, NOT a fallback;
+ * there is no code path here that runs a plugin without JSPI.
  */
 export function shardWorkerSource(): string {
   return `/** @generated semio shard worker (H2 — bounded pool, actorId-multiplexed) */
@@ -85,6 +95,21 @@ export function shardWorkerSource(): string {
 // instead of being truncated to V8's 10-frame default — this worker's stack is otherwise destroyed
 // before \`ShardClient\` ever sees it (the main thread only ever saw one frame: \`at worker.onmessage\`).
 Error.stackTraceLimit = 200;
+
+// 🧪️ terra-web-bridges: explicit JSPI capability gate — see this file's own header doc ("what must
+// change" #1 in 📓️terra-jco-spike-report.md). Every plugin component this worker will ever \`import()\`
+// is fully async-lifted, and jco's glue for that unconditionally needs \`WebAssembly.Suspending\`/
+// \`WebAssembly.promising\`; without them the FIRST \`import()\` throws \`TypeError: WebAssembly.Suspending
+// is not a constructor\` at module top-level, before any plugin call — an opaque failure the spike
+// reproduced verbatim under plain Node 24. Posting a \`"trap"\` BEFORE throwing gives \`ShardClient\`'s
+// \`onActorTrap\` its best chance at a readable message even where a cross-context Worker \`onerror\`
+// gets redacted to \`"undefined undefined undefined"\` (also reproduced by the spike) — \`actorId: "*"\`
+// is a worker-wide sentinel, not a real actor, since no actor has activated yet at this point.
+if (typeof WebAssembly === "undefined" || typeof WebAssembly.Suspending !== "function" || typeof WebAssembly.promising !== "function") {
+  const message = "semio shard worker: this browser/engine lacks JavaScript Promise Integration (JSPI) — WebAssembly.Suspending/WebAssembly.promising are required to run semio's async-lifted plugin components and there is no fallback. Chrome/Edge/Chromium-based browsers ship JSPI on by default; Firefox needs the javascript.options.wasm_js_promise_integration flag in about:config; Node.js needs --experimental-wasm-jspi.";
+  self.postMessage({ kind: "trap", actorId: "*", message });
+  throw new Error(message);
+}
 
 const actors = new Map(); // actorId -> { api, moduleUrl }
 const inFlightTurnActors = new Set();
@@ -156,10 +181,26 @@ async function loadActor(actorId, moduleUrl) {
   const existing = actors.get(actorId);
   if (existing && existing.moduleUrl === moduleUrl) return existing;
   const bridge = await import(/* @vite-ignore */ moduleUrl);
-  const api = await bridge.createActorApi();
+  // 🧪️ terra-web-bridges: \`actorId\` now threads into \`createActorApi\` so \`🟨️host-shim.js\` can bind
+  // its \`host-async\` effect-request envelopes to the right actor — see \`pluginComponentBridgeSource\`'s
+  // own doc for why this is safe (one moduleUrl per actor ⇒ one shim module instance per actor).
+  const api = await bridge.createActorApi(actorId);
   const entry = { api, moduleUrl, pendingAssets: [] };
   actors.set(actorId, entry);
   return entry;
+}
+
+// 🧪️ terra-web-bridges: settles a \`🟨️host-shim.js\` \`effectRequest\` Promise from an \`effect-complete\`/
+// \`effect-error\` envelope — see \`hostShimSource\`'s own doc for the wire shape this expects
+// (\`envelope.payload.payload.requestId\`, \`.value\` on complete / \`.message\` on error). A missing actor
+// (already disposed, or the envelope arrived before \`activate\`) is silently dropped rather than
+// thrown, matching \`cancelJob\`'s own \`actor?.\` defensiveness above.
+function deliverEffectResult(actorId, envelope) {
+  const actor = actors.get(actorId);
+  if (!actor) return;
+  const { kind, payload } = envelope.payload;
+  if (kind === "effect-complete") actor.api.resolveEffect(payload.requestId, payload.value);
+  else if (kind === "effect-error") actor.api.rejectEffect(payload.requestId, payload.message);
 }
 
 // 🪶️ GUESTSLIM (design-runtime.md §3): world \`actor\` exports NO \`activate\` function — activation is
@@ -195,6 +236,14 @@ self.addEventListener("message", async (event) => {
     actors.delete(msg.actorId);
     inFlightTurnActors.delete(msg.actorId);
     grantedBudgets.delete(msg.actorId);
+    return;
+  }
+  // 🧪️ terra-web-bridges: an effect-complete/effect-error \`"frame"\` is a REPLY to something THIS
+  // worker sent (\`🟨️host-shim.js\`'s \`effectRequest\`), never a request expecting a \`reply()\` of its
+  // own — settled directly, before the generic requestId/actorId-gated dispatch below (which always
+  // posts a \`"result"\` back, wrong for a message that is itself already an answer).
+  if (kind === "frame" && msg.frame && msg.frame.kind === "Envelope" && msg.frame.envelope && msg.frame.envelope.payload && (msg.frame.envelope.payload.kind === "effect-complete" || msg.frame.envelope.payload.kind === "effect-error")) {
+    deliverEffectResult(msg.actorId, msg.frame.envelope);
     return;
   }
   const { requestId, actorId } = msg;
@@ -285,26 +334,45 @@ self.addEventListener("message", async (event) => {
  * the SAME re-instantiation this bridge used to do blindly, now a supervised decision instead of a
  * local guess with no visibility into checkpoint state.
  *
- * 🚧 UNVERIFIED against a real compiled artifact (B1b's `GuestRuntime`/wasip2 guest build is still
- * landing as of this packet): the exact jco-generated export shape for a world that exports several
- * *interfaces* (rather than bare functions) is assumed here to be one JS binding per interface, named
- * for the interface (\`reactor\`/\`jobs\`/\`checkpoint\`/\`describe\`), field names camelCased from the
- * WIT's kebab-case. If jco nests these differently, only the four destructured names below need to
- * change — every other line here is interface-shape-agnostic.
+ * 🚧 UNVERIFIED against a real compiled artifact of the PRODUCTION `world actor` component (the
+ * wasm32-wasip2 fleet does not currently compile — a large in-flight conversion tracked elsewhere on
+ * this ticket): the exact jco-generated export shape for a world that exports several *interfaces*
+ * (rather than bare functions) is assumed here to be one JS binding per interface, named for the
+ * interface (\`reactor\`/\`jobs\`/\`checkpoint\`/\`describe\`), field names camelCased from the WIT's
+ * kebab-case. **This IS confirmed for a single-export-interface world against a real transpiled
+ * component** (📓️terra-jco-spike-report.md's jcoprobe fixture: \`export * as probe from
+ * './interfaces/...'\`, camelCased function names) — the multi-interface-export case (4 interfaces,
+ * matching \`world actor\`) is extrapolated from that single-interface evidence plus jco's documented
+ * per-interface naming convention, not independently re-confirmed here. If jco nests these
+ * differently, only the four destructured names below need to change — every other line here is
+ * interface-shape-agnostic.
+ *
+ * 🧪️ terra-web-bridges: every destructured method now returns a Promise (every WIT function in the
+ * target world is `async func`) — made EXPLICITLY `async` here rather than relying on bare pass-
+ * through, so the shape is self-documenting and robust even if a future jco version wraps a export in
+ * something that ISN'T already a thenable. Also now takes `actorId` and binds it into the shim
+ * (`__bindHostBridge`) BEFORE returning the api object — see `🟨️host-shim.js` (`hostShimSource`)'s own
+ * header doc for why this binding is safe as per-module state and why it's needed at all (every
+ * `host-async` import must tag its outbound `effect-request` envelope with the actor it belongs to).
+ * `🟨️shard-worker.js`'s `loadActor` is the one caller, updated to pass `actorId` alongside this change.
  */
 export function pluginComponentBridgeSource(componentBase: string, wasmFileName: string): string {
   return `/** @generated semio actor jco component bridge */
+import * as hostShim from "./${PLUGIN_HOST_SHIM_FILE}";
 const { reactor, jobs, checkpoint, describe } = await import("./${componentBase}.js");
 
-export async function createActorApi() {
+export async function createActorApi(actorId) {
+  hostShim.__bindHostBridge(actorId);
   return {
-    poll: (events, budget) => reactor.poll(events, budget),
-    startJob: (job, kind, input) => jobs.startJob(job, kind, input),
-    stepJob: (job, budget) => jobs.stepJob(job, budget),
-    cancelJob: (job) => jobs.cancelJob(job),
-    checkpoint: () => checkpoint.checkpoint(),
-    restore: (state) => checkpoint.restore(state),
-    describe: () => describe.describe(),
+    poll: async (events, budget) => reactor.poll(events, budget),
+    startJob: async (job, kind, input) => jobs.startJob(job, kind, input),
+    stepJob: async (job, budget) => jobs.stepJob(job, budget),
+    cancelJob: async (job) => jobs.cancelJob(job),
+    checkpoint: async () => checkpoint.checkpoint(),
+    restore: async (state) => checkpoint.restore(state),
+    describe: async () => describe.describe(),
+    resolveEffect: (requestId, value) => hostShim.__resolveEffect(requestId, value),
+    rejectEffect: (requestId, message) => hostShim.__rejectEffect(requestId, message),
   };
 }
 `;
@@ -361,10 +429,19 @@ function optimizePluginCoreModules(outDir: string, componentBase: string, ctx: P
 }
 
 export function transpilePluginComponent(artifact: string, outDir: string, componentBase: string, ctx: PluginWebMaterializeContext): void {
-  // 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (A2/H2): `world actor`'s only import is `pure`
-  // (component.wit's `interface pure { log; now-ms; trace-span; }`), replacing the old `host`
-  // interface — `🟨️host-shim.js` below implements only these three functions now.
-  if (runNodeBinStatus(["@bytecodealliance/jco", "transpile", artifact, "-o", outDir, "--name", componentBase, "--map", "semio:framework/pure=./🟨️host-shim.js"], ctx.repoRoot) !== 0) {
+  // 🧪️ terra-web-bridges (📓️terra-jco-spike-report.md "what must change" #2): NO `--async-mode`
+  // flag — confirmed byte-identical to jco's bare/"sync" default for a component whose every WIT
+  // function is already `async func` (`--async-mode jspi` was diffed against the bare transpile of
+  // the SAME wasm and produced 0 bytes of difference). `world actor`'s import surface is now `pure`
+  // (component.wit's `interface pure { log; now-ms; trace-span; }`, still plain `func`) PLUS
+  // `host-async` (`interface host-async`, ~:887 — 24 `async func` imports + `emit`/`emit-patch`) —
+  // both map to the SAME `🟨️host-shim.js`, which now implements both interfaces' exports from one file.
+  if (
+    runNodeBinStatus(
+      ["@bytecodealliance/jco", "transpile", artifact, "-o", outDir, "--name", componentBase, "--map", "semio:framework/pure=./🟨️host-shim.js", "--map", "semio:framework/host-async=./🟨️host-shim.js"],
+      ctx.repoRoot,
+    ) !== 0
+  ) {
     throw new Error(`jco transpile failed for ${artifact}`);
   }
   optimizePluginCoreModules(outDir, componentBase, ctx);
@@ -446,7 +523,10 @@ async function optimizePluginCoreModulesAsync(outDir: string, componentBase: str
  * artifact's cleanup against jco still reading it. */
 export async function transpilePluginComponentAsync(artifact: string, outDir: string, componentBase: string, ctx: PluginWebMaterializeContext): Promise<void> {
   try {
-    await spawnNodeBinAsync(["@bytecodealliance/jco", "transpile", artifact, "-o", outDir, "--name", componentBase, "--map", "semio:framework/pure=./🟨️host-shim.js"], ctx.repoRoot);
+    // 🧪️ terra-web-bridges: same flags/map pair as the sync {@link transpilePluginComponent} above —
+    // see that function's own doc for why no `--async-mode` flag is needed and why `host-async` maps
+    // to the same shim file `pure` already does.
+    await spawnNodeBinAsync(["@bytecodealliance/jco", "transpile", artifact, "-o", outDir, "--name", componentBase, "--map", "semio:framework/pure=./🟨️host-shim.js", "--map", "semio:framework/host-async=./🟨️host-shim.js"], ctx.repoRoot);
   } catch {
     throw new Error(`jco transpile failed for ${artifact}`);
   }
@@ -456,22 +536,36 @@ export async function transpilePluginComponentAsync(artifact: string, outDir: st
 
 
 /**
- * @emoji 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (A2/H2, design-abi.md §1): `world actor`'s ONLY
- * import — `interface pure { log; now-ms; trace-span; }` — replacing the old `host` world's much
- * larger synchronous surface (`read-document`/`write-document`/`open-window`/`invoke-action`/
- * `read-asset`/`network-fetch`/`write-blob`/`read-blob`, and the ad hoc `backboneSend`/`backbonePoll`/
- * `backboneStatus` worker-postMessage relay). Every one of those is gone: reads/writes/network/dialogs
- * /jobs are now `effect`s returned from `poll`, answered by an `event` on a later `poll` — never a
- * synchronous host-shim call — which is what makes a pooled, multi-instance-per-worker actor
- * `Send`-free and reentrancy-safe in the first place (component.wit's own doc comment on `pure`).
- * `writeBlob`/`readBlob`'s synchronous XHR trick and the `backbonePoll` shared queue are the two
- * pieces design-runtime.md §3 calls out by name for deletion; both are subsumed by the same effect/
- * event turn loop (`document-read`/`document-write`/`blob-load`/`blob-write` effects, `message-event`
- * for backbone-shaped traffic).
+ * @emoji 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (A2/H2, design-abi.md §1) + 🧪️ terra-web-bridges
+ * (async-worlds). `pure` (`interface pure { log; now-ms; trace-span; }`, component.wit ~:823) stays
+ * plain synchronous `func` and is unchanged from H2 — the old `host` world's larger surface
+ * (`read-document`/`write-document`/`open-window`/`invoke-action`/`read-asset`/`network-fetch`/
+ * `write-blob`/`read-blob`, plus the ad hoc `backboneSend`/`backbonePoll`/`backboneStatus`
+ * worker-postMessage relay) is still gone.
+ *
+ * NEW: `host-async` (component.wit ~:887 — 24 `async func` imports plus the two fire-and-forget
+ * `emit`/`emit-patch` doors) is now ALSO implemented in this one file, mapped alongside `pure` by
+ * `transpilePluginComponent`'s `--map` pair. Every async import posts an `effect-request` and returns
+ * a Promise settled by a later `effect-complete`/`effect-error` — see `effectRequest`'s own doc below
+ * for the exact `ShardFrame`/`ShardEnvelope` shape it rides (reused verbatim from
+ * `🎭️actor/📦️packages/🟦️typescript/🧵️shard-client.ts`, never a second wire) and `__bindHostBridge`'s
+ * doc for why per-actor correlation is safe as this module's own top-level state.
+ *
+ * 🚧 UNPROVEN beyond the jcoprobe fixture (📓️terra-jco-spike-report.md): (a) whether jco expects a
+ * `result<T, pack>`-returning host-async import to signal `Err` by throwing — jcoprobe's own
+ * `probe-host` never used a `result<>` return, so `effectRequest` rejecting on `effect-error` follows
+ * jco's documented host-import convention, not a spike-confirmed one; (b) the kernel-side responder
+ * for `effect-request`/`effect-complete` does not exist yet — `ShardClient`'s `InboundMessage` union
+ * (`🧵️shard-client.ts`) only recognizes `result`/`heartbeat`/`trap` today, so a real round trip through
+ * a live `ShardClient` has not been exercised; only the SHAPE this shim emits/expects is fixed here,
+ * for a sibling packet owning that file to start answering.
  */
 export function hostShimSource(): string {
-  return `/** @generated semio actor host shim — implements ONLY the \`pure\` import interface */
+  return `/** @generated semio actor host shim — implements the pure AND host-async import interfaces
+ * (component.wit ~:823 / ~:887). See plugin-web-materialize.ts's hostShimSource doc for the design
+ * this file is generated from. */
 
+//#region 🧬️pure
 export function log(level, message) {
   if (level === "error") console.error(\`[actor] \${message}\`);
   else console.log(\`[actor] \${message}\`);
@@ -484,5 +578,142 @@ export function nowMs() {
 export function traceSpan(name) {
   if (typeof performance !== "undefined" && typeof performance.mark === "function") performance.mark(name);
 }
+//#endregion 🧬️pure
+
+//#region 🌉️host-async
+let boundActorId = null;
+let effectSeq = 0;
+const pendingEffects = new Map();
+
+// 🌉️ Called once by \`createActorApi(actorId)\` (\`pluginComponentBridgeSource\`), right after this
+// module is imported for that actor — every subsequent \`effectRequest\` in THIS module instance is
+// tagged with \`actorId\`. Safe as module-scoped (not global) state ONLY because \`🟨️shard-worker.js\`
+// dynamically \`import()\`s a distinct moduleUrl per actor (\`loadActor\`'s own doc), so each actor gets
+// its own copy of this file's top-level state — never shared across actors, even under the
+// cross-actor interleaving this worker's header doc describes.
+export function __bindHostBridge(actorId) {
+  boundActorId = actorId;
+}
+
+// 🌉️ Settles the Promise \`effectRequest\` handed back for \`requestId\` — called by \`🟨️shard-worker.js\`
+// when an \`effect-complete\`/\`effect-error\` envelope for this actor arrives.
+export function __resolveEffect(requestId, value) {
+  const entry = pendingEffects.get(requestId);
+  if (!entry) return;
+  pendingEffects.delete(requestId);
+  entry.resolve(value);
+}
+
+export function __rejectEffect(requestId, message) {
+  const entry = pendingEffects.get(requestId);
+  if (!entry) return;
+  pendingEffects.delete(requestId);
+  entry.reject(new Error(message));
+}
+
+// 🌊️ jco's proven shape for a guest-consumable \`stream<u8>\` is a plain async generator yielding ONE
+// byte at a time — confirmed against a real component (jcoprobe's \`fetchBody\`/\`read-body\`, S4 in
+// 📓️terra-jco-spike-report.md), NOT a \`ReadableStream\` directly. An \`effect-complete\` for
+// \`http-fetch\`/\`blob-read\` is expected to carry a \`ReadableStream\` (structured-clone-transferable
+// across \`postMessage\`); this adapts it into the proven per-byte generator shape. Also accepts an
+// already-async-iterable value so a kernel handing back a plain byte array still works.
+async function* streamToByteGenerator(body) {
+  if (body == null) return;
+  if (typeof body[Symbol.asyncIterator] === "function") {
+    for await (const chunk of body) {
+      if (chunk instanceof Uint8Array) { for (const byte of chunk) yield byte; } else yield chunk;
+    }
+    return;
+  }
+  const reader = body.getReader();
+  try {
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) return;
+      if (value instanceof Uint8Array) { for (const byte of value) yield byte; } else yield value;
+    }
+  } finally {
+    reader.releaseLock();
+  }
+}
+
+// 🚪️ Every \`host-async\` ASYNC import funnels through here — posts one \`ShardFrame::Envelope\` up to
+// the kernel over the SAME shape \`🧵️shard-client.ts\` declares (\`to\`/\`from\`/\`lane\`/\`seq\`/
+// \`deadlineMs\`/\`coalesce\`/\`cancelOf\`/\`payload\`), with \`payload: {kind: "effect-request", payload:
+// {effect, requestId, params}}\` — the SAME \`{kind, payload}\` envelope-payload shape
+// \`ShardEventEnvelope\` already uses for turn events, reused rather than inventing a new one. Resolves
+// or rejects once \`__resolveEffect\`/\`__rejectEffect\` fires for the matching \`requestId\`.
+function effectRequest(effect, params) {
+  const requestId = \`\${boundActorId}:\${effect}:\${++effectSeq}\`;
+  return new Promise((resolve, reject) => {
+    pendingEffects.set(requestId, { resolve, reject });
+    self.postMessage({
+      kind: "frame",
+      actorId: boundActorId,
+      frame: {
+        kind: "Envelope",
+        envelope: {
+          to: "kernel",
+          from: { kind: "actor", id: boundActorId },
+          lane: "Background",
+          seq: effectSeq,
+          deadlineMs: null,
+          coalesce: null,
+          cancelOf: null,
+          payload: { kind: "effect-request", payload: { effect, requestId, params } },
+        },
+      },
+    });
+  });
+}
+
+// 🚪️ \`emit\`/\`emit-patch\` are plain (non-async) WIT \`func\`s — the ONE fire-and-forget door for the
+// ~24 one-way \`effect\` variants (plus \`respond\`) and for UI patches. No \`requestId\`/Promise: posts
+// and returns immediately, same envelope shape as \`effectRequest\` above minus the correlation.
+function postFireAndForget(kind, payload) {
+  self.postMessage({
+    kind: "frame",
+    actorId: boundActorId,
+    frame: {
+      kind: "Envelope",
+      envelope: { to: "kernel", from: { kind: "actor", id: boundActorId }, lane: "Background", seq: ++effectSeq, deadlineMs: null, coalesce: null, cancelOf: null, payload: { kind, payload } },
+    },
+  });
+}
+
+const call = (effect) => (params) => effectRequest(effect, params);
+export const storageRead = call("storage-read");
+export const storageWrite = call("storage-write");
+export const storageDelete = call("storage-delete");
+export const blobLoad = call("blob-load");
+export const blobWrite = call("blob-write");
+export const blobRead = (hash) => effectRequest("blob-read", { hash }).then(streamToByteGenerator);
+export const httpFetch = (params) => effectRequest("http-fetch", params).then((response) => ({ ...response, body: streamToByteGenerator(response.body) }));
+export const documentRead = call("document-read");
+export const documentWrite = call("document-write");
+export const linkResolve = (link) => effectRequest("link-resolve", { link });
+export const registryQuery = call("registry-query");
+export const ioCompose = call("io-compose");
+export const ioRun = call("io-run");
+export const cacheDerive = call("cache-derive");
+export const cacheRead = call("cache-read");
+export const invokeExtension = call("invoke-extension");
+export const openWindow = call("open-window");
+export const openDialog = call("open-dialog");
+export const dispatchAction = call("dispatch-action");
+export const spawnPluginInstance = call("spawn-plugin-instance");
+export const requestFileOpen = call("request-file-open");
+export const requestMediaFrames = call("request-media-frames");
+export const requestCapability = call("request-capability");
+export const spawnJob = (job, kind, input, placement) => effectRequest("spawn-job", { job, kind, input, placement });
+
+export function emit(value) {
+  postFireAndForget("effect-emit", value);
+}
+
+export function emitPatch(patch) {
+  postFireAndForget("ui-patch-emit", patch);
+}
+//#endregion 🌉️host-async
 `;
 }

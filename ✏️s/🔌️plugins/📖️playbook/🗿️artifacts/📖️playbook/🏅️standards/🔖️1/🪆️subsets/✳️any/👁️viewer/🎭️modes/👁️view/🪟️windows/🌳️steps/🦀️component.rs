@@ -81,7 +81,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn definition_restamps_the_tree_window_kit_with_this_windows_own_id_and_body_key() {
         let definition = definition();
         assert_eq!(definition.id, PLAYBOOK_VIEW_WINDOW_STEPS);
@@ -89,7 +89,7 @@ mod tests {
         assert_eq!(definition.surface_kind, TreeWindowKit::window_kind().surface_kind, "restamping the id/body-key must not change the underlying surface shape");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn render_nests_every_blocks_label_and_kind_under_its_own_step() {
         let step = PlaybookStep { id: "s1".into(), title: "Intro".into(), description: None, blocks: vec![sample_block("b1", "Name", "text")] };
         let spec = playbook_snapshot_with_steps("playbook.program", "playbook", "1", Some("Recipe".into()), vec![step]);
@@ -99,7 +99,7 @@ mod tests {
         assert!(json.contains("Name (text)"), "block label+kind must appear as a leaf node label: {json}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn render_falls_back_to_the_step_id_when_the_title_is_empty() {
         let step = PlaybookStep { id: "s1".into(), title: String::new(), description: None, blocks: Vec::new() };
         let spec = playbook_snapshot_with_steps("playbook.program", "playbook", "1", None, vec![step]);

@@ -48,7 +48,7 @@ pub struct NamedTripleDiff<K, D, T> {
 }
 
 impl<K, D, T> Default for NamedTripleDiff<K, D, T> {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { removed: Vec::new(), modified: Vec::new(), added: Vec::new() }
     }
 }
@@ -1797,7 +1797,7 @@ mod handcrafted_diff_codec_tests {
     /// `XlsxCellValue` variant (incl. `Formula.cached` and a value containing raw `,`/`:`/`[`/`]`
     /// bytes-through-hex), the OPC content-types/parts/relationships triples (incl.
     /// `OpcTargetMode::External`), and both `opc`/`workbook` top-level tokens together and alone.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn diff_codec_text_binary_roundtrip_law() {
         let a = snapshot_a();
         let b = snapshot_b();
@@ -1828,7 +1828,7 @@ mod handcrafted_diff_codec_tests {
 mod result_apply_tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn rejects_missing_sheet_target_without_mutating_base() {
         let base = XlsxSnapshot::default();
         let diff =

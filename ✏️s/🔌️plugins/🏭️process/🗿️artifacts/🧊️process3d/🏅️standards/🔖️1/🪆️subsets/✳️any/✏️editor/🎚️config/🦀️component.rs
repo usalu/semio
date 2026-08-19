@@ -116,7 +116,7 @@ async fn default_contributions_json() -> String {
 }
 
 impl Default for Process3dConfig {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self {
             engagement_input: String::new(),
             camera_position: [3.0, -3.0, 2.0],
@@ -306,7 +306,7 @@ impl Mutation<Process3dConfig> for Process3dConfigMutation {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn process3d_config_dsl_and_pack_round_trip() {
         use store::ArtifactPack;
         let config = Process3dConfig { sun_enabled: true, active_utility_id: "cut".into(), ..Process3dConfig::default() };
@@ -315,7 +315,7 @@ mod tests {
         assert_eq!(Process3dConfig::decode_pack(&bytes).expect("decode"), config);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn process3d_config_operation_backwards_restores_the_same_field_from_base() {
         let base = Process3dConfig::default();
         let operation = Process3dConfigMutation::SetLocale { value: "de-DE".into() };
@@ -323,7 +323,7 @@ mod tests {
         assert_eq!(inverse, vec![Process3dConfigMutation::SetLocale { value: base.locale }]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn process3d_config_operation_diff_applies_expected_fields() {
         let base = Process3dConfig::default();
         let next = Process3dConfigMutation::SetCamera { position: [1.0, 2.0, 3.0], target: [0.1, 0.2, 0.3], fov: 60.0 }.diff(&base).into_parts().0;
@@ -339,7 +339,7 @@ mod tests {
         assert_eq!(next.sun_color, "#123456");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn process3d_config_op_text_round_trips_every_variant() {
         store::os_store::test_support::assert_op_line_round_trip(&Process3dConfigMutation::SetEngagementInput { value: "cut".into() });
         store::os_store::test_support::assert_op_line_round_trip(&Process3dConfigMutation::SetCamera { position: [1.0, 2.0, 3.0], target: [0.1, 0.2, 0.3], fov: 60.0 });
@@ -349,7 +349,7 @@ mod tests {
         store::os_store::test_support::assert_op_line_round_trip(&Process3dConfigMutation::SetContributions { json: "[]".into() });
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn process3d_config_default_matches_the_existing_runtime_defaults() {
         let config = Process3dConfig::default();
         assert_eq!(config.camera_position, [3.0, -3.0, 2.0]);

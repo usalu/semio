@@ -16,7 +16,7 @@ pub async fn measure(config: &LowpolyConfig, _labels: &LowpolyLabels) -> WindowM
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn measure_builds_a_group() {
         let config = LowpolyConfig::default();
         assert!(matches!(measure(&config, semio_framework_plugin::resolve_labels_for_locale::<LowpolyLabels>("en-US")), WindowMeasure::Group { .. }));

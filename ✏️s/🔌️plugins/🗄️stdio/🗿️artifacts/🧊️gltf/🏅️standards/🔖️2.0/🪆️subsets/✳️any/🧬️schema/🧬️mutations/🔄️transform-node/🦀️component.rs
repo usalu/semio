@@ -33,7 +33,7 @@ impl protocol::MutationKind<GltfSnapshot, GltfMutation> for TransformNode {
 }
 
 impl GltfSemanticMutation for TransformNode {
-    async fn apply(&self, snapshot: &mut GltfSnapshot) -> Result<(), GltfMutationRejection> {
+    fn apply(&self, snapshot: &mut GltfSnapshot) -> Result<(), GltfMutationRejection> {
         check_index("document/nodes", self.index, snapshot.document.nodes.len())?;
         if self.matrix.is_some() && (self.translation.is_some() || self.rotation.is_some() || self.scale.is_some()) {
             return Err(reject("gltf.node.transform-exclusive", format!("document/nodes/{}", self.index), "matrix and TRS cannot coexist"));

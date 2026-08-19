@@ -921,7 +921,7 @@ pub(crate) async fn demo_diff_cases() -> Vec<Ifc2x3Diff> {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn invalid_instance_order_is_rejected_before_mutation() {
         let base = Ifc2x3Snapshot::default();
         let diff = Ifc2x3Diff { instance_order: Some(vec![1]), ..Default::default() };
@@ -943,7 +943,7 @@ mod tests {
 
     /// 🧪️ THE acceptance criterion for "diff can change every field": schema, header, and
     /// instance add/remove/modify all round-trip through `between`+`apply`.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn field_sweep_between_covers_every_field() {
         let base = snap("stdio.ifc.2x3", Part21Header::default(), vec![inst(1, "IFCWALL"), inst(2, "IFCDOOR")]);
         let mut next_header = Part21Header::default();
@@ -961,7 +961,7 @@ mod tests {
         assert_eq!(d.apply(&base).expect("valid between diff"), next);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_upsert_then_remove_same_id_cancels_to_removed_only() {
         let mut d1 = Ifc2x3Diff { upserted_instances: vec![inst(5, "IFCSLAB")], ..Default::default() };
         let d2 = Ifc2x3Diff { removed_instances: vec![5], ..Default::default() };
@@ -970,7 +970,7 @@ mod tests {
         assert_eq!(d1.removed_instances, vec![5]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_remove_then_upsert_same_id_un_removes() {
         let mut d1 = Ifc2x3Diff { removed_instances: vec![7], ..Default::default() };
         let d2 = Ifc2x3Diff { upserted_instances: vec![inst(7, "IFCBEAM")], ..Default::default() };
@@ -979,7 +979,7 @@ mod tests {
         assert_eq!(d1.upserted_instances, vec![inst(7, "IFCBEAM")]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_matches_sequential_apply() {
         let base = snap("stdio.ifc.2x3", Part21Header::default(), vec![inst(1, "IFCWALL")]);
         let d1 = Ifc2x3Diff { upserted_instances: vec![inst(2, "IFCDOOR")], ..Default::default() };
@@ -993,7 +993,7 @@ mod tests {
         assert_eq!(merged.apply(&base).expect("valid absorbed diff"), sequential);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inverse_diff_level_roundtrip() {
         let base = snap("stdio.ifc.2x3", Part21Header::default(), vec![inst(1, "IFCWALL"), inst(2, "IFCDOOR")]);
         let d = Ifc2x3Diff { removed_instances: vec![2], upserted_instances: vec![inst(1, "IFCWALLSTANDARDCASE"), inst(4, "IFCCOLUMN")], ..Default::default() };
@@ -1002,7 +1002,7 @@ mod tests {
         assert_eq!(inv.apply(&next).expect("valid inverse diff"), base);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn between_self_is_empty() {
         let base = snap("stdio.ifc.2x3", Part21Header::default(), vec![inst(1, "IFCWALL")]);
         assert!(Ifc2x3Diff::between(&base, &base).is_empty());
@@ -1012,7 +1012,7 @@ mod tests {
     /// 🧪️ `DiffCodec` round-trip laws over the hand-rolled `Ifc2x3Diff` grammar — exercises every
     /// top-level field (`schema`/`header`/`removed`/`upserted`) and every `Part21Value` tag incl.
     /// `List`/`Typed` recursion and a real COMPLEX instance (2-entry `entities`).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn diff_codec_text_binary_roundtrip_law() {
         use protocol::DiffCodec;
         let complex_inst =

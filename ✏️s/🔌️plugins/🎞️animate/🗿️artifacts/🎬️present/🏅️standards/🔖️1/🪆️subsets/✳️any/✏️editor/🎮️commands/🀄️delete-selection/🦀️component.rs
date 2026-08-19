@@ -41,7 +41,7 @@ mod tests {
     /// adds a tile, selects it via the framework's real `interactionSelect` action (the only way a
     /// downstream crate can populate a genuine `InteractionView`), then confirms `deleteSelection`
     /// removes exactly that tile.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn delete_selection_removes_the_live_selected_tile() {
         let mut app = present_app_with_registry();
         dispatch(&mut app, PresentCommand::AddTile(add_tile::AddTile { crop: None }));
@@ -52,7 +52,7 @@ mod tests {
         assert!(crate::artifacts::present::present_working_scene(&app.snapshot().expect("projection")).1.is_empty(), "selected tile must be deleted");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn delete_selection_with_no_selection_is_a_no_op() {
         let mut app = present_app_with_registry();
         dispatch(&mut app, PresentCommand::AddTile(add_tile::AddTile { crop: None }));

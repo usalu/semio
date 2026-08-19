@@ -75,7 +75,7 @@ pub mod derived_construction {
     mod tests {
         use super::*;
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn pass_through_build_never_fails_on_conformance_grounds() {
             let snapshot = TiffBaselineBuilderConstruction::empty().build().expect("all conformance findings are soft by policy; build must succeed");
             assert!(snapshot.ifds.is_empty());
@@ -216,7 +216,7 @@ pub mod derived_analysis {
             }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn no_ifd_is_flagged_soft() {
             let snapshot = TiffSnapshot::default();
             let diagnostics = check_tiff_baseline_conformance(&snapshot);
@@ -224,28 +224,28 @@ pub mod derived_analysis {
             assert_eq!(diagnostics.len(), 1, "no-IFD short-circuits before any other check, got {diagnostics:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn degenerate_zero_dimensions_are_flagged_soft() {
             let snapshot = snapshot_with(0, 0, Vec::new());
             let diagnostics = check_tiff_baseline_conformance(&snapshot);
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_DEGENERATE_RASTER && d.severity == Severity::Warning), "got {diagnostics:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn rgba_length_mismatch_is_flagged_soft() {
             let snapshot = snapshot_with(4, 4, vec![0u8; 4]); // way too short for 4x4 RGBA
             let diagnostics = check_tiff_baseline_conformance(&snapshot);
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_DEGENERATE_RASTER), "got {diagnostics:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn well_formed_raster_has_no_findings() {
             let snapshot = snapshot_with(3, 2, vec![0u8; 3 * 2 * 4]);
             let diagnostics = check_tiff_baseline_conformance(&snapshot);
             assert!(diagnostics.is_empty(), "expected zero findings for a fully baseline-conformant IFD, got {diagnostics:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn unsupported_compression_is_flagged_soft() {
             let mut snapshot = snapshot_with(2, 2, vec![0u8; 2 * 2 * 4]);
             snapshot.ifds[0].entries.iter_mut().find(|t| t.tag == 259).unwrap().values = TiffValues::Short(vec![5]); // LZW
@@ -253,7 +253,7 @@ pub mod derived_analysis {
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_UNSUPPORTED_COMPRESSION), "got {diagnostics:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn unsupported_bits_per_sample_is_flagged_soft() {
             let mut snapshot = snapshot_with(2, 2, vec![0u8; 2 * 2 * 4]);
             snapshot.ifds[0].entries.iter_mut().find(|t| t.tag == 258).unwrap().values = TiffValues::Short(vec![16]);
@@ -261,7 +261,7 @@ pub mod derived_analysis {
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_UNSUPPORTED_BITS_PER_SAMPLE), "got {diagnostics:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn tiled_organization_is_flagged_soft() {
             let mut snapshot = snapshot_with(2, 2, vec![0u8; 2 * 2 * 4]);
             snapshot.ifds[0].entries.push(tag(322, TiffFieldType::Long, TiffValues::Long(vec![16]))); // TileWidth

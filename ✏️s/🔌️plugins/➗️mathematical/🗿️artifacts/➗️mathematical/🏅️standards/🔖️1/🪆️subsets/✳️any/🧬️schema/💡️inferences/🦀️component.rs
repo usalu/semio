@@ -27,7 +27,7 @@ pub struct MathematicalInference {
 }
 
 impl Default for MathematicalInference {
-    async fn default() -> Self {
+    fn default() -> Self {
         <Self as protocol::Inference<MathematicalSnapshot>>::infer(&MathematicalSnapshot::default())
     }
 }
@@ -98,18 +98,18 @@ mod tests {
     use protocol::Inference;
 
     //#region 🧪️InferenceLaws
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = MathematicalSnapshot::default();
         assert_eq!(MathematicalInference::infer(&snapshot), MathematicalInference::infer(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(MathematicalInference::infer(&MathematicalSnapshot::default()), MathematicalInference::default());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn default_graph_diamond_is_cycle_free_with_two_roots() {
         // 🔷 The default graph is a diamond: a->b, a->c, b->d, c->d — acyclic, `a` is the only root.
         let inferred = MathematicalInference::infer(&MathematicalSnapshot::default());
@@ -122,7 +122,7 @@ mod tests {
         assert!(a_index < d_index);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn default_equation_is_the_zero_polynomial_with_no_roots() {
         // 🔎️ `EquationSnapshot::default()` is the integer literal `0` — the zero polynomial has no
         // isolated real roots, an empty `Vec`, never a panic (see `🌱roots`'s own scope tests).

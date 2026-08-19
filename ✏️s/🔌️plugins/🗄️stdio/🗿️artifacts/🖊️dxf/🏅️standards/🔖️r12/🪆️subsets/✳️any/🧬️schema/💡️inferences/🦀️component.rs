@@ -33,7 +33,7 @@ impl protocol::Inference<DxfSnapshot> for DxfInference {
 /// 🌱 Defined in terms of `infer` (not derived) — keeps the law correct regardless of whether
 /// `DxfSnapshot::default()`'s `entities`/`blocks` ever stop being empty.
 impl Default for DxfInference {
-    async fn default() -> Self {
+    fn default() -> Self {
         <Self as protocol::Inference<DxfSnapshot>>::infer(&DxfSnapshot::default())
     }
 }
@@ -86,13 +86,13 @@ mod tests {
     use super::*;
     use protocol::Inference;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = DxfSnapshot::default();
         assert_eq!(DxfInference::infer(&snapshot), DxfInference::infer(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(DxfInference::infer(&DxfSnapshot::default()), DxfInference::default());
     }

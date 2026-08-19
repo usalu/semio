@@ -385,20 +385,20 @@ mod tests {
     use store::{ArtifactDsl};
 
     //#region 🔖️DslTests
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dsl_round_trip_empty_projection() {
         test_support::assert_dsl_round_trip(&Procedural2dSnapshot::default());
         test_support::assert_dsl_pack_equivalence(&Procedural2dSnapshot::default());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dsl_round_trip_example_fixture() {
         let projection = Procedural2dSnapshot::parse_dsl(PROCEDURAL2D_EXAMPLE_TEXT).expect("parse 🌀️default.procedural2d fixture");
         test_support::assert_dsl_round_trip(&projection);
         test_support::assert_dsl_pack_equivalence(&projection);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dsl_round_trip_with_generation_state() {
         let mut projection = Procedural2dSnapshot::default();
         let mut values = serde_json::Map::new();
@@ -415,7 +415,7 @@ mod tests {
         test_support::assert_dsl_pack_equivalence(&projection);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dsl_round_trip_covers_every_widget_kind() {
         let mut projection = Procedural2dSnapshot::default();
         projection.fixture.widgets = vec![
@@ -435,7 +435,7 @@ mod tests {
     //#region 🔖️CommandEnvelopeTests
     /// 🎫️ CW7 command-envelope law: proves `Procedural2dMutation`'s `Edit` round-trips through
     /// `protocol::MutationEnvelope`s beside this file's existing dsl/pack round-trip laws.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn command_envelope_round_trip_holds_for_an_applied_operation() {
         use crate::artifacts::procedural2d::op::Procedural2dMutation;
         use protocol::{ArtifactId, Edit, SchemaId};
@@ -449,54 +449,54 @@ mod tests {
     //#endregion 🔖️CommandEnvelopeTests
 
     //#region 🔖️DslErrorTests
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dsl_parse_rejects_malformed_text() {
         let error = Procedural2dSnapshot::parse_dsl("schema=\"flow.fixture").unwrap_err();
         assert!(error.message.contains("unterminated string literal"), "unexpected error: {}", error.message);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dsl_parse_rejects_missing_required_field() {
         let text = "camera { x=0 y=0 zoom=1 }\nwidgets { }\nsynapses= [ ]\nlayout= { }\ngenerations= [ ]\n";
         let error = Procedural2dSnapshot::parse_dsl(text).unwrap_err();
         assert!(error.message.contains("found Absent"), "unexpected error: {}", error.message);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dsl_parse_rejects_missing_camera_block() {
         let error = Procedural2dSnapshot::parse_dsl("schema=\"flow.fixture\"\n").unwrap_err();
         assert!(error.message.contains("expected Record, found Absent"), "unexpected error: {}", error.message);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dsl_parse_rejects_unquoted_value_for_string_field() {
         let text = "schema=123\ncamera { x=0 y=0 zoom=1 }\nwidgets { }\nsynapses= [ ]\nlayout= { }\ngenerations= [ ]\n";
         let error = Procedural2dSnapshot::parse_dsl(text).unwrap_err();
         assert!(error.message.contains("expected Text"), "unexpected error: {}", error.message);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dsl_parse_rejects_non_numeric_value_for_number_field() {
         let text = "schema=\"flow.fixture\"\ncamera { x=0 y=0 zoom=1 }\nwidgets { input-slider id=\"s\" value=abc min=0 max=1 step=1 }\nsynapses= [ ]\nlayout= { }\ngenerations= [ ]\n";
         let error = Procedural2dSnapshot::parse_dsl(text).unwrap_err();
         assert!(error.message.contains("expected a float"), "unexpected error: {}", error.message);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dsl_parse_rejects_invalid_bool_value() {
         let text = "schema=\"flow.fixture\"\ncamera { x=0 y=0 zoom=1 }\nwidgets { neuron id=\"n\" neuron-kind=math.add preview=maybe input-ports= [ ] output-ports= [ ] params= [ ] }\nsynapses= [ ]\nlayout= { }\ngenerations= [ ]\n";
         let error = Procedural2dSnapshot::parse_dsl(text).unwrap_err();
         assert!(error.message.contains("expected 'true' or 'false'"), "unexpected error: {}", error.message);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dsl_parse_rejects_malformed_value_literal() {
         let text = "schema=\"flow.fixture\"\ncamera { x=0 y=0 zoom=1 }\nwidgets { cluster id=\"n\" name=\"n\" tree=bogusvalue flow= [ ] }\nsynapses= [ ]\nlayout= { }\ngenerations= [ ]\n";
         let error = Procedural2dSnapshot::parse_dsl(text).unwrap_err();
         assert!(error.message.contains("expected a value literal"), "unexpected error: {}", error.message);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dsl_parse_rejects_unknown_widget_kind() {
         let text = "schema=\"flow.fixture\"\ncamera { x=0 y=0 zoom=1 }\nwidgets { bogus id=\"n\" }\nsynapses= [ ]\nlayout= { }\ngenerations= [ ]\n";
         let error = Procedural2dSnapshot::parse_dsl(text).unwrap_err();

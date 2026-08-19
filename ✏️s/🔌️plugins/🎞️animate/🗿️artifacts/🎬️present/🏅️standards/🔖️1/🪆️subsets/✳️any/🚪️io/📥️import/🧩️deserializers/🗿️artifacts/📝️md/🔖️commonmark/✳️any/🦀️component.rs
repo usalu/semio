@@ -32,7 +32,7 @@ pub struct MdIntoPresent;
 impl Deserializer<PresentSnapshot> for MdIntoPresent {
     const FROM: Dialect = MD_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Canonical;
-    async fn deserialize(payload: &IoPayload) -> IoResult<PresentSnapshot> {
+    fn deserialize(payload: &IoPayload) -> IoResult<PresentSnapshot> {
         let IoPayload::Binary(bytes) = payload else {
             return Err(IoError { message: "MdIntoPresent: expected a binary md payload".to_string(), diagnostics: Vec::new() });
         };

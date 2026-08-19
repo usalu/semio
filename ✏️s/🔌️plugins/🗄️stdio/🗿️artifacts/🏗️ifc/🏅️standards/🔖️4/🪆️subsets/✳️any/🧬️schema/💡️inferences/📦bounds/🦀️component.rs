@@ -26,7 +26,7 @@ pub struct IfcBounds {
 /// `compute_ifc_bounds` returns for zero `IFCCARTESIANPOINT` entities (the fold's identity
 /// value), keeping the inference-default law correct.
 impl Default for IfcBounds {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { min: [0.0, 0.0, 0.0], max: [0.0, 0.0, 0.0], point_count: 0 }
     }
 }
@@ -75,7 +75,7 @@ mod tests {
         IfcEntity { id, name: "IFCCARTESIANPOINT".into(), args: vec![IfcValue::Aggregate(vec![IfcValue::Real(x), IfcValue::Real(y), IfcValue::Real(z)])], complex: Vec::new() }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn bounds_matches_hand_built_entity_extent() {
         let snapshot = IfcSnapshot {
             schema: STDIO_IFC_DOCUMENT_SCHEMA.into(),
@@ -88,13 +88,13 @@ mod tests {
         assert_eq!(bounds.point_count, 3);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = IfcSnapshot { schema: STDIO_IFC_DOCUMENT_SCHEMA.into(), header: Default::default(), entities: vec![point_entity(1, 1.0, 1.0, 1.0)] };
         assert_eq!(compute_ifc_bounds(&snapshot), compute_ifc_bounds(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(compute_ifc_bounds(&IfcSnapshot::default()), IfcBounds::default());
     }

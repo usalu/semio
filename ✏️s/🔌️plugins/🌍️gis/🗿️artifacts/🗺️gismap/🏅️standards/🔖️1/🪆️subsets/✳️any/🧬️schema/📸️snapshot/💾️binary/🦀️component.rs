@@ -29,21 +29,21 @@ mod tests {
     use crate::artifacts::gismap::MapFeature;
     use serde_json::json;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn gis_map_document_pack_agrees_with_dsl_for_bundled_reuse_example() {
         let document = dsl::parse_dsl(dsl::REUSE_MAP_EXAMPLE_TEXT).expect("parse reuse-map example");
         store::os_store::test_support::assert_dsl_pack_equivalence(&document);
         assert_eq!(decode(&encode(&document)).expect("decode"), document);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn gis_map_document_pack_agrees_with_dsl_for_empty_document() {
         store::os_store::test_support::assert_dsl_pack_equivalence(&GisMapSnapshot::default());
     }
 
     /// 🧬️ `MapFeature::data` is `dsl::DslValue` (deliberately untyped — see `crate::artifacts::gismap`'s
     /// doc comment) — this bridges a `serde_json::json!` literal into one for test-fixture ergonomics.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn gis_map_document_pack_agrees_with_dsl_for_synthetic_value_shapes() {
         let dsl_of = |value: serde_json::Value| ::dsl::to_dsl_value(&value).unwrap_or(::dsl::DslValue::Null);
         let document = GisMapSnapshot {

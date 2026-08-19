@@ -142,7 +142,7 @@ mod tests {
         forward
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_edit_delete_step_round_trip() {
         let snapshot = default_snapshot();
         let step = SequenceStep { id: "step-99".into(), kind: "log.print".into(), params: StepParams::new(), x: 5.0, y: 6.0, slot: None, collapsed: false };
@@ -154,14 +154,14 @@ mod tests {
         assert!(!removed.to_fixture().steps.iter().any(|step| step.id == "step-99"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn delete_step_severs_and_reconnects_edges() {
         let snapshot = default_snapshot();
         assert!(snapshot.to_fixture().edges.iter().any(|edge| edge.from == "step-1" && edge.to == "step-2"));
         round_trip(&snapshot, &delete_step("step-1".into()));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn snapshot_mutations_capture_move_and_connect() {
         // 🧭️ Built by hand rather than via `SequenceHost` (that editing host now lives in
         // `the sibling editor module` — an artifact must never depend on an app): a step add is enough
@@ -174,7 +174,7 @@ mod tests {
         assert!(mutations.iter().any(|mutation| matches!(mutation, SequenceMutation::CreateStep(payload) if payload.step.id == id)));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn store_applies_and_undoes_step_create() {
         let mut store = SequenceStore::new(create_document_envelope(SEQUENCE_DOCUMENT_SCHEMA, "sequence", default_snapshot(), None)).expect("valid artifact store fixture");
         store
@@ -187,39 +187,39 @@ mod tests {
     }
 
     //#region 🔖️MutationLaws
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_step_inverse_law() {
         let base = default_snapshot();
         let step = SequenceStep { id: "step-99".into(), kind: "log.print".into(), params: StepParams::new(), x: 5.0, y: 6.0, slot: None, collapsed: false };
         assert_mutation_inverse_law(&base, &create_step(step));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn delete_step_inverse_law() {
         let base = default_snapshot();
         assert_mutation_inverse_law(&base, &delete_step("step-1".into()));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn move_step_inverse_law() {
         let base = default_snapshot();
         assert_mutation_inverse_law(&base, &move_step("step-1".into(), 42.0, -8.0));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn connect_disconnect_steps_inverse_law() {
         let base = default_snapshot();
         assert_mutation_inverse_law(&base, &connect_steps("edge-99".into(), "step-1".into(), "step-2".into()));
         assert_mutation_inverse_law(&base, &disconnect_steps("edge-1".into()));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn duplicate_step_inverse_law() {
         let base = default_snapshot();
         assert_mutation_inverse_law(&base, &duplicate_step("step-1".into(), "step-1-copy".into(), 10.0, 10.0));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn move_step_diff_absorb_law() {
         use protocol::Mutation;
         let base = default_snapshot();
@@ -229,7 +229,7 @@ mod tests {
         assert_mutation_diff_absorb_law(&base, d1, d2);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dispatch_registers_semantic_descriptors() {
         register_sequence_mutation_descriptors();
         for kind in SequenceMutation::kinds() {
@@ -244,7 +244,7 @@ mod tests {
     // family present in this facet (`assert_missing_target_is_error`/`assert_fatal_never_applies`,
     // landed in `📡️spr/🧪️testkit`). `assert_outcome_policy_matrix` is NOT landed under that name
     // (only the generic closure-based `assert_policy_matrix` exists) — see this ticket's report.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_family_fatal_never_applies() {
         let base = default_snapshot();
         let outcome = create_step(SequenceStep { id: "step-1".into(), kind: "log.print".into(), params: StepParams::new(), x: 0.0, y: 0.0, slot: None, collapsed: false }).diff(&base);
@@ -252,19 +252,19 @@ mod tests {
         assert_fatal_never_applies(&outcome);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn delete_family_missing_target_is_error() {
         let base = default_snapshot();
         assert_missing_target_is_error(&base, &delete_step("missing".into()));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn move_family_missing_target_is_error() {
         let base = default_snapshot();
         assert_missing_target_is_error(&base, &move_step("missing".into(), 1.0, 1.0));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn move_family_fatal_never_applies() {
         let base = default_snapshot();
         let outcome = move_step("step-1".into(), f64::NAN, 0.0).diff(&base);
@@ -272,25 +272,25 @@ mod tests {
         assert_fatal_never_applies(&outcome);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn edit_family_missing_target_is_error() {
         let base = default_snapshot();
         assert_missing_target_is_error(&base, &edit_step_params("missing".into(), StepParams::new()));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn change_family_missing_target_is_error() {
         let base = default_snapshot();
         assert_missing_target_is_error(&base, &change_step_collapsed("missing".into(), true));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn connect_family_missing_target_is_error() {
         let base = default_snapshot();
         assert_missing_target_is_error(&base, &connect_steps("edge-99".into(), "missing".into(), "step-2".into()));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn connect_family_fatal_never_applies() {
         let base = default_snapshot();
         let outcome = connect_steps("edge-99".into(), "step-1".into(), "step-1".into()).diff(&base);
@@ -298,19 +298,19 @@ mod tests {
         assert_fatal_never_applies(&outcome);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn disconnect_family_missing_target_is_error() {
         let base = default_snapshot();
         assert_missing_target_is_error(&base, &disconnect_steps("missing".into()));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn duplicate_family_missing_target_is_error() {
         let base = default_snapshot();
         assert_missing_target_is_error(&base, &duplicate_step("missing".into(), "step-1-copy".into(), 0.0, 0.0));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn duplicate_family_fatal_never_applies() {
         let base = default_snapshot();
         let outcome = duplicate_step("step-1".into(), "step-2".into(), 0.0, 0.0).diff(&base);

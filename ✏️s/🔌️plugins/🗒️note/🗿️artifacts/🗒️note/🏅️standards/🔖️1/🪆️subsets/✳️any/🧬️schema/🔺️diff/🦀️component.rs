@@ -567,7 +567,7 @@ pub async fn note_asset_removed_diff(key: &str) -> NoteDiff {
 mod diff_apply_tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn malformed_nested_parent_rejects_without_changing_the_base() {
         let base = NoteSnapshot::default();
         let diff = NoteDiff {

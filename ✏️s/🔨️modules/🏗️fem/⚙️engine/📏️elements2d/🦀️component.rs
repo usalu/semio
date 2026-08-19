@@ -910,7 +910,7 @@ mod tests {
     use crate::model::{solve_linear_static, Model, NodalLoad, Node, Support};
 
     /// 🪢️ Headless (no document layer) axial elongation check: δ = FL/EA, N = F.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn bar2_axial_matches_hand_calc() {
         let (e, area, l, p) = (200e9, 0.001, 2.0, 5000.0);
         let model = Model {
@@ -932,7 +932,7 @@ mod tests {
 
     /// 🏗️ Headless cantilever tip-load check: δ = PL³/3EI, θ = PL²/2EI — the classic beam-theory
     /// benchmark, exercised here directly against `fem_core::Model` (no document layer involved).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn beam_eb2_cantilever_matches_hand_calc() {
         let (e, iy, area, l, p) = (200e9, 1e-5, 0.01, 2.0, 1000.0);
         let model = Model {
@@ -952,7 +952,7 @@ mod tests {
 
     /// 🌀️ Rigid-body test: a pure translation (no relative deformation) must produce zero internal
     /// force — `Ke * rigid_translation ≈ 0`. Catches sign/assembly bugs that a single load case might not.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn beam_eb2_rigid_translation_gives_zero_force() {
         let (e, iy, area, l) = (200e9, 1e-5, 0.01, 2.0);
         let beam = BeamEb2 { id: "e1".into(), start: "a".into(), end: "b".into(), e, area, iy, density: 0.0 };
@@ -966,7 +966,7 @@ mod tests {
     }
 
     /// 🏋️ `Bar2::mass` matches the hand-derived isotropic `m = ρAL/6` block form directly.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn bar2_mass_matches_hand_calc() {
         let (density, area, l) = (7850.0, 0.001, 2.0);
         let bar = Bar2 { id: "e1".into(), start: "a".into(), end: "b".into(), e: 200e9, area, density };
@@ -983,7 +983,7 @@ mod tests {
     /// ⚖️ Consistent-mass physical sanity check: the sum of ALL entries in a pure-translational
     /// submatrix (no rotational DOFs involved) must equal the element's total mass `ρAL` — a
     /// consequence of the shape functions partitioning unity.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn bar2_mass_total_equals_rho_a_l() {
         let (density, area, l) = (7850.0, 0.001, 2.0);
         let bar = Bar2 { id: "e1".into(), start: "a".into(), end: "b".into(), e: 200e9, area, density };
@@ -996,7 +996,7 @@ mod tests {
     /// 🏋️ `BeamEb2::mass`'s axial 2x2 submatrix sums to the total member mass `ρAL` (same identity as
     /// `Bar2`'s, since the axial DOFs carry no rotational coupling) — checked on a horizontal member so
     /// global == local (rotation is identity) and hand-derived indices apply directly.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn beam_eb2_mass_axial_block_sums_to_total_mass() {
         let (e, iy, area, l, density) = (200e9, 1e-5, 0.01, 2.0, 7850.0);
         let beam = BeamEb2 { id: "e1".into(), start: "a".into(), end: "b".into(), e, area, iy, density };
@@ -1009,7 +1009,7 @@ mod tests {
 
     /// 🌀️ Geometric stiffness must vanish under a pure rigid translation, same as ordinary stiffness —
     /// a non-zero axial force alone shouldn't invent a force from rigid motion.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn beam_eb2_geometric_stiffness_rigid_translation_gives_zero_force() {
         let (e, iy, area, l) = (200e9, 1e-5, 0.01, 2.0);
         let beam = BeamEb2 { id: "e1".into(), start: "a".into(), end: "b".into(), e, area, iy, density: 0.0 };
@@ -1026,7 +1026,7 @@ mod tests {
     }
 
     /// 🌀️ Geometric stiffness is symmetric and scales linearly with the recovered axial force.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn beam_eb2_geometric_stiffness_is_symmetric_and_scales_with_axial_force() {
         let (e, iy, area, l) = (200e9, 1e-5, 0.01, 2.0);
         let beam = BeamEb2 { id: "e1".into(), start: "a".into(), end: "b".into(), e, area, iy, density: 0.0 };
@@ -1044,7 +1044,7 @@ mod tests {
     }
 
     /// 🌬️ `Bar2::equivalent_nodal_loads` splits a global UDL `wL/2` exactly evenly at both nodes.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn bar2_equivalent_nodal_loads_matches_wl_over_2() {
         let (e, area, l) = (200e9, 0.001, 2.0);
         let bar = Bar2 { id: "e1".into(), start: "a".into(), end: "b".into(), e, area, density: 0.0 };
@@ -1061,7 +1061,7 @@ mod tests {
     /// 🌀️ `Bar2::geometric_stiffness`: zero under rigid translation, symmetric, and destabilizes only
     /// the direction PERPENDICULAR to the bar's own axis (an axially-aligned bar with axial force `n`
     /// should have ZERO transverse stiffness contribution along its own axis).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn bar2_geometric_stiffness_rigid_translation_gives_zero_force_and_is_symmetric() {
         let (e, area, l) = (200e9, 0.001, 2.0);
         let bar = Bar2 { id: "e1".into(), start: "a".into(), end: "b".into(), e, area, density: 0.0 };
@@ -1151,7 +1151,7 @@ mod continuum_tests {
         ElementContext { positions: coords.iter().map(|&[x, y]| [x, y, 0.0]).collect() }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn tri3_cst_patch_test_reproduces_linear_field() {
         let coords = [[0.0, 0.0], [2.0, 0.1], [0.2, 1.8]];
         let el = Tri3Cst { id: "t".into(), nodes: ["a".into(), "b".into(), "c".into()], e: E, nu: NU, thickness: 1.0, kind: PlaneKind::Stress, density: 0.0 };
@@ -1162,7 +1162,7 @@ mod continuum_tests {
         assert_plane_gauss_matches(&gauss, expected_stress(PlaneKind::Stress), 1e-8);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn tri3_cst_rigid_translation_gives_zero_force() {
         let coords = [[0.0, 0.0], [2.0, 0.1], [0.2, 1.8]];
         let el = Tri3Cst { id: "t".into(), nodes: ["a".into(), "b".into(), "c".into()], e: E, nu: NU, thickness: 1.0, kind: PlaneKind::Stress, density: 0.0 };
@@ -1171,7 +1171,7 @@ mod continuum_tests {
         assert_rigid_body_gives_zero_force(&ke, &rigid_translation_u_local(3, 1.5, -2.3));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn tri6_lst_patch_test_reproduces_linear_field() {
         let coords = [[0.0, 0.0], [2.0, 0.1], [0.2, 1.8], [1.0, 0.05], [1.1, 0.95], [0.1, 0.9]];
         let el = Tri6Lst { id: "t".into(), nodes: ["a".into(), "b".into(), "c".into(), "d".into(), "e".into(), "f".into()], e: E, nu: NU, thickness: 1.0, kind: PlaneKind::Stress, density: 0.0 };
@@ -1182,7 +1182,7 @@ mod continuum_tests {
         assert_plane_gauss_matches(&gauss, expected_stress(PlaneKind::Stress), 1e-8);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn tri6_lst_rigid_translation_gives_zero_force() {
         let coords = [[0.0, 0.0], [2.0, 0.1], [0.2, 1.8], [1.0, 0.05], [1.1, 0.95], [0.1, 0.9]];
         let el = Tri6Lst { id: "t".into(), nodes: ["a".into(), "b".into(), "c".into(), "d".into(), "e".into(), "f".into()], e: E, nu: NU, thickness: 1.0, kind: PlaneKind::Stress, density: 0.0 };
@@ -1191,7 +1191,7 @@ mod continuum_tests {
         assert_rigid_body_gives_zero_force(&ke, &rigid_translation_u_local(6, 1.5, -2.3));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn quad4_patch_test_reproduces_linear_field() {
         let coords = [[0.0, 0.0], [3.0, 0.2], [3.3, 2.5], [0.2, 2.3]];
         let el = Quad4 { id: "q".into(), nodes: ["a".into(), "b".into(), "c".into(), "d".into()], e: E, nu: NU, thickness: 1.0, kind: PlaneKind::Strain, density: 0.0 };
@@ -1202,7 +1202,7 @@ mod continuum_tests {
         assert_plane_gauss_matches(&gauss, expected_stress(PlaneKind::Strain), 1e-8);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn quad4_rigid_translation_gives_zero_force() {
         let coords = [[0.0, 0.0], [3.0, 0.2], [3.3, 2.5], [0.2, 2.3]];
         let el = Quad4 { id: "q".into(), nodes: ["a".into(), "b".into(), "c".into(), "d".into()], e: E, nu: NU, thickness: 1.0, kind: PlaneKind::Strain, density: 0.0 };
@@ -1211,7 +1211,7 @@ mod continuum_tests {
         assert_rigid_body_gives_zero_force(&ke, &rigid_translation_u_local(4, 1.5, -2.3));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn quad8_patch_test_reproduces_linear_field() {
         let coords = [[0.0, 0.0], [3.0, 0.2], [3.3, 2.5], [0.2, 2.3], [1.5, 0.1], [3.15, 1.35], [1.75, 2.4], [0.1, 1.15]];
         let el = Quad8 { id: "q8".into(), nodes: ["a".into(), "b".into(), "c".into(), "d".into(), "e".into(), "f".into(), "g".into(), "h".into()], e: E, nu: NU, thickness: 1.0, kind: PlaneKind::Stress, density: 0.0 };
@@ -1222,7 +1222,7 @@ mod continuum_tests {
         assert_plane_gauss_matches(&gauss, expected_stress(PlaneKind::Stress), 1e-8);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn quad8_rigid_translation_gives_zero_force() {
         let coords = [[0.0, 0.0], [3.0, 0.2], [3.3, 2.5], [0.2, 2.3], [1.5, 0.1], [3.15, 1.35], [1.75, 2.4], [0.1, 1.15]];
         let el = Quad8 { id: "q8".into(), nodes: ["a".into(), "b".into(), "c".into(), "d".into(), "e".into(), "f".into(), "g".into(), "h".into()], e: E, nu: NU, thickness: 1.0, kind: PlaneKind::Stress, density: 0.0 };
@@ -1234,7 +1234,7 @@ mod continuum_tests {
     /// 🌀️ Cook's membrane: the classic tapered/skewed cantilever panel, meshed on a 4x4 grid of
     /// `Quad4` elements via bilinear blending of the four corner points. A coarse-mesh sanity check
     /// (not a fine-mesh convergence study) — the tip deflection must be positive and finite.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn quad4_cooks_membrane_tip_deflection_is_positive_and_finite() {
         let n = 4usize;
         let (p00, p10, p11, p01) = ((0.0, 0.0), (48.0, 44.0), (48.0, 60.0), (0.0, 44.0));
@@ -1270,7 +1270,7 @@ mod continuum_tests {
 
     /// ⚖️ Consistent-mass physical sanity check (same identity `bar2_mass_total_equals_rho_a_l` uses):
     /// the sum of the pure-`Tx` submatrix must equal the element's total mass `ρtA`.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn tri3_cst_mass_total_equals_rho_t_area() {
         let (density, thickness) = (7850.0, 0.02);
         let coords = [[0.0, 0.0], [2.0, 0.1], [0.2, 1.8]];
@@ -1287,7 +1287,7 @@ mod continuum_tests {
         0.5 * ((coords[1][0] - coords[0][0]) * (coords[2][1] - coords[0][1]) - (coords[2][0] - coords[0][0]) * (coords[1][1] - coords[0][1]))
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn quad4_mass_total_equals_rho_t_area() {
         let (density, thickness) = (2400.0, 0.15);
         let coords = [[0.0, 0.0], [3.0, 0.2], [3.3, 2.5], [0.2, 2.3]];
@@ -1304,7 +1304,7 @@ mod continuum_tests {
     /// 🌀️ `Tri3Cst::geometric_stiffness` must vanish under a pure rigid translation (zero stress ⇒
     /// zero `Kg`, same reasoning `beam_eb2_geometric_stiffness_rigid_translation_gives_zero_force` uses)
     /// and be symmetric under a genuinely deforming field.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn tri3_cst_geometric_stiffness_rigid_translation_gives_zero_force_and_is_symmetric() {
         let coords = [[0.0, 0.0], [2.0, 0.1], [0.2, 1.8]];
         let el = Tri3Cst { id: "t".into(), nodes: ["a".into(), "b".into(), "c".into()], e: E, nu: NU, thickness: 1.0, kind: PlaneKind::Stress, density: 0.0 };
@@ -1326,7 +1326,7 @@ mod continuum_tests {
     /// 🌀️ `Quad4::geometric_stiffness` must vanish under a pure rigid translation and be symmetric —
     /// the last `Quad4` method not already exercised by `quad4_mass_total_equals_rho_t_area`/the patch
     /// and rigid-translation stiffness tests above.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn quad4_geometric_stiffness_rigid_translation_gives_zero_force_and_is_symmetric() {
         let coords = [[0.0, 0.0], [3.0, 0.2], [3.3, 2.5], [0.2, 2.3]];
         let el = Quad4 { id: "q".into(), nodes: ["a".into(), "b".into(), "c".into(), "d".into()], e: E, nu: NU, thickness: 1.0, kind: PlaneKind::Strain, density: 0.0 };
@@ -1347,7 +1347,7 @@ mod continuum_tests {
 
     /// ⚖️ `Tri6Lst::mass` total (same partition-of-unity identity `tri3_cst_mass_total_equals_rho_t_area`
     /// uses) — `Tri6Lst`'s `mass`/`mass_rule`/`shape_full` are otherwise never exercised.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn tri6_lst_mass_total_equals_rho_t_area() {
         let (density, thickness) = (7850.0, 0.02);
         let coords = [[0.0, 0.0], [2.0, 0.1], [0.2, 1.8], [1.0, 0.05], [1.1, 0.95], [0.1, 0.9]];
@@ -1361,7 +1361,7 @@ mod continuum_tests {
     }
 
     /// 🌀️ `Tri6Lst::geometric_stiffness` must vanish under a pure rigid translation and be symmetric.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn tri6_lst_geometric_stiffness_rigid_translation_gives_zero_force_and_is_symmetric() {
         let coords = [[0.0, 0.0], [2.0, 0.1], [0.2, 1.8], [1.0, 0.05], [1.1, 0.95], [0.1, 0.9]];
         let el = Tri6Lst { id: "t".into(), nodes: ["a".into(), "b".into(), "c".into(), "d".into(), "e".into(), "f".into()], e: E, nu: NU, thickness: 1.0, kind: PlaneKind::Stress, density: 0.0 };
@@ -1382,7 +1382,7 @@ mod continuum_tests {
 
     /// ⚖️ `Quad8::mass` total (same identity as `quad4_mass_total_equals_rho_t_area`) — `Quad8`'s
     /// `mass`/`shape_full` are otherwise never exercised.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn quad8_mass_total_equals_rho_t_area() {
         let (density, thickness) = (2400.0, 0.15);
         let coords = [[0.0, 0.0], [3.0, 0.2], [3.3, 2.5], [0.2, 2.3], [1.5, 0.1], [3.15, 1.35], [1.75, 2.4], [0.1, 1.15]];
@@ -1396,7 +1396,7 @@ mod continuum_tests {
     }
 
     /// 🌀️ `Quad8::geometric_stiffness` must vanish under a pure rigid translation and be symmetric.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn quad8_geometric_stiffness_rigid_translation_gives_zero_force_and_is_symmetric() {
         let coords = [[0.0, 0.0], [3.0, 0.2], [3.3, 2.5], [0.2, 2.3], [1.5, 0.1], [3.15, 1.35], [1.75, 2.4], [0.1, 1.15]];
         let el = Quad8 { id: "q8".into(), nodes: ["a".into(), "b".into(), "c".into(), "d".into(), "e".into(), "f".into(), "g".into(), "h".into()], e: E, nu: NU, thickness: 1.0, kind: PlaneKind::Stress, density: 0.0 };
@@ -1419,7 +1419,7 @@ mod continuum_tests {
     /// other test in this module (which calls their methods directly), this exercises `id`/`node_ids`/
     /// `dofs_per_node` via the SAME dynamic-dispatch assembly path `solve_linear_static` uses for every
     /// element kind, on three disjoint single-element-type patches sharing one solve.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn continuum_elements_solve_correctly_via_dyn_dispatch() {
         let p = 1000.0;
         let mut nodes = vec![Node { id: "t3_a".into(), pos: [0.0, 0.0, 0.0] }, Node { id: "t3_b".into(), pos: [2.0, 0.0, 0.0] }, Node { id: "t3_c".into(), pos: [0.0, 2.0, 0.0] }];
@@ -1493,7 +1493,7 @@ mod plate_tests {
         VecD::from_vec(v)
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn plate_dkt_patch_test_reproduces_constant_curvature() {
         let coords = [[0.0, 0.0], [2.0, 0.1], [0.2, 1.8]];
         let el = PlateDkt { id: "p".into(), nodes: ["a".into(), "b".into(), "c".into()], e: E, nu: NU, thickness: THICKNESS, density: 0.0 };
@@ -1512,7 +1512,7 @@ mod plate_tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn plate_dkt_rigid_translation_gives_zero_force() {
         let coords = [[0.0, 0.0], [2.0, 0.1], [0.2, 1.8]];
         let el = PlateDkt { id: "p".into(), nodes: ["a".into(), "b".into(), "c".into()], e: E, nu: NU, thickness: THICKNESS, density: 0.0 };
@@ -1528,7 +1528,7 @@ mod plate_tests {
     /// 🏋️ `PlateDkt::mass` lumps `ρtA/3` onto each node's `Tz` only — zero rotary inertia, zero
     /// coupling to `Rx`/`Ry` — `mass` is otherwise never exercised (`stiffness_global`/`recover` are
     /// covered by the patch/rigid-translation/simply-supported tests above and below).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn plate_dkt_mass_lumps_rho_t_area_over_3_onto_each_tz_only() {
         let (density, thickness) = (2500.0, 0.02);
         let coords = [[0.0, 0.0], [2.0, 0.1], [0.2, 1.8]];
@@ -1559,7 +1559,7 @@ mod plate_tests {
     /// load lumped `q*Area_i/3` to each triangle's 3 nodes — checked against the classical thin-plate
     /// centerpoint deflection `w = 0.00406*q*a⁴/D` within an order-of-magnitude (coarse mesh, crude
     /// load lumping, so this is a sanity check, not a convergence study).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn plate_dkt_simply_supported_square_center_deflection_right_order_of_magnitude() {
         let (e, nu, t, a) = (2e11, 0.3, 0.01, 2.0);
         let q = 1000.0;

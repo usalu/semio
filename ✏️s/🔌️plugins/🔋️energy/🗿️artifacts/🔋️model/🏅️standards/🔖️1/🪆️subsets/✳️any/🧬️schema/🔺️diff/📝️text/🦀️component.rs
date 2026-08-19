@@ -117,14 +117,14 @@ pub async fn diff_set_results_json(results_json: impl Into<String>) -> EnergyMod
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn empty_diff_is_a_no_operation() {
         let base = crate::artifacts::model::schema::empty_energy_model_snapshot();
         let diff = EnergyModelDiff::default();
         assert_eq!(diff.apply(&base).expect("valid mutation diff"), base);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn preview_results_do_not_enter_snapshot() {
         let base = crate::artifacts::model::schema::empty_energy_model_snapshot();
         let diff = diff_set_results_json("{\"ok\":true}");
@@ -136,7 +136,7 @@ mod tests {
         assert_eq!(next.results_json, "{\"ok\":true}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn diff_from_model_regenerates_structure_and_zones_together() {
         let base = crate::artifacts::model::schema::empty_energy_model_snapshot();
         let model = crate::model::Model { name: "Demo".into(), ..crate::model::Model::default() };

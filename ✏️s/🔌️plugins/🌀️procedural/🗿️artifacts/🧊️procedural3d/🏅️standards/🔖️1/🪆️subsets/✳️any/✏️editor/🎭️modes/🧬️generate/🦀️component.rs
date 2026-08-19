@@ -33,7 +33,7 @@ pub async fn layout() -> NamedLayout {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn the_generate_layout_lists_all_three_windows() {
         let json = serde_json::to_string(&layout()).expect("layout json");
         assert!(json.contains(generations::PROCEDURAL_3D_PLAY_WINDOW_GENERATIONS));

@@ -478,7 +478,7 @@ mod tests {
         layer_id(projection.layers.last().expect("layer")).to_string()
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn renders_canvas_scene_with_segments() {
         let mut app = draw_app();
         let example_json = semio_draw_example_json();
@@ -498,7 +498,7 @@ mod tests {
         assert!(layers_json.contains("200 × 200"), "example artboard dimensions must be visible");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn default_document_exposes_artboard_dimensions_on_canvas() {
         let mut app = draw_app();
         let node = app.render(DRAW_PLAY_BODY_COMPOSITE, None, &ViewModel::default()).expect("render");
@@ -507,7 +507,7 @@ mod tests {
         assert!(layers_json.contains("1024 × 1024"), "blank documents show default artboard dimensions");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn layers_panel_lists_default_layer() {
         let mut app = draw_app();
         let node = app.render(DRAW_PLAY_BODY_LAYERS, None, &ViewModel::default()).expect("render");
@@ -516,7 +516,7 @@ mod tests {
         assert!(json.contains("Layer 1"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn catalogue_panel_lists_boolean_operations() {
         let mut app = draw_app();
         let node = app.render(DRAW_PLAY_BODY_CATALOGUE, None, &ViewModel::default()).expect("render");
@@ -525,7 +525,7 @@ mod tests {
         assert!(json.contains("Boolean union"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_layer_action_emits_op_and_appends_path() {
         let mut app = draw_app();
         let before = app.snapshot().unwrap().layers.len();
@@ -536,7 +536,7 @@ mod tests {
         assert!(projection.layers.iter().any(|layer| matches!(layer, DrawLayerNode::Shape(shape) if shape.shape_kind == "rect")));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn patch_layers_opacity_emits_granular_operation() {
         let mut app = draw_app();
         let id = first_layer_id(&app);
@@ -546,7 +546,7 @@ mod tests {
         assert!((crate::artifacts::draw::schema::layer_base(&projection.layers[0]).opacity - 0.5).abs() < f64::EPSILON);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn patch_layer_name_emits_op_and_changes_projection() {
         let mut app = draw_app();
         let id = first_layer_id(&app);
@@ -555,7 +555,7 @@ mod tests {
         assert_eq!(crate::artifacts::draw::schema::layer_base(&app.snapshot().unwrap().layers[0]).name, "Renamed");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_active_utility_clears_scratch_and_emits_no_history_entry() {
         let mut app = draw_app_with_registry();
         set_utility(&mut app, "shapeRect");
@@ -568,7 +568,7 @@ mod tests {
         assert!(up.mutations.is_empty(), "the in-progress shape draft was cleared on utility switch");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn combine_boolean_creates_boolean_layer() {
         let mut app = draw_app();
         let first_id = first_layer_id(&app);
@@ -579,7 +579,7 @@ mod tests {
         assert!(app.snapshot().unwrap().layers.iter().any(|layer| matches!(layer, DrawLayerNode::Boolean(_))));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn canvas_point_to_world_matches_host_formula() {
         let camera = crate::artifacts::draw::DrawCamera { x: 100.0, y: 50.0, zoom: 2.0 };
         let (world_x, world_y) = canvas_pointer_down::canvas_point_to_world(&camera, 420.0, 310.0, 800.0, 600.0);
@@ -587,7 +587,7 @@ mod tests {
         assert!((world_y - 55.0).abs() < 1e-9);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn shape_rect_drag_commits_one_layer_and_requests_utility_reset() {
         let mut app = draw_app_with_registry();
         set_utility(&mut app, "shapeRect");
@@ -608,7 +608,7 @@ mod tests {
         );
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn pen_draft_commits_path_layer_on_enter() {
         let mut app = draw_app();
         set_utility(&mut app, "pen");
@@ -621,7 +621,7 @@ mod tests {
         assert!(matches!(result.requested_effects.as_slice(), [Effect::SetActiveUtility { utility_id, .. }] if utility_id == "selectDirect"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn canvas_escape_cancels_draft_without_committing() {
         let mut app = draw_app();
         let before = app.snapshot().unwrap().layers.len();
@@ -632,7 +632,7 @@ mod tests {
         assert_eq!(app.snapshot().unwrap().layers.len(), before);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn marquee_select_covers_contained_layer_only() {
         // 🔖 Built through dispatched commands (`add-layer` + `patch-layer` transform fields), never
         // a whole-document swap — `SetSnapshot` is banned vocabulary now (see
@@ -666,7 +666,7 @@ mod tests {
         assert_eq!(result.requested_effects, vec![canvas_pointer_down::interaction_select_effect(&[rect_a_id.clone()], "replace")], "only the contained rect is requested, not the outside ellipse");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_camera_writes_runtime_and_emits_no_operations() {
         let mut app = draw_app();
         let before = app.snapshot().expect("projection");
@@ -678,7 +678,7 @@ mod tests {
         assert!(json.contains(r#""cameraX":5.0"#), "composite scene camera reflects runtime state: {json}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_camera_zoom_updates_zoom_and_keeps_pan_via_runtime() {
         let mut app = draw_app();
         app.dispatch_typed(DrawCommand::SetCamera(set_camera::SetCamera { camera: crate::artifacts::draw::DrawCamera { x: 4.0, y: 5.0, zoom: 1.0 } }), &fw_testkit::meta("local")).expect("set camera");
@@ -689,14 +689,14 @@ mod tests {
         assert!(json.contains(r#""cameraX":4.0"#), "pan preserved across zoom-only update: {json}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_layer_undo_round_trip_through_wrapper() {
         let mut app = draw_app();
         let before = app.snapshot().unwrap().layers.len();
         fw_testkit::assert_undo_redo_round_trip(&mut app, DrawCommand::AddLayer(add_layer::AddLayer { kind: "path".into() }), |app| app.snapshot().unwrap().layers.len(), before, before + 1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn utility_registry_declares_all_canvas_utilities_scoped_to_the_window() {
         let definition = create_draw_app();
         let utility_ids: Vec<&str> = definition.utilities.iter().map(|utility| utility.id.as_str()).collect();
@@ -709,7 +709,7 @@ mod tests {
         assert!(!definition.window_kinds.iter().flat_map(|window| window.actions.iter()).any(|action| action.id == "setActiveUtility" && !matches!(action.kind, ActionKind::View)));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn strokes_interaction_domain_is_declared_flat_pick_rectangle_lasso_on_the_canvas_window() {
         let definition = create_draw_app();
         let domain = definition.interactions.iter().find(|interaction| interaction.id == DRAW_INTERACTION_DOMAIN).expect("strokes interaction domain declared");
@@ -719,7 +719,7 @@ mod tests {
         assert!(canvas_window.interactions.iter().any(|interaction_ref| interaction_ref.as_str() == DRAW_INTERACTION_DOMAIN));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn canvas_pointer_up_direct_pick_requests_interaction_select() {
         let mut app = draw_app_with_registry();
         // 🔖 The default document's one layer is an empty-segment path (no bounds to hit-test against
@@ -738,7 +738,7 @@ mod tests {
         assert_eq!(result.requested_effects, vec![canvas_pointer_down::interaction_select_effect(&[rect_id], "replace")]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_selected_opacity_reads_the_framework_interaction_selection() {
         let mut app = draw_app_with_registry();
         let id = first_layer_id(&app);
@@ -749,7 +749,7 @@ mod tests {
         assert!((crate::artifacts::draw::schema::layer_base(&app.snapshot().unwrap().layers[0]).opacity - 0.25).abs() < f64::EPSILON);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn draw_labels_resolve_native_by_default() {
         let mut app = draw_app();
         let node = app.render(DRAW_PLAY_BODY_LAYERS, None, &ViewModel::default()).expect("render");
@@ -759,7 +759,7 @@ mod tests {
         assert!(!json.contains("Pfad hinzufügen"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn draw_labels_translate_panels_in_german() {
         let mut app = draw_app();
         app.dispatch_typed(DrawCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }), &fw_testkit::meta("local")).expect("set locale");
@@ -774,7 +774,7 @@ mod tests {
         assert!(catalogue_json.contains("Nachzeichnung"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn draw_io_declares_vector_out_and_export_media_covers_both_ports() {
         let mut app = draw_app();
         app.dispatch_typed(DrawCommand::AddLayer(add_layer::AddLayer { kind: "shape:rect".into() }), &fw_testkit::meta("local")).expect("add");
@@ -790,13 +790,13 @@ mod tests {
     }
 
     //#region 🔖️GesturePreview
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn gesture_preview_is_none_while_idle() {
         let session = DrawSession::default();
         assert!(session.gesture_preview().is_none(), "no live gesture, nothing to preview");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn gesture_preview_reflects_live_shape_drag_and_clears_on_commit() {
         let mut session = DrawSession::default();
         let document = default_draw_document("empty", None);
@@ -822,7 +822,7 @@ mod tests {
         assert!(session.gesture_preview().is_none(), "the gesture returned to idle: nothing left to preview, and the commit above already carried the real operation");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn gesture_preview_is_a_pure_read_never_mutating_gesture_context() {
         let mut session = DrawSession::default();
         let document = default_draw_document("empty", None);
@@ -870,7 +870,7 @@ mod tests {
         ]
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn draw_command_op_text_round_trips_every_variant() {
         for command in every_command() {
             store::os_store::test_support::assert_op_line_round_trip(&command);
@@ -880,7 +880,7 @@ mod tests {
         store::os_store::test_support::assert_op_line_round_trip(&DrawCommand::EngagementSubmit(engagement_submit::EngagementSubmit { value: None }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn draw_command_op_binary_round_trips_every_variant() {
         for command in every_command() {
             store::os_store::test_support::assert_op_text_binary_equivalence(&command);
@@ -891,7 +891,7 @@ mod tests {
     /// distinct wire cases — copied verbatim from the `wire-baseline-before.txt` capture taken from
     /// the OLD `draw_protocol` crate before this migration. A byte-for-byte diff, not just a
     /// round-trip law, since round-trip alone would happily pass on a changed-but-consistent format.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn optional_field_rows_keep_their_pre_migration_bytes() {
         use protocol::OpBinary;
         let engagement_submit_some = DrawCommand::EngagementSubmit(engagement_submit::EngagementSubmit { value: Some("Renamed \"layer\"".into()) });
@@ -904,7 +904,7 @@ mod tests {
         (0..hex.len()).step_by(2).map(|i| u8::from_str_radix(&hex[i..i + 2], 16).expect("valid hex")).collect()
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn every_command_row_prints_starting_with_its_wire_keyword() {
         use protocol::OpText;
         let expected_keywords = [

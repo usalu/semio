@@ -17,7 +17,7 @@ pub struct Procedural2dSnapshot {
 //#endregion 🔖️Procedural2dSnapshot
 
 impl Default for Procedural2dSnapshot {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self {
             fixture: FlowFixture::default(),
             generation: GenerationPlayState::default()}

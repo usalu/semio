@@ -238,12 +238,12 @@ impl Drop for RequestFuture {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn resolve_before_first_poll_leaves_the_future_immediately_ready() {
-        let registry = RequestRegistry::new();
-        let future = registry.request(|req| Effect::CancelJob { job: req.0 });
-        assert_eq!(registry.drain().len(), 1, "request() must queue exactly one effect");
-        registry.resolve(RequestId(1), Ok(b"ok".to_vec()));
+        let registry = RequestRegistry::new().await;
+        let future = registry.request(|req| Effect::CancelJob { job: req.0 }).await;
+        assert_eq!(registry.drain().await.len(), 1, "request() must queue exactly one effect");
+        registry.resolve(RequestId(1), Ok(b"ok".to_vec())).await;
         let mut future = Box::pin(future);
         let waker = futures_test_waker();
         let mut cx = Context::from_waker(waker);
@@ -254,14 +254,14 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn append_chunk_reassembles_a_multi_chunk_body_to_the_exact_original_bytes() {
-        let registry = RequestRegistry::new();
-        let future = registry.request(|req| Effect::CancelJob { job: req.0 });
+        let registry = RequestRegistry::new().await;
+        let future = registry.request(|req| Effect::CancelJob { job: req.0 }).await;
         let original: Vec<u8> = (0u8..=255).chain(0u8..=255).chain(0u8..100).collect(); // 710 bytes, non-trivial and non-uniform
         for (index, window) in original.chunks(97).enumerate() {
             let done = (index + 1) * 97 >= original.len();
-            registry.append_chunk(RequestId(1), window.to_vec(), done, 1024 * 1024);
+            registry.append_chunk(RequestId(1), window.to_vec(), done, 1024 * 1024).await;
         }
         let mut future = Box::pin(future);
         let waker = futures_test_waker();
@@ -273,12 +273,12 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn append_chunk_over_cap_faults_instead_of_silently_truncating() {
-        let registry = RequestRegistry::new();
-        let future = registry.request(|req| Effect::CancelJob { job: req.0 });
-        registry.append_chunk(RequestId(1), vec![0u8; 40], false, 64);
-        registry.append_chunk(RequestId(1), vec![0u8; 40], false, 64); // 80 > 64 cap — must fault here, not wait for `done`
+        let registry = RequestRegistry::new().await;
+        let future = registry.request(|req| Effect::CancelJob { job: req.0 }).await;
+        registry.append_chunk(RequestId(1), vec![0u8; 40], false, 64).await;
+        registry.append_chunk(RequestId(1), vec![0u8; 40], false, 64).await; // 80 > 64 cap — must fault here, not wait for `done`
         let mut future = Box::pin(future);
         let waker = futures_test_waker();
         let mut cx = Context::from_waker(waker);
@@ -289,13 +289,13 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn append_chunk_on_an_unknown_or_already_resolved_id_is_a_harmless_no_op() {
-        let registry = RequestRegistry::new();
-        registry.append_chunk(RequestId(999), vec![1, 2, 3], false, 1024); // never requested
-        let future = registry.request(|req| Effect::CancelJob { job: req.0 });
-        registry.resolve(RequestId(1), Ok(b"already done".to_vec()));
-        registry.append_chunk(RequestId(1), vec![9, 9, 9], true, 1024); // arrives after resolve
+        let registry = RequestRegistry::new().await;
+        registry.append_chunk(RequestId(999), vec![1, 2, 3], false, 1024).await; // never requested
+        let future = registry.request(|req| Effect::CancelJob { job: req.0 }).await;
+        registry.resolve(RequestId(1), Ok(b"already done".to_vec())).await;
+        registry.append_chunk(RequestId(1), vec![9, 9, 9], true, 1024).await; // arrives after resolve
         let mut future = Box::pin(future);
         let waker = futures_test_waker();
         let mut cx = Context::from_waker(waker);
@@ -305,29 +305,29 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn pending_ids_reports_only_unresolved_requests() {
-        let registry = RequestRegistry::new();
-        let _first = registry.request(|req| Effect::CancelJob { job: req.0 });
-        let _second = registry.request(|req| Effect::CancelJob { job: req.0 });
-        assert_eq!(registry.pending_ids().len(), 2);
-        registry.resolve(RequestId(1), Ok(Vec::new()));
-        assert_eq!(registry.pending_ids(), vec![RequestId(2)]);
+        let registry = RequestRegistry::new().await;
+        let _first = registry.request(|req| Effect::CancelJob { job: req.0 }).await;
+        let _second = registry.request(|req| Effect::CancelJob { job: req.0 }).await;
+        assert_eq!(registry.pending_ids().await.len(), 2);
+        registry.resolve(RequestId(1), Ok(Vec::new())).await;
+        assert_eq!(registry.pending_ids().await, vec![RequestId(2)]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn cancel_instance_removes_only_that_instances_pending_requests() {
-        let registry = RequestRegistry::new();
-        let scoped_to_7 = registry.for_instance(7);
-        let scoped_to_9 = registry.for_instance(9);
-        let _seven_a = scoped_to_7.request(|req| Effect::CancelJob { job: req.0 });
-        let _seven_b = scoped_to_7.request(|req| Effect::CancelJob { job: req.0 });
-        let nine = scoped_to_9.request(|req| Effect::CancelJob { job: req.0 });
+        let registry = RequestRegistry::new().await;
+        let scoped_to_7 = registry.for_instance(7).await;
+        let scoped_to_9 = registry.for_instance(9).await;
+        let _seven_a = scoped_to_7.request(|req| Effect::CancelJob { job: req.0 }).await;
+        let _seven_b = scoped_to_7.request(|req| Effect::CancelJob { job: req.0 }).await;
+        let nine = scoped_to_9.request(|req| Effect::CancelJob { job: req.0 }).await;
 
-        assert_eq!(registry.pending_ids().len(), 3, "all three requests share the one underlying queue");
-        let removed = registry.cancel_instance(7);
+        assert_eq!(registry.pending_ids().await.len(), 3, "all three requests share the one underlying queue");
+        let removed = registry.cancel_instance(7).await;
         assert_eq!(removed, 2, "cancel_instance must report exactly the count it removed");
-        assert_eq!(registry.pending_ids(), vec![RequestId(3)], "only instance 9's request must survive");
+        assert_eq!(registry.pending_ids().await, vec![RequestId(3)], "only instance 9's request must survive");
 
         // 🚫️ A cancelled instance's future observes neither Ready nor a wake — it simply never
         // resolves. The slot is gone outright (no leaked entry to poll against later).
@@ -337,20 +337,20 @@ mod tests {
         assert!(matches!(nine.as_mut().poll(&mut cx), Poll::Pending), "the surviving instance's request is unaffected");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn cancel_instance_on_an_instance_with_no_pending_requests_is_a_harmless_no_op() {
-        let registry = RequestRegistry::new();
-        assert_eq!(registry.cancel_instance(42), 0);
+        let registry = RequestRegistry::new().await;
+        assert_eq!(registry.cancel_instance(42).await, 0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn for_instance_shares_the_same_id_counter_as_the_registry_it_was_derived_from() {
-        let registry = RequestRegistry::new();
-        let scoped = registry.for_instance(3);
-        let _first = registry.request(|req| Effect::CancelJob { job: req.0 }); // id 1, instance 0
-        let _second = scoped.request(|req| Effect::CancelJob { job: req.0 }); // id 2, instance 3
-        assert_eq!(registry.cancel_instance(3), 1, "only the request allocated through the scoped handle belongs to instance 3");
-        assert_eq!(registry.pending_ids(), vec![RequestId(1)]);
+        let registry = RequestRegistry::new().await;
+        let scoped = registry.for_instance(3).await;
+        let _first = registry.request(|req| Effect::CancelJob { job: req.0 }).await; // id 1, instance 0
+        let _second = scoped.request(|req| Effect::CancelJob { job: req.0 }).await; // id 2, instance 3
+        assert_eq!(registry.cancel_instance(3).await, 1, "only the request allocated through the scoped handle belongs to instance 3");
+        assert_eq!(registry.pending_ids().await, vec![RequestId(1)]);
     }
 
     // 🚫️async: E4 fn-pointer slot — Waker::noop() replaces the hand-rolled RawWakerVTable outright;

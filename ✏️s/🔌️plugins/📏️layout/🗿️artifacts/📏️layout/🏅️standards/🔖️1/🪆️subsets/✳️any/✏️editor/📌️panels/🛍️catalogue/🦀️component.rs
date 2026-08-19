@@ -50,7 +50,7 @@ mod tests {
     use super::*;
     use crate::editor::layout::testkit::{layout_app, render as render_body};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn catalogue_lists_frame_kinds() {
         let mut app = layout_app();
         let json = render_body(&mut app, LAYOUT_PLAY_BODY_CATALOGUE);
@@ -58,7 +58,7 @@ mod tests {
         assert!(json.contains("Text Frame"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn catalogue_items_are_draggable() {
         let mut app = layout_app();
         let json = render_body(&mut app, LAYOUT_PLAY_BODY_CATALOGUE);
@@ -67,7 +67,7 @@ mod tests {
         assert!(json.contains("layout-catalogue.page"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn definition_binds_the_framework_catalogue_tab_to_this_body_key() {
         let definition = definition();
         assert_eq!(definition.id(), FRAMEWORK_PANEL_TAB_CATALOGUE_ID);

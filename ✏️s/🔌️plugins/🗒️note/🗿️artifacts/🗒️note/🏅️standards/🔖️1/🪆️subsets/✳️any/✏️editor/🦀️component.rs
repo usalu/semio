@@ -476,7 +476,7 @@ mod tests {
     /// 🏷️ Every declared manifest action id must be reachable as exactly one command row, and every
     /// row's wire keyword must be distinct — the cross-cutting invariant `app_commands!` is there to
     /// hold.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn command_ids_are_unique_across_every_row() {
         let app = NotePlayApp;
         let ids: Vec<&str> = every_command().iter().map(|command| NotePlayApp::command_id(command)).collect();
@@ -488,7 +488,7 @@ mod tests {
     }
 
     /// ⚖️ LAW: text and binary are two projections of the same command, for every single row.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn every_command_round_trips_through_text_and_binary() {
         for command in every_command() {
             store::os_store::test_support::assert_op_text_binary_equivalence(&command);
@@ -539,7 +539,7 @@ mod tests {
 
     /// 🎞️ Pins the exact hex for rows whose `Option` fields make `None`/`Some` distinct wire cases —
     /// copied from the pre-migration `🧪️wire-baseline-before.txt` dump.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn optional_field_rows_keep_their_pre_migration_bytes() {
         store::os_store::test_support::assert_op_text_binary_equivalence(&NoteCommand::SetGridVisible(set_grid_visible::SetGridVisible { value: None }));
         store::os_store::test_support::assert_op_text_binary_equivalence(&NoteCommand::SetSnapEnabled(set_snap_enabled::SetSnapEnabled { value: None }));
@@ -549,7 +549,7 @@ mod tests {
     //#endregion 🔖️CommandSurface
 
     //#region 🔖️ManifestSanity
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn the_manifest_stitches_every_taxonomy_node() {
         let json = serde_json::to_string(&create_note_app()).expect("app definition json");
         for id in [NOTE_PLAY_WINDOW_COMPOSITE, NOTE_PLAY_WINDOW_NAVIGATOR] {
@@ -561,7 +561,7 @@ mod tests {
         assert!(json.contains("2d.note"), "artifact kind missing from the manifest");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn utility_registry_declares_canvas_utilities_scoped_to_composite_window() {
         let definition = create_note_app();
         let utility_ids: Vec<&str> = definition.utilities.iter().map(|utility| utility.id.as_str()).collect();
@@ -577,7 +577,7 @@ mod tests {
     //#region 🔖️Interaction
     /// 🕹️ The `blocks` domain is declared `HierarchyProvider::Topology`, transitive on both hover and
     /// selection, and scoped to the composite (canvas) window kind.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn blocks_interaction_domain_is_declared_topology_and_transitive_on_the_composite_window() {
         let definition = create_note_app();
         let blocks = definition.interactions.iter().find(|interaction| interaction.id == NOTE_INTERACTION_BLOCKS).expect("blocks interaction domain declared");
@@ -590,7 +590,7 @@ mod tests {
 
     /// 🌳️ `interaction_topology` walks the document's own Group nesting into `TopologyNode.parent`
     /// links — a top-level block has no parent, every group child's parent is the group's own row id.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn interaction_topology_walks_group_nesting_into_parent_links() {
         let document = crate::artifacts::note::schema::semio_example_snapshot();
         let config = NoteConfig::default();
@@ -605,7 +605,7 @@ mod tests {
 
     /// 🌱️ An empty document has no blocks to select — an empty topology (every stale `blocks`
     /// selection id gets pruned).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn interaction_topology_is_empty_for_a_document_with_no_blocks() {
         let document = empty_note_snapshot();
         let config = NoteConfig::default();
@@ -619,7 +619,7 @@ mod tests {
     /// 🕹️ Retained verb over the framework-owned selection: `delete-selection` reads
     /// `InteractionView::selection("blocks")` (via `NoteDispatchCtx`) — picking through the real
     /// injected `interactionSelect` verb, not a deleted app command.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn delete_selection_deletes_the_blocks_picked_via_interaction_select() {
         use crate::editor::note::testkit::{dispatch as note_dispatch, note_app_with_registry, select_blocks};
         let mut app = note_app_with_registry();
@@ -632,7 +632,7 @@ mod tests {
     //#endregion 🔖️Interaction
 
     //#region 🔖️Locale
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn note_labels_resolve_native_by_default() {
         let mut app = note_app();
         let document_json = crate::editor::note::testkit::render(&mut app, NOTE_PLAY_BODY_DOCUMENT);
@@ -643,7 +643,7 @@ mod tests {
     //#endregion 🔖️Locale
 
     //#region 🔖️CrossCutting
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn undo_redo_round_trip_through_the_wrapper() {
         let mut app = note_app();
         testkit::assert_undo_redo_round_trip(&mut app, NoteCommand::AddBlock(add_block::AddBlock { kind: "text".into(), x: 0.0, y: 0.0 }), |app| app.snapshot().expect("snapshot").blocks.len(), 0, 1);
@@ -652,7 +652,7 @@ mod tests {
     /// 🧪️ The definitional regression proof: two independent instances start from the same document,
     /// apply DISJOINT edits, and exchanging operations over a `MemoryBackbone` converges both sides to
     /// contain BOTH edits.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn two_instances_converge_disjoint_edits_via_backbone() {
         testkit::assert_two_instances_converge::<semio_framework_plugin::EditorApp<NotePlayApp>, (usize, Option<bool>)>(
             "mem://note-convergence",
@@ -665,7 +665,7 @@ mod tests {
         );
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn ingest_operations_is_idempotent_for_note() {
         testkit::assert_ingest_idempotent::<semio_framework_plugin::EditorApp<NotePlayApp>, f64>(NoteCommand::SetGridSpacing(set_grid_spacing::SetGridSpacing { value: 48.0 }), |app| app.snapshot().expect("snapshot").grid_spacing.unwrap_or_default());
     }

@@ -189,7 +189,7 @@ pub struct LmConfig {
 }
 
 impl Default for LmConfig {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { max_iters: 100, initial_lambda: 1e-3, tol_grad: 1e-10, tol_dx: 1e-14, loss: RobustLoss::Trivial }
     }
 }
@@ -580,7 +580,7 @@ pub struct RansacConfig {
 }
 
 impl Default for RansacConfig {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { threshold: 1.0, confidence: 0.99, max_iters: 1000, seed: 0, scoring: RansacScoring::Msac }
     }
 }
@@ -865,7 +865,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn levenberg_marquardt_solves_rosenbrock() {
         let cfg = LmConfig::default();
         let x0 = VecD::from_vec(vec![-1.2, 1.0]);
@@ -876,7 +876,7 @@ mod tests {
         assert!(result.cost < 1e-8, "cost = {}", result.cost);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn numeric_jacobian_matches_analytic_jacobian_for_rosenbrock() {
         let x = VecD::from_vec(vec![0.7, -0.3]);
         let mut analytic = MatD::zeros(2, 2);
@@ -920,7 +920,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn gauss_newton_solves_consistent_linear_system_in_one_step() {
         let cfg = LmConfig { max_iters: 20, tol_grad: 1e-14, tol_dx: 1e-14, ..LmConfig::default() };
         let x0 = VecD::from_vec(vec![0.0, 0.0]);
@@ -963,7 +963,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn huber_loss_recovers_line_that_trivial_loss_misses() {
         let true_m = 2.0;
         let true_b = -1.0;
@@ -1100,7 +1100,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn schur_lm_matches_flat_levenberg_marquardt() {
         let num_cameras = 2;
         let num_points = 8;
@@ -1185,7 +1185,7 @@ mod tests {
         (data, true_m, true_b, n - outlier_count)
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn ransac_recovers_line_and_planted_inlier_count() {
         let (data, true_m, true_b, planted_inliers) = synthetic_line_data(2026);
         let cfg = RansacConfig { threshold: 0.2, confidence: 0.999, max_iters: 500, seed: 7, scoring: RansacScoring::Msac };
@@ -1195,7 +1195,7 @@ mod tests {
         assert!((result.model.1 - true_b).abs() < 0.05, "b = {}", result.model.1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn lo_ransac_improves_on_plain_ransac_accuracy() {
         let (data, true_m, true_b, _) = synthetic_line_data(2026);
         let cfg = RansacConfig { threshold: 0.2, confidence: 0.999, max_iters: 500, seed: 7, scoring: RansacScoring::Msac };
@@ -1223,14 +1223,14 @@ mod tests {
     // #endregion 🔖️RansacTests
 
     // #region 🔖️ScalarTests
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn brent_minimize_finds_convex_minimum() {
         let (x, fx) = brent_minimize(|x| (x - 2.0).powi(2) + 1.0, 0.0, 5.0, 1e-10);
         assert!((x - 2.0).abs() < 1e-6, "x = {x}");
         assert!((fx - 1.0).abs() < 1e-6, "fx = {fx}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn golden_section_finds_convex_minimum() {
         let (x, fx) = golden_section(|x| (x - 2.0).powi(2) + 1.0, 0.0, 5.0, 1e-8);
         assert!((x - 2.0).abs() < 1e-4, "x = {x}");

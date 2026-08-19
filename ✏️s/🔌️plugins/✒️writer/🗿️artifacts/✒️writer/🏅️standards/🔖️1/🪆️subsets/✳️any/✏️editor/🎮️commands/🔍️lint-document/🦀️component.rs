@@ -25,7 +25,7 @@ mod tests {
     use crate::artifacts::writer::{writer_text, WriterSnapshot};
     use semio_framework::kernel::Effect;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn lint_is_a_view_action_and_example_default_materializes() {
         let mut app = new_app_with_registry();
         // lintDocument is a declared View action: registry kind discipline requires it emit no operations.

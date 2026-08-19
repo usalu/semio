@@ -98,7 +98,7 @@ pub struct Puzzle2dConfig {
 
 /// ⚠️ Explicit impl (not `#[derive(Default)]`) so Rust construction matches the serde field defaults above.
 impl Default for Puzzle2dConfig {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self {
             camera_x: 0.0,
             camera_y: 0.0,

@@ -32,7 +32,7 @@ pub struct FlowSnapshot {
 
 //#region 🔹DefaultsAndBridge
 impl Default for FlowSnapshot {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self::from_fixture(flow::FlowFixture::default())
     }
 }
@@ -54,13 +54,13 @@ impl FlowSnapshot {
 }
 
 impl From<flow::FlowFixture> for FlowSnapshot {
-    async fn from(fixture: flow::FlowFixture) -> Self {
+    fn from(fixture: flow::FlowFixture) -> Self {
         Self::from_fixture(fixture)
     }
 }
 
 impl From<FlowSnapshot> for flow::FlowFixture {
-    async fn from(snapshot: FlowSnapshot) -> Self {
+    fn from(snapshot: FlowSnapshot) -> Self {
         snapshot.to_fixture()
     }
 }

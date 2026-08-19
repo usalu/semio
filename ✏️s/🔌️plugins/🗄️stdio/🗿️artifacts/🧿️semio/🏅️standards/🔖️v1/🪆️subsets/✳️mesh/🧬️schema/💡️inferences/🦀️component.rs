@@ -92,18 +92,18 @@ mod tests {
     use super::*;
     use protocol::Inference;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = SemioMeshSnapshot::default();
         assert_eq!(SemioMeshInference::infer(&snapshot), SemioMeshInference::infer(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(SemioMeshInference::infer(&SemioMeshSnapshot::default()), SemioMeshInference::default());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_covers_every_primitive_by_composite_key() {
         use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint3;
         use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMesh, SemioPrimitive};

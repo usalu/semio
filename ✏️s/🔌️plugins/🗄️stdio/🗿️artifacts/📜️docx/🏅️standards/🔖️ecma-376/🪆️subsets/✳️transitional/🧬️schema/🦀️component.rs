@@ -106,18 +106,18 @@ pub mod derived_construction {
     mod tests {
         use super::*;
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn empty_builder_is_transitional_conformant() {
             DocxTransitionalBuilderConstruction::empty().build().expect("empty transitional builder must be conformant");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn add_paragraph_stays_transitional_conformant() {
             let snapshot = DocxTransitionalBuilderConstruction::empty().add_text_paragraph("Hello, transitional world!").build().expect("must build");
             assert_eq!(snapshot.document.body.len(), 1);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn hard_violation_injected_via_raw_mutate_still_fails_build() {
             let mut snapshot = DocxTransitionalBuilderConstruction::empty().add_text_paragraph("clean").build().unwrap();
             snapshot.opc.set_part("word/styles.xml", "application/xml", b"<w:styles xmlns:w=\"http://purl.oclc.org/ooxml/wordprocessingml/main\"/>".to_vec());
@@ -262,7 +262,7 @@ pub mod derived_analysis {
             DocxSnapshot::from_parts(opc, Default::default())
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn conforming_transitional_document_has_no_hard_diagnostics() {
             let snapshot = snapshot_with_main_part(REL_TYPE_OFFICE_DOCUMENT, transitional_document_bytes());
             let diagnostics = check_transitional_conformance(&snapshot);
@@ -270,14 +270,14 @@ pub mod derived_analysis {
             assert!(diagnostics.iter().all(|d| d.code.0 != CODE_CONFORMANCE_ATTR), "got {diagnostics:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn missing_transitional_namespace_is_hard() {
             let snapshot = snapshot_with_main_part(REL_TYPE_OFFICE_DOCUMENT, b"<w:document><w:body/></w:document>".to_vec());
             let diagnostics = check_transitional_conformance(&snapshot);
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_MAIN_NS_MISSING && d.severity == Severity::Error), "got {diagnostics:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn strict_namespace_anywhere_is_hard() {
             let mut snapshot = snapshot_with_main_part(REL_TYPE_OFFICE_DOCUMENT, transitional_document_bytes());
             snapshot.opc.set_part("word/styles.xml", "application/xml", b"<w:styles xmlns:w=\"http://purl.oclc.org/ooxml/wordprocessingml/main\"/>".to_vec());
@@ -285,7 +285,7 @@ pub mod derived_analysis {
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_STRICT_NS_PRESENT && d.severity == Severity::Error), "got {diagnostics:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn strict_relationship_base_anywhere_is_hard() {
             let mut opc = OpcPackage::empty();
             opc.content_types.set_default("rels", RELS_CONTENT_TYPE);
@@ -298,7 +298,7 @@ pub mod derived_analysis {
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_STRICT_NS_PRESENT && d.severity == Severity::Error), "got {diagnostics:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn conformance_strict_attribute_present_is_soft() {
             let doc = format!(r#"<w:document xmlns:w="{TRANSITIONAL_MAIN_NS}" conformance="strict"><w:body/></w:document>"#).into_bytes();
             let snapshot = snapshot_with_main_part(REL_TYPE_OFFICE_DOCUMENT, doc);

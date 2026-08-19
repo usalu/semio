@@ -492,7 +492,7 @@ pub async fn check_composite_beam(m_ed_knm: f64, v_ed_kn: f64, m_pla: f64, m_pl_
 mod compliance_helpers_tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn composite_beam_e2e() {
         let report = check_composite_beam(200.0, 120.0, 80.0, 250.0, 0.75, 150.0, AnnexChoice::De);
         assert!(!report.checks.is_empty());
@@ -500,13 +500,13 @@ mod compliance_helpers_tests {
         assert!((m_rd - 207.5).abs() < 0.1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn effective_width_8m_span() {
         let beff = part_1_1::effective_width_mm(8000.0, 80.0, 3000.0);
         assert!((beff - 2160.0).abs() < 1.0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn partial_shear_connection_eta() {
         let eta = part_1_1::shear_connection_degree(15, 20);
         assert!((eta - 0.75).abs() < 0.01);
@@ -514,13 +514,13 @@ mod compliance_helpers_tests {
         assert!((m_rd - 250.0).abs() < 0.1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn longitudinal_shear_vl() {
         let v_l = part_1_1::longitudinal_shear_kn(500.0, 200.0);
         assert!((v_l - 2500.0).abs() < 1.0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn stud_connector_resistance_worked_example() {
         let d = 19.0_f64;
         let h_sc = 5.0 * d;
@@ -538,31 +538,31 @@ mod compliance_helpers_tests {
         assert!((p_rd - expected_p_rd_kn).abs() < 1e-6);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn min_shear_connection_degree_span_8m() {
         let eta_min = part_1_1::min_shear_connection_degree(8.0, 355.0);
         assert!((eta_min - 0.49).abs() < 1e-6);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fire_insulation_r60() {
         let t = part_1_2::insulation_thickness_mm(part_1_2::FireRating::R60, "trapezoidal");
         assert!((t - 18.0).abs() < 0.1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn bridge_composite_fatigue() {
         let report = part_2::check_bridge_composite(180.0, 250.0, 65.0, "stud_welded");
         assert_eq!(report.checks.len(), 2);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn stud_fatigue_resistance_at_reference_cycles() {
         let delta_tau_c = part_2::stud_fatigue_resistance_mpa(part_2::STUD_N_REF);
         assert!((delta_tau_c - 90.0).abs() < 1e-9);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn annex_params_document_equality() {
         let en = AnnexParams::en();
         let de = AnnexParams::de();

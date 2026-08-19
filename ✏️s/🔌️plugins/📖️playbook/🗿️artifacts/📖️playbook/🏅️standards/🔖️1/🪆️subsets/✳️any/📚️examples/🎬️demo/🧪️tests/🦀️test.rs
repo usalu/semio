@@ -1,11 +1,11 @@
-#[test]
+#[semio_framework_async_macros::async_test]
 async fn primary_asset_is_nonempty() {
     let text = include_str!("../🖼️assets/🗣️example.dsl.semio");
     assert!(text.len() > 8);
 }
 
 //#region 💡️InferenceLaws
-#[test]
+#[semio_framework_async_macros::async_test]
 async fn inference_determinism_law() {
     use crate::artifacts::playbook::PlaybookSnapshot;
     use crate::artifacts::playbook::standards::v1::subsets::any::schema::inferences::PlaybookInference;
@@ -21,7 +21,7 @@ async fn inference_determinism_law() {
     assert!(inference.topology.cycle_free, "the demo document has no cyclic block conditions");
 }
 
-#[test]
+#[semio_framework_async_macros::async_test]
 async fn inference_default_law() {
     use crate::artifacts::playbook::PlaybookSnapshot;
     use crate::artifacts::playbook::standards::v1::subsets::any::schema::inferences::PlaybookInference;

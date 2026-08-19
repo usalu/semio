@@ -37,22 +37,22 @@ pub async fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyEr
 mod surface_tests {
     use semio_framework_plugin::testkit::{assert_editor_and_viewer_share_dialect, assert_viewer_never_mutates};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn trinity_jack_viewer_never_mutates() {
         assert_viewer_never_mutates::<crate::viewer::jack::TrinityJackViewer>();
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn trinity_jack_editor_and_viewer_share_dialect() {
         assert_editor_and_viewer_share_dialect::<crate::editor::jack::TrinityJackPlayApp, crate::viewer::jack::TrinityJackViewer>();
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn trinity_rewrite_viewer_never_mutates() {
         assert_viewer_never_mutates::<crate::viewer::rewrite::TrinityRewriteViewer>();
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn trinity_rewrite_editor_and_viewer_share_dialect() {
         assert_editor_and_viewer_share_dialect::<crate::editor::rewrite::TrinityRewritePlayApp, crate::viewer::rewrite::TrinityRewriteViewer>();
     }

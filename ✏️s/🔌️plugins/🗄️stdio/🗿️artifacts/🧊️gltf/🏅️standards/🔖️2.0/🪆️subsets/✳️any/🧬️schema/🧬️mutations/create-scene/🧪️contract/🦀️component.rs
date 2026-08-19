@@ -93,7 +93,7 @@ mod tests {
         SceneState { scene: snapshot.document.scene, scenes: snapshot.document.scenes.clone() }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_scene_shared_vector_executes_descriptor_and_phase_laws() {
         let contract: Contract = serde_json::from_str(include_str!("🔣️component.json")).expect("canonical vector decodes");
         assert_eq!(contract.id, mutation::ID);

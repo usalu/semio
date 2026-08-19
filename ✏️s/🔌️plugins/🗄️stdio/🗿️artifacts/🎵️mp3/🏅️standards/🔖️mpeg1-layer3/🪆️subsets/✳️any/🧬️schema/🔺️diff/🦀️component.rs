@@ -347,7 +347,7 @@ mod tests {
     //#region field_sweep
     /// 🧪️ `field_sweep`: `sweep_a`/`sweep_b` differ in EVERY mutable field, exercising both
     /// tri-state directions (`Some(Some(_))` a→b, `Some(None)` b→a).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn field_sweep_between_covers_every_field() {
         let a = sweep_a();
         let b = sweep_b();
@@ -368,7 +368,7 @@ mod tests {
     //#endregion field_sweep
 
     //#region between_roundtrip_law
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn between_roundtrip_law() {
         let a = sweep_a();
         let b = sweep_b();
@@ -378,7 +378,7 @@ mod tests {
     //#endregion between_roundtrip_law
 
     //#region absorb_law
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_law_disjoint_and_lww_and_associativity() {
         let base = sweep_a();
         let d1 = diff_set_frames(vec![frame(), frame(), frame()]);
@@ -409,7 +409,7 @@ mod tests {
     //#endregion absorb_law
 
     //#region inverse_law
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inverse_law_diff_level() {
         let base = sweep_a();
         let d = Mp3Diff::between(&base, &sweep_b());
@@ -420,7 +420,7 @@ mod tests {
     //#endregion inverse_law
 
     //#region diff_codec_text_binary_roundtrip_law
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn diff_codec_text_binary_roundtrip_law() {
         let a = sweep_a();
         let b = sweep_b();

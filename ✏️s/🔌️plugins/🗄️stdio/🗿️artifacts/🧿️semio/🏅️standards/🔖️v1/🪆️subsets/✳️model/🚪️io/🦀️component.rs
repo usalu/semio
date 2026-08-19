@@ -170,13 +170,13 @@ pub mod derived_composition {
             }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn clean_snapshot_has_no_referential_diagnostics() {
             let diagnostics = semio_model_referential_diagnostics(&clean_snapshot());
             assert!(diagnostics.is_empty(), "expected no diagnostics, got {diagnostics:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn dangling_spatial_parent_is_flagged() {
             let mut snap = clean_snapshot();
             snap.spatial[0].parent_id = Some("missing".into());
@@ -184,7 +184,7 @@ pub mod derived_composition {
             assert!(diagnostics.iter().any(|d| d.code.0 == "stdio.semio_model.validate-dangling-parent"), "got {diagnostics:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn dangling_element_spatial_ref_is_flagged() {
             let mut snap = clean_snapshot();
             snap.elements[0].spatial_id = Some("missing".into());
@@ -192,7 +192,7 @@ pub mod derived_composition {
             assert!(diagnostics.iter().any(|d| d.code.0 == "stdio.semio_model.validate-dangling-spatial-ref"), "got {diagnostics:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn dangling_relation_endpoints_are_flagged() {
             let mut snap = clean_snapshot();
             snap.relations[0].from = "missing-from".into();
@@ -202,7 +202,7 @@ pub mod derived_composition {
             assert!(diagnostics.iter().any(|d| d.code.0 == "stdio.semio_model.validate-dangling-relation-to"), "got {diagnostics:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn validator_validate_runs_the_same_checks_through_the_io_payload_boundary() {
             let bytes = <SemioModelSnapshot as store::ArtifactPack>::encode_pack(&clean_snapshot());
             let diagnostics = SemioModelValidator::validate(&IoPayload::Binary(bytes));
@@ -224,7 +224,7 @@ pub mod derived_composition {
             /// ✅️ "committed files parse": all 6 handcrafted `.grammar.semio`/`.protocol.semio` files
             /// parse under the real dialect — independent of, and cheaper than, the two `recognize`/
             /// `walk_protocol` laws below.
-            #[test]
+            #[semio_framework_async_macros::async_test]
             async fn committed_facet_files_parse() {
                 for (label, text) in [("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO)] {
                     let grammar = dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
@@ -240,7 +240,7 @@ pub mod derived_composition {
             /// `m5_handcrafted_grammar_conformance` harness uses (envelope id prepended as the bare
             /// `artifact-mark` token), so this is a direct proof this facet will pass that harness once
             /// graduated.
-            #[test]
+            #[semio_framework_async_macros::async_test]
             async fn grammar_conformance_law() {
                 let grammar = dsl::parse_grammar(snapshot::text::COMPONENT_GRAMMAR_SEMIO).expect("parse snapshot grammar");
                 let recognizer = dsl::Recognizer::compile(&grammar);
@@ -252,7 +252,7 @@ pub mod derived_composition {
 
             /// ✅️ `ops_grammar_conformance_law`: the mutations grammar recognizes real `print_op` output
             /// for every `SemioModelMutation` variant (`mutations::demo_mutation_cases()`).
-            #[test]
+            #[semio_framework_async_macros::async_test]
             async fn ops_grammar_conformance_law() {
                 let grammar = dsl::parse_grammar(mutations::text::COMPONENT_GRAMMAR_SEMIO).expect("parse mutations grammar");
                 let recognizer = dsl::Recognizer::compile(&grammar);
@@ -265,7 +265,7 @@ pub mod derived_composition {
             /// ✅️ `diff_grammar_conformance_law`: the diff grammar recognizes real `print_diff` output
             /// for every representative `SemioModelDiff` (`diff::demo_diff_cases()`), incl. the empty
             /// (no-op) diff.
-            #[test]
+            #[semio_framework_async_macros::async_test]
             async fn diff_grammar_conformance_law() {
                 let grammar = dsl::parse_grammar(diff::text::COMPONENT_GRAMMAR_SEMIO).expect("parse diff grammar");
                 let recognizer = dsl::Recognizer::compile(&grammar);
@@ -278,7 +278,7 @@ pub mod derived_composition {
             /// ✅️ `protocol_walk_law`: `walk_protocol` against REAL bytes for all three facets —
             /// snapshot pack (`encode_pack`, envelope-unwrapped first), every demo mutation's
             /// `encode_op`, and every demo diff's `encode_diff` — asserting `consumed == bytes.len()`.
-            #[test]
+            #[semio_framework_async_macros::async_test]
             async fn protocol_walk_law() {
                 let pack_spec = dsl::parse_protocol(snapshot::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
                 let packed = store::ArtifactPack::encode_pack(&snapshot::demo_semio_model_snapshot());
@@ -305,7 +305,7 @@ pub mod derived_composition {
             /// `print_dsl`/`encode_pack` output of `snapshot::demo_semio_model_snapshot()` —
             /// `parse_dsl(fixture) == demo()`, `print_dsl(demo()) == fixture` (byte-for-byte), and the
             /// pack twin — so the fixtures can never silently drift back to a fake.
-            #[test]
+            #[semio_framework_async_macros::async_test]
             async fn fixture_honesty_law() {
                 const FIXTURE_DSL: &str = include_str!("../../✳️any/📚️examples/🏢️building/🖼️assets/🗣️example.dsl.semio");
                 const FIXTURE_PACK: &[u8] = include_bytes!("../../✳️any/📚️examples/🏢️building/🖼️assets/🎒️example.pack.semio");

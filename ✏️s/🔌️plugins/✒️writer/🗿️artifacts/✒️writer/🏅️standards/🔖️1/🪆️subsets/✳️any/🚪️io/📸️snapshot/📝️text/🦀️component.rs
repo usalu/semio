@@ -148,13 +148,13 @@ mod tests {
     use super::*;
     use crate::artifacts::writer::schema;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn jack_example_dsl_round_trips() {
         let document = parse_dsl(JACK_EXAMPLE_TEXT).expect("parse jack example");
         store::os_store::test_support::assert_dsl_round_trip(&document);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dag_jack_example_dsl_round_trips() {
         let document = parse_dsl(DAG_JACK_EXAMPLE_TEXT).expect("parse dag.jack example");
         store::os_store::test_support::assert_dsl_round_trip(&document);
@@ -171,7 +171,7 @@ mod tests {
         )
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn writer_dsl_round_trips_empty_and_jack_snapshots() {
         store::os_store::test_support::assert_dsl_round_trip(&schema::empty_writer_snapshot());
         store::os_store::test_support::assert_dsl_round_trip(&jack_snapshot());
@@ -182,7 +182,7 @@ mod tests {
     /// `document` is now a two-string CHILD HANDLE, not the embedded text, so this law only checks
     /// the scalar fields print readably; the actual text content is proven separately by
     /// `writer_dsl_round_trips_empty_and_jack_snapshots` (round trip) and `writer_text` reads.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn writer_dsl_prints_readable_scalar_fields() {
         let printed = print_dsl(&jack_snapshot());
         assert!(printed.contains(&format!("schema={}", hex_encode_for_test("writer.document"))));
@@ -202,7 +202,7 @@ mod tests {
 mod semio_grammar_conformance {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn component_grammar_semio_is_grammar_dialect() {
         let g = ::dsl::parse_grammar(COMPONENT_GRAMMAR_SEMIO).expect("parse grammar.semio");
         assert_eq!(g.dialect, ::dsl::SemioDialect::Grammar);

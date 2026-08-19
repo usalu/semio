@@ -35,7 +35,7 @@ mod tests {
     /// 📜️ Both real example fixtures (migrated from the legacy `.3d.json` shape — see ticket
     /// 🎫️convertpuzzle2d3d5dtotypeddslderiveengine) parse as `.puzzle3d` DSL text and round-trip
     /// through `print_dsl`/`parse_dsl` exactly.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn puzzle3d_example_fixtures_parse_and_round_trip_as_dsl() {
         for dsl_text in [PUZZLE3D_CONCRETE_FOREST_EXAMPLE_TEXT, PUZZLE3D_NAKAGIN_EXAMPLE_TEXT] {
             let projection = parse_dsl(dsl_text).expect("example fixture parses as dsl");
@@ -47,7 +47,7 @@ mod tests {
     /// 📜️ A representative in-memory projection (one object with two vortices, one attraction, a
     /// target volume, a reference plane, and a link-compatibility rule) round-trips through
     /// `print_dsl`/`parse_dsl` exactly.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn puzzle3d_projection_dsl_round_trips() {
         let empty = Puzzle3dSnapshot::default();
         semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&empty);
@@ -89,7 +89,7 @@ mod tests {
     /// `Puzzle3dMutation`'s `Edit` round-trips through `protocol::MutationEnvelope`s beside this
     /// file's existing dsl/pack round-trip laws (same pattern as `dag`'s own
     /// `command_envelope_round_trip_holds_for_an_applied_operation`).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn command_envelope_round_trip_holds_for_an_applied_operation() {
         use crate::artifacts::puzzle3d::op::Puzzle3dMutation;
         use crate::artifacts::puzzle3d::spr::Puzzle3dStore;

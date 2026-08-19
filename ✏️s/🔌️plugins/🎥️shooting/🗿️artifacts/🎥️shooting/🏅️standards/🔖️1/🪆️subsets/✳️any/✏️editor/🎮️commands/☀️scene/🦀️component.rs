@@ -127,7 +127,7 @@ mod tests {
     use crate::editor::shooting::testkit::{dispatch, shooting_app};
     use crate::editor::shooting::ShootingCommand;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn scene_setters_mutate_lighting() {
         let mut app = shooting_app();
         dispatch(&mut app, ShootingCommand::SetSunAzimuth(set_sun_azimuth::SetSunAzimuth { value: 90.0 }));
@@ -137,7 +137,7 @@ mod tests {
         assert!(!snapshot.scene.shadow.enabled);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn toggle_sun_round_trips_through_ops_and_defaults_off() {
         let mut app = shooting_app();
         assert!(!app.snapshot().expect("snapshot").scene.sun.enabled);

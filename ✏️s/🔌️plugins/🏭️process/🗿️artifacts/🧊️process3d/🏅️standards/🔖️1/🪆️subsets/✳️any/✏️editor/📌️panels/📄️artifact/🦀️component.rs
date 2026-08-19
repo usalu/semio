@@ -75,14 +75,14 @@ mod tests {
     use super::*;
     use crate::editor::process3d::testkit;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn definition_binds_the_framework_document_tab_to_this_body_key() {
         let definition = definition();
         assert_eq!(definition.id(), FRAMEWORK_PANEL_TAB_ARTIFACT_ID);
         assert_eq!(definition.body_key.as_deref(), Some(PROCESS_3D_PLAY_BODY_DOCUMENT));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn document_panel_lists_stock_and_steps() {
         let mut app = testkit::app();
         let rendered = testkit::render(&mut app, PROCESS_3D_PLAY_BODY_DOCUMENT);

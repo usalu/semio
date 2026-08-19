@@ -207,7 +207,7 @@ mod tests {
         EquationSnapshot { expr, next_label: 8 }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn extracts_integer_polynomial_coefficients_by_degree() {
         let (var, coeffs) = extract_integer_polynomial(&quadratic_with_roots_one_and_two().expr).expect("polynomial in scope");
         assert_eq!(var, "x");
@@ -216,7 +216,7 @@ mod tests {
         assert_eq!(coeffs.get(&2).map(|c| c.to_string()), Some("1".to_string()));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn plan_has_one_step_per_isolated_root_with_no_parents() {
         let mut snapshot = MathematicalSnapshot::default();
         snapshot.equation = quadratic_with_roots_one_and_two();
@@ -225,7 +225,7 @@ mod tests {
         assert!(steps.iter().all(|step| step.parents.is_empty()), "roots never depend on each other");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn compute_mathematical_roots_finds_one_and_two() {
         let mut snapshot = MathematicalSnapshot::default();
         snapshot.equation = quadratic_with_roots_one_and_two();
@@ -236,7 +236,7 @@ mod tests {
         assert!((roots[1] - 2.0).abs() < 1e-6, "expected root near 2.0, got {}", roots[1]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn out_of_scope_equation_plans_zero_steps_not_a_panic() {
         // 🔎️ Rational, non-integer coefficient — documented scope boundary, not a crash.
         let snapshot = MathematicalSnapshot::default(); // default equation is the integer literal 0
@@ -247,7 +247,7 @@ mod tests {
     /// 🧪️ Determinism law (mirrors `🧭topology`'s own `inference_determinism_law`): same snapshot,
     /// same `DepHash` chain, same values — required for `protocol::infer_field`'s cache to ever be
     /// safe to enable for this field.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dep_hash_is_deterministic_across_repeated_calls() {
         let mut snapshot = MathematicalSnapshot::default();
         snapshot.equation = quadratic_with_roots_one_and_two();
@@ -259,7 +259,7 @@ mod tests {
     /// 🧪️ The whole point of a real `DepHash` chain: an edit that changes a coefficient must
     /// change `dep_input`'s bytes for every root, proving the chain is actually wired to
     /// `equation`, not a constant.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dep_input_changes_when_a_coefficient_changes() {
         let mut before = MathematicalSnapshot::default();
         before.equation = quadratic_with_roots_one_and_two();

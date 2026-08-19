@@ -150,7 +150,7 @@ mod tests {
     use super::*;
     use crate::artifacts::remodel::default_remodel_scene;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn empty_diff_is_identity_and_absorb_is_fieldwise_last_writer() {
         let scene = default_remodel_scene();
         assert_eq!(

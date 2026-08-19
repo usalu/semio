@@ -38,27 +38,27 @@ mod tests {
         AviSnapshot { main_header: AviMainHeader { total_frames, micro_sec_per_frame, ..AviMainHeader::default() }, streams: (0..stream_count).map(|_| AviStream::default()).collect(), ..AviSnapshot::default() }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn duration_is_total_frames_times_micro_sec_per_frame() {
         // 10 fps (100_000 microseconds/frame), 2 frames => 0.2s.
         let duration = compute_avi_duration(&snapshot(2, 100_000, 1));
         assert_eq!(duration, AviDuration { duration_seconds: 0.2, stream_count: 1, total_frames: 2 });
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn multi_stream_container_counts_every_declared_stream() {
         let duration = compute_avi_duration(&snapshot(0, 0, 3));
         assert_eq!(duration.stream_count, 3);
         assert_eq!(duration.duration_seconds, 0.0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = snapshot(30, 33_333, 1);
         assert_eq!(compute_avi_duration(&snapshot), compute_avi_duration(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(compute_avi_duration(&AviSnapshot::default()), AviDuration::default());
     }

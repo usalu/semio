@@ -50,6 +50,8 @@ const REC_COMPACTION: u8 = 0x12;
 const REC_PADDING: u8 = 0x7F;
 
 /// 🏷️ A short human-readable label for `inspect`'s record-count table.
+// 🚫️async: R9 pure accessor — every consumer is a `println!`/`assert_eq!` argument position,
+// which cannot await; no suspension point exists in the body either.
 fn kind_name(kind: u8) -> &'static str {
     match kind {
         REC_END => "end",
@@ -90,7 +92,7 @@ struct CommitFields {
 
 /// 🎞️ Parses a `REC_COMMIT` frame's `payload()` bytes per the frozen 64-byte layout; `None` on
 /// any length mismatch (never panics on corrupt input).
-fn parse_commit_fields(payload: &[u8]) -> Option<CommitFields> {
+async fn parse_commit_fields(payload: &[u8]) -> Option<CommitFields> {
     if payload.len() != 64 {
         return None;
     }
@@ -110,7 +112,7 @@ fn parse_commit_fields(payload: &[u8]) -> Option<CommitFields> {
 /// no-argument boolean flags (`--reverse`, `--truncate-torn-tail`, ...) must strip those out of
 /// `args` first (see `parse_log_args`/`parse_repair_args`) — this parser always tries to consume
 /// the next token as a value, which would otherwise swallow a following positional/flag.
-fn parse_args(args: &[String]) -> (Vec<String>, HashMap<String, String>) {
+async fn parse_args(args: &[String]) -> (Vec<String>, HashMap<String, String>) {
     let mut positional = Vec::new();
     let mut flags = HashMap::new();
     let mut index = 0;
@@ -135,7 +137,7 @@ fn parse_args(args: &[String]) -> (Vec<String>, HashMap<String, String>) {
     (positional, flags)
 }
 
-fn parse_level(flags: &HashMap<String, String>) -> Result<crate::os_spr::VerificationLevel, String> {
+async fn parse_level(flags: &HashMap<String, String>) -> Result<crate::os_spr::VerificationLevel, String> {
     match flags.get("level").map(String::as_str) {
         None => Ok(crate::os_spr::VerificationLevel::Standard),
         Some("trusted") => Ok(crate::os_spr::VerificationLevel::Trusted),
@@ -147,7 +149,7 @@ fn parse_level(flags: &HashMap<String, String>) -> Result<crate::os_spr::Verific
 
 /// ✂️ `log`'s own arg splitter: `--reverse` takes no value, so it is pulled out before the
 /// generic `--flag value` pairing runs (see `parse_args`'s doc comment).
-fn parse_log_args(rest: &[String]) -> (Vec<String>, HashMap<String, String>, bool) {
+async fn parse_log_args(rest: &[String]) -> (Vec<String>, HashMap<String, String>, bool) {
     let mut filtered = Vec::new();
     let mut reverse = false;
     for arg in rest {
@@ -157,12 +159,12 @@ fn parse_log_args(rest: &[String]) -> (Vec<String>, HashMap<String, String>, boo
             filtered.push(arg.clone());
         }
     }
-    let (positional, flags) = parse_args(&filtered);
+    let (positional, flags) = parse_args(&filtered).await;
     (positional, flags, reverse)
 }
 
 /// ✂️ `repair`'s own arg splitter: both flags are no-value booleans.
-fn parse_repair_args(rest: &[String]) -> (Vec<String>, bool, bool) {
+async fn parse_repair_args(rest: &[String]) -> (Vec<String>, bool, bool) {
     let mut positional = Vec::new();
     let mut truncate_torn_tail = false;
     let mut rebuild_indexes = false;
@@ -178,6 +180,8 @@ fn parse_repair_args(rest: &[String]) -> (Vec<String>, bool, bool) {
 //#endregion 🔖️Args
 
 //#region 🔖️Format
+// 🚫️async: R9 pure accessor — every consumer is a `println!` argument position, which cannot
+// await; no suspension point exists in the body either.
 fn hex32(bytes: &[u8; 32]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
@@ -190,6 +194,8 @@ fn hex32(bytes: &[u8; 32]) -> String {
 /// `protocol_cli` depends on nothing but the facade. `std::hash::Hasher` is dependency-free and
 /// sufficient to spot content differences for a CLI diff display; it is explicitly NOT presented
 /// as a cryptographic digest (labelled `fp=` in output, never `hash=`).
+// 🚫️async: R9 pure accessor — only consumer is a `println!` argument position, which cannot
+// await; no suspension point exists in the body either.
 fn fingerprint(edit: &crate::os_spr::HistoryEdit) -> String {
     use std::hash::{Hash, Hasher};
     let mut hasher = std::collections::hash_map::DefaultHasher::new();
@@ -211,8 +217,8 @@ fn fingerprint(edit: &crate::os_spr::HistoryEdit) -> String {
 /// 🔍️ `protocol inspect <file>` — header, commit chain (all generations), record counts by kind,
 /// and dictionary/snapshot/index record tallies. Never panics on corrupt input: a malformed
 /// frame simply stops the walk early and the summary prints whatever was scanned so far.
-fn cmd_inspect(rest: &[String]) -> i32 {
-    let (positional, _flags) = parse_args(rest);
+async fn cmd_inspect(rest: &[String]) -> i32 {
+    let (positional, _flags) = parse_args(rest).await;
     let Some(path) = positional.first() else {
         eprintln!("usage: protocol inspect <file>");
         return 2;
@@ -237,13 +243,13 @@ fn cmd_inspect(rest: &[String]) -> i32 {
 
     let mut counts: BTreeMap<u8, u64> = BTreeMap::new();
     let mut commits: Vec<(u64, CommitFields)> = Vec::new();
-    let mut cursor = crate::os_spr::FrameCursor::new(&bytes, HEADER_SIZE);
+    let mut cursor = crate::os_spr::FrameCursor::new(&bytes, HEADER_SIZE).await;
     loop {
-        match cursor.next_frame() {
+        match cursor.next_frame().await {
             Ok(Some(frame)) => {
                 *counts.entry(frame.kind).or_insert(0) += 1;
                 if frame.kind == REC_COMMIT {
-                    if let Some(fields) = parse_commit_fields(frame.payload()) {
+                    if let Some(fields) = parse_commit_fields(frame.payload().await).await {
                         commits.push((frame.offset, fields));
                     }
                 }
@@ -281,17 +287,28 @@ fn cmd_inspect(rest: &[String]) -> i32 {
 //#endregion 🔖️Inspect
 
 //#region 🔖️Verify
+/// 🚪️ Opens a `HistoryReader` and decodes its `HistoryLog`, sequenced explicitly: `reader.log()`
+/// is async, so it cannot be chained through `Result::and_then`'s sync closure (R10 shape 1).
+/// Shared by `cmd_verify`/`cmd_diff`/`cmd_frontier` — every `.spr` inspection command opens the
+/// same way.
+async fn open_and_log(bytes: &[u8], options: &crate::os_spr::DecodeOptions) -> Result<crate::os_spr::HistoryLog, crate::os_spr::ProtocolError> {
+    match crate::os_spr::HistoryReader::open(bytes, options).await {
+        Ok(reader) => reader.log().await,
+        Err(error) => Err(error),
+    }
+}
+
 /// 🛡️ `protocol verify <file> [--level=trusted|standard|full]` — opens via `HistoryReader` at the
 /// requested `VerificationLevel` and forces a full decode; `full` additionally recomputes the
 /// commit hash chain (see `crate::os_spr::history::decode_history_from`'s `VerificationLevel::Full`
 /// branch). Prints `OK`/`FAIL: <reason>`, never panics on corrupt input.
-fn cmd_verify(rest: &[String]) -> i32 {
-    let (positional, flags) = parse_args(rest);
+async fn cmd_verify(rest: &[String]) -> i32 {
+    let (positional, flags) = parse_args(rest).await;
     let Some(path) = positional.first() else {
         eprintln!("usage: protocol verify <file> [--level=trusted|standard|full]");
         return 2;
     };
-    let level = match parse_level(&flags) {
+    let level = match parse_level(&flags).await {
         Ok(level) => level,
         Err(error) => {
             eprintln!("protocol: {error}");
@@ -306,7 +323,7 @@ fn cmd_verify(rest: &[String]) -> i32 {
         }
     };
     let options = crate::os_spr::DecodeOptions { verification: level, limits: crate::os_spr::ProtocolLimits::default() };
-    match crate::os_spr::HistoryReader::open(&bytes, &options).and_then(|reader| reader.log()) {
+    match open_and_log(&bytes, &options).await {
         Ok(log) => {
             println!("OK");
             println!("  doc_id: {}", log.doc_id);
@@ -326,8 +343,8 @@ fn cmd_verify(rest: &[String]) -> i32 {
 //#region 🔖️Hash
 /// #⃣ `protocol hash <file>` — prints `(commit_seq, chain_hash)`, the file's current commit
 /// identity, via `crate::os_spr::content_frontier`.
-fn cmd_hash(rest: &[String]) -> i32 {
-    let (positional, _flags) = parse_args(rest);
+async fn cmd_hash(rest: &[String]) -> i32 {
+    let (positional, _flags) = parse_args(rest).await;
     let Some(path) = positional.first() else {
         eprintln!("usage: protocol hash <file>");
         return 2;
@@ -339,7 +356,7 @@ fn cmd_hash(rest: &[String]) -> i32 {
             return 1;
         }
     };
-    match crate::os_spr::content_frontier(&bytes) {
+    match crate::os_spr::content_frontier(&bytes).await {
         Ok(frontier) => {
             println!("{} {}", frontier.last_commit_seq, hex32(&frontier.chain_hash));
             0
@@ -357,8 +374,8 @@ fn cmd_hash(rest: &[String]) -> i32 {
 /// text dump: one line per edit (ordinal, id, actor column, op count, description), annotated with
 /// `[checkpoint ...]` lane markers where a checkpoint's reachable edits top out, and `(amends
 /// <id>)` when an edit shares a `coalesce_key` with an earlier one in the printed range.
-fn cmd_log(rest: &[String]) -> i32 {
-    let (positional, flags, reverse) = parse_log_args(rest);
+async fn cmd_log(rest: &[String]) -> i32 {
+    let (positional, flags, reverse) = parse_log_args(rest).await;
     let Some(path) = positional.first() else {
         eprintln!("usage: protocol log <file> [--limit N] [--actor ID] [--alternative ID] [--reverse]");
         return 2;
@@ -384,7 +401,7 @@ fn cmd_log(rest: &[String]) -> i32 {
         }
     };
     let options = crate::os_spr::DecodeOptions::default();
-    let log = match crate::os_spr::HistoryReader::open(&bytes, &options).and_then(|reader| reader.log()) {
+    let log = match open_and_log(&bytes, &options).await {
         Ok(log) => log,
         Err(error) => {
             eprintln!("protocol: {error}");
@@ -464,8 +481,8 @@ fn cmd_log(rest: &[String]) -> i32 {
 //#region 🔖️Compile
 /// 🔨️ `protocol compile <doc.ops> [--out doc.spr]` — ops text -> `.spr` binary via
 /// `crate::os_spr::compile_ops`. Writes to `--out` when given, else emits the raw bytes to stdout.
-fn cmd_compile(rest: &[String]) -> i32 {
-    let (positional, flags) = parse_args(rest);
+async fn cmd_compile(rest: &[String]) -> i32 {
+    let (positional, flags) = parse_args(rest).await;
     let Some(path) = positional.first() else {
         eprintln!("usage: protocol compile <doc.ops> [--out doc.spr]");
         return 2;
@@ -477,7 +494,7 @@ fn cmd_compile(rest: &[String]) -> i32 {
             return 1;
         }
     };
-    let bytes = match crate::os_spr::compile_ops(&text, &crate::os_spr::EncodeOptions::default()) {
+    let bytes = match crate::os_spr::compile_ops(&text, &crate::os_spr::EncodeOptions::default()).await {
         Ok(bytes) => bytes,
         Err(error) => {
             eprintln!("protocol: compile failed: {error}");
@@ -509,8 +526,8 @@ fn cmd_compile(rest: &[String]) -> i32 {
 //#region 🔖️Decompile
 /// 🔧️ `protocol decompile <doc.spr> [--out doc.ops]` — `.spr` binary -> ops text via
 /// `crate::os_spr::decompile_ops`. Writes to `--out` when given, else prints the text to stdout.
-fn cmd_decompile(rest: &[String]) -> i32 {
-    let (positional, flags) = parse_args(rest);
+async fn cmd_decompile(rest: &[String]) -> i32 {
+    let (positional, flags) = parse_args(rest).await;
     let Some(path) = positional.first() else {
         eprintln!("usage: protocol decompile <doc.spr> [--out doc.ops]");
         return 2;
@@ -522,7 +539,7 @@ fn cmd_decompile(rest: &[String]) -> i32 {
             return 1;
         }
     };
-    let text = match crate::os_spr::decompile_ops(&bytes, &crate::os_spr::DecodeOptions::default()) {
+    let text = match crate::os_spr::decompile_ops(&bytes, &crate::os_spr::DecodeOptions::default()).await {
         Ok(text) => text,
         Err(error) => {
             eprintln!("protocol: decompile failed: {error}");
@@ -553,8 +570,8 @@ fn cmd_decompile(rest: &[String]) -> i32 {
 /// `only-in-a`/`only-in-b` by `(ordinal, id)` and content-mismatch lines (see `fingerprint`'s doc
 /// comment for why these are labelled `fp=`, not `hash=`) for edits present on both sides past the
 /// prefix. Exit `0` when identical, `1` when they differ, `2` on a usage/read/decode error.
-fn cmd_diff(rest: &[String]) -> i32 {
-    let (positional, _flags) = parse_args(rest);
+async fn cmd_diff(rest: &[String]) -> i32 {
+    let (positional, _flags) = parse_args(rest).await;
     if positional.len() < 2 {
         eprintln!("usage: protocol diff <a.spr> <b.spr>");
         return 2;
@@ -576,14 +593,14 @@ fn cmd_diff(rest: &[String]) -> i32 {
         }
     };
     let options = crate::os_spr::DecodeOptions::default();
-    let log_a = match crate::os_spr::HistoryReader::open(&bytes_a, &options).and_then(|reader| reader.log()) {
+    let log_a = match open_and_log(&bytes_a, &options).await {
         Ok(log) => log,
         Err(error) => {
             eprintln!("protocol: decode '{path_a}' failed: {error}");
             return 1;
         }
     };
-    let log_b = match crate::os_spr::HistoryReader::open(&bytes_b, &options).and_then(|reader| reader.log()) {
+    let log_b = match open_and_log(&bytes_b, &options).await {
         Ok(log) => log,
         Err(error) => {
             eprintln!("protocol: decode '{path_b}' failed: {error}");
@@ -635,8 +652,8 @@ fn cmd_diff(rest: &[String]) -> i32 {
 /// rewrite). `--out`, when given, first copies `<file>` to `FIXED` and compacts the copy, leaving
 /// the original untouched; without it, `<file>` is compacted in place (matching `compact`'s own
 /// in-place-only signature).
-fn cmd_compact(rest: &[String]) -> i32 {
-    let (positional, flags) = parse_args(rest);
+async fn cmd_compact(rest: &[String]) -> i32 {
+    let (positional, flags) = parse_args(rest).await;
     let Some(path) = positional.first() else {
         eprintln!("usage: protocol compact <file> [--out FIXED]");
         return 2;
@@ -652,7 +669,7 @@ fn cmd_compact(rest: &[String]) -> i32 {
         None => PathBuf::from(path),
     };
     let options = crate::os_spr::CompactOptions { drop_ephemeral: true, keep_snapshots: crate::os_spr::KeepSnapshots::All };
-    match crate::os_spr::compact(&target, &options, &crate::os_spr::ProtocolLimits::default()) {
+    match crate::os_spr::compact(&target, &options, &crate::os_spr::ProtocolLimits::default()).await {
         Ok(()) => {
             println!("compacted {}", target.display());
             0
@@ -674,14 +691,14 @@ fn cmd_compact(rest: &[String]) -> i32 {
 /// needs `crate::os_spr::history::IndexBuilder`/`IndexReader`, which are not part of the facade's
 /// re-export surface (this crate's sole dependency) — same rationale as `upgrade`'s "hook exists,
 /// v1 passthrough" note in the contract.
-fn cmd_repair(rest: &[String]) -> i32 {
-    let (positional, truncate_torn_tail, rebuild_indexes) = parse_repair_args(rest);
+async fn cmd_repair(rest: &[String]) -> i32 {
+    let (positional, truncate_torn_tail, rebuild_indexes) = parse_repair_args(rest).await;
     let Some(path) = positional.first() else {
         eprintln!("usage: protocol repair <file> [--truncate-torn-tail] [--rebuild-indexes]");
         return 2;
     };
     let limits = crate::os_spr::ProtocolLimits::default();
-    let report = match crate::os_spr::recover_file(Path::new(path), &limits, crate::os_spr::RecoveryMode::LastCommit) {
+    let report = match crate::os_spr::recover_file(Path::new(path), &limits, crate::os_spr::RecoveryMode::LastCommit).await {
         Ok(report) => report,
         Err(error) => {
             eprintln!("protocol: recovery failed: {error}");
@@ -718,8 +735,8 @@ fn cmd_repair(rest: &[String]) -> i32 {
 /// ⬆️ `protocol upgrade <file>` — v1 `RecordUpcaster`-driven rewrite hook: no upcaster exists yet
 /// in this family, so `upgrade` validates the file decodes cleanly (Full verification) and passes
 /// it through unmodified, exactly as the contract's "no-op passthrough, hook exists" note specifies.
-fn cmd_upgrade(rest: &[String]) -> i32 {
-    let (positional, _flags) = parse_args(rest);
+async fn cmd_upgrade(rest: &[String]) -> i32 {
+    let (positional, _flags) = parse_args(rest).await;
     let Some(path) = positional.first() else {
         eprintln!("usage: protocol upgrade <file>");
         return 2;
@@ -732,7 +749,7 @@ fn cmd_upgrade(rest: &[String]) -> i32 {
         }
     };
     let options = crate::os_spr::DecodeOptions { verification: crate::os_spr::VerificationLevel::Full, limits: crate::os_spr::ProtocolLimits::default() };
-    match crate::os_spr::HistoryReader::open(&bytes, &options).and_then(|reader| reader.log()) {
+    match open_and_log(&bytes, &options).await {
         Ok(_) => {
             println!("no upgrade needed (v1 passthrough; RecordUpcaster hook not yet wired to any schema)");
             0
@@ -746,7 +763,7 @@ fn cmd_upgrade(rest: &[String]) -> i32 {
 //#endregion 🔖️Upgrade
 
 //#region 🔖️Cli
-fn print_help() {
+async fn print_help() {
     println!("protocol — inspect/verify/hash/log/compile/decompile/diff/compact/repair/upgrade .spr binary op-log files\n");
     println!("USAGE:");
     println!("  protocol inspect <file>");
@@ -765,22 +782,22 @@ fn print_help() {
 /// around this. Never panics on malformed input; every subcommand handler maps errors to a
 /// printed message and a non-zero exit code instead. Exit codes: `0` success, `1` runtime/decode
 /// failure, `2` usage error.
-pub fn main_impl(args: &[String]) -> i32 {
+pub async fn main_impl(args: &[String]) -> i32 {
     let Some((command, rest)) = args.split_first() else {
         print_help();
         return 2;
     };
     match command.as_str() {
-        "inspect" => cmd_inspect(rest),
-        "verify" => cmd_verify(rest),
-        "hash" => cmd_hash(rest),
-        "log" => cmd_log(rest),
-        "compile" => cmd_compile(rest),
-        "decompile" => cmd_decompile(rest),
-        "diff" => cmd_diff(rest),
-        "compact" => cmd_compact(rest),
-        "repair" => cmd_repair(rest),
-        "upgrade" => cmd_upgrade(rest),
+        "inspect" => cmd_inspect(rest).await,
+        "verify" => cmd_verify(rest).await,
+        "hash" => cmd_hash(rest).await,
+        "log" => cmd_log(rest).await,
+        "compile" => cmd_compile(rest).await,
+        "decompile" => cmd_decompile(rest).await,
+        "diff" => cmd_diff(rest).await,
+        "compact" => cmd_compact(rest).await,
+        "repair" => cmd_repair(rest).await,
+        "upgrade" => cmd_upgrade(rest).await,
         "help" | "--help" | "-h" => {
             print_help();
             0
@@ -803,12 +820,12 @@ mod tests {
     //#region 🔖️Fixtures
     static TEMP_COUNTER: AtomicU64 = AtomicU64::new(0);
 
-    fn temp_path(name: &str) -> PathBuf {
+    async fn temp_path(name: &str) -> PathBuf {
         let counter = TEMP_COUNTER.fetch_add(1, Ordering::Relaxed);
         std::env::temp_dir().join(format!("protocol_cli_test_{}_{counter}_{name}", std::process::id()))
     }
 
-    fn sample_edit(id: &str, actor: Option<&str>, description: Option<&str>, coalesce_key: Option<&str>) -> crate::os_spr::HistoryEdit {
+    async fn sample_edit(id: &str, actor: Option<&str>, description: Option<&str>, coalesce_key: Option<&str>) -> crate::os_spr::HistoryEdit {
         crate::os_spr::HistoryEdit {
             id: id.to_string(),
             actor: actor.map(str::to_string),
@@ -825,7 +842,7 @@ mod tests {
     /// 🧪️ Builds a small `.spr` file on disk with `edit_count` edits (ids `"e00".."eNN"`, one per
     /// commit generation), an optional checkpoint landing on the last edit, and an alternative
     /// pointing at that checkpoint. Returns the file path and the raw bytes written.
-    fn build_history_file(name: &str, edit_count: usize, with_checkpoint_and_alternative: bool) -> (PathBuf, Vec<u8>) {
+    async fn build_history_file(name: &str, edit_count: usize, with_checkpoint_and_alternative: bool) -> (PathBuf, Vec<u8>) {
         let mut appender = crate::os_spr::HistoryAppender::begin(Vec::new(), "doc-1", "schema-1", &crate::os_spr::WriteOptions::default()).unwrap();
         let mut edit_ids = Vec::new();
         for i in 0..edit_count {
@@ -851,7 +868,7 @@ mod tests {
     /// 🧪️ Round-trips a small `HistoryLog` through `HistoryAppender` -> `decompile_ops` to obtain
     /// ground-truth `.ops` text without hand-writing the grammar (see the module's design note on
     /// why `parse_ops_text`/`print_ops_text` are not directly reachable from this crate).
-    fn sample_ops_text() -> String {
+    async fn sample_ops_text() -> String {
         let mut appender = crate::os_spr::HistoryAppender::begin(Vec::new(), "doc-1", "schema-1", &crate::os_spr::WriteOptions::default()).unwrap();
         appender.append_edit(&sample_edit("e00", Some("actor-a"), Some("first edit"), None)).unwrap();
         appender.commit().unwrap();
@@ -861,8 +878,8 @@ mod tests {
     //#endregion 🔖️Fixtures
 
     //#region 🔖️Args
-    #[test]
-    fn parse_args_splits_flags_and_positionals() {
+    #[semio_framework_async_macros::async_test]
+    async fn parse_args_splits_flags_and_positionals() {
         let args = vec![String::from("a.spr"), String::from("--level=full"), String::from("--actor"), String::from("actor-1"), String::from("b.spr")];
         let (positional, flags) = parse_args(&args);
         assert_eq!(positional, vec!["a.spr".to_string(), "b.spr".to_string()]);
@@ -870,8 +887,8 @@ mod tests {
         assert_eq!(flags.get("actor"), Some(&"actor-1".to_string()));
     }
 
-    #[test]
-    fn parse_log_args_extracts_reverse_without_disturbing_value_flags() {
+    #[semio_framework_async_macros::async_test]
+    async fn parse_log_args_extracts_reverse_without_disturbing_value_flags() {
         let args = vec![String::from("file.spr"), String::from("--reverse"), String::from("--limit"), String::from("3")];
         let (positional, flags, reverse) = parse_log_args(&args);
         assert_eq!(positional, vec!["file.spr".to_string()]);
@@ -879,8 +896,8 @@ mod tests {
         assert_eq!(flags.get("limit"), Some(&"3".to_string()));
     }
 
-    #[test]
-    fn parse_repair_args_extracts_both_boolean_flags() {
+    #[semio_framework_async_macros::async_test]
+    async fn parse_repair_args_extracts_both_boolean_flags() {
         let args = vec![String::from("file.spr"), String::from("--truncate-torn-tail"), String::from("--rebuild-indexes")];
         let (positional, truncate, rebuild) = parse_repair_args(&args);
         assert_eq!(positional, vec!["file.spr".to_string()]);
@@ -888,8 +905,8 @@ mod tests {
         assert!(rebuild);
     }
 
-    #[test]
-    fn parse_level_accepts_known_values_and_rejects_unknown() {
+    #[semio_framework_async_macros::async_test]
+    async fn parse_level_accepts_known_values_and_rejects_unknown() {
         let mut flags = HashMap::new();
         assert!(matches!(parse_level(&flags), Ok(crate::os_spr::VerificationLevel::Standard)));
         flags.insert("level".to_string(), "full".to_string());
@@ -900,8 +917,8 @@ mod tests {
     //#endregion 🔖️Args
 
     //#region 🔖️Frame
-    #[test]
-    fn kind_name_covers_every_frozen_kind_byte() {
+    #[semio_framework_async_macros::async_test]
+    async fn kind_name_covers_every_frozen_kind_byte() {
         for (kind, name) in [
             (REC_END, "end"),
             (REC_DOC, "doc"),
@@ -929,12 +946,19 @@ mod tests {
         assert_eq!(kind_name(0x50), "extension");
     }
 
-    #[test]
-    fn parse_commit_fields_matches_a_real_commit_frame() {
-        let (_path, bytes) = build_history_file("commit_fields", 1, false);
-        let mut cursor = crate::os_spr::FrameCursor::new(&bytes, HEADER_SIZE);
-        let commit_frame = std::iter::from_fn(|| cursor.next_frame().transpose()).map(Result::unwrap).find(|frame| frame.kind == REC_COMMIT).unwrap();
-        let fields = parse_commit_fields(commit_frame.payload()).unwrap();
+    #[semio_framework_async_macros::async_test]
+    async fn parse_commit_fields_matches_a_real_commit_frame() {
+        let (_path, bytes) = build_history_file("commit_fields", 1, false).await;
+        let mut cursor = crate::os_spr::FrameCursor::new(&bytes, HEADER_SIZE).await;
+        // 🚫️async: R10 shape 1 — `next_frame` is async but `Iterator::from_fn`'s closure is sync;
+        // rewritten as a plain loop so it can be awaited.
+        let commit_frame = loop {
+            let frame = cursor.next_frame().await.unwrap().unwrap();
+            if frame.kind == REC_COMMIT {
+                break frame;
+            }
+        };
+        let fields = parse_commit_fields(commit_frame.payload().await).await.unwrap();
         assert_eq!(fields.commit_seq, 1);
         assert_eq!(fields.prev_commit_offset, 0);
         // 🎯️ `HistoryAppender::begin` writes a `REC_STR_DICT` delta (doc_id + schema interned)
@@ -944,31 +968,31 @@ mod tests {
         assert_eq!(fields.record_count, 4);
     }
 
-    #[test]
-    fn parse_commit_fields_rejects_wrong_length_payload() {
-        assert!(parse_commit_fields(&[0u8; 10]).is_none());
+    #[semio_framework_async_macros::async_test]
+    async fn parse_commit_fields_rejects_wrong_length_payload() {
+        assert!(parse_commit_fields(&[0u8; 10]).await.is_none());
     }
     //#endregion 🔖️Frame
 
     //#region 🔖️Inspect
-    #[test]
-    fn cli_inspect_reports_header_kinds_and_commit_chain() {
-        let (path, _bytes) = build_history_file("inspect", 3, true);
+    #[semio_framework_async_macros::async_test]
+    async fn cli_inspect_reports_header_kinds_and_commit_chain() {
+        let (path, _bytes) = build_history_file("inspect", 3, true).await;
         assert_eq!(main_impl(&[String::from("inspect"), path.to_string_lossy().to_string()]), 0);
         std::fs::remove_file(&path).ok();
     }
 
-    #[test]
-    fn cli_inspect_reports_error_on_missing_file() {
+    #[semio_framework_async_macros::async_test]
+    async fn cli_inspect_reports_error_on_missing_file() {
         let missing = temp_path("missing.spr").to_string_lossy().to_string();
         assert_eq!(main_impl(&[String::from("inspect"), missing]), 1);
     }
     //#endregion 🔖️Inspect
 
     //#region 🔖️Verify
-    #[test]
-    fn cli_verify_ok_at_every_level_on_a_clean_file() {
-        let (path, _bytes) = build_history_file("verify_ok", 4, false);
+    #[semio_framework_async_macros::async_test]
+    async fn cli_verify_ok_at_every_level_on_a_clean_file() {
+        let (path, _bytes) = build_history_file("verify_ok", 4, false).await;
         let path_str = path.to_string_lossy().to_string();
         for level in ["trusted", "standard", "full"] {
             assert_eq!(main_impl(&[String::from("verify"), path_str.clone(), format!("--level={level}")]), 0, "level {level}");
@@ -976,8 +1000,8 @@ mod tests {
         std::fs::remove_file(&path).ok();
     }
 
-    #[test]
-    fn cli_verify_rejects_file_with_corrupted_header() {
+    #[semio_framework_async_macros::async_test]
+    async fn cli_verify_rejects_file_with_corrupted_header() {
         // 🎯️ Design note: this family's read path (`HistoryReader::open` -> `crate::os_spr::format::
         // recover`) is deliberately self-healing for interior corruption — any tampered frame's
         // own CRC-32C fails during `recover`'s forward scan, which simply EXCLUDES it (and
@@ -986,7 +1010,7 @@ mod tests {
         // intended torn-tail tolerance, not a gap in this CLI). The one corruption class that IS
         // guaranteed unrecoverable at every `VerificationLevel` is a corrupted 32-byte header
         // (bad magic), since there is no earlier trusted state to fall back to at all.
-        let (path, mut bytes) = build_history_file("verify_bad_header", 2, false);
+        let (path, mut bytes) = build_history_file("verify_bad_header", 2, false).await;
         bytes[0] ^= 0xFF;
         std::fs::write(&path, &bytes).unwrap();
         let path_str = path.to_string_lossy().to_string();
@@ -996,9 +1020,9 @@ mod tests {
         std::fs::remove_file(&path).ok();
     }
 
-    #[test]
-    fn cli_verify_rejects_unknown_level() {
-        let (path, _bytes) = build_history_file("verify_bad_level", 1, false);
+    #[semio_framework_async_macros::async_test]
+    async fn cli_verify_rejects_unknown_level() {
+        let (path, _bytes) = build_history_file("verify_bad_level", 1, false).await;
         let path_str = path.to_string_lossy().to_string();
         assert_eq!(main_impl(&[String::from("verify"), path_str, String::from("--level=bogus")]), 2);
         std::fs::remove_file(&path).ok();
@@ -1006,18 +1030,18 @@ mod tests {
     //#endregion 🔖️Verify
 
     //#region 🔖️Hash
-    #[test]
-    fn cli_hash_prints_commit_seq_and_chain_hash() {
-        let (path, _bytes) = build_history_file("hash", 2, false);
+    #[semio_framework_async_macros::async_test]
+    async fn cli_hash_prints_commit_seq_and_chain_hash() {
+        let (path, _bytes) = build_history_file("hash", 2, false).await;
         assert_eq!(main_impl(&[String::from("hash"), path.to_string_lossy().to_string()]), 0);
         std::fs::remove_file(&path).ok();
     }
     //#endregion 🔖️Hash
 
     //#region 🔖️Log
-    #[test]
-    fn cli_log_filters_by_actor_and_alternative_and_respects_limit_reverse() {
-        let (path, _bytes) = build_history_file("log", 4, true);
+    #[semio_framework_async_macros::async_test]
+    async fn cli_log_filters_by_actor_and_alternative_and_respects_limit_reverse() {
+        let (path, _bytes) = build_history_file("log", 4, true).await;
         let path_str = path.to_string_lossy().to_string();
         assert_eq!(main_impl(&[String::from("log"), path_str.clone()]), 0);
         assert_eq!(main_impl(&[String::from("log"), path_str.clone(), String::from("--actor"), String::from("actor-a")]), 0);
@@ -1030,8 +1054,8 @@ mod tests {
     //#endregion 🔖️Log
 
     //#region 🔖️Compile
-    #[test]
-    fn cli_compile_and_decompile_round_trip_via_files() {
+    #[semio_framework_async_macros::async_test]
+    async fn cli_compile_and_decompile_round_trip_via_files() {
         let ops_text = sample_ops_text();
         let ops_path = temp_path("roundtrip.ops");
         std::fs::write(&ops_path, &ops_text).unwrap();
@@ -1054,8 +1078,8 @@ mod tests {
         std::fs::remove_file(&decompiled_path).ok();
     }
 
-    #[test]
-    fn cli_compile_rejects_malformed_ops_text() {
+    #[semio_framework_async_macros::async_test]
+    async fn cli_compile_rejects_malformed_ops_text() {
         let ops_path = temp_path("bad.ops");
         std::fs::write(&ops_path, "not a valid ops line\n").unwrap();
         assert_eq!(main_impl(&[String::from("compile"), ops_path.to_string_lossy().to_string()]), 1);
@@ -1064,12 +1088,12 @@ mod tests {
     //#endregion 🔖️Compile
 
     //#region 🔖️Diff
-    #[test]
-    fn cli_diff_reports_identical_and_divergent_files() {
+    #[semio_framework_async_macros::async_test]
+    async fn cli_diff_reports_identical_and_divergent_files() {
         // `diff_b` has fewer edits than `diff_a` — a genuine divergence (only-in-a for the tail),
         // not just a differently-named copy of the same content.
-        let (path_a, _) = build_history_file("diff_a", 3, false);
-        let (path_b, _) = build_history_file("diff_b", 2, false);
+        let (path_a, _) = build_history_file("diff_a", 3, false).await;
+        let (path_b, _) = build_history_file("diff_b", 2, false).await;
         let path_a_str = path_a.to_string_lossy().to_string();
         let path_b_str = path_b.to_string_lossy().to_string();
         assert_eq!(main_impl(&[String::from("diff"), path_a_str.clone(), path_a_str.clone()]), 0);
@@ -1078,8 +1102,8 @@ mod tests {
         std::fs::remove_file(&path_b).ok();
     }
 
-    #[test]
-    fn cli_diff_reports_only_in_a_when_b_is_a_shorter_prefix() {
+    #[semio_framework_async_macros::async_test]
+    async fn cli_diff_reports_only_in_a_when_b_is_a_shorter_prefix() {
         let mut appender_a = crate::os_spr::HistoryAppender::begin(Vec::new(), "doc-1", "schema-1", &crate::os_spr::WriteOptions::default()).unwrap();
         appender_a.append_edit(&sample_edit("e00", Some("actor-a"), None, None)).unwrap();
         appender_a.append_edit(&sample_edit("e01", Some("actor-a"), None, None)).unwrap();
@@ -1104,9 +1128,9 @@ mod tests {
     //#endregion 🔖️Diff
 
     //#region 🔖️Compact
-    #[test]
-    fn cli_compact_in_place_and_via_out_both_leave_a_verifiable_file() {
-        let (path, _bytes) = build_history_file("compact", 3, false);
+    #[semio_framework_async_macros::async_test]
+    async fn cli_compact_in_place_and_via_out_both_leave_a_verifiable_file() {
+        let (path, _bytes) = build_history_file("compact", 3, false).await;
         let path_str = path.to_string_lossy().to_string();
         assert_eq!(main_impl(&[String::from("compact"), path_str.clone()]), 0);
         assert_eq!(main_impl(&[String::from("verify"), path_str.clone()]), 0);
@@ -1123,9 +1147,9 @@ mod tests {
     //#endregion 🔖️Compact
 
     //#region 🔖️Repair
-    #[test]
-    fn cli_repair_reports_clean_file_and_truncates_a_torn_tail() {
-        let (path, bytes) = build_history_file("repair", 2, false);
+    #[semio_framework_async_macros::async_test]
+    async fn cli_repair_reports_clean_file_and_truncates_a_torn_tail() {
+        let (path, bytes) = build_history_file("repair", 2, false).await;
         let path_str = path.to_string_lossy().to_string();
         assert_eq!(main_impl(&[String::from("repair"), path_str.clone()]), 0);
 
@@ -1141,24 +1165,24 @@ mod tests {
         std::fs::remove_file(&path).ok();
     }
 
-    #[test]
-    fn cli_repair_reports_error_on_missing_file() {
+    #[semio_framework_async_macros::async_test]
+    async fn cli_repair_reports_error_on_missing_file() {
         let missing = temp_path("missing_repair.spr").to_string_lossy().to_string();
         assert_eq!(main_impl(&[String::from("repair"), missing]), 1);
     }
     //#endregion 🔖️Repair
 
     //#region 🔖️Upgrade
-    #[test]
-    fn cli_upgrade_passes_through_a_valid_file() {
-        let (path, _bytes) = build_history_file("upgrade", 1, false);
+    #[semio_framework_async_macros::async_test]
+    async fn cli_upgrade_passes_through_a_valid_file() {
+        let (path, _bytes) = build_history_file("upgrade", 1, false).await;
         assert_eq!(main_impl(&[String::from("upgrade"), path.to_string_lossy().to_string()]), 0);
         std::fs::remove_file(&path).ok();
     }
 
-    #[test]
-    fn cli_upgrade_fails_on_corrupt_file() {
-        let (path, mut bytes) = build_history_file("upgrade_corrupt", 1, false);
+    #[semio_framework_async_macros::async_test]
+    async fn cli_upgrade_fails_on_corrupt_file() {
+        let (path, mut bytes) = build_history_file("upgrade_corrupt", 1, false).await;
         let mid = bytes.len() / 2;
         bytes[mid] ^= 0xFF;
         std::fs::write(&path, &bytes).unwrap();
@@ -1168,8 +1192,8 @@ mod tests {
     //#endregion 🔖️Upgrade
 
     //#region 🔖️Cli
-    #[test]
-    fn cli_help_and_unknown_subcommand() {
+    #[semio_framework_async_macros::async_test]
+    async fn cli_help_and_unknown_subcommand() {
         assert_eq!(main_impl(&[]), 2);
         assert_eq!(main_impl(&[String::from("help")]), 0);
         assert_eq!(main_impl(&[String::from("--help")]), 0);

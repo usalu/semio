@@ -42,7 +42,7 @@ mod tests {
         })
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_binary_round_trips_and_agrees_with_text() {
         let operation = sample_move_widgets_operation();
         store::os_store::test_support::assert_op_text_binary_equivalence(&operation);
@@ -50,7 +50,7 @@ mod tests {
         assert_eq!(decode_op(&bytes).expect("decode"), operation);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn flow_document_text_round_trips_store_with_applied_operation() {
         let envelope = store::create_document_envelope::<FlowSnapshot, FlowMutation>("flow.fixture", "doc-text-test", FlowSnapshot::default(), None);
         let mut doc_store = store::ArtifactStore::new(envelope).expect("valid artifact store fixture");
@@ -63,7 +63,7 @@ mod tests {
     /// `ArtifactStore::dispatch` path — `replay_mutations` calls `Op::encode_op()` on every applied
     /// mutation before it even reaches history, so a composite whose codec only worked in isolation
     /// would still fail here.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn duplicate_widget_composite_round_trips_through_op_codecs_and_a_real_store_dispatch() {
         let widget = flow::Widget::InputNote { id: "note-1".into(), text: "hello".into() };
         let create = FlowMutation::CreateWidget(crate::artifacts::flow::schema::mutations::create_widget::mutation::CreateWidget { index: 0, widget });

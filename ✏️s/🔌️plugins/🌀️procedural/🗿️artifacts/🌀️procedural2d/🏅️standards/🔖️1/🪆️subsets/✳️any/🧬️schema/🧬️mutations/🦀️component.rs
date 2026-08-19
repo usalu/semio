@@ -183,7 +183,7 @@ mod tests {
         forward
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fixture_ops_ignore_camera() {
         let before = FlowFixture::default();
         let mut after = before.clone();
@@ -192,7 +192,7 @@ mod tests {
         assert!(operations.iter().all(|operation| !matches!(operation, Procedural2dMutation::UpdateCamera(_))));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn delete_and_recreate_widget_round_trips() {
         let base = empty_procedural2d_snapshot();
         let removed_id = widget_id(&base.fixture.widgets[0]).to_string();
@@ -200,7 +200,7 @@ mod tests {
         assert!(!after.fixture.widgets.iter().any(|w| widget_id(w) == removed_id));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fixture_ops_capture_widget_creation() {
         let before = FlowFixture::default();
         let mut after = before.clone();
@@ -209,7 +209,7 @@ mod tests {
         assert!(operations.iter().any(|operation| matches!(operation, Procedural2dMutation::CreateWidget(payload) if widget_id(&payload.widget) == "note-1")));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fixture_ops_capture_widget_replacement() {
         let mut before = FlowFixture::default();
         before.widgets.clear();
@@ -220,7 +220,7 @@ mod tests {
         assert!(operations.iter().any(|operation| matches!(operation, Procedural2dMutation::ReplaceWidget(payload) if widget_id(&payload.widget) == "note-1")));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn generation_lifecycle_round_trips() {
         let before = empty_procedural2d_snapshot();
         let generation = FormGeneration { id: "generation-1".into(), name: "Generation 1".into(), values: serde_json::Map::new() };
@@ -229,14 +229,14 @@ mod tests {
     }
 
     //#region 🔖️MutationInverseLawTests
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_widget_inverse_law() {
         let base = empty_procedural2d_snapshot();
         let mutation = create_widget(0, Widget::InputNote { id: "brand-new".into(), text: String::new() });
         assert_mutation_inverse_law(&base, &mutation);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn replace_widget_inverse_law() {
         let base = empty_procedural2d_snapshot();
         let id = widget_id(&base.fixture.widgets[1]).to_string();
@@ -244,14 +244,14 @@ mod tests {
         assert_mutation_inverse_law(&base, &mutation);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn replace_widget_on_unknown_id_is_a_noop_with_no_inverse() {
         let base = empty_procedural2d_snapshot();
         let mutation = replace_widget(Widget::InputNote { id: "does-not-exist".into(), text: String::new() });
         assert!(mutation.inverse(&base).is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn delete_widget_inverse_law() {
         let base = empty_procedural2d_snapshot();
         let id = widget_id(&base.fixture.widgets[1]).to_string();
@@ -259,7 +259,7 @@ mod tests {
         assert_mutation_inverse_law(&base, &mutation);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn delete_widget_on_unknown_id_is_a_noop_with_no_inverse() {
         let base = empty_procedural2d_snapshot();
         let mutation = delete_widget("does-not-exist".into());
@@ -268,7 +268,7 @@ mod tests {
         assert_eq!(after, base);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn connect_synapse_inverse_law() {
         let base = empty_procedural2d_snapshot();
         let synapse = SynapseSpec { id: "brand-new-synapse".into(), from: "slider".into(), to: "add".into(), from_port: "number".into(), to_port: "b".into() };
@@ -276,7 +276,7 @@ mod tests {
         assert_mutation_inverse_law(&base, &mutation);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn replace_synapse_inverse_law() {
         let base = empty_procedural2d_snapshot();
         let id = base.fixture.synapses[0].id.clone();
@@ -284,7 +284,7 @@ mod tests {
         assert_mutation_inverse_law(&base, &mutation);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn disconnect_synapse_inverse_law() {
         let base = empty_procedural2d_snapshot();
         let id = base.fixture.synapses[0].id.clone();
@@ -292,14 +292,14 @@ mod tests {
         assert_mutation_inverse_law(&base, &mutation);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn disconnect_synapse_on_unknown_id_is_a_noop_with_no_inverse() {
         let base = empty_procedural2d_snapshot();
         let mutation = disconnect_synapse("missing".into());
         assert!(mutation.inverse(&base).is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn move_widget_inverse_law_over_prior_layout() {
         let mut base = empty_procedural2d_snapshot();
         let id = widget_id(&base.fixture.widgets[0]).to_string();
@@ -308,7 +308,7 @@ mod tests {
         assert_mutation_inverse_law(&base, &mutation);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn move_widget_creating_a_layout_entry_clears_on_undo() {
         let base = empty_procedural2d_snapshot();
         assert!(base.fixture.layout.is_empty());
@@ -317,7 +317,7 @@ mod tests {
         assert!(after.fixture.layout.contains_key("slider"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn clear_widget_layout_inverse_law() {
         let mut base = empty_procedural2d_snapshot();
         base.fixture.layout.insert("slider".into(), WidgetLayout { x: 4.0, y: 5.0 });
@@ -325,42 +325,42 @@ mod tests {
         assert_mutation_inverse_law(&base, &mutation);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn clear_widget_layout_on_unknown_id_is_a_noop_with_no_inverse() {
         let base = empty_procedural2d_snapshot();
         let mutation = clear_widget_layout("missing".into());
         assert!(mutation.inverse(&base).is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn update_camera_inverse_law() {
         let base = empty_procedural2d_snapshot();
         let mutation = update_camera(CameraJson { x: 42.0, y: -3.0, zoom: 5.0 });
         assert_mutation_inverse_law(&base, &mutation);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn change_schema_inverse_law() {
         let base = empty_procedural2d_snapshot();
         let mutation = change_schema("changed.schema".into());
         assert_mutation_inverse_law(&base, &mutation);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_generation_inverse_law() {
         let base = empty_procedural2d_snapshot();
         let generation = FormGeneration { id: "generation-1".into(), name: "Generation 1".into(), values: serde_json::Map::new() };
         assert_mutation_inverse_law(&base, &create_generation(generation));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn rename_generation_inverse_law() {
         let mut base = empty_procedural2d_snapshot();
         base.generation.generations.push(FormGeneration { id: "generation-1".into(), name: "Generation 1".into(), values: serde_json::Map::new() });
         assert_mutation_inverse_law(&base, &rename_generation("generation-1".into(), "Renamed".into()));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn change_generation_value_diff_absorb_law() {
         let mut base = empty_procedural2d_snapshot();
         base.generation.generations.push(FormGeneration { id: "generation-1".into(), name: "Generation 1".into(), values: serde_json::Map::new() });
@@ -371,7 +371,7 @@ mod tests {
     }
     //#endregion 🔖️MutationInverseLawTests
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dispatch_registers_semantic_descriptors() {
         register_procedural2d_mutation_descriptors();
         for kind in Procedural2dMutation::kinds() {
@@ -381,7 +381,7 @@ mod tests {
     }
 
     //#region 🔖️FixtureOpsTests
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fixture_ops_widget_id_matches_every_widget_kind() {
         let widgets = vec![
             Widget::Neuron { id: "w-neuron".into(), neuron_kind: "math.add".into(), params: Default::default(), input_ports: vec![], output_ports: vec![], preview: true },
@@ -405,7 +405,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn widgets_diff_apply_replaces_by_id_and_removes_by_id() {
         let mut widgets = vec![Widget::InputNote { id: "a".into(), text: "1".into() }, Widget::InputNote { id: "b".into(), text: "2".into() }];
         let diff = crate::artifacts::procedural2d::diff::WidgetsDiff { removed: vec!["b".into()], set: vec![(0, Widget::InputNote { id: "a".into(), text: "replaced".into() })] };
@@ -413,7 +413,7 @@ mod tests {
         assert_eq!(widgets, vec![Widget::InputNote { id: "a".into(), text: "replaced".into() }]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn synapses_diff_apply_replaces_by_id_and_removes_by_id() {
         let mut synapses = vec![SynapseSpec { id: "s1".into(), from: "a".into(), to: "b".into(), from_port: "out".into(), to_port: "in".into() }];
         let diff = crate::artifacts::procedural2d::diff::SynapsesDiff { removed: vec![], set: vec![(0, SynapseSpec { id: "s1".into(), from: "a".into(), to: "c".into(), from_port: "out".into(), to_port: "in".into() })] };

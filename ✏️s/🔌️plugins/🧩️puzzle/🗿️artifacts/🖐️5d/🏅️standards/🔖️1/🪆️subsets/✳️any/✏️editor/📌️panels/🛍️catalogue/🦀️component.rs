@@ -109,7 +109,7 @@ mod tests {
     use super::*;
     use crate::editor::puzzle5d::testkit::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn catalogue_tree_lists_all_four_kind_sections() {
         let mut app = app();
         let rendered = render_body(&mut app, BODY_KEY);

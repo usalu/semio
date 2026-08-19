@@ -22,7 +22,7 @@ pub struct SequenceSnapshot {
 }
 
 impl Default for SequenceSnapshot {
-    async fn default() -> Self {
+    fn default() -> Self {
         default_snapshot()
     }
 }

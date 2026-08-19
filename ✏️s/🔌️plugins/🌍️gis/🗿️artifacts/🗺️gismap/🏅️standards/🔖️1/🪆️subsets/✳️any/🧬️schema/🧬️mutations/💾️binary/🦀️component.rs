@@ -46,7 +46,7 @@ mod tests {
         crate::artifacts::gismap::MapFeature { id: id.into(), data: dsl_of(&json!({ "id": id, "lon": 1.0, "lat": 2.0 })) }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_binary_round_trips_and_agrees_with_text() {
         let operation = GisMapMutation::CreatePosition(create_position::mutation::CreatePosition { index: 0, item: sample_feature("p1") });
         store::os_store::test_support::assert_op_text_binary_equivalence(&operation);
@@ -54,7 +54,7 @@ mod tests {
         assert_eq!(decode_op(&bytes).expect("decode"), operation);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn gis_map_positions_op_lines_round_trip() {
         store::os_store::test_support::assert_op_line_round_trip(&GisMapMutation::CreatePosition(create_position::mutation::CreatePosition { index: 0, item: sample_feature("p1") }));
         store::os_store::test_support::assert_op_line_round_trip(&GisMapMutation::DeletePosition(delete_position::mutation::DeletePosition { id: "p1".into() }));
@@ -65,19 +65,19 @@ mod tests {
         }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn gis_map_routes_op_lines_round_trip() {
         store::os_store::test_support::assert_op_line_round_trip(&GisMapMutation::CreateRoute(create_route::mutation::CreateRoute { index: 0, item: sample_feature("p1") }));
         store::os_store::test_support::assert_op_line_round_trip(&GisMapMutation::ReorderRoutes(reorder_routes::mutation::ReorderRoutes { id: "p1".into(), to_index: 1 }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn gis_map_regions_op_lines_round_trip() {
         store::os_store::test_support::assert_op_line_round_trip(&GisMapMutation::CreateRegion(create_region::mutation::CreateRegion { index: 0, item: sample_feature("p1") }));
         store::os_store::test_support::assert_op_line_round_trip(&GisMapMutation::ReorderRegions(reorder_regions::mutation::ReorderRegions { id: "p1".into(), to_index: 2 }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn gis_map_document_text_round_trips_through_store() {
         let initial = empty_gis_map_snapshot();
         let envelope = store::create_document_envelope(GIS_MAP_SCHEMA, "gis2d-demo", initial, None);
@@ -89,7 +89,7 @@ mod tests {
         store::os_store::test_support::assert_document_pack_round_trip(&store);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn gis_map_default_document_is_non_empty() {
         assert!(!default_document().positions.is_empty());
     }

@@ -47,7 +47,7 @@ pub struct Process3dSnapshot {
 }
 
 impl Default for Process3dSnapshot {
-    async fn default() -> Self {
+    fn default() -> Self {
         crate::artifacts::process3d::empty_process3d_snapshot()
     }
 }

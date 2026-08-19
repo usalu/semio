@@ -235,7 +235,7 @@ pub struct GltfCollectionDiff<T, D> {
 }
 
 impl<T, D> Default for GltfCollectionDiff<T, D> {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { removed: Vec::new(), modified: Vec::new(), added: Vec::new() }
     }
 }
@@ -3822,7 +3822,7 @@ mod tests {
 
     //#region 🔖️AbsorbCanonicalCases
     /// 🧪️ Canonical absorb case 1: `Insert(2,x)` then `Remove(0)` → `{removed:[0], added:[(1,x)]}`.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_law_insert_then_remove_before_shifts_index() {
         let n = node(9);
         let mut d1 = GltfNodesDiff { added: vec![GltfAdded { index: 2, item: n.clone() }], ..Default::default() };
@@ -3834,7 +3834,7 @@ mod tests {
     }
 
     /// 🧪️ Canonical absorb case 2: `Insert(2,f)` then `Insert(2,g)` → BOTH survive.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_law_insert_insert_same_index_both_survive() {
         let f = node(1);
         let g = node(2);
@@ -3846,7 +3846,7 @@ mod tests {
 
     /// 🧪️ Canonical absorb case 3: `Insert(1,f)` then `SetField(1,name)` patches INTO the added
     /// payload -- merged has only `added`, no separate `modified` entry.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_law_insert_then_set_field_patches_into_added() {
         let f = node(1);
         let mut d1 = GltfNodesDiff { added: vec![GltfAdded { index: 1, item: f.clone() }], ..Default::default() };
@@ -3861,7 +3861,7 @@ mod tests {
     /// 🧪️ Canonical absorb case 4 (id-keyed-collection-analog / modify-of-removed): `Remove(0)`
     /// then `Modify(0)` (post-remove index 0 refers to a DIFFERENT surviving base item) must NOT
     /// corrupt the removed item and must attach the d2 patch to the correct transported base index.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_law_remove_then_modify_transports_to_correct_surviving_item() {
         let mut d1 = GltfNodesDiff { removed: vec![0], ..Default::default() };
         // after d1, base[1] is now at position 0 -- d2 modifies position 0 (== base[1]).
@@ -3872,7 +3872,7 @@ mod tests {
         assert_eq!(d1.modified[0].index, 1, "d2's patch at post-remove position 0 must transport to BASE index 1");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_law_holds_over_curated_ops() {
         let base = base_snapshot();
         let mid = {
@@ -3899,7 +3899,7 @@ mod tests {
     //#endregion 🔖️AbsorbCanonicalCases
 
     //#region 🔖️BetweenRoundtripLaw
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn between_roundtrip_law_holds_on_synthetic_fixture() {
         let a = base_snapshot();
         let mut b = a.clone();
@@ -3915,7 +3915,7 @@ mod tests {
     //#endregion 🔖️BetweenRoundtripLaw
 
     //#region 🔖️InverseLaw
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inverse_law_diff_level_round_trips() {
         let base = base_snapshot();
         let next = {
@@ -4014,7 +4014,7 @@ mod tests {
     /// 🧪️ Field sweep — the acceptance criterion: `sweep_a`/`sweep_b` differ in EVERY mutable
     /// field, incl. every tri-state exercising `Some(None)`, with asymmetric collection lengths
     /// split across both `between()` directions (F1's structural trap).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn field_sweep_covers_every_mutable_field() {
         let sweep_a = sweep_a();
         let sweep_b = sweep_b();
@@ -4056,7 +4056,7 @@ mod tests {
         assert!(<GltfDiff as DiffAlgebra<GltfSnapshot>>::between(&sweep_a, &sweep_a).is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn touched_regions_are_stable_precise_for_modification_and_conservative_for_transport() {
         use protocol::DiffRegions as _;
         let modified = GltfDiff {
@@ -4211,7 +4211,7 @@ mod handcrafted_diff_codec_tests {
     /// variants, and at least one tri-state field per STRONG entity diff type
     /// (`Asset`/`Scene`/`Node`/`Mesh`/`Accessor`/`Material`/`Buffer`), which is the representative
     /// slice this law test commits to (documented here, not literally all 42 occurrences).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn diff_codec_text_binary_roundtrip_law() {
         let sweep_a = tests::sweep_a();
         let sweep_b = tests::sweep_b();

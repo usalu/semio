@@ -700,7 +700,7 @@ mod tests {
         (model, tb.build().unwrap(), arcs)
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn solves_a_satisfiable_path() {
         let (model, topo, arcs) = checkerboard_topology(6);
         let config = SearchConfig::default();
@@ -713,7 +713,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn proves_unsat_on_odd_cycle_with_backtrack_mode() {
         let mut b = ModelBuilder::new();
         let black = b.add_pattern(1.0);
@@ -738,7 +738,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn backtracking_solves_graph_coloring_needing_multiple_decisions() {
         let (model, topo, arcs) = k_graph(4, 4);
         for seed in 0..20 {
@@ -751,7 +751,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn unsatisfiable_k5_with_four_colors_proves_unsat() {
         let (model, topo, _arcs) = k_graph(5, 4);
         let config = SearchConfig { mode: SearchMode::Backtrack, ..Default::default() };
@@ -762,7 +762,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn backjump_mode_matches_backtrack_completeness() {
         let (model, topo, _arcs) = k_graph(5, 4);
         let config = SearchConfig { mode: SearchMode::Backjump, ..Default::default() };
@@ -781,7 +781,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fixed_pins_are_respected() {
         let (model, topo, _arcs) = checkerboard_topology(3);
         let config = SearchConfig::default();
@@ -792,7 +792,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn budget_exceeded_reports_partial_state() {
         // A checkerboard path fully solves after a single decision (propagation alone forces
         // every other node), so the budget must bite before any decision is even attempted.
@@ -802,7 +802,7 @@ mod tests {
         assert!(matches!(outcome, SolveOutcome::BudgetExceeded { .. }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn same_seed_is_fully_reproducible() {
         let (model, topo, _arcs) = checkerboard_topology(10);
         let config = SearchConfig::default();
@@ -814,7 +814,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn golden_replay_same_seed_reproduces_the_identical_decision_trace() {
         // Determinism at the level of the final assignment (`same_seed_is_fully_reproducible`)
         // is necessary but not sufficient — this checks the exact decision *sequence* two
@@ -836,7 +836,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn diag_off_records_no_decision_events_but_summary_and_above_do() {
         let (model, topo, _arcs) = checkerboard_topology(5);
         let off_config = SearchConfig { diag_level: DiagLevel::Off, ..Default::default() };
@@ -854,7 +854,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn cancellation_stops_search_and_reports_partial() {
         let (model, topo, _arcs) = k_graph(6, 4);
         let cancel = CancelToken::new();
@@ -864,7 +864,7 @@ mod tests {
         assert!(matches!(outcome, SolveOutcome::Cancelled { .. }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn cancel_token_reflects_state() {
         let cancel = CancelToken::new();
         assert!(!cancel.is_cancelled());
@@ -872,7 +872,7 @@ mod tests {
         assert!(cancel.is_cancelled());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn restart_only_never_proves_unsat_on_unsatisfiable_instance() {
         let (model, topo, _arcs) = k_graph(5, 4);
         let config = SearchConfig { mode: SearchMode::RestartOnly, max_restarts: Some(3), restart_schedule: RestartSchedule::Fixed(5), ..Default::default() };
@@ -880,7 +880,7 @@ mod tests {
         assert!(matches!(outcome, SolveOutcome::Contradiction(_)));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn restart_only_still_solves_satisfiable_instances() {
         let (model, topo, arcs) = k_graph(4, 4);
         let config = SearchConfig { mode: SearchMode::RestartOnly, max_restarts: Some(50), restart_schedule: RestartSchedule::Luby(4), ..Default::default() };
@@ -891,7 +891,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn luby_sequence_matches_known_values() {
         let expected = [1, 1, 2, 1, 1, 2, 4, 1, 1, 2, 1, 1, 2, 4, 8];
         for (i, &e) in expected.iter().enumerate() {
@@ -899,7 +899,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn solve_all_finds_every_solution_and_proves_complete() {
         let (model, topo, arcs) = k_graph(3, 3);
         let config = SearchConfig::default();
@@ -915,7 +915,7 @@ mod tests {
         assert_eq!(assignments.len(), 6, "solve_all must not report the same solution twice");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn solve_all_on_unsat_instance_returns_empty_and_complete() {
         let (model, topo, _arcs) = k_graph(5, 4);
         let config = SearchConfig::default();
@@ -924,7 +924,7 @@ mod tests {
         assert!(solutions.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn solve_all_respects_limit_and_reports_incomplete() {
         let (model, topo, _arcs) = k_graph(4, 4);
         let config = SearchConfig::default();
@@ -933,7 +933,7 @@ mod tests {
         assert!(!complete);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn nogood_learning_still_proves_unsat_on_pigeonhole_instance() {
         use crate::wfc_engine::nogood::NogoodConfig;
         let (model, topo, _arcs) = k_graph(5, 4); // K5 needs 5 colors, only 4 available: unsat
@@ -945,7 +945,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn nogood_learning_survives_restarts_and_still_proves_unsat() {
         use crate::wfc_engine::nogood::NogoodConfig;
         let (model, topo, _arcs) = k_graph(5, 4);
@@ -962,7 +962,7 @@ mod tests {
     mod quick {
         use super::*;
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn random_instances_solved_or_proven_unsat_match_oracle() {
             let mut rng = Rng::from_seed(777);
             for trial in 0..100 {
@@ -995,7 +995,7 @@ mod tests {
             }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn random_instances_with_nogoods_enabled_still_match_oracle() {
             use crate::wfc_engine::nogood::NogoodConfig;
             // Same sweep as `random_instances_solved_or_proven_unsat_match_oracle`, but with
@@ -1034,7 +1034,7 @@ mod tests {
             }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn solve_all_matches_oracle_solution_set_on_random_instances() {
             let mut rng = Rng::from_seed(2026);
             for trial in 0..40 {

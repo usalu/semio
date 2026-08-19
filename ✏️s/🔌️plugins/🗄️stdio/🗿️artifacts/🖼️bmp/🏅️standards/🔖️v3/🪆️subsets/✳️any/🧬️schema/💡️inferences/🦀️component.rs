@@ -33,7 +33,7 @@ impl protocol::Inference<BmpSnapshot> for BmpInference {
 /// don't derive structurally" trick as `AddInference`'s hand-written `Default` in
 /// `📡️spr/🎮️command/🦀️component.rs`.
 impl Default for BmpInference {
-    async fn default() -> Self {
+    fn default() -> Self {
         <Self as protocol::Inference<BmpSnapshot>>::infer(&BmpSnapshot::default())
     }
 }
@@ -83,13 +83,13 @@ mod tests {
     use super::*;
     use protocol::Inference;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = BmpSnapshot::default();
         assert_eq!(BmpInference::infer(&snapshot), BmpInference::infer(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(BmpInference::infer(&BmpSnapshot::default()), BmpInference::default());
     }

@@ -557,7 +557,7 @@ mod tests {
 
     //#region 🔖️PreRewriteParity
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn step_job_on_an_unknown_id_fails_without_panicking() {
         match step_job(999, JobBudget::default()) {
             JobStep::Failed(_) => {}
@@ -565,7 +565,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn cancel_job_removes_a_pending_record_so_a_later_step_fails() {
         start_job(1, JOB_KIND_IO_RUN, b"{}");
         cancel_job(1);
@@ -575,7 +575,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn step_job_on_an_unknown_kind_fails_with_a_named_fault() {
         start_job(2, "semio.not-a-real-kind", b"{}");
         match step_job(2, JobBudget::default()) {
@@ -591,7 +591,7 @@ mod tests {
     /// fault) and preserve their pre-rewrite decode-failure fault codes exactly — the old file had
     /// no fixture for a REAL io-run hop either (that coverage lives in `🖥️host`'s mock-backed
     /// integration tests), so this is the same scope the pre-rewrite suite actually had.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn io_run_dispatches_through_the_registry_and_keeps_its_decode_fault_code() {
         start_job(3, JOB_KIND_IO_RUN, b"not json");
         match step_job(3, JobBudget::default()) {
@@ -603,7 +603,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn io_sniff_dispatches_through_the_registry_and_keeps_its_decode_fault_code() {
         start_job(4, JOB_KIND_IO_SNIFF, b"not json");
         match step_job(4, JobBudget::default()) {
@@ -635,7 +635,7 @@ mod tests {
         })
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn a_three_slice_job_returns_running_running_done_with_progress_each_slice() {
         register_job_kind("test.resumable-counter", resumable_counter_job);
         start_job(10, "test.resumable-counter", &[7]);
@@ -654,7 +654,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn the_budget_a_tick_observes_is_whatever_step_job_most_recently_passed() {
         async fn budget_echo_job(ctx: JobCtx, _input: Vec<u8>, _restored: Option<Vec<u8>>) -> Pin<Box<dyn Future<Output = Result<Vec<u8>, semio_framework::Fault>>>> {
             Box::pin(async move {
@@ -679,7 +679,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn cancelling_a_job_mid_slice_frees_its_slot_for_the_id() {
         register_job_kind("test.resumable-counter", resumable_counter_job);
         start_job(12, "test.resumable-counter", b"[]");
@@ -697,7 +697,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn checkpoint_restore_resumes_and_matches_an_uninterrupted_run() {
         register_job_kind("test.resumable-counter", resumable_counter_job);
 
@@ -731,7 +731,7 @@ mod tests {
         assert_eq!(restored_final, baseline, "checkpoint/restore must produce the identical final output");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn the_stall_guard_fires_after_repeated_no_progress_static_budget_slices() {
         async fn never_progresses_job(ctx: JobCtx, _input: Vec<u8>, _restored: Option<Vec<u8>>) -> Pin<Box<dyn Future<Output = Result<Vec<u8>, semio_framework::Fault>>>> {
             Box::pin(async move {

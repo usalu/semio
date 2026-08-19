@@ -57,7 +57,7 @@ mod tests {
     use super::*;
     use crate::artifacts::playbook::empty_playbook_snapshot;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn change_title_op_sets_title() {
         let spec = empty_playbook_snapshot();
         let mutation = change_title_operation(Some("Renamed".into()));
@@ -65,7 +65,7 @@ mod tests {
         assert_eq!(next.title.as_deref(), Some("Renamed"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn apply_playbook_add_step_roundtrip() {
         let spec = empty_playbook_snapshot();
         let next = apply_playbook_mutation(&spec, &add_step_operation(&spec, "step-test".into()))
@@ -98,7 +98,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_text_round_trips_for_every_kind() {
         use protocol::OpText;
         let ops = vec![

@@ -13,7 +13,7 @@ use crate::artifacts::gltf::standards::v2_0::subsets::any::schema::{GltfAccessor
 use semio_framework_plugin::{AnalyzeSource, ArtifactBuilder};
 
 //#region 🔖️(a) RealDecode
-#[test]
+#[semio_framework_async_macros::async_test]
 async fn base_glb_decodes_with_real_non_trivial_invariants() {
     let snap = decoded_snapshot();
     let doc = &snap.document;
@@ -73,7 +73,7 @@ async fn base_glb_decodes_with_real_non_trivial_invariants() {
 //#endregion 🔖️(a) RealDecode
 
 //#region 🔖️(b) DecodeEncodeDecode
-#[test]
+#[semio_framework_async_macros::async_test]
 async fn base_glb_decode_encode_decode_is_semantically_equal() {
     let original = decode_glb(BASE_GLB_BYTES).expect("decode base.glb");
     let reencoded = encode_glb(&original).expect("re-encode");
@@ -104,7 +104,7 @@ async fn base_glb_decode_encode_decode_is_semantically_equal() {
 /// 🧪️ The project's core acceptance test: analyze the real fixture, then reconstruct an
 /// equivalent document using ONLY typed builder calls (no direct snapshot/document
 /// construction), then prove the rebuilt document decodes to the same real data as the original.
-#[test]
+#[semio_framework_async_macros::async_test]
 async fn analyzer_builder_round_trip_reconstructs_equivalent_document() {
     let analysis = GltfAnalyzer::analyze(&[AnalyzeSource::Binary(BASE_GLB_BYTES)]);
     let original = analysis.parts.snapshot.expect("analyzer decodes base.glb");

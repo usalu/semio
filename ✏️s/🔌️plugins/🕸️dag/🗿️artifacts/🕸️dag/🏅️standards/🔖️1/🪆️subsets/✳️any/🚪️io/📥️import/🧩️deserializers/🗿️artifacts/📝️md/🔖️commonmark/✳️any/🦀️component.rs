@@ -22,7 +22,7 @@ pub struct MdIntoDag;
 impl Deserializer<DagSnapshot> for MdIntoDag {
     const FROM: Dialect = MD_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Canonical;
-    async fn deserialize(payload: &IoPayload) -> IoResult<DagSnapshot> {
+    fn deserialize(payload: &IoPayload) -> IoResult<DagSnapshot> {
         let IoPayload::Binary(bytes) = payload else {
             return Err(IoError { message: "MdIntoDag: expected a binary md payload".to_string(), diagnostics: Vec::new() });
         };

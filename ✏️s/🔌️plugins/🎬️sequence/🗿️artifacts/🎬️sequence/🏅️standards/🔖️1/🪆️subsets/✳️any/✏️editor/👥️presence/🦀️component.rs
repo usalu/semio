@@ -21,7 +21,7 @@ pub struct SequencePresence {
 }
 
 impl Default for SequencePresence {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { orientation: "leftRight".into(), camera: SequenceCamera::default() }
     }
 }

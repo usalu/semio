@@ -14,7 +14,7 @@ pub struct SequenceIntoTxt;
 impl Serializer<SequenceSnapshot> for SequenceIntoTxt {
     const INTO: Dialect = TXT_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    async fn serialize(_from: &SequenceSnapshot) -> IoResult<IoPayload> {
+    fn serialize(_from: &SequenceSnapshot) -> IoResult<IoPayload> {
         Err(IoError { message: "txt export not yet implemented".to_string(), diagnostics: Vec::new() })
     }
 }

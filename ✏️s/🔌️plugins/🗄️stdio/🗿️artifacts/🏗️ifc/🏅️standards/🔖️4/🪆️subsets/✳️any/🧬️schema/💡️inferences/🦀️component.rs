@@ -34,7 +34,7 @@ impl protocol::Inference<IfcSnapshot> for IfcInference {
 /// 🌱 Defined in terms of `infer` (not derived) — keeps the law correct regardless of whether
 /// `IfcSnapshot::default()`'s `entities` ever stops being empty.
 impl Default for IfcInference {
-    async fn default() -> Self {
+    fn default() -> Self {
         <Self as protocol::Inference<IfcSnapshot>>::infer(&IfcSnapshot::default())
     }
 }
@@ -86,13 +86,13 @@ mod tests {
     use super::*;
     use protocol::Inference;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = IfcSnapshot::default();
         assert_eq!(IfcInference::infer(&snapshot), IfcInference::infer(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(IfcInference::infer(&IfcSnapshot::default()), IfcInference::default());
     }

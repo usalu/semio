@@ -420,7 +420,7 @@ mod tests {
             .collect()
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fft_ifft_round_trips() {
         let n = 256;
         let original_re = seeded_noise(n, 7);
@@ -435,7 +435,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fft_satisfies_parseval() {
         let n = 256;
         let time_re = seeded_noise(n, 21);
@@ -448,7 +448,7 @@ mod tests {
         assert!((time_energy - freq_energy).abs() < 1e-9);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fft2_ifft2_round_trips() {
         let (w, h) = (8, 4);
         let original = seeded_noise(w * h, 3);
@@ -462,7 +462,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn windows_have_expected_shape() {
         for window in [hann(64), hamming(64), blackman(64)] {
             assert_eq!(window.len(), 64);
@@ -473,7 +473,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn welch_psd_finds_planted_sinusoid() {
         let fs = 100.0;
         let x: Vec<f64> = (0..1000).map(|t| (2.0 * PI * 7.0 * t as f64 / fs).sin()).collect();
@@ -489,7 +489,7 @@ mod tests {
         assert!((peak_freq - 7.0).abs() < 0.5);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn cross_spectrum_phase_encodes_lag() {
         let cycles = 16.0;
         let delay = 3.0;
@@ -507,7 +507,7 @@ mod tests {
         assert!((phase[peak_bin] - expected).abs() < 1e-2);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn xcorr_peaks_at_known_shift() {
         let base = gaussian_smooth_1d(&seeded_noise(200, 99), 2.0);
         let mut shifted = vec![0.0; 200];
@@ -524,7 +524,7 @@ mod tests {
         assert!(c[peak] > 0.95 && c[peak] <= 1.0 + 1e-9);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn subsample_peak_recovers_fractional_lag() {
         let pulse = |center: f64| -> Vec<f64> { (0..128).map(|t| (-((t as f64 - center) * (t as f64 - center)) / (2.0 * 16.0)).exp()).collect() };
         let a = pulse(50.0);
@@ -536,7 +536,7 @@ mod tests {
         assert_eq!(subsample_peak(&[3.0, 2.0, 1.0]), None);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn savitzky_golay_differentiates_cubic() {
         let dt = 0.1;
         let x: Vec<f64> = (0..50).map(|i| (i as f64 * dt).powi(3)).collect();
@@ -547,7 +547,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn savitzky_golay_preserves_low_order_polynomials() {
         let x: Vec<f64> = (0..40).map(|i| 2.0 + 0.5 * i as f64 + 0.03 * (i * i) as f64).collect();
         let smoothed = savitzky_golay(&x, 5, 2, 0, 1.0);
@@ -556,7 +556,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn smoothing_preserves_constant_signals() {
         let x = vec![4.2; 30];
         for out in [gaussian_smooth_1d(&x, 1.5), moving_average(&x, 5), savitzky_golay(&x, 7, 2, 0, 1.0)] {
@@ -566,7 +566,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn find_peaks_ranks_two_bumps_by_prominence() {
         let x: Vec<f64> = (0..100)
             .map(|t| {

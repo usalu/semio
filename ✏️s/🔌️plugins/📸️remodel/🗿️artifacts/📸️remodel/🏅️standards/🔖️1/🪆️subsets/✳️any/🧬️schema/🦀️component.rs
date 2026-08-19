@@ -98,7 +98,7 @@ pub struct RemodelUiCamera {
 }
 
 impl Default for RemodelUiCamera {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { position: [4.0, -4.0, 3.0], target: [0.0, 0.0, 0.0], fov: 45.0 }
     }
 }
@@ -123,7 +123,7 @@ pub struct RemodelUiLayers {
 }
 
 impl Default for RemodelUiLayers {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { mesh: true, dense: true, sparse: true, cameras: true, gcps: true }
     }
 }
@@ -139,7 +139,7 @@ pub struct RemodelUiFrameCursor {
 
 //#region 🔖️Conversions
 impl Default for RemodelArtifact {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self::from_snapshot(RemodelSnapshot::default())
     }
 }
@@ -353,7 +353,7 @@ semio_framework_plugin::derive_artifact_facets!(
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn next_remodel_id_is_monotonic_and_prefixed() {
         let a = next_remodel_id("stream");
         let b = next_remodel_id("stream");
@@ -362,7 +362,7 @@ mod tests {
         assert_ne!(a, b);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn stage_display_covers_every_stage() {
         let cases = [
             (ReconstructionStage::Idle, "Idle"),
@@ -374,7 +374,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn video_codec_from_label_recognizes_common_aliases() {
         assert_eq!(video_codec_from_label("h264"), VideoCodec::Avc);
         assert_eq!(video_codec_from_label("h.265"), VideoCodec::Hevc);

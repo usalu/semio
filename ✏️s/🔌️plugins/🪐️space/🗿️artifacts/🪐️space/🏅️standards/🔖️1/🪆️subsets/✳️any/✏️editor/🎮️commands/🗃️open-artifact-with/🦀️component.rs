@@ -36,7 +36,7 @@ mod tests {
     use crate::editor::space_index::{testkit, SpaceIndexCommand};
     
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn open_artifact_with_relays_the_explicit_choice() {
         let mut app = testkit::new_app();
         app.dispatch_typed(SpaceIndexCommand::CreateArtifact(create_artifact::CreateArtifact { name: "First".into(), kind_id: "draw".into(), now_ms: 1, actor: "user:1".into() }), &semio_framework_plugin::testkit::meta("local")).expect("create artifact");

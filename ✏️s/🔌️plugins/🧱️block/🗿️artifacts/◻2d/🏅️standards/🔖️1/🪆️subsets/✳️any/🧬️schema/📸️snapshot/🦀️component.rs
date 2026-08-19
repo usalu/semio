@@ -108,7 +108,7 @@ impl store::ArtifactPack for Block2dSnapshot {
 //#endregion 🔖️HandcraftedArtifactCodecs
 
 impl Default for Block2dSnapshot {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self {
             schema: BLOCK_2D_SCHEMA.to_string(),
             node_kind: BlockKindIdentity::default(),

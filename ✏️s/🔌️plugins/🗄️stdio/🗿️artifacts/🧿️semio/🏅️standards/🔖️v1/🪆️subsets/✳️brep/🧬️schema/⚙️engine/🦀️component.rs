@@ -298,7 +298,7 @@ pub struct Brep {
 }
 
 impl Default for Brep {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self::new()
     }
 }
@@ -1565,7 +1565,7 @@ impl SolidImporter for GlbSolidImporter {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn native_box_volume() {
         let mut k = Brep::new();
         let solid = block_on(k.box_prim(1.0, 1.0, 1.0)).unwrap();
@@ -1573,7 +1573,7 @@ mod tests {
         assert!((v - 1.0).abs() < 1e-3, "volume {v}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn native_fuse_disjoint() {
         let mut k = Brep::new();
         let a = block_on(k.box_prim(1.0, 1.0, 1.0)).unwrap();
@@ -1583,7 +1583,7 @@ mod tests {
         assert!((v - 2.0).abs() < 1e-2, "volume {v}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn wire_tessellate_preserves_edge_positions() {
         let mut k = Brep::new();
         let wire = block_on(k.rectangle_wire(2.0, 1.5)).expect("wire");
@@ -1593,7 +1593,7 @@ mod tests {
         assert!(data.indices.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn box_shell_produces_positive_volume() {
         let mut k = Brep::new();
         let box_h = block_on(k.box_prim(2.0, 2.0, 2.0)).expect("box");
@@ -1604,7 +1604,7 @@ mod tests {
         assert!(!mesh.position.is_empty() || !mesh.edges.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn sphere_torus_cut_produces_preview_mesh() {
         let mut k2 = Brep::new();
         let sphere = block_on(k2.sphere_prim(2.2)).expect("sphere");
@@ -1618,7 +1618,7 @@ mod tests {
         assert!(mesh.position.len() >= 9 && mesh.index.len() >= 3, "cut mesh empty: pos={} idx={}", mesh.position.len(), mesh.index.len());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn arc_curve_respects_start_end_angles() {
         let mut k = Brep::new();
         let start = 0.0;
@@ -1642,7 +1642,7 @@ mod tests {
         assert!((kappa - 1.0 / radius).abs() < 5e-2, "kappa {kappa}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn solid_face_loops_returns_a_quad_per_box_face() {
         let mut k = Brep::new();
         let solid = k.box_prim_sync(2.0, 3.0, 4.0).expect("box");
@@ -1655,7 +1655,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn validate_returns_structured_json_report() {
         let mut k = Brep::new();
         let solid = k.box_prim_sync(1.0, 1.0, 1.0).expect("box");
@@ -1666,7 +1666,7 @@ mod tests {
         assert!(value["issues"].as_array().unwrap().is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn deconstruct_includes_vertices_edges_and_faces() {
         let mut k = Brep::new();
         let solid = k.box_prim_sync(1.0, 1.0, 1.0).expect("box");

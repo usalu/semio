@@ -159,7 +159,7 @@ mod tests {
     use super::*;
     use crate::editor::sourcing::testkit::{new_app, render as render_body};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn pool_render_respects_query_filter() {
         let document = crate::artifacts::curate::schema::default_document();
         let cfg = SourcingCurateConfig { filters: Filters { query: "glulam".into(), ..Default::default() }, ..Default::default() };
@@ -169,7 +169,7 @@ mod tests {
         assert!(!json.contains("Hollow Core"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn pool_stepper_cell_max_equals_availability() {
         let document = crate::artifacts::curate::schema::default_document();
         let cfg = SourcingCurateConfig::default();
@@ -183,7 +183,7 @@ mod tests {
         assert_eq!(row["curated"]["max"].as_f64().unwrap(), kind.availability as f64);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn filter_bar_module_toggles_encode_pressed_state_as_presence_selected() {
         let filters = Filters { module_ids: vec!["beams".into()], ..Default::default() };
         let modules = available_modules();
@@ -201,14 +201,14 @@ mod tests {
         assert!(!windows_slice.contains("\"selected\":true"), "windows toggle not selected: {windows_slice}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn definition_declares_the_table_surface_and_body_key() {
         let def = definition();
         assert_eq!(def.body_key, SOURCING_CURATE_BODY_POOL);
         assert!(matches!(def.surface_kind, SurfaceKind::Table));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn renders_pool_table_scene() {
         let mut app = new_app();
         assert!(render_body(&mut app, SOURCING_CURATE_BODY_POOL).contains("table"));

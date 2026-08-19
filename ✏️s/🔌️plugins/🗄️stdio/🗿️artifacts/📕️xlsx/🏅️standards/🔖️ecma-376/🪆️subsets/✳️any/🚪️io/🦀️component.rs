@@ -21,7 +21,7 @@ pub enum XlsxError {
 }
 
 impl std::fmt::Display for XlsxError {
-    async fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Opc(e) => write!(f, "xlsx: {e}"),
             Self::MissingWorkbookRelationship => write!(f, "xlsx: package root has no officeDocument relationship"),
@@ -35,7 +35,7 @@ impl std::fmt::Display for XlsxError {
 impl std::error::Error for XlsxError {}
 
 impl From<crate::artifacts::zip::opc::OpcError> for XlsxError {
-    async fn from(e: crate::artifacts::zip::opc::OpcError) -> Self {
+    fn from(e: crate::artifacts::zip::opc::OpcError) -> Self {
         Self::Opc(e)
     }
 }

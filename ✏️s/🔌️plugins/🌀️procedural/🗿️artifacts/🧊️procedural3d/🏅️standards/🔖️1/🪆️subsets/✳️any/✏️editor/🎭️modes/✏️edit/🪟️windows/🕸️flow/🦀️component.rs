@@ -86,14 +86,14 @@ mod tests {
     use super::*;
     use crate::editor::procedural3d::testkit::{app, render as render_body};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn renders_node_graph_scene() {
         let _serial = crate::editor::procedural3d::test_support::lock();
         let mut app = app();
         assert!(render_body(&mut app, PROCEDURAL_3D_PLAY_BODY_MAIN).contains("node-graph"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn main_graph_scene_exports_flow_backed_node_graph_fields() {
         let _serial = crate::editor::procedural3d::test_support::lock();
         let mut app = app();

@@ -66,7 +66,7 @@ mod tests {
     use crate::wfc_engine::ids::PatternId;
     use crate::wfc_engine::weights::WeightTable;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mrv_picks_smallest_domain() {
         let w = WeightTable::new(&[1.0, 1.0, 1.0, 1.0]).unwrap();
         let mut store = DomainStore::new_full(3, &w);
@@ -77,7 +77,7 @@ mod tests {
         assert_eq!(picked, NodeId(2));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn ties_break_by_ascending_node_id() {
         let w = WeightTable::new(&[1.0, 1.0]).unwrap();
         let store = DomainStore::new_full(3, &w);
@@ -85,7 +85,7 @@ mod tests {
         assert_eq!(picked, NodeId(0));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn singleton_and_resolved_domains_are_skipped() {
         let w = WeightTable::new(&[1.0, 1.0]).unwrap();
         let mut store = DomainStore::new_full(2, &w);
@@ -94,14 +94,14 @@ mod tests {
         assert_eq!(picked, NodeId(1));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn none_when_all_singleton() {
         let w = WeightTable::new(&[1.0]).unwrap();
         let store = DomainStore::new_full(2, &w);
         assert!(select_unresolved(ObserveHeuristic::Mrv, &store).is_none());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn weighted_entropy_prefers_lower_entropy_domain() {
         let w = WeightTable::new(&[1.0, 1.0, 1.0, 1.0]).unwrap();
         let mut store = DomainStore::new_full(2, &w);

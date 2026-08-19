@@ -59,7 +59,7 @@ pub async fn decode_engine_command(bytes: &[u8]) -> Result<Puzzle3dEngineCommand
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn puzzle3d_document_vcs_replays_granular_operations() {
         use crate::artifacts::puzzle3d::schema::empty_puzzle3d_snapshot;
         use crate::artifacts::puzzle3d::{Puzzle3dObject, PUZZLE_3D_SCHEMA};
@@ -101,7 +101,7 @@ mod tests {
         serde_json::from_str(json).expect("sample scene config parses")
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn engine_command_set_scene_binary_round_trips_and_agrees_with_text() {
         let command = Puzzle3dEngineCommand::SetScene { scene: sample_scene_config() };
         semio_framework_os_kernel::os_store::test_support::assert_op_text_binary_equivalence(&command);
@@ -109,7 +109,7 @@ mod tests {
         assert_eq!(decode_engine_command(&bytes).expect("decode"), command);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn engine_command_brush_preview_binary_round_trips_and_agrees_with_text() {
         let command = Puzzle3dEngineCommand::BrushPreview { vortex_full_id: "host:v0".to_string(), candidate_index: 2 };
         semio_framework_os_kernel::os_store::test_support::assert_op_text_binary_equivalence(&command);
@@ -117,7 +117,7 @@ mod tests {
         assert_eq!(decode_engine_command(&bytes).expect("decode"), command);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn engine_command_update_kind_weights_binary_round_trips_and_agrees_with_text() {
         let mut object_weights = std::collections::BTreeMap::new();
         object_weights.insert("Host".to_string(), 0.5);
@@ -181,7 +181,7 @@ mod wire_format_guard {
 
     /// ⚖️ Every document-mutation operation prints, parses, encodes, and decodes back to an equal
     /// value.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn operations_round_trip_text_and_binary() {
         let operations = ops();
         assert!(!operations.is_empty());
@@ -206,7 +206,7 @@ mod wire_format_guard {
     }
 
     /// ⚖️ Same law for the engine-command codec.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn engine_command_rows_keep_their_pre_migration_wire_bytes() {
         let commands = engine_commands();
         assert_eq!(commands.len(), PRE_MIGRATION_ENGINE_COMMAND_WIRE.len(), "every engine-command variant covered here must be in the frozen wire table");

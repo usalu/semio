@@ -32,7 +32,7 @@ impl protocol::Inference<SemioAnimationSnapshot> for SemioAnimationInference {
 /// 🌱 Defined in terms of `infer` (not derived) — keeps the law correct regardless of whether
 /// `SemioAnimationSnapshot::default()`'s `timelines` ever stops being empty.
 impl Default for SemioAnimationInference {
-    async fn default() -> Self {
+    fn default() -> Self {
         <Self as protocol::Inference<SemioAnimationSnapshot>>::infer(&SemioAnimationSnapshot::default())
     }
 }
@@ -84,13 +84,13 @@ mod tests {
     use super::*;
     use protocol::Inference;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = SemioAnimationSnapshot::default();
         assert_eq!(SemioAnimationInference::infer(&snapshot), SemioAnimationInference::infer(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(SemioAnimationInference::infer(&SemioAnimationSnapshot::default()), SemioAnimationInference::default());
     }

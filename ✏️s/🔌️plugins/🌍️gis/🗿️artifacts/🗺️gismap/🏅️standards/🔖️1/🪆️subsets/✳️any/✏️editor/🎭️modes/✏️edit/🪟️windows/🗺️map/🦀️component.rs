@@ -106,13 +106,13 @@ mod tests {
     use crate::editor::gis2d::terminology::gis2d_labels;
     use crate::editor::gis2d::testkit::{app, main_window_measures, render as render_body};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn renders_gis_map_scene() {
         let mut app = app();
         assert!(render_body(&mut app, GIS2D_PLAY_BODY_COMPOSITE).contains("tiled-map"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn render_canvas_uses_absolute_tile_urls_when_env_set() {
         unsafe { std::env::set_var("SEMIO_ASSET_BASE_URL", "http://127.0.0.1:6141") };
         let mut app = app();
@@ -122,7 +122,7 @@ mod tests {
         unsafe { std::env::remove_var("SEMIO_ASSET_BASE_URL") };
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn the_window_collects_every_option_node_exactly_once() {
         let config = Gis2dConfig::default();
         let measures = window_measures(&config, gis2d_labels(&config));
@@ -131,7 +131,7 @@ mod tests {
         assert_eq!(main_window_measures(&mut app).len(), measures.len(), "the app routes the same set under the window id");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn the_definition_binds_the_tiled_map_surface_to_the_composite_body() {
         let definition = definition();
         assert_eq!(definition.id, GIS2D_PLAY_WINDOW_MAIN);

@@ -250,7 +250,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn world_transform_composes_down_through_nested_groups() {
         let snapshot = fixture();
         let values = store::infer_field::<SemioDrawingSnapshot, DrawFlattenedScene>(&snapshot, None);
@@ -264,7 +264,7 @@ mod tests {
         assert_eq!(nested_text.world_transform.translation.x, 15.0, "Text inherits its parent Group's composed world transform");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn style_reference_resolves_to_the_real_value() {
         let snapshot = fixture();
         let values = store::infer_field::<SemioDrawingSnapshot, DrawFlattenedScene>(&snapshot, None);
@@ -281,7 +281,7 @@ mod tests {
     /// bearing half: a miss-count-only check can't distinguish "only the leaf missed" from "the leaf
     /// missed AND everything else was never looked up"; asserting `hits == plan.len() - 1` proves
     /// every other entity was actually consulted and found warm.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn changing_a_leaf_own_style_does_not_recompute_ancestors_or_siblings() {
         let mut cache = InferenceCache::new(InferenceCacheConfig { enabled: true, record_stats: true, ..Default::default() });
         let base = fixture();
@@ -300,7 +300,7 @@ mod tests {
 
     /// 🌳️ Ancestor law: changing the ROOT's own transform must miss for every entity in the plan
     /// (root + every descendant transitively folds root's `DepHash` into its own chain).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn changing_the_root_transform_recomputes_the_whole_subtree() {
         let mut cache = InferenceCache::new(InferenceCacheConfig { enabled: true, record_stats: true, ..Default::default() });
         let base = fixture();
@@ -343,7 +343,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn an_unrelated_sibling_edit_leaves_the_other_siblings_chain_warm() {
         let mut cache = InferenceCache::new(InferenceCacheConfig { enabled: true, record_stats: true, ..Default::default() });
         let base = two_independent_styled_siblings();
@@ -362,7 +362,7 @@ mod tests {
     }
     //#endregion 🧪️IncrementalityLaw
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn disabled_cache_matches_pure_recompute() {
         let snapshot = fixture();
         let pure = store::infer_field::<SemioDrawingSnapshot, DrawFlattenedScene>(&snapshot, None);
@@ -371,7 +371,7 @@ mod tests {
         assert_eq!(pure, via_disabled);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn quaternion_rotation_of_identity_is_a_no_op() {
         let p = SemioPoint3 { x: 3.0, y: 4.0, z: 5.0 };
         assert_eq!(rotate_point(SemioQuaternion::default(), p), p);

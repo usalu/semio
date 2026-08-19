@@ -56,14 +56,14 @@ mod tests {
         WriterStore::new(store::create_document_envelope("writer.document", "writer", schema::empty_writer_snapshot(), None)).expect("valid artifact store fixture")
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn writer_document_vcs_replays_text_mutations() {
         let mut store = seeded_store();
         store.dispatch(store::ArtifactCommand::Apply { mutations: vec![WriterMutation::EditText(EditText { text: "hello".into() })], description: None }).expect("apply");
         assert_eq!(crate::artifacts::writer::writer_text(&store.snapshot().expect("snapshot")), "hello");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn writer_document_vcs_undoes_text_mutation() {
         let mut store = seeded_store();
         store.dispatch(store::ArtifactCommand::Apply { mutations: vec![WriterMutation::EditText(EditText { text: "hello".into() })], description: None }).expect("apply");
@@ -72,7 +72,7 @@ mod tests {
     }
 
     //#region 🔖️MutationLaws
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn rename_writer_and_edit_text_invert_to_the_prior_field_value() {
         let snapshot = WriterSnapshot { id: "old-id".into(), document: crate::artifacts::writer::document_child_handle_and_cache("old-id", "old text", "plaintext"), ..schema::empty_writer_snapshot() };
         assert_eq!(
@@ -85,7 +85,7 @@ mod tests {
         );
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn change_uri_and_change_language_obey_the_inverse_and_diff_absorb_laws() {
         let base = WriterSnapshot { uri: "writer://a".into(), language_id: "plaintext".into(), ..schema::empty_writer_snapshot() };
 
@@ -99,7 +99,7 @@ mod tests {
         protocol::testkit::assert_mutation_inverse_law(&base, &language_mutation);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn edit_text_obeys_the_inverse_and_diff_absorb_laws() {
         let base = WriterSnapshot { document: crate::artifacts::writer::document_child_handle_and_cache("empty", "first", "plaintext"), ..schema::empty_writer_snapshot() };
         let mutation = WriterMutation::EditText(EditText { text: "second".into() });
@@ -116,7 +116,7 @@ mod tests {
     /// only checkable law is `mutation.no-op` (exercised in `🔖️MutationLaws` above) plus determinism.
     /// `assert_outcome_policy_matrix` is not yet landed in `📡️spr/🧪️testkit` — TODO(1-D testkit laws
     /// pending) once it lands.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn edit_text_outcome_is_deterministic() {
         let base = WriterSnapshot { document: crate::artifacts::writer::document_child_handle_and_cache("empty", "first", "plaintext"), ..schema::empty_writer_snapshot() };
         let mutation = WriterMutation::EditText(EditText { text: "second".into() });

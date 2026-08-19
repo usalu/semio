@@ -106,7 +106,7 @@ mod tests {
         forward
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_delete_object_round_trips() {
         let base = fixture();
         let create = SemioKitMutation::CreateObject(create_object::mutation::CreateObject { child_id: "obj-99".into(), target: ref_of("object", "new-obj") });
@@ -118,7 +118,7 @@ mod tests {
         assert!(after.objects.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn delete_object_of_an_absent_id_has_an_empty_inverse() {
         let base = fixture();
         let delete = SemioKitMutation::DeleteObject(delete_object::mutation::DeleteObject { child_id: "does-not-exist".into() });
@@ -126,7 +126,7 @@ mod tests {
         assert_eq!(delete.diff(&base).diff().apply(&base).expect("apply must succeed for a well-formed fixture"), base);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_delete_model_round_trips() {
         let base = fixture();
         let create = SemioKitMutation::CreateModel(create_model::mutation::CreateModel { child_id: "model-99".into(), target: ref_of("model", "new-model") });
@@ -138,7 +138,7 @@ mod tests {
         assert!(after.models.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_delete_properties_round_trips() {
         let base = fixture();
         let create = SemioKitMutation::CreateProperties(create_properties::mutation::CreateProperties { child_id: "props-99".into(), target: ref_of("value", "new-props") });
@@ -150,7 +150,7 @@ mod tests {
         assert!(after.properties.is_none());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn bind_unbind_representation_round_trips() {
         let base = fixture();
         let bind = SemioKitMutation::BindRepresentation(bind_representation::mutation::BindRepresentation { target: ref_of("mesh", "extra-repr"), pin: store::LinkPin::Head, role: "chair".into() });
@@ -162,7 +162,7 @@ mod tests {
         assert!(after.representations.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn unbind_representation_of_an_out_of_range_index_has_an_empty_inverse() {
         let base = fixture();
         let unbind = SemioKitMutation::UnbindRepresentation(unbind_representation::mutation::UnbindRepresentation { index: 99 });
@@ -170,7 +170,7 @@ mod tests {
         assert_eq!(unbind.diff(&base).diff().apply(&base).expect("apply must succeed for a well-formed fixture"), base);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn change_representation_pin_round_trips() {
         let base = fixture();
         let change = SemioKitMutation::ChangeRepresentationPin(change_representation_pin::mutation::ChangeRepresentationPin { index: 0, pin: store::LinkPin::Checkpoint { id: "cp-1".into() } });
@@ -178,7 +178,7 @@ mod tests {
         assert_eq!(after.representations[0].pin, store::LinkPin::Checkpoint { id: "cp-1".into() });
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_remove_rename_type_round_trips() {
         let base = fixture();
         let add = SemioKitMutation::AddType(add_type::mutation::AddType { id: "table".into(), name: "Table".into(), category: "furniture".into() });
@@ -194,7 +194,7 @@ mod tests {
         assert!(after.types.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_remove_edit_design_round_trips() {
         let base = fixture();
         let add = SemioKitMutation::AddDesign(add_design::mutation::AddDesign { id: "office".into(), name: "Office".into() });
@@ -212,7 +212,7 @@ mod tests {
         let _ = SemioKitDesign::default();
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn semantic_kinds_cover_every_variant() {
         assert_eq!(SemioKitMutation::kinds().len(), 15);
         let mutation = SemioKitMutation::UnbindRepresentation(unbind_representation::mutation::UnbindRepresentation { index: 1 });

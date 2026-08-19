@@ -35,7 +35,7 @@ mod tests {
     use crate::editor::gis3d::Gis3dCommand;
     use semio_framework_plugin::PluginApp;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn seeds_exaggeration_from_the_terrain_fixture() {
         let app = app();
         assert_eq!(app.snapshot().expect("projection").exaggeration, 1.5);
@@ -43,7 +43,7 @@ mod tests {
 
     /// 🧪️ A slider drag is many `setExaggeration` ticks sharing one coalesce key: they fold into ONE
     /// undoable edit, so a single undo restores the fixture's exaggeration rather than a mid-drag value.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn exaggeration_drag_coalesces_into_one_undo_step() {
         let mut app = app();
         for value in [2.0, 2.5, 3.0] {
@@ -54,7 +54,7 @@ mod tests {
         assert_eq!(app.snapshot().expect("projection").exaggeration, 1.5, "one coalesced edit: undo restores the fixture exaggeration");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_exaggeration_is_a_document_operation_not_config_state() {
         let mut app = app();
         let result = dispatch(&mut app, Gis3dCommand::SetExaggeration(set_exaggeration::SetExaggeration { exaggeration: 2.0 }));

@@ -542,7 +542,7 @@ mod tests {
     }
 
     //#region field_sweep + between_roundtrip_law
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn field_sweep_covers_every_mutable_field() {
         let a = snap(vec![track(1, vec![sample(1), sample(2)]), track(2, vec![sample(3)])]);
         let mut b = a.clone();
@@ -560,7 +560,7 @@ mod tests {
         assert!(<Mp4Diff as DiffAlgebra<Mp4Snapshot>>::between(&a, &a).is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inverse_law_round_trips_through_apply() {
         let a = snap(vec![track(1, vec![sample(1), sample(2)])]);
         let mut b = a.clone();
@@ -575,7 +575,7 @@ mod tests {
     //#endregion
 
     //#region absorb_law — canonical index-transport cases (schema-design.md)
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_insert_then_remove_before_matches_sequential() {
         let base: Vec<Mp4Sample> = vec![sample(1), sample(2)];
         // d1: insert `f` at final index 2 -> mid = [s1, s2, f]
@@ -593,7 +593,7 @@ mod tests {
         assert_eq!(d1.removed, vec![0], "the real base removal must transport through");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_insert_insert_same_index_both_survive() {
         let base: Vec<Mp4Sample> = vec![sample(1)];
         let f = Mp4Sample { data: vec![0xAA], duration: 1, cts_offset: 0, sync: true };
@@ -611,7 +611,7 @@ mod tests {
         assert_eq!(combined.len(), 3, "both inserts at the same nominal index must survive (fixes the gif-style LWW-slot bug)");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_modify_patches_into_added_payload() {
         let base: Vec<Mp4Sample> = vec![sample(1)];
         let f = Mp4Sample { data: vec![0xAA], duration: 1, cts_offset: 0, sync: false };
@@ -630,7 +630,7 @@ mod tests {
         assert!(d1.modified.is_empty(), "the patch must land INTO the carried added payload, not become a separate modified entry");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_modify_then_remove_drops_the_modification() {
         let base: Vec<Mp4Sample> = vec![sample(1), sample(2)];
         let mut d1: Mp4SamplesDiff = IndexedDiff { removed: vec![], modified: vec![IndexedModified { index: 0, diff: Mp4SampleDiff { data: None, duration: Some(77), cts_offset: None, sync: None } }], added: vec![] };
@@ -645,7 +645,7 @@ mod tests {
         assert!(d1.modified.is_empty(), "a merged-removed key's modified entry must be dropped");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_associativity_over_three_diffs() {
         let a = snap(vec![track(1, vec![sample(1), sample(2)])]);
         let mut mid1 = a.clone();
@@ -673,7 +673,7 @@ mod tests {
         assert_eq!(left.apply(&a).unwrap(), right.apply(&a).unwrap(), "absorb must be associative");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn exact_fixture_empty_inverse_absorb_and_source_removal_laws() {
         let path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../temp/bauen-mit-bestand.mp4");
         let bytes = std::fs::read(path).expect("read exact MP4 fixture");

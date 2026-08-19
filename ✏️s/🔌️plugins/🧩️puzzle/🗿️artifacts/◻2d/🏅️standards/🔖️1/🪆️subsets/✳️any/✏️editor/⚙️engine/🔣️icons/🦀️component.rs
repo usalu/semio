@@ -19,7 +19,7 @@ mod tests {
     use super::puzzle_themed_icon_lookup;
     use crate::editor::puzzle2d::engine::canvas;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn svg_icon_append_smoke() {
         let mut scene = canvas::Scene::new();
         let svg = r##"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><rect width="10" height="10" fill="#ffffff"/><path d="M0 0 L10 10" stroke="#000000" stroke-width="1"/></svg>"##;
@@ -30,7 +30,7 @@ mod tests {
         canvas::svg_icon::append_svg_str_themed(&mut scene2, svg, fg, bg).expect("parse themed");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn board_icon_codec_resolves_catalog_key_via_themed_lookup() {
         let r = canvas::icon_codec::board_resolve_icon_kind("capsule_J", puzzle_themed_icon_lookup);
         match r {
@@ -41,7 +41,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn board_icon_codec_resolves_typst_math_to_svg_plain() {
         let r = canvas::icon_codec::board_resolve_icon_kind("typst:$x^2$", puzzle_themed_icon_lookup);
         match r {
@@ -52,7 +52,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn board_icon_codec_resolves_emoji_prefix_without_tofu() {
         let r = canvas::icon_codec::board_resolve_icon_kind("emoji:☺️", puzzle_themed_icon_lookup);
         match r {
@@ -64,7 +64,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn svg_icon_content_bounds_follows_nested_group_translate() {
         let svg = r#"<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200"><g transform="translate(72 88)"><rect width="12" height="12" fill="rgb(8,8,8)"/></g></svg>"#;
         let (x, y, w, h) = canvas::svg_icon::svg_icon_content_bounds_from_str(svg).expect("parse");
@@ -73,7 +73,7 @@ mod tests {
         assert!(w > 10.0 && w < 14.0 && h > 10.0 && h < 14.0, "expected ~12×12 bbox, got {w}×{h}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn svg_icon_content_bounds_includes_visible_image_abs_box() {
         let svg = r##"<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><image href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==" x="30" y="40" width="50" height="50"/></svg>"##;
         let (x, y, w, h) = canvas::svg_icon::svg_icon_content_bounds_from_str(svg).expect("parse");

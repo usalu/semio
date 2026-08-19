@@ -156,7 +156,7 @@ impl store::ArtifactPack for HomeConfig {
 
 
 impl Default for HomeConfig {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { active_panel_tab: String::new(), locale: "en-US".into(), directory_json: directory_to_json(&store::os_directory::DirectoryReadModel::default()), client_id: String::new(), client_name: String::new() }
     }
 }
@@ -293,19 +293,19 @@ mod tests {
     use super::*;
     use protocol::Mutation;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn home_config_default_locale_is_english() {
         let config = HomeConfig::default();
         assert_eq!(config.locale, "en-US");
         assert!(config.active_panel_tab.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn home_config_dsl_text_round_trips() {
         store::os_store::test_support::assert_dsl_round_trip(&HomeConfig::default());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn home_config_op_text_round_trips_every_variant() {
         store::os_store::test_support::assert_op_line_round_trip(&HomeConfigMutation::Snapshot { config: HomeConfig::default() });
         store::os_store::test_support::assert_op_line_round_trip(&HomeConfigMutation::SetActivePanelTab { tab_id: "tab-1".into() });
@@ -314,14 +314,14 @@ mod tests {
         store::os_store::test_support::assert_op_line_round_trip(&HomeConfigMutation::SetClient { client_id: "u1".into(), client_name: "Ada".into() });
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn home_config_default_directory_is_empty() {
         let model = HomeConfig::default().directory();
         assert!(model.spaces.is_empty());
         assert_eq!(model.cursor, 0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fold_directory_event_updates_the_read_model() {
         let config = HomeConfig::default();
         let event_json = serde_json::json!({
@@ -341,14 +341,14 @@ mod tests {
         assert_eq!(space.view.name, "Atelier");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fold_directory_event_ignores_malformed_json() {
         let config = HomeConfig::default();
         let next = HomeConfigMutation::FoldDirectoryEvent { event_json: "not json".into() }.diff(&config).diff().clone();
         assert_eq!(next.directory_json, config.directory_json, "malformed events never panic and never change the model");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_client_updates_identity_fields() {
         let config = HomeConfig::default();
         let next = HomeConfigMutation::SetClient { client_id: "u1".into(), client_name: "Ada".into() }.diff(&config).diff().clone();
@@ -356,7 +356,7 @@ mod tests {
         assert_eq!(next.client_name, "Ada");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn home_config_operation_round_trips_via_apply_and_backwards() {
         let config = HomeConfig::default();
         let operation = HomeConfigMutation::SetLocale { value: "de".into() };

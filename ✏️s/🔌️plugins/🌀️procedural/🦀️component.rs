@@ -95,21 +95,21 @@ mod surface_tests {
     use crate::viewer::procedural3d::Procedural3dViewer;
 
     /// 👁️ A viewer instance never mutates the document store, even when dispatched.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn procedural2d_viewer_never_mutates() {
         semio_framework_plugin::testkit::assert_viewer_never_mutates::<Procedural2dViewer>();
     }
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn procedural3d_viewer_never_mutates() {
         semio_framework_plugin::testkit::assert_viewer_never_mutates::<Procedural3dViewer>();
     }
 
     /// 🤝️ Editor and viewer surfaces agree on the artifact dialect they address.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn procedural2d_editor_and_viewer_share_dialect() {
         semio_framework_plugin::testkit::assert_editor_and_viewer_share_dialect::<Procedural2dPlayApp, Procedural2dViewer>();
     }
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn procedural3d_editor_and_viewer_share_dialect() {
         semio_framework_plugin::testkit::assert_editor_and_viewer_share_dialect::<Procedural3dPlayApp, Procedural3dViewer>();
     }

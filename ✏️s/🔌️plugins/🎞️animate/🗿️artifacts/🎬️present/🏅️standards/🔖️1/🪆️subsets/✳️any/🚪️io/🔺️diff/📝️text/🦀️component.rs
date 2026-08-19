@@ -97,7 +97,7 @@ mod tests {
     use crate::artifacts::present::schema::mutations::replace_source;
     use protocol::Mutation;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn replace_source_diff_applies_onto_the_base_snapshot() {
         let base = default_present_snapshot();
         let (source, _tiles) = crate::artifacts::present::present_working_scene(&base);

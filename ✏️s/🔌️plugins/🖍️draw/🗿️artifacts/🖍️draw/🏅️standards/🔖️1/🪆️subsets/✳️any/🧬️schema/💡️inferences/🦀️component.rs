@@ -34,7 +34,7 @@ impl protocol::Inference<DrawSnapshot> for DrawInference {
 /// 🌱 Defined in terms of `infer` (not derived) — keeps the law correct regardless of whether
 /// `DrawSnapshot::default()`'s `layers` field ever stops being empty.
 impl Default for DrawInference {
-    async fn default() -> Self {
+    fn default() -> Self {
         <Self as protocol::Inference<DrawSnapshot>>::infer(&DrawSnapshot::default())
     }
 }
@@ -82,13 +82,13 @@ mod tests {
     use super::*;
     use protocol::Inference;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = DrawSnapshot::default();
         assert_eq!(DrawInference::infer(&snapshot), DrawInference::infer(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(DrawInference::infer(&DrawSnapshot::default()), DrawInference::default());
     }

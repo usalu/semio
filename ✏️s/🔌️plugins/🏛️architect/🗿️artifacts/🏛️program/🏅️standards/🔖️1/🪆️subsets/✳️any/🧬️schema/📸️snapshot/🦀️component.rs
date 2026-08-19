@@ -226,7 +226,7 @@ pub struct ProgramSnapshot {
 }
 
 impl Default for ProgramSnapshot {
-    async fn default() -> Self {
+    fn default() -> Self {
         crate::artifacts::program::empty_plugin()
     }
 }

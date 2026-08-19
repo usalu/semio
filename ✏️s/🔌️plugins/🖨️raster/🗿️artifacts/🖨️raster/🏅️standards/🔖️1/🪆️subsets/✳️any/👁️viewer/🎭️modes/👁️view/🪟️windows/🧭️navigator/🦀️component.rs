@@ -54,7 +54,7 @@ pub async fn render(document: &RasterSnapshot) -> UiNode {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn definition_declares_a_canvas2d_navigator_window() {
         let def = definition();
         assert_eq!(def.id, RASTER_VIEW_WINDOW_NAVIGATOR);
@@ -62,7 +62,7 @@ mod tests {
         assert_eq!(def.surface_kind, SurfaceKind::Canvas2d);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn render_produces_a_scene_node_for_the_default_document() {
         let document = crate::artifacts::raster::schema::empty_raster_document();
         let _node = render(&document);

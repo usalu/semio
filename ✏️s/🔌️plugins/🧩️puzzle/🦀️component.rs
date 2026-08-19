@@ -87,32 +87,32 @@ pub async fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyEr
 mod surface_tests {
     use semio_framework_plugin::testkit::{assert_editor_and_viewer_share_dialect, assert_viewer_never_mutates};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn puzzle2d_viewer_never_mutates() {
         assert_viewer_never_mutates::<crate::viewer::puzzle2d::Puzzle2dViewer>();
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn puzzle2d_editor_and_viewer_share_dialect() {
         assert_editor_and_viewer_share_dialect::<crate::editor::puzzle2d::Puzzle2dPlayApp, crate::viewer::puzzle2d::Puzzle2dViewer>();
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn puzzle3d_viewer_never_mutates() {
         assert_viewer_never_mutates::<crate::viewer::puzzle3d::Puzzle3dViewer>();
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn puzzle3d_editor_and_viewer_share_dialect() {
         assert_editor_and_viewer_share_dialect::<crate::editor::puzzle3d::Puzzle3dPlayApp, crate::viewer::puzzle3d::Puzzle3dViewer>();
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn puzzle5d_viewer_never_mutates() {
         assert_viewer_never_mutates::<crate::viewer::puzzle5d::Puzzle5dViewer>();
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn puzzle5d_editor_and_viewer_share_dialect() {
         assert_editor_and_viewer_share_dialect::<crate::editor::puzzle5d::Puzzle5dPlayApp, crate::viewer::puzzle5d::Puzzle5dViewer>();
     }

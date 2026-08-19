@@ -27,13 +27,13 @@ mod tests {
     use super::*;
     use crate::editor::en1992::testkit;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn definition_declares_this_windows_body_key() {
         assert_eq!(definition().body_key, BODY_INPUTS);
         assert_eq!(definition().id, WINDOW_INPUTS);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn renders_the_document_as_json() {
         let mut app = testkit::new_app();
         assert!(testkit::render(&mut app, BODY_INPUTS).contains(':'), "the inputs body renders the document json");

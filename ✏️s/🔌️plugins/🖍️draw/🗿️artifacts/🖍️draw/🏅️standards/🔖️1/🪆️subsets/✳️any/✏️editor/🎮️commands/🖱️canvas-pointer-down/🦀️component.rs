@@ -373,7 +373,7 @@ async fn utility_is_select_direct(_ctx: &GestureContext, event: Option<&draw_ges
 //#endregion 🔖️GestureGuards
 
 //#region 🔖️GestureActions
-async fn gesture_start_marquee(ctx: &mut GestureContext, event: Option<&draw_gesture::Event>, _sink: &mut dyn fsm::CommandSink<draw_gesture::DrawGesture>) {
+async fn gesture_start_marquee(ctx: &mut GestureContext, event: Option<&draw_gesture::Event>, _sink: &mut Vec<fsm::Command<draw_gesture::DrawGesture>>) {
     if let Some(draw_gesture::Event::PointerDown { utility, world, shift, ctrl, meta }) = event {
         ctx.method = if utility == "selectLasso" { "lasso".into() } else { "rectangle".into() };
         ctx.start = *world;
@@ -383,7 +383,7 @@ async fn gesture_start_marquee(ctx: &mut GestureContext, event: Option<&draw_ges
     }
 }
 
-async fn gesture_start_shape(ctx: &mut GestureContext, event: Option<&draw_gesture::Event>, _sink: &mut dyn fsm::CommandSink<draw_gesture::DrawGesture>) {
+async fn gesture_start_shape(ctx: &mut GestureContext, event: Option<&draw_gesture::Event>, _sink: &mut Vec<fsm::Command<draw_gesture::DrawGesture>>) {
     if let Some(draw_gesture::Event::PointerDown { utility, world, .. }) = event {
         ctx.utility = utility.clone();
         ctx.start = *world;
@@ -391,7 +391,7 @@ async fn gesture_start_shape(ctx: &mut GestureContext, event: Option<&draw_gestu
     }
 }
 
-async fn gesture_start_draft(ctx: &mut GestureContext, event: Option<&draw_gesture::Event>, _sink: &mut dyn fsm::CommandSink<draw_gesture::DrawGesture>) {
+async fn gesture_start_draft(ctx: &mut GestureContext, event: Option<&draw_gesture::Event>, _sink: &mut Vec<fsm::Command<draw_gesture::DrawGesture>>) {
     if let Some(draw_gesture::Event::PointerDown { utility, world, .. }) = event {
         ctx.utility = utility.clone();
         ctx.points = vec![*world];
@@ -399,14 +399,14 @@ async fn gesture_start_draft(ctx: &mut GestureContext, event: Option<&draw_gestu
     }
 }
 
-async fn gesture_append_draft_point(ctx: &mut GestureContext, event: Option<&draw_gesture::Event>, _sink: &mut dyn fsm::CommandSink<draw_gesture::DrawGesture>) {
+async fn gesture_append_draft_point(ctx: &mut GestureContext, event: Option<&draw_gesture::Event>, _sink: &mut Vec<fsm::Command<draw_gesture::DrawGesture>>) {
     if let Some(draw_gesture::Event::PointerDown { world, .. }) = event {
         ctx.points.push(*world);
         ctx.cursor = *world;
     }
 }
 
-async fn gesture_update_marquee_cursor(ctx: &mut GestureContext, event: Option<&draw_gesture::Event>, _sink: &mut dyn fsm::CommandSink<draw_gesture::DrawGesture>) {
+async fn gesture_update_marquee_cursor(ctx: &mut GestureContext, event: Option<&draw_gesture::Event>, _sink: &mut Vec<fsm::Command<draw_gesture::DrawGesture>>) {
     if let Some(draw_gesture::Event::PointerMove { world, marquee_threshold_world }) = event {
         let distance = ((world[0] - ctx.start[0]).powi(2) + (world[1] - ctx.start[1]).powi(2)).sqrt();
         ctx.active = ctx.active || distance >= *marquee_threshold_world;
@@ -414,41 +414,41 @@ async fn gesture_update_marquee_cursor(ctx: &mut GestureContext, event: Option<&
     }
 }
 
-async fn gesture_update_shape_cursor(ctx: &mut GestureContext, event: Option<&draw_gesture::Event>, _sink: &mut dyn fsm::CommandSink<draw_gesture::DrawGesture>) {
+async fn gesture_update_shape_cursor(ctx: &mut GestureContext, event: Option<&draw_gesture::Event>, _sink: &mut Vec<fsm::Command<draw_gesture::DrawGesture>>) {
     if let Some(draw_gesture::Event::PointerMove { world, .. }) = event {
         ctx.cursor = *world;
     }
 }
 
-async fn gesture_update_draft_cursor(ctx: &mut GestureContext, event: Option<&draw_gesture::Event>, _sink: &mut dyn fsm::CommandSink<draw_gesture::DrawGesture>) {
+async fn gesture_update_draft_cursor(ctx: &mut GestureContext, event: Option<&draw_gesture::Event>, _sink: &mut Vec<fsm::Command<draw_gesture::DrawGesture>>) {
     if let Some(draw_gesture::Event::PointerMove { world, .. }) = event {
         ctx.cursor = *world;
     }
 }
 
-async fn gesture_commit_marquee(ctx: &mut GestureContext, event: Option<&draw_gesture::Event>, sink: &mut dyn fsm::CommandSink<draw_gesture::DrawGesture>) {
+async fn gesture_commit_marquee(ctx: &mut GestureContext, event: Option<&draw_gesture::Event>, sink: &mut Vec<fsm::Command<draw_gesture::DrawGesture>>) {
     if let Some(draw_gesture::Event::PointerUp { world, shift, ctrl, meta, .. }) = event {
         sink.push(fsm::Command::Effect(GestureEffect::CommitMarquee { start: ctx.start, end: *world, active: ctx.active, merge: ctx.merge.clone(), shift: *shift, ctrl: *ctrl, meta: *meta }));
     }
 }
 
-async fn gesture_commit_shape(ctx: &mut GestureContext, event: Option<&draw_gesture::Event>, sink: &mut dyn fsm::CommandSink<draw_gesture::DrawGesture>) {
+async fn gesture_commit_shape(ctx: &mut GestureContext, event: Option<&draw_gesture::Event>, sink: &mut Vec<fsm::Command<draw_gesture::DrawGesture>>) {
     if let Some(draw_gesture::Event::PointerUp { world, .. }) = event {
         sink.push(fsm::Command::Effect(GestureEffect::CommitShape { utility: ctx.utility.clone(), start: ctx.start, end: *world }));
     }
 }
 
-async fn gesture_commit_draft(ctx: &mut GestureContext, _event: Option<&draw_gesture::Event>, sink: &mut dyn fsm::CommandSink<draw_gesture::DrawGesture>) {
+async fn gesture_commit_draft(ctx: &mut GestureContext, _event: Option<&draw_gesture::Event>, sink: &mut Vec<fsm::Command<draw_gesture::DrawGesture>>) {
     sink.push(fsm::Command::Effect(GestureEffect::CommitDraft { utility: ctx.utility.clone(), points: ctx.points.clone() }));
 }
 
-async fn gesture_commit_trace(_ctx: &mut GestureContext, event: Option<&draw_gesture::Event>, sink: &mut dyn fsm::CommandSink<draw_gesture::DrawGesture>) {
+async fn gesture_commit_trace(_ctx: &mut GestureContext, event: Option<&draw_gesture::Event>, sink: &mut Vec<fsm::Command<draw_gesture::DrawGesture>>) {
     if let Some(draw_gesture::Event::PointerDown { world, .. }) = event {
         sink.push(fsm::Command::Effect(GestureEffect::CommitTrace { world: *world }));
     }
 }
 
-async fn gesture_pick_point(_ctx: &mut GestureContext, event: Option<&draw_gesture::Event>, sink: &mut dyn fsm::CommandSink<draw_gesture::DrawGesture>) {
+async fn gesture_pick_point(_ctx: &mut GestureContext, event: Option<&draw_gesture::Event>, sink: &mut Vec<fsm::Command<draw_gesture::DrawGesture>>) {
     if let Some(draw_gesture::Event::PointerUp { world, shift, ctrl, meta, .. }) = event {
         sink.push(fsm::Command::Effect(GestureEffect::PickPoint { world: *world, shift: *shift, ctrl: *ctrl, meta: *meta }));
     }
@@ -544,7 +544,7 @@ pub struct DrawSession {
 }
 
 impl Default for DrawSession {
-    async fn default() -> Self {
+    fn default() -> Self {
         let mut sink: Vec<fsm::Command<draw_gesture::DrawGesture>> = Vec::new();
         Self { gesture: fsm::init::<draw_gesture::DrawGesture>((), &mut sink), preview_seq: 0, interaction: DrawInteractionSnapshot::default() }
     }

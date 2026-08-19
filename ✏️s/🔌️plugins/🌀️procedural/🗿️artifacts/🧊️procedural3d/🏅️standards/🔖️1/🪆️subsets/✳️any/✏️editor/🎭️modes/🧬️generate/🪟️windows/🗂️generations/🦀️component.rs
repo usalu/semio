@@ -41,7 +41,7 @@ mod tests {
     use super::*;
     use crate::editor::procedural3d::testkit::{app, render as render_body};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn generate_mode_renders_surfaces() {
         let mut app = app();
         assert!(render_body(&mut app, PROCEDURAL_3D_PLAY_BODY_GENERATIONS).contains("addGeneration"));

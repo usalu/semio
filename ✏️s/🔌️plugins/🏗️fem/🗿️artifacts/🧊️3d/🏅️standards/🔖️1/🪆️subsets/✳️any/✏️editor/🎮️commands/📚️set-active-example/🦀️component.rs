@@ -45,7 +45,7 @@ mod tests {
     /// in-process `VcsArtifactApp` never applies `effects` to its own store (that's the real host's
     /// job), so this asserts directly on the `Emit` `import_media`-style rather than through
     /// `app.snapshot()`.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_active_example_loads_default_fixture_3d() {
         let (snapshot, history) = empty_view();
         let doc = ArtifactView::new(&snapshot, &history);
@@ -62,7 +62,7 @@ mod tests {
     /// 🧬️ `setActiveExample` replaces document content via a `Effect::LoadDocument`, so it MUST be
     /// declared as a Mutation, not a View/Shell action — the framework's "View/Shell actions must not
     /// emit operations" guard would otherwise reject it.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_active_example_is_declared_as_operation_3d() {
         let definition = crate::editor::fem3d::create_fem3d_app();
         let action = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|action| action.id == "setActiveExample").expect("setActiveExample declared");
@@ -70,7 +70,7 @@ mod tests {
         assert!(!action.args.is_empty(), "the palette stages the example choice via a declared select arg");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_active_example_unknown_id_resets_to_empty_document() {
         let (snapshot, history) = empty_view();
         let doc = ArtifactView::new(&snapshot, &history);

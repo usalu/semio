@@ -26,7 +26,7 @@ pub struct CurateIntoStl;
 impl Serializer<CurateSnapshot> for CurateIntoStl {
     const INTO: Dialect = STL_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    async fn serialize(from: &CurateSnapshot) -> IoResult<IoPayload> {
+    fn serialize(from: &CurateSnapshot) -> IoResult<IoPayload> {
         serialize_bytes(from).map(|bytes| IoOutcome::clean(IoPayload::Binary(bytes))).map_err(|error| IoError { message: format!("CurateIntoStl: {error}"), diagnostics: Vec::new() })
     }
 }

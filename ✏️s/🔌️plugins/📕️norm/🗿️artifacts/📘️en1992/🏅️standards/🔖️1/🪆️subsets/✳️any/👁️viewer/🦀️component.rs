@@ -94,18 +94,18 @@ pub async fn create_en1992_viewer() -> semio_framework_plugin::AppDefinition {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_en1992_viewer_builds_a_definition_for_this_dialect() {
         let def = create_en1992_viewer();
         assert_eq!(def.dialect, EN1992_DIALECT.into());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn viewer_dialect_matches_the_artifact_coordinate() {
         assert_eq!(<En1992Viewer as ArtifactViewer>::DIALECT, EN1992_DIALECT);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn an_unknown_body_key_falls_back_to_a_text_node() {
         let snapshot = En1992Snapshot::default();
         let history = semio_framework_plugin::HistoryView::empty();

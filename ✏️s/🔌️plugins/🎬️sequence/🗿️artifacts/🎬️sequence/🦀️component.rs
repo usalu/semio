@@ -59,7 +59,7 @@ impl StepParams {
 
 impl std::ops::Deref for StepParams {
     type Target = Dictionary;
-    async fn deref(&self) -> &Dictionary {
+    fn deref(&self) -> &Dictionary {
         &self.0
     }
 }
@@ -93,7 +93,7 @@ pub struct SequenceCamera {
 }
 
 impl Default for SequenceCamera {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { x: 0.0, y: 0.0, zoom: 1.0 }
     }
 }
@@ -324,12 +324,12 @@ pub async fn artifact_kind() -> ArtifactKindSpec {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn default_snapshot_has_steps() {
         assert_eq!(default_snapshot().to_fixture().steps.len(), 2);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn step_content_round_trips_through_the_composed_child_snapshot() {
         let fixture = default_snapshot().to_fixture();
         let content = sequence_content_snapshot_from_working(&fixture.steps, &fixture.edges);
@@ -338,7 +338,7 @@ mod tests {
         assert_eq!(edges, fixture.edges);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn artifact_kind_keeps_the_media_schema_consistent_with_the_store_schema() {
         assert_eq!(artifact_kind().schema, "sequence.sequence");
         assert_eq!(SEQUENCE_DOCUMENT_SCHEMA, "sequence.sequence");

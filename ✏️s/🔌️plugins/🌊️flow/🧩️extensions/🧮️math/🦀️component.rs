@@ -275,7 +275,7 @@ impl Vec3 {
 impl std::ops::Add for Vec3 {
     type Output = Self;
 
-    async fn add(self, rhs: Self) -> Self::Output {
+    fn add(self, rhs: Self) -> Self::Output {
         Self::new(self.x + rhs.x, self.y + rhs.y, self.z + rhs.z)
     }
 }
@@ -283,7 +283,7 @@ impl std::ops::Add for Vec3 {
 impl std::ops::Sub for Vec3 {
     type Output = Self;
 
-    async fn sub(self, rhs: Self) -> Self::Output {
+    fn sub(self, rhs: Self) -> Self::Output {
         Self::new(self.x - rhs.x, self.y - rhs.y, self.z - rhs.z)
     }
 }
@@ -488,8 +488,8 @@ async fn operator_info(id: &str, name: &str, abbreviation: &str, summary: &str, 
     OperatorInfo { id: id.into(), extension: "math".into(), name: name.into(), abbreviation: abbreviation.into(), icon: "emoji:➕️".into(), summary: summary.into(), inputs, outputs, ..Default::default() }
 }
 
-async fn register_simple(registry: &mut Registry, info: OperatorInfo, operation: Box<dyn Operator>, schemas: Vec<&str>, produces: &[&str]) {
-    registry.register_operator(info, vec![OperatorImpl { schemas: schemas.into_iter().map(str::to_string).collect(), operator: operation }], produces);
+async fn register_simple<O: Operator + 'static>(registry: &mut Registry, info: OperatorInfo, operation: O, schemas: Vec<&str>, produces: &[&str]) {
+    registry.register_operator(info, vec![OperatorImpl { schemas: schemas.into_iter().map(str::to_string).collect(), operator: Box::new(operation) }], produces);
 }
 
 // #endregion 🔖️Helpers
@@ -530,28 +530,27 @@ pub async fn register(registry: &mut Registry) {
         &["number", "point", "vector"],
     );
     let binary_scalar = vec![number_channel("a", "math.multiply"), number_channel("b", "math.multiply")];
-    register_simple(registry, operator_info("math.multiply", "Multiply", "Mul", "Multiplies two numbers", binary_scalar.clone(), vec![product_out()]), Box::new(Multiply), vec!["number", "number"], &["number"]);
-    register_simple(registry, operator_info("math.divide", "Divide", "Div", "Divides a by b", binary_scalar.clone(), vec![quotient_out()]), Box::new(Divide), vec!["number", "number"], &["number"]);
-    register_simple(registry, operator_info("math.power", "Power", "Pow", "Raises a to the power of b", binary_scalar.clone(), vec![power_out()]), Box::new(Power), vec!["number", "number"], &["number"]);
-    register_simple(registry, operator_info("math.modulo", "Modulo", "Mod", "Remainder of a divided by b", binary_scalar, vec![modulo_out()]), Box::new(Modulo), vec!["number", "number"], &["number"]);
+    register_simple(registry, operator_info("math.multiply", "Multiply", "Mul", "Multiplies two numbers", binary_scalar.clone(), vec![product_out()]), Multiply, vec!["number", "number"], &["number"]);
+    register_simple(registry, operator_info("math.divide", "Divide", "Div", "Divides a by b", binary_scalar.clone(), vec![quotient_out()]), Divide, vec!["number", "number"], &["number"]);
+    register_simple(registry, operator_info("math.power", "Power", "Pow", "Raises a to the power of b", binary_scalar.clone(), vec![power_out()]), Power, vec!["number", "number"], &["number"]);
+    register_simple(registry, operator_info("math.modulo", "Modulo", "Mod", "Remainder of a divided by b", binary_scalar, vec![modulo_out()]), Modulo, vec!["number", "number"], &["number"]);
 
-    for (id, name, abbreviation, summary, output, operation) in [
-        ("math.negate", "Negate", "Neg", "Negates a number", vec![negated_out()], Box::new(Negate) as Box<dyn Operator>),
-        ("math.abs", "Abs", "Abs", "Absolute value", vec![absolute_out()], Box::new(Abs)),
-        ("math.sqrt", "Sqrt", "Sqrt", "Square root", vec![root_out()], Box::new(Sqrt)),
-        ("math.floor", "Floor", "Flr", "Floor of a number", vec![floor_out()], Box::new(Floor)),
-        ("math.ceil", "Ceil", "Ceil", "Ceiling of a number", vec![ceiling_out()], Box::new(Ceil)),
-        ("math.round", "Round", "Rnd", "Rounds a number", vec![rounded_out()], Box::new(Round)),
-        ("math.sin", "Sin", "Sin", "Sine in radians", vec![sine_out()], Box::new(Sin)),
-        ("math.cos", "Cos", "Cos", "Cosine in radians", vec![cosine_out()], Box::new(Cos)),
-        ("math.tan", "Tan", "Tan", "Tangent in radians", vec![tangent_out()], Box::new(Tan)),
-        ("math.passThrough", "PassThrough", "Pass", "Forwards a number", vec![number_out()], Box::new(PassThrough)),
-    ] {
-        register_simple(registry, operator_info(id, name, abbreviation, summary, vec![number_channel("number", id)], output), operation, vec!["number"], &["number"]);
-    }
+    // 🧬️ Each unary op has a distinct concrete `Operator` type, so this is unrolled rather than
+    // looped over a heterogeneous table — no first-party `dyn` seam, per O1/R11 (closed local set,
+    // no shared collection needed).
+    register_simple(registry, operator_info("math.negate", "Negate", "Neg", "Negates a number", vec![number_channel("number", "math.negate")], vec![negated_out()]), Negate, vec!["number"], &["number"]);
+    register_simple(registry, operator_info("math.abs", "Abs", "Abs", "Absolute value", vec![number_channel("number", "math.abs")], vec![absolute_out()]), Abs, vec!["number"], &["number"]);
+    register_simple(registry, operator_info("math.sqrt", "Sqrt", "Sqrt", "Square root", vec![number_channel("number", "math.sqrt")], vec![root_out()]), Sqrt, vec!["number"], &["number"]);
+    register_simple(registry, operator_info("math.floor", "Floor", "Flr", "Floor of a number", vec![number_channel("number", "math.floor")], vec![floor_out()]), Floor, vec!["number"], &["number"]);
+    register_simple(registry, operator_info("math.ceil", "Ceil", "Ceil", "Ceiling of a number", vec![number_channel("number", "math.ceil")], vec![ceiling_out()]), Ceil, vec!["number"], &["number"]);
+    register_simple(registry, operator_info("math.round", "Round", "Rnd", "Rounds a number", vec![number_channel("number", "math.round")], vec![rounded_out()]), Round, vec!["number"], &["number"]);
+    register_simple(registry, operator_info("math.sin", "Sin", "Sin", "Sine in radians", vec![number_channel("number", "math.sin")], vec![sine_out()]), Sin, vec!["number"], &["number"]);
+    register_simple(registry, operator_info("math.cos", "Cos", "Cos", "Cosine in radians", vec![number_channel("number", "math.cos")], vec![cosine_out()]), Cos, vec!["number"], &["number"]);
+    register_simple(registry, operator_info("math.tan", "Tan", "Tan", "Tangent in radians", vec![number_channel("number", "math.tan")], vec![tangent_out()]), Tan, vec!["number"], &["number"]);
+    register_simple(registry, operator_info("math.passThrough", "PassThrough", "Pass", "Forwards a number", vec![number_channel("number", "math.passThrough")], vec![number_out()]), PassThrough, vec!["number"], &["number"]);
 
-    register_simple(registry, operator_info("math.min", "Min", "Min", "Minimum of two numbers", vec![number_channel("a", "math.min"), number_channel("b", "math.min")], vec![minimum_out()]), Box::new(Min), vec!["number", "number"], &["number"]);
-    register_simple(registry, operator_info("math.max", "Max", "Max", "Maximum of two numbers", vec![number_channel("a", "math.max"), number_channel("b", "math.max")], vec![maximum_out()]), Box::new(Max), vec!["number", "number"], &["number"]);
+    register_simple(registry, operator_info("math.min", "Min", "Min", "Minimum of two numbers", vec![number_channel("a", "math.min"), number_channel("b", "math.min")], vec![minimum_out()]), Min, vec!["number", "number"], &["number"]);
+    register_simple(registry, operator_info("math.max", "Max", "Max", "Maximum of two numbers", vec![number_channel("a", "math.max"), number_channel("b", "math.max")], vec![maximum_out()]), Max, vec!["number", "number"], &["number"]);
     register_simple(
         registry,
         operator_info(
@@ -562,7 +561,7 @@ pub async fn register(registry: &mut Registry) {
             vec![number_channel("value", "math.remap"), number_channel("fromMin", "math.remap"), number_channel("fromMax", "math.remap"), number_channel("toMin", "math.remap"), number_channel("toMax", "math.remap")],
             vec![remapped_out()],
         ),
-        Box::new(Remap),
+        Remap,
         vec!["number", "number", "number", "number", "number"],
         &["number"],
     );
@@ -576,11 +575,11 @@ pub async fn register(registry: &mut Registry) {
             vec![number_channel("seed", "math.random"), number_channel("min", "math.random"), ChannelSpec::number_default("max", 1.0, &["math.random"])],
             vec![random_out()],
         ),
-        Box::new(Random),
+        Random,
         vec!["number", "number", "number"],
         &["number"],
     );
-    register_simple(registry, operator_info("math.sum", "Sum", "Sum", "Sums numbers in a list dictionary", vec![ChannelSpec::list("list", &["math.sum"])], sum_output.clone()), Box::new(Sum), vec!["list"], &["number"]);
+    register_simple(registry, operator_info("math.sum", "Sum", "Sum", "Sums numbers in a list dictionary", vec![ChannelSpec::list("list", &["math.sum"])], sum_output.clone()), Sum, vec!["list"], &["number"]);
     registry.register_operator(
         operator_info("math.move", "Move", "Move", "Moves a point or vector by a vector", vec![ChannelSpec::requires("subject", &["math.move"]), ChannelSpec::requires("vector", &["math.move"])], move_out()),
         vec![OperatorImpl { schemas: vec!["point".into(), "vector".into()], operator: Box::new(Move) }, OperatorImpl { schemas: vec!["vector".into(), "vector".into()], operator: Box::new(Move) }],
@@ -620,7 +619,7 @@ mod tests {
     use super::*;
     use flow_extension_sdk::{build_manifest_json, evaluate_json, FlowExtensionCommand, FlowExtensionSetting};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_sums_number_dictionaries() {
         let mut reg = Registry::new();
         register(&mut reg);
@@ -631,7 +630,7 @@ mod tests {
         assert_eq!(sum.get("value").and_then(|v| v.as_atom()).and_then(|a| a.as_f64()), Some(4.1));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn construct_vector_uses_xyz_channels() {
         let mut reg = Registry::new();
         register(&mut reg);
@@ -642,7 +641,7 @@ mod tests {
         assert_eq!(vector.get("z").and_then(|v| v.as_atom()).and_then(|a| a.as_f64()), Some(3.0));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn schema_component_round_trips_vector() {
         let reg = module_registry();
         let built = reg.dispatch("math.vector", &Dictionary::new().insert("x", Value::Dictionary(number_dictionary(1.0))).insert("y", Value::Dictionary(number_dictionary(2.0))).insert("z", Value::Dictionary(number_dictionary(3.0)))).unwrap();
@@ -651,7 +650,7 @@ mod tests {
         assert_eq!(deconstructed.get("y").and_then(|value| value.as_dictionary()).and_then(|dictionary| dictionary.get("value")).and_then(|value| value.as_atom()).and_then(|atom| atom.as_f64()), Some(2.0));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn move_translates_point() {
         let mut reg = Registry::new();
         register(&mut reg);
@@ -662,7 +661,7 @@ mod tests {
         assert_eq!(point.get("x").and_then(|v| v.as_atom()).and_then(|a| a.as_f64()), Some(5.0));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn manifest_lists_math_operators_and_schemas() {
         let json = build_manifest_json(
             "math",
@@ -679,7 +678,7 @@ mod tests {
         assert!(json.contains("vector"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn evaluate_json_adds_numbers() {
         let reg = module_registry();
         let input = Dictionary::new().insert("a", Value::Dictionary(number_dictionary(2.0))).insert("b", Value::Dictionary(number_dictionary(1.0)));
@@ -690,7 +689,7 @@ mod tests {
         assert_eq!(sum.get("value").and_then(|v| v.as_atom()).and_then(|a| a.as_f64()), Some(3.0));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn random_is_deterministic_with_seed() {
         let mut reg = Registry::new();
         register(&mut reg);
@@ -702,7 +701,7 @@ mod tests {
         assert_eq!(first_value, second_value);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn divide_rejects_zero() {
         let mut reg = Registry::new();
         register(&mut reg);

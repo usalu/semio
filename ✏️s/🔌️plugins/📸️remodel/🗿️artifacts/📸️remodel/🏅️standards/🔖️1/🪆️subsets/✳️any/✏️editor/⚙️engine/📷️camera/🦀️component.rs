@@ -614,7 +614,7 @@ pub enum CameraError {
 }
 
 impl std::fmt::Display for CameraError {
-    async fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::TooFewViews => write!(f, "fewer than the minimum required number of calibration views"),
             Self::DegenerateHomography => write!(f, "homography estimation is degenerate"),
@@ -1053,7 +1053,7 @@ mod tests {
     }
 
     // #region 🔖️DistortionTests
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn project_unproject_round_trips_for_none_distortion() {
         let intr = Intrinsics { fx: 600.0, fy: 610.0, cx: 320.0, cy: 240.0, skew: 0.5, distortion: Distortion::None };
         for ix in -3..=3 {
@@ -1067,7 +1067,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn undistort_distort_round_trips_for_brown_conrady_and_fisheye() {
         let models = [Distortion::BrownConrady { k1: -0.15, k2: 0.03, k3: -0.002, p1: 0.001, p2: -0.0015 }, Distortion::FisheyeEquidistant { k1: -0.05, k2: 0.01, k3: -0.002, k4: 0.0005 }];
         for distortion in models {
@@ -1084,7 +1084,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn project_unproject_round_trips_through_moderate_distortion() {
         let intr = Intrinsics { fx: 650.0, fy: 655.0, cx: 315.0, cy: 245.0, skew: 0.0, distortion: Distortion::BrownConrady { k1: -0.1, k2: 0.02, k3: 0.0, p1: 0.0005, p2: -0.0004 } };
         for ix in -3..=3 {
@@ -1100,7 +1100,7 @@ mod tests {
     // #endregion 🔖️DistortionTests
 
     // #region 🔖️ReprojectionTests
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn reprojection_problem_residuals_vanish_at_ground_truth_and_lm_recovers_from_perturbation() {
         let intr = Intrinsics { fx: 500.0, fy: 500.0, cx: 250.0, cy: 200.0, skew: 0.0, distortion: Distortion::None };
         let num_cameras = 3;
@@ -1150,7 +1150,7 @@ mod tests {
     // #endregion 🔖️ReprojectionTests
 
     // #region 🔖️PlanarCalibrationTests
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn calibrate_planar_recovers_intrinsics_from_synthetic_checkerboard() {
         let true_intr = Intrinsics { fx: 800.0, fy: 810.0, cx: 322.0, cy: 238.0, skew: 0.0, distortion: Distortion::BrownConrady { k1: -0.12, k2: 0.02, k3: 0.0, p1: 0.0005, p2: -0.0003 } };
         let (nx, ny, square) = (7, 5, 0.03);
@@ -1194,7 +1194,7 @@ mod tests {
         assert_eq!(result.poses.len(), num_views);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn calibrate_planar_rejects_too_few_views() {
         let view = vec![([0.0, 0.0], [100.0, 100.0]), ([0.1, 0.0], [150.0, 100.0]), ([0.0, 0.1], [100.0, 150.0]), ([0.1, 0.1], [150.0, 150.0])];
         let views = vec![view.clone(), view];
@@ -1203,7 +1203,7 @@ mod tests {
     // #endregion 🔖️PlanarCalibrationTests
 
     // #region 🔖️RollingShutterTests
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn pose_at_row_matches_pose0_at_first_row_and_grows_monotonically() {
         let model = RollingShutterModel { line_delay_s: 1e-5, readout: ReadoutDirection::TopToBottom };
         let pose0 = CameraPose(Se3::exp([0.1, -0.05, 0.2, 0.05, 0.02, -0.03]));
@@ -1221,7 +1221,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn pose_at_row_bottom_to_top_reverses_direction() {
         let model_top = RollingShutterModel { line_delay_s: 1e-5, readout: ReadoutDirection::TopToBottom };
         let model_bottom = RollingShutterModel { line_delay_s: 1e-5, readout: ReadoutDirection::BottomToTop };
@@ -1233,7 +1233,7 @@ mod tests {
         assert!(diff < 1e-9, "top-to-bottom last row should match bottom-to-top first row");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn rectify_remap_field_is_near_identity_at_zero_velocity() {
         let intr = Intrinsics { fx: 400.0, fy: 400.0, cx: 100.0, cy: 75.0, skew: 0.0, distortion: Distortion::None };
         let model = RollingShutterModel { line_delay_s: 1e-5, readout: ReadoutDirection::TopToBottom };
@@ -1252,7 +1252,7 @@ mod tests {
     // #endregion 🔖️RollingShutterTests
 
     // #region 🔖️RigTests
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn rig_project_matches_manual_composition() {
         let intr = Intrinsics { fx: 400.0, fy: 400.0, cx: 200.0, cy: 150.0, skew: 0.0, distortion: Distortion::None };
         let camera_from_rig = Se3::exp([0.1, 0.0, 0.0, 0.0, 0.2, 0.0]);
@@ -1265,7 +1265,7 @@ mod tests {
         assert!(rig_project(&rig, &[intr], "unknown", &rig_pose, point_world).is_none());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn refine_rig_recovers_planted_extrinsics_and_instance_poses_from_perturbation() {
         let intr = Intrinsics { fx: 500.0, fy: 505.0, cx: 250.0, cy: 200.0, skew: 0.0, distortion: Distortion::None };
         let intrinsics = [intr, intr, intr];
@@ -1348,7 +1348,7 @@ mod tests {
         a
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn bougnoux_focal_from_fundamental_recovers_distinct_ground_truth_focals() {
         let f1_true = 850.0;
         let f2_true = 1200.0;
@@ -1376,7 +1376,7 @@ mod tests {
         assert!((rf2_scaled - rf2).abs() < 1e-6, "f2 should be scale-invariant: {rf2_scaled} vs {rf2}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn aggregate_self_calibration_recovers_median_and_rejects_outliers() {
         let candidates = [(800.0, 1000.0), (820.0, 990.0), (5000.0, 40.0), (810.0, 1010.0), (790.0, 1005.0)];
         let (f1, f2) = aggregate_self_calibration(&candidates);
@@ -1385,7 +1385,7 @@ mod tests {
         assert_eq!(aggregate_self_calibration(&[]), (0.0, 0.0));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn bougnoux_focal_from_fundamental_rejects_wrong_shaped_matrix() {
         let mut f_wrong = MatD::zeros(2, 3);
         f_wrong.set(0, 0, 1.0);
@@ -1433,7 +1433,7 @@ mod tests {
         out
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn reprojection_jacobians_match_central_difference_at_random_configurations() {
         let mut state = 909_u64;
         let models = [Distortion::None, Distortion::BrownConrady { k1: -0.12, k2: 0.02, k3: 0.001, p1: 0.0008, p2: -0.0005 }, Distortion::FisheyeEquidistant { k1: -0.04, k2: 0.008, k3: -0.001, k4: 0.0002 }];

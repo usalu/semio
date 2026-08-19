@@ -20,7 +20,7 @@ pub struct FlattenPlane {
 }
 
 impl Default for FlattenPlane {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { origin: [0.0, 0.0, 0.0], x_axis: [1.0, 0.0, 0.0], y_axis: [0.0, 1.0, 0.0] }
     }
 }
@@ -35,7 +35,7 @@ pub struct FlattenPose {
 }
 
 impl Default for FlattenPose {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { plane: FlattenPlane::default(), center: [0.0, 0.0], orientation: [0.0, 0.0, 0.0, 1.0] }
     }
 }
@@ -516,7 +516,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fixed_root_keeps_stored_plane() {
         let objects = vec![object("a", [1.0, 2.0, 3.0], vec![])];
         let poses = flatten_objects(&objects, &[], None);
@@ -524,7 +524,7 @@ mod tests {
         assert_eq!(pose.plane.origin, [1.0, 2.0, 3.0]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn derived_root_resets_plane_to_default() {
         let mut objects = vec![object("a", [1.0, 2.0, 3.0], vec![])];
         objects[0].anchor = Puzzle3dObjectAnchor::Derived;
@@ -533,7 +533,7 @@ mod tests {
         assert_eq!(pose.plane.origin, [0.0, 0.0, 0.0]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn child_plane_is_deterministic_for_vertical_stack() {
         let parent = object("p", [0.0, 0.0, 0.0], vec![vortex("top", [0.0, 0.0, 1.0], [0.0, 0.0, 1.0])]);
         let mut child = object("c", [0.0, 0.0, 0.0], vec![vortex("bottom", [0.0, 0.0, -1.0], [0.0, 0.0, -1.0])]);
@@ -560,7 +560,7 @@ mod tests {
         assert!(child_pose.plane.origin[2].is_finite());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn identity_orientation_from_default_plane() {
         let q = plane_to_orientation(FlattenPlane::default());
         assert!((q[0]).abs() < 1e-9 && (q[1]).abs() < 1e-9 && (q[2]).abs() < 1e-9);

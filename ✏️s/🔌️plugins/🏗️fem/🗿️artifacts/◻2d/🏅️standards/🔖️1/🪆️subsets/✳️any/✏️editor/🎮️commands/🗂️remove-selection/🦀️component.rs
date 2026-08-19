@@ -53,7 +53,7 @@ mod tests {
     use crate::editor::fem2d::testkit::{dispatch, fem2d_app};
     use crate::editor::fem2d::Fem2dCommand;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn remove_selection_covers_nodes_elements_materials_sections_supports_load_cases_2d() {
         let mut app = fem2d_app();
         dispatch(&mut app, Fem2dCommand::AddNode(add_node::AddNode { x: 0.0, y: 0.0 }));
@@ -67,7 +67,7 @@ mod tests {
         assert!(app.snapshot().expect("snapshot").load_cases.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn remove_selection_covers_regions_2d() {
         let mut app = fem2d_app();
         dispatch(&mut app, Fem2dCommand::AddRegion(add_region::AddRegion { x: 0.0, y: 0.0, width: 1.0, height: 1.0, material_id: "steel".into(), thickness: None, mesh_size: None }));
@@ -77,7 +77,7 @@ mod tests {
         assert!(app.snapshot().expect("snapshot").regions.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn remove_selection_with_no_matching_ids_is_a_no_op_2d() {
         let mut app = fem2d_app();
         let result = dispatch(&mut app, Fem2dCommand::RemoveSelection(RemoveSelection { ids: vec!["missing".into()] }));

@@ -44,7 +44,7 @@ mod tests {
     use crate::editor::remodel::testkit::{app, dispatch, render as render_body};
     use crate::editor::remodel::RemodelCommand;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn the_calibration_panel_lists_added_ground_control_points() {
         let mut app = app();
         dispatch(&mut app, RemodelCommand::AddGcp(AddGcp { name: "Corner".into(), world_x: 1.0, world_y: 2.0, world_z: 3.0 }));

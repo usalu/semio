@@ -29,7 +29,7 @@ mod tests {
         rendered.pointer("/nodeGraph/previewOffJson").and_then(Value::as_str).and_then(|raw| serde_json::from_str(raw).ok()).unwrap_or(Value::Null)
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_preview_off_toggles_ids_on_and_off_the_scene() {
         use crate::editor::flow::commands::set_preview_off;
         let mut app = flow_app();
@@ -39,7 +39,7 @@ mod tests {
         assert_eq!(preview_off_ids(&mut app), Value::Null, "an empty preview-off set is omitted from the scene");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn node_graph_viewport_moves_the_camera() {
         let mut app = flow_app();
         let before = render(&mut app, FLOW_PLAY_BODY_MAIN);

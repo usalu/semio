@@ -85,14 +85,14 @@ mod tests {
     use protocol::Inference;
 
     //#region 🧪️InferenceLaws
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let mut snapshot = empty_cad_snapshot();
         snapshot.shape_model = Some(sample_model_child("inference-law-1"));
         assert_eq!(CadInference::infer(&snapshot), CadInference::infer(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(CadInference::infer(&empty_cad_snapshot()), CadInference::default());
     }
@@ -110,7 +110,7 @@ mod derive_transformation {
     #[cfg(test)]
     use crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::CadPrimitiveSlot;
 
-    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::{BrepKernel, GeometryHandle};
+    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::{Brep, BrepKernel, GeometryHandle};
     use semio_framework_3d::engine::Vec3;
     #[cfg(test)]
     use std::collections::HashMap;
@@ -154,7 +154,7 @@ mod derive_transformation {
     //#endregion 🔖️ClassifyRules
 
     //#region 🔖️FaceAnalytics
-    async fn face_mesh_analytics(kernel: &dyn BrepKernel, face: &GeometryHandle) -> Option<(Vec3, Vec3)> {
+    async fn face_mesh_analytics(kernel: &Brep, face: &GeometryHandle) -> Option<(Vec3, Vec3)> {
         let mesh = semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::block_on(kernel.tessellate(face, 0.1)).ok()?;
         let mut area_sum = 0.0;
         let mut centroid = [0.0, 0.0, 0.0];
@@ -209,12 +209,12 @@ mod derive_transformation {
     }
 
     /// @emoji 📍️ Face centroid via tessellated triangle area weighting (premigration `faceCentroid` equivalent).
-    pub async fn face_centroid_sync(kernel: &dyn BrepKernel, face: &GeometryHandle) -> Option<Vec3> {
+    pub async fn face_centroid_sync(kernel: &Brep, face: &GeometryHandle) -> Option<Vec3> {
         face_mesh_analytics(kernel, face).map(|(centroid, _)| centroid)
     }
 
     /// @emoji 🧭️ Face outward normal from tessellated triangle winding.
-    pub async fn face_normal_sync(kernel: &dyn BrepKernel, face: &GeometryHandle) -> Option<Vec3> {
+    pub async fn face_normal_sync(kernel: &Brep, face: &GeometryHandle) -> Option<Vec3> {
         face_mesh_analytics(kernel, face).map(|(_, normal)| normal)
     }
 
@@ -297,7 +297,7 @@ mod derive_transformation {
 
     //#region 🔖️SolidConstruction
     /// @emoji 📦️ Builds or reuses a kernel solid for a CAD object.
-    pub(crate) async fn solid_for_object(kernel: &mut dyn BrepKernel, object: &CadObject) -> Option<GeometryHandle> {
+    pub(crate) async fn solid_for_object(kernel: &mut Brep, object: &CadObject) -> Option<GeometryHandle> {
         if let Some(handle) = object.solid_handle.as_ref() {
             if semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::block_on(kernel.kind(&GeometryHandle(handle.clone()))).is_ok() {
                 return Some(GeometryHandle(handle.clone()));
@@ -311,7 +311,7 @@ mod derive_transformation {
     }
 
     /// @emoji 📦️ Builds a kernel solid sized from extent without mutating the object.
-    pub async fn build_solid_for_typology(kernel: &mut dyn BrepKernel, typology: &str, extent: [f64; 3]) -> Option<GeometryHandle> {
+    pub async fn build_solid_for_typology(kernel: &mut Brep, typology: &str, extent: [f64; 3]) -> Option<GeometryHandle> {
         let [ex, ey, ez] = extent;
         let (width, depth, height) = (ex.max(0.05), ey.max(0.05), ez.max(0.05));
         if typology.contains("column") {
@@ -322,7 +322,7 @@ mod derive_transformation {
     }
 
     #[cfg(test)]
-    async fn fuse_solids(kernel: &mut dyn BrepKernel, solids: &[GeometryHandle]) -> Option<GeometryHandle> {
+    async fn fuse_solids(kernel: &mut Brep, solids: &[GeometryHandle]) -> Option<GeometryHandle> {
         if solids.is_empty() {
             return None;
         }
@@ -349,7 +349,7 @@ mod derive_transformation {
 
     /// @emoji 🔄️ Derives energy objects from shape-pane solids via fuse + face classification.
     #[cfg(test)]
-    pub(crate) async fn run_derive_from_geometry(kernel: &mut dyn BrepKernel, source_objects: &[CadObject], id_seed: &str) -> Vec<CadObject> {
+    pub(crate) async fn run_derive_from_geometry(kernel: &mut Brep, source_objects: &[CadObject], id_seed: &str) -> Vec<CadObject> {
         let solids: Vec<GeometryHandle> = source_objects.iter().filter_map(|object| solid_for_object(kernel, object)).collect();
         if solids.is_empty() {
             return Vec::new();
@@ -528,7 +528,7 @@ mod derive_transformation {
     mod tests {
         use super::*;
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn derive_from_geometry_classifies_box() {
             let mut kernel = semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::Brep::new();
             let solid = semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::block_on(kernel.box_prim(2.0, 2.0, 3.0)).expect("box");
@@ -554,7 +554,7 @@ mod derive_transformation {
             assert!(derived.iter().any(|object| object.typology == "energy.energy.windows"), "missing windows in {typos:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn face_plane_group_key_is_stable() {
             let key = face_plane_group_key([0.0, 0.0, 1.0], [1.0, 2.0, 3.0]);
             assert!(key.starts_with("z:1:"));
@@ -743,7 +743,7 @@ mod construct_query {
             CadGeometry { anchors: Vec::new(), vertices, edges, wires, faces, shells: vec![shell], solids: vec![solid] }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn topology_graph_exposes_every_entity_as_a_labeled_node() {
             let geometry = box_geometry();
             let graph = CadTopologyGraph::new(&geometry);
@@ -757,7 +757,7 @@ mod construct_query {
             assert_eq!(graph.node_ids().len(), 8 + 12 + 6 + 6 + 1 + 1);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn topology_graph_bounded_by_and_contains_edges_traverse_every_dimension() {
             let geometry = box_geometry();
             let graph = CadTopologyGraph::new(&geometry);
@@ -769,7 +769,7 @@ mod construct_query {
             assert!(rel_edges.iter().any(|e| e.kind == REL_CONTAINS && e.source_node_id == "e0" && e.target_node_id == "v0"));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn construct_query_finds_every_face_bounded_by_its_wire() {
             let geometry = box_geometry();
             let json = run_construct_query(&geometry, "MATCH (f:Face)--[:BOUNDED_BY]->(w:Wire) RETURN f.name, w.name").expect("construct query must run");
@@ -778,7 +778,7 @@ mod construct_query {
             assert_eq!(rows.len(), 6, "every one of the 6 faces must match exactly its own wire: {json}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn construct_query_filters_edges_by_curve_kind_property() {
             let geometry = box_geometry();
             let json = run_construct_query(&geometry, "MATCH (e:Edge) WHERE e.curveKind = 'line' RETURN e.name").expect("construct query must run");
@@ -787,7 +787,7 @@ mod construct_query {
             assert_eq!(rows.len(), 12, "all 12 box edges are line curves: {json}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn construct_query_rejects_malformed_syntax_with_a_real_parse_error() {
             let geometry = box_geometry();
             let error = run_construct_query(&geometry, "NOT A QUERY (((").unwrap_err();
@@ -809,7 +809,7 @@ mod scene_compute {
     use crate::artifacts::cad::{CadCamera, CadNode, CadPaneId, CadProjectionDsl, CadReference, CadSnapshot, CAD_PLAY_DOCUMENT_SCHEMA};
     use crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::{centroid_from_fixture_primitives, objects_from_fixture_model, parse_geometry, tessellate_object_mesh, tessellate_object_mesh_from_fixture, CadGeometry, CadObject, CadPrimitiveSlot};
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::mesh_data_from_mesh_transfer;
-    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::{block_on, BrepKernel, GeometryHandle};
+    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::{block_on, Brep, BrepKernel, GeometryHandle};
     use semio_framework_3d::engine::MeshTransfer;
     use semio_framework::parse_contributions;
     use semio_framework_plugin::{mesh_from_kind, MeshData, WorldProjectionConfig};
@@ -1136,7 +1136,7 @@ mod scene_compute {
         }
     }
 
-    pub(crate) async fn ensure_object_solid_handle(kernel: &mut dyn BrepKernel, object: &mut CadObject) {
+    pub(crate) async fn ensure_object_solid_handle(kernel: &mut Brep, object: &mut CadObject) {
         if object.solid_handle.is_some() {
             return;
         }

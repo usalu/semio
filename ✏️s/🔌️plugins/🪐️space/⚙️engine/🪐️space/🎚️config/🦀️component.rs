@@ -22,19 +22,19 @@ pub struct SpaceWindowCamera {
 }
 
 impl Default for SpaceWindowCamera {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { x: 0.0, y: 0.0, zoom: 1.0 }
     }
 }
 
 impl From<OsWorkflowCamera> for SpaceWindowCamera {
-    async fn from(camera: OsWorkflowCamera) -> Self {
+    fn from(camera: OsWorkflowCamera) -> Self {
         Self { x: camera.x, y: camera.y, zoom: camera.zoom }
     }
 }
 
 impl From<SpaceWindowCamera> for OsWorkflowCamera {
-    async fn from(camera: SpaceWindowCamera) -> Self {
+    fn from(camera: SpaceWindowCamera) -> Self {
         Self { x: camera.x, y: camera.y, zoom: camera.zoom }
     }
 }
@@ -146,7 +146,7 @@ impl store::ArtifactPack for SpaceConfig {
 
 
 impl Default for SpaceConfig {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self {
             camera: BTreeMap::new(),
             collapsed_node_ids: Vec::new(),
@@ -354,7 +354,7 @@ mod tests {
         forward
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn space_config_default_matches_the_expected_sticky_defaults() {
         let config = SpaceConfig::default();
         assert_eq!(config.active_panel_tab, S_PLAY_CATALOGUE_TAB_ID);
@@ -362,12 +362,12 @@ mod tests {
         assert!(config.camera.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn space_config_dsl_text_round_trips() {
         store::os_store::test_support::assert_dsl_round_trip(&SpaceConfig::default());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_camera_round_trips_and_keys_by_window_id() {
         let config = SpaceConfig::default();
         let camera = SpaceWindowCamera { x: 12.0, y: -4.0, zoom: 2.0 };
@@ -376,7 +376,7 @@ mod tests {
         assert_eq!(next.camera.get(S_PLAY_WINDOW_WORKFLOW), Some(&camera));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_active_panel_tab_round_trips() {
         let config = SpaceConfig::default();
         let operation = SpaceConfigMutation::SetActivePanelTab { tab_id: S_PLAY_PARAMETERS_TAB_ID.into() };
@@ -384,7 +384,7 @@ mod tests {
         assert_eq!(next.active_panel_tab, S_PLAY_PARAMETERS_TAB_ID);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn space_config_op_text_round_trips_every_variant() {
         store::os_store::test_support::assert_op_line_round_trip(&SpaceConfigMutation::Snapshot { config: SpaceConfig::default() });
         store::os_store::test_support::assert_op_line_round_trip(&SpaceConfigMutation::SetActiveNode { node_id: Some("a".into()) });
@@ -403,7 +403,7 @@ mod tests {
         store::os_store::test_support::assert_op_line_round_trip(&SpaceConfigMutation::SetLocale { value: "de".into() });
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn space_config_dsl_pack_equivalence() {
         store::os_store::test_support::assert_dsl_pack_equivalence(&SpaceConfig::default());
     }

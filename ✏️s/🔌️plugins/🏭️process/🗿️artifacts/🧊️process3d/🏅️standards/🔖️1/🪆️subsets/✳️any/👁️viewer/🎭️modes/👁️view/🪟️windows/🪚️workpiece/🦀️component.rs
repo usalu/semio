@@ -93,14 +93,14 @@ pub async fn render(fixture: &Process3dSnapshot) -> UiNode {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn definition_declares_the_world3d_surface_and_body_key() {
         let definition = definition();
         assert_eq!(definition.body_key, PROCESS3D_VIEW_BODY_MAIN);
         assert!(matches!(definition.surface_kind, SurfaceKind::World3d));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn render_world_scene_contains_processed_mesh() {
         let fixture = crate::artifacts::process3d::empty_process3d_snapshot();
         let node = serde_json::to_string(&render(&fixture)).expect("render json");

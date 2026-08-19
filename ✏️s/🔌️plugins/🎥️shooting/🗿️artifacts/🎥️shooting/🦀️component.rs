@@ -202,7 +202,7 @@ pub struct ShootingCamera {
 }
 
 impl Default for ShootingCamera {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { position: default_camera_position(), target: default_camera_target(), zoom: 1.0, fov: default_fov(), up: None, projection: None }
     }
 }
@@ -289,7 +289,7 @@ pub struct ShootingSun {
 }
 
 impl Default for ShootingSun {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { enabled: false, azimuth: 45.0, elevation: 35.0, intensity: 2.4, color: "#ffffff".into() }
     }
 }
@@ -302,7 +302,7 @@ pub struct ShootingAmbient {
 }
 
 impl Default for ShootingAmbient {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { intensity: 1.15, color: "#ffffff".into() }
     }
 }
@@ -316,7 +316,7 @@ pub struct ShootingShadow {
 }
 
 impl Default for ShootingShadow {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { enabled: true, opacity: 0.35, softness: 1.0 }
     }
 }
@@ -332,7 +332,7 @@ pub struct ShootingMaterial {
 }
 
 impl Default for ShootingMaterial {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { color: "#9aa0ab".into(), metalness: 0.0, roughness: 1.0, emissive: "#000000".into(), emissive_intensity: 0.0 }
     }
 }
@@ -714,13 +714,13 @@ mod tests {
     /// `SHOOTING_DOCUMENT_SCHEMA` ("shooting.shooting") — the former names the artifact kind in the OS
     /// media catalogue, the latter keys the store envelope. Pinned so a future edit can't silently
     /// merge them.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn artifact_kind_keeps_the_media_schema_distinct_from_the_store_schema() {
         assert_eq!(artifact_kind().schema, "shooting.scene");
         assert_eq!(SHOOTING_DOCUMENT_SCHEMA, "shooting.shooting");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn empty_snapshot_has_no_entities() {
         let snapshot = empty_shooting_snapshot();
         assert!(snapshot.assets.is_empty() && snapshot.shots.is_empty() && snapshot.saved_cameras.is_empty());

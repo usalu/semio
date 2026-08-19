@@ -79,7 +79,7 @@ pub struct SemioTextSnapshot {
 }
 
 impl Default for SemioTextSnapshot {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { schema: STDIO_SEMIOTEXT_DOCUMENT_SCHEMA.into(), runs: Vec::new() }
     }
 }
@@ -337,7 +337,7 @@ mod tests {
         demo_text_snapshot()
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn json_pack_round_trips() {
         let snap = SemioTextSnapshot::default();
         let bytes = <SemioTextSnapshot as store::ArtifactPack>::encode_pack(&snap);
@@ -345,7 +345,7 @@ mod tests {
         assert_eq!(snap, back);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dsl_text_round_trips() {
         let snap = SemioTextSnapshot::default();
         let text = <SemioTextSnapshot as store::ArtifactDsl>::print_dsl(&snap);
@@ -355,7 +355,7 @@ mod tests {
 
     /// 🧪️ codec_retention_law: decode(encode(snapshot)) is byte-for-byte structurally identical
     /// on a fully-populated snapshot (runs/marks non-empty), not just the default.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn codec_retention_law() {
         let snap = populated();
         let bytes = <SemioTextSnapshot as store::ArtifactPack>::encode_pack(&snap);

@@ -24,19 +24,19 @@ async fn assert_fixture_bytes(actual: &[u8], label: &str) {
     panic!("{label}: bytes differ at offset {offset}; actual len={} window={:02x?}; expected len={} window={:02x?}", actual.len(), &actual[start..actual_end], FIXTURE_BYTES.len(), &FIXTURE_BYTES[start..expected_end]);
 }
 
-#[test]
+#[semio_framework_async_macros::async_test]
 async fn fixture_is_real_ac1024_not_a_stub() {
     assert!(FIXTURE_BYTES.len() > 100_000, "architectural.dwg must be the real ~145KB fixture, got {} bytes", FIXTURE_BYTES.len());
     assert_eq!(&FIXTURE_BYTES[0..6], b"AC1024", "fixture must start with the AC1024 version marker");
 }
 
-#[test]
+#[semio_framework_async_macros::async_test]
 async fn source_nonempty() {
     let _ = source();
 }
 
 /// 🧪️ The real file is projected into standard logical concepts without retaining its container.
-#[test]
+#[semio_framework_async_macros::async_test]
 async fn real_decode_projects_logical_state() {
     let snap = decode_dwg(FIXTURE_BYTES).expect("real fixture must decode");
     assert_eq!(snap.version, "AC1024");
@@ -104,21 +104,21 @@ async fn real_decode_projects_logical_state() {
     assert!(!snap.application.name.is_empty(), "real fixture must project its standard application information");
 }
 
-#[test]
+#[semio_framework_async_macros::async_test]
 async fn every_imported_object_has_a_typed_standard_body() {
     let snap = decode_dwg(FIXTURE_BYTES).expect("real fixture must decode");
     let missing = snap.drawing.objects.iter().filter(|object| object.body.is_none()).map(|object| format!("{:#x}:{}", object.handle, object.class_name)).collect::<Vec<_>>();
     assert!(missing.is_empty(), "{} of 652 imported objects remain identity-only; first missing bodies: {:?}", missing.len(), &missing[..missing.len().min(24)]);
 }
 
-#[test]
+#[semio_framework_async_macros::async_test]
 async fn real_decode_stays_lossless_on_reencode() {
     let snap = decode_dwg(FIXTURE_BYTES).expect("real fixture must decode");
     let reencoded = encode_dwg(&snap).expect("re-encode");
     assert_fixture_bytes(&reencoded, "re-encode");
 }
 
-#[test]
+#[semio_framework_async_macros::async_test]
 async fn snapshot_pack_preserves_signed_zero_semantics() {
     let original = decode_dwg(FIXTURE_BYTES).expect("real fixture must decode");
     let restored = DwgSnapshot::decode_pack(&original.encode_pack()).expect("snapshot pack roundtrip");
@@ -128,7 +128,7 @@ async fn snapshot_pack_preserves_signed_zero_semantics() {
     assert_eq!(actual, expected, "snapshot pack must preserve signed zero");
 }
 
-#[test]
+#[semio_framework_async_macros::async_test]
 async fn exact_fixture_roundtrips_through_snapshot_diff_mutation_and_raw_io() {
     let binary = BinarySnapshot { schema: STDIO_BINARY_DOCUMENT_SCHEMA.into(), bytes: FIXTURE_BYTES.to_vec() };
     let original = raw_import::deserialize(&binary).expect("raw DWG import");
@@ -184,7 +184,7 @@ async fn exact_fixture_roundtrips_through_snapshot_diff_mutation_and_raw_io() {
     assert_fixture_bytes(&encode_dwg(&absorbed.apply(&original).expect("absorbed diff must apply")).expect("absorbed inverse export"), "absorbed inverse export");
 }
 
-#[test]
+#[semio_framework_async_macros::async_test]
 async fn persisted_dwg_facets_have_no_parallel_entity_projection() {
     let artifact_root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/🧬️schema");
     for relative in
@@ -200,7 +200,7 @@ async fn persisted_dwg_facets_have_no_parallel_entity_projection() {
     assert!(!drawing.contains("pub entities:"), "Rust persisted drawing retains the parallel entities field");
 }
 
-#[test]
+#[semio_framework_async_macros::async_test]
 async fn semantic_metadata_edits_materialize_from_logical_content() {
     let original = decode_dwg(FIXTURE_BYTES).expect("decode exact fixture");
     let mut changed = original.clone();

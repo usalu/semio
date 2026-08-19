@@ -21,7 +21,7 @@ pub struct Process3dPresence {
 }
 
 impl Default for Process3dPresence {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self {
             engagement_input: String::new(),
             camera_position: [3.0, -3.0, 2.0],

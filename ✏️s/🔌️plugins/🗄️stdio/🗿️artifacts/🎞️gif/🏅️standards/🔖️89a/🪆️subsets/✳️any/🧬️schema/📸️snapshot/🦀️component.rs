@@ -122,7 +122,7 @@ pub struct GifAppExtension {
 }
 
 impl Default for GifAppExtension {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { identifier: [0; 8], auth_code: [0; 3], data: Vec::new() }
     }
 }
@@ -226,7 +226,7 @@ pub struct GifSnapshot {
 }
 
 impl Default for GifSnapshot {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { schema: STDIO_GIF89A_DOCUMENT_SCHEMA.into(), width: 0, height: 0, gct: None, background_color_index: 0, pixel_aspect_ratio: 0, loop_count: None, frames: Vec::new(), comments: Vec::new(), app_extensions: Vec::new() }
     }
 }

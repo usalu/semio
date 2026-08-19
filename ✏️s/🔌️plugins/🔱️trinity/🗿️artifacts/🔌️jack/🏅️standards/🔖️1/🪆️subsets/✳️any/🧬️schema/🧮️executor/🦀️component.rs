@@ -352,13 +352,13 @@ mod tests {
         Graph::from_fixture(fixture).unwrap()
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn parse_match_return() {
         let q = parse("MATCH (a:Piece)-[r:Connection]->(b:Piece) RETURN a.name, b.name").unwrap();
         assert_eq!(q.clauses.len(), 2);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn run_match_return() {
         let mut g = mini_graph();
         let result = run(&mut g, "MATCH (a:Piece)-[r:Connection]->(b:Piece) RETURN a.name, b.name").unwrap();
@@ -367,7 +367,7 @@ mod tests {
         assert_eq!(result.rows[0][0], PropertyValue::String("core".into()));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn run_match_return_graph() {
         let mut g = mini_graph();
         let result = run(&mut g, "MATCH (a:Piece)-[r:Connection]->(b:Piece) RETURN a, r, b").unwrap();
@@ -377,14 +377,14 @@ mod tests {
         assert_eq!(fixture.edges().len(), 1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn run_create() {
         let mut g = mini_graph();
         run(&mut g, "CREATE (n:Piece)").unwrap();
         assert_eq!(g.nodes.len(), 3);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn run_set() {
         let mut g = mini_graph();
         run(&mut g, "MATCH (a:Piece) WHERE a.name = 'core' SET a.label = 'root-core'").unwrap();
@@ -392,62 +392,62 @@ mod tests {
         assert_eq!(node.properties.get("label"), Some(&PropertyValue::String("root-core".into())));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn tokenize_keywords_and_strings() {
         let spans = tokenize("MATCH (a:Piece) WHERE a.name = 'core'");
         assert!(spans.iter().any(|s| s.class == TokenClass::Keyword && s.start == 0));
         assert!(spans.iter().any(|s| s.class == TokenClass::String));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn tokenize_unterminated_string_is_error() {
         let spans = tokenize("MATCH (a:Piece) WHERE a.name = 'core");
         assert!(spans.iter().any(|s| s.class == TokenClass::Error));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn complete_clause_keywords() {
         let g = mini_graph();
         let items = complete(&g, "MAT", 3);
         assert!(items.iter().any(|row| row.label == "MATCH"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn complete_node_kinds_after_colon() {
         let g = mini_graph();
         let items = complete(&g, "MATCH (a:P", 11);
         assert!(items.iter().any(|row| row.label == "Piece"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn complete_properties_after_dot() {
         let g = mini_graph();
         let items = complete(&g, "MATCH (a:Piece) WHERE a.n", 25);
         assert!(items.iter().any(|row| row.label == "name"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn complete_bound_variables() {
         let g = mini_graph();
         let items = complete(&g, "MATCH (a:Piece) RETURN a", 24);
         assert!(items.iter().any(|row| row.label == "a"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn lint_unterminated_string() {
         let g = mini_graph();
         let diags = lint(&g, "MATCH (a:Piece) WHERE a.name = 'core");
         assert!(diags.iter().any(|d| d.code.as_deref() == Some("jack/unterminated-string")));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn lint_unbound_variable() {
         let g = mini_graph();
         let diags = lint(&g, "RETURN a.name");
         assert!(diags.iter().any(|d| d.code.as_deref() == Some("jack/unbound-variable")));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn format_is_idempotent() {
         let source = "MATCH (a:Piece)--[r:Connection]->(b:Piece) RETURN a.name, b.name";
         let once = format_source(source).unwrap();
@@ -457,21 +457,21 @@ mod tests {
         assert!(once.contains('\n'));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn hover_keyword() {
         let g = mini_graph();
         let info = hover(&g, "MATCH (a:Piece) RETURN a.name", 2).unwrap();
         assert!(info.contents.contains("MATCH"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn semantic_tokens_cover_keywords() {
         let tokens = semantic_tokens("MATCH (a:Piece) RETURN a.name");
         assert!(tokens.iter().any(|t| t.class == "keyword"));
         assert!(tokens.iter().any(|t| t.class == "ident"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn run_create_edge() {
         let mut g = mini_graph();
         while g.nodes.len() < 9 {
@@ -482,7 +482,7 @@ mod tests {
         assert_eq!(g.edges.len(), 2);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn run_delete() {
         let mut g = mini_graph();
         run(&mut g, "MATCH (n:Piece) WHERE n.name = 'capsule' DELETE n").unwrap();
@@ -490,7 +490,7 @@ mod tests {
         assert_eq!(g.edges.len(), 0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn run_merge_noop_when_pattern_exists() {
         let mut g = mini_graph();
         run(&mut g, "MERGE (a:Piece)-[:Connection]->(b:Piece)").unwrap();
@@ -498,7 +498,7 @@ mod tests {
         assert_eq!(g.edges.len(), 1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn run_merge_creates_disconnected_pattern() {
         let mut g = mini_graph();
         g.edges.clear();
@@ -507,7 +507,7 @@ mod tests {
         assert_eq!(g.edges.len(), 1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn lex_not_equal() {
         let tokens = lex("WHERE a.name != 'core'").unwrap();
         assert!(tokens.iter().any(|t| matches!(t, Token::Ne)));

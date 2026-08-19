@@ -46,17 +46,17 @@ mod surface_tests {
     use crate::editor::mathematical::MathematicalPlayApp;
     use crate::viewer::mathematical::MathematicalViewer;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mathematical_viewer_never_mutates() {
         semio_framework_plugin::testkit::assert_viewer_never_mutates::<MathematicalViewer>();
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mathematical_editor_and_viewer_share_dialect() {
         semio_framework_plugin::testkit::assert_editor_and_viewer_share_dialect::<MathematicalPlayApp, MathematicalViewer>();
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mathematical_viewer_instantiates_through_new_viewer() {
         let _app = semio_framework_plugin::testkit::new_viewer::<MathematicalViewer>();
     }

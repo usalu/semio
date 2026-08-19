@@ -28,13 +28,13 @@ mod tests {
     use super::*;
     use crate::editor::en1993::testkit;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn definition_declares_this_windows_body_key() {
         assert_eq!(definition().body_key, BODY_RESULTS);
         assert_eq!(definition().id, WINDOW_RESULTS);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn renders_the_computed_checks() {
         let mut app = testkit::new_app();
         let rendered = testkit::render(&mut app, BODY_RESULTS);

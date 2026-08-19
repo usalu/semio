@@ -167,7 +167,7 @@ pub struct SemioPresentationSnapshot {
 }
 
 impl Default for SemioPresentationSnapshot {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { schema: STDIO_SEMIOPRESENTATION_DOCUMENT_SCHEMA.into(), masters: Vec::new(), layouts: Vec::new(), slides: Vec::new() }
     }
 }
@@ -570,7 +570,7 @@ pub(crate) async fn demo_semio_presentation_snapshot() -> SemioPresentationSnaps
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn pack_round_trips() {
         let snap = SemioPresentationSnapshot::default();
         let bytes = <SemioPresentationSnapshot as store::ArtifactPack>::encode_pack(&snap);
@@ -578,7 +578,7 @@ mod tests {
         assert_eq!(snap, back);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dsl_text_round_trips() {
         let snap = SemioPresentationSnapshot::default();
         let text = <SemioPresentationSnapshot as store::ArtifactDsl>::print_dsl(&snap);
@@ -586,7 +586,7 @@ mod tests {
         assert_eq!(snap, back);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn demo_snapshot_pack_and_dsl_round_trip() {
         let snap = demo_semio_presentation_snapshot();
         let bytes = <SemioPresentationSnapshot as store::ArtifactPack>::encode_pack(&snap);
@@ -600,7 +600,7 @@ mod tests {
 
     /// 🧪️ Non-empty structural round trip: masters/layouts/slides all populated, exercising every
     /// shape kind + the document-block reuse.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn pack_round_trips_populated_structure() {
         let snap = SemioPresentationSnapshot {
             schema: STDIO_SEMIOPRESENTATION_DOCUMENT_SCHEMA.into(),

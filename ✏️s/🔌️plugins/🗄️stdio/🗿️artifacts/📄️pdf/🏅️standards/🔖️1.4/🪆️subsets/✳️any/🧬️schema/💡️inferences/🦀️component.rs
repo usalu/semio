@@ -35,7 +35,7 @@ impl Inference<PdfSnapshot> for PdfInference {
 /// `inference_default_law`. Defining default as "infer the default snapshot" makes the two
 /// definitionally equal.
 impl Default for PdfInference {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self::infer(&PdfSnapshot::default())
     }
 }
@@ -83,13 +83,13 @@ mod tests {
     use super::*;
     use protocol::Inference;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = PdfSnapshot::default();
         assert_eq!(PdfInference::infer(&snapshot), PdfInference::infer(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(PdfInference::infer(&PdfSnapshot::default()), PdfInference::default());
     }

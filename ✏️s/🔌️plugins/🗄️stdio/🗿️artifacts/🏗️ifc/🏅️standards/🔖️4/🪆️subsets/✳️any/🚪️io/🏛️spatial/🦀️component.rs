@@ -28,7 +28,7 @@ pub struct SpatialNode {
 pub struct Mat4(pub [[f64; 4]; 4]);
 
 impl Default for Mat4 {
-    async fn default() -> Self {
+    fn default() -> Self {
         Mat4::identity()
     }
 }
@@ -300,7 +300,7 @@ mod tests {
         parse_part21(FIXTURE).expect("parse ifc fixture")
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn spatial_hierarchy_matches_real_chain() {
         let doc = fixture_doc();
         let analysis = analyze_spatial(&doc);
@@ -320,7 +320,7 @@ mod tests {
         assert_eq!(wall.name.as_deref(), Some("Wall-01"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn placement_matrix_composes_across_four_levels() {
         let doc = fixture_doc();
         let analysis = analyze_spatial(&doc);
@@ -333,7 +333,7 @@ mod tests {
         assert!((origin[2] - 10.0).abs() < 1e-9, "z: {origin:?}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn property_set_attached_to_wall() {
         let doc = fixture_doc();
         let analysis = analyze_spatial(&doc);
@@ -347,7 +347,7 @@ mod tests {
         assert_eq!(inner[0].as_enum(), Some("T"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn cyclic_placement_is_flagged_not_infinite_loop() {
         let cyclic = "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION((''),'2;1');\nFILE_NAME('','',(''),(''),'','','');\nFILE_SCHEMA(('IFC4'));\nENDSEC;\nDATA;\n#1=IFCLOCALPLACEMENT(#2,#3);\n#2=IFCLOCALPLACEMENT(#1,#3);\n#3=IFCAXIS2PLACEMENT3D(#4,$,$);\n#4=IFCCARTESIANPOINT((0.,0.,0.));\nENDSEC;\nEND-ISO-10303-21;\n";
         let doc = parse_part21(cyclic).expect("parse cyclic fixture");

@@ -82,7 +82,7 @@ impl store::ArtifactPack for SHomeSnapshot {
 //#endregion 🔖️HandcraftedArtifactCodecs
 
 impl Default for SHomeSnapshot {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self {
             schema: S_HOME_DOCUMENT_SCHEMA.into(),
             catalog_generation: 0,

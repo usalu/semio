@@ -164,21 +164,21 @@ mod tests {
     use crate::editor::shooting::testkit::{dispatch, shooting_app};
     use crate::editor::shooting::ShootingCommand;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_active_shot_label_patches_active_shot() {
         let mut app = shooting_app();
         dispatch(&mut app, ShootingCommand::SetActiveShotLabel(set_active_shot_label::SetActiveShotLabel { value: "Hero Shot".into() }));
         assert_eq!(crate::artifacts::shooting::schema::active_shot(&app.snapshot().expect("snapshot")).unwrap().label, "Hero Shot");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_shot_action_appends_shot() {
         let mut app = shooting_app();
         dispatch(&mut app, ShootingCommand::AddShot(add_shot::AddShot { format: "svg".into(), shape: "ellipse".into() }));
         assert!(app.snapshot().expect("snapshot").shots.iter().any(|shot| shot.format == "svg" && shot.shape == "ellipse"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_active_shot_updates_fixture() {
         let mut app = shooting_app();
         let second_id = app.snapshot().expect("snapshot").shots.get(1).map(|shot| shot.id.clone()).expect("second shot");

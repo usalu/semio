@@ -103,20 +103,20 @@ pub async fn render(doc: &LayoutSnapshot) -> UiNode {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn definition_declares_a_canvas_2d_preview_window() {
         let def = definition();
         assert_eq!(def.id, WINDOW_KIND_ID);
         assert!(matches!(def.surface_kind, SurfaceKind::Canvas2d));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn render_produces_a_scene_node_for_the_default_document() {
         let document = crate::artifacts::layout::schema::default_document();
         let _node = render(&document);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn viewer_canvas_layers_renders_the_page_background() {
         let document = crate::artifacts::layout::schema::default_document();
         let json = viewer_canvas_layers(&document);

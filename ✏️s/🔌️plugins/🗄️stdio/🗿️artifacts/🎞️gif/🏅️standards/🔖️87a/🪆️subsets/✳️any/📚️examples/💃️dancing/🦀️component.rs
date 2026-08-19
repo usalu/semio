@@ -32,7 +32,7 @@ pub async fn source() -> ExampleSource {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dancing_source_nonempty_and_decodes() {
         let src = source();
         assert!(!src.document_json().is_empty());

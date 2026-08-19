@@ -139,12 +139,12 @@ pub async fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn artifact_kind_schema_matches_the_document_schema() {
         assert_eq!(artifact_kind().schema, PROCEDURAL_2D_SCHEMA);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn widget_id_covers_every_widget_kind() {
         let widgets = vec![
             Widget::Neuron { id: "w-neuron".into(), neuron_kind: "math.add".into(), params: Default::default(), input_ports: vec![], output_ports: vec![], preview: true },

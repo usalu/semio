@@ -703,7 +703,7 @@ mod tests {
         SvgSnapshot::import_utf8(&exact_fixture_bytes()).expect("import temp/artifacts.svg")
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn insert_then_remove_element_apply_and_inverse() {
         let base = fixture();
         let insert = SvgMutation::InsertElement { parent: vec![], index: 1, node: XmlNode::Element { name: "circle".into(), attrs: vec![XmlAttr { name: "r".into(), value: "1".into() }], children: vec![] } };
@@ -721,7 +721,7 @@ mod tests {
         assert_eq!(restored, base);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_attribute_apply_and_inverse_round_trip() {
         let base = fixture();
         let mutation = SvgMutation::SetAttribute { path: vec![0], name: "width".into(), value: Some("99".into()) };
@@ -737,7 +737,7 @@ mod tests {
         assert_eq!(write_svg_xml(&restored.doc), write_svg_xml(&base.doc));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_view_box_and_set_transform_apply_and_inverse() {
         let base = fixture();
         let vb = SvgMutation::SetViewBox { path: vec![], view_box: Some(ViewBox { min_x: 1.0, min_y: 2.0, width: 3.0, height: 4.0 }) };
@@ -759,7 +759,7 @@ mod tests {
         assert_eq!(write_svg_xml(&after2.doc), write_svg_xml(&base.doc));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn remove_element_inverse_restores_removed_node() {
         let base = fixture();
         let remove = SvgMutation::RemoveElement { parent: vec![], index: 0 };
@@ -775,7 +775,7 @@ mod tests {
         assert_eq!(write_svg_xml(&after.doc), write_svg_xml(&base.doc));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_element_name_apply_and_inverse() {
         let base = fixture();
         let mutation = SvgMutation::SetElementName { path: vec![0], name: "circle".into() };
@@ -874,7 +874,7 @@ mod tests {
         ]
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mutation_diff_law() {
         for mutation in sample_mutations() {
             let base = fixture();
@@ -891,7 +891,7 @@ mod tests {
     //#endregion 🔖️MutationDiffLaw
 
     //#region 🔖️InverseLaw
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inverse_law() {
         for mutation in sample_mutations() {
             let base = fixture();
@@ -915,7 +915,7 @@ mod tests {
     /// removing a MIDDLE attribute (`"width"`, not the last) and inverting at the DIFF level (not
     /// via a bare replayed `SetAttribute` mutation) DOES restore its exact original Vec position,
     /// because `inverse_attrs_diff` tracks the true original index directly off `base`.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inverse_diff_level_restores_middle_attribute_position() {
         let base = fixture();
         let mutation = SvgMutation::SetAttribute { path: vec![0], name: "width".into(), value: None };
@@ -961,7 +961,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_law() {
         // Canonical: Insert(2)+Remove(0) -> {removed:[0], added:[(1,f)]}.
         {
@@ -1051,7 +1051,7 @@ mod tests {
     //#endregion 🔖️AbsorbLaw
 
     //#region 🔖️BetweenRoundtripLaw
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn between_roundtrip_law() {
         let a = sweep_a();
         let b = sweep_b();
@@ -1072,7 +1072,7 @@ mod tests {
     //#endregion 🔖️BetweenRoundtripLaw
 
     //#region 🔖️CodecRetentionLaw
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn codec_retention_law() {
         let text = r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><g id="layer1"><rect x="0" y="0" width="10" height="10"/><circle cx="50" cy="50" r="5"/></g></svg>"#;
         let doc = crate::artifacts::svg::schema::snapshot::parse_svg_xml(text).expect("fixture parses");
@@ -1093,7 +1093,7 @@ mod tests {
     /// 🎯️ THE acceptance criterion: `sweep_a`/`sweep_b` differ in every mutable field (see the
     /// fixtures' doc comment for exactly how each collection flavor -- removed/modified/added --
     /// is exercised given the recipe's naive positional `between_children`).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn field_sweep() {
         let a = sweep_a();
         let b = sweep_b();
@@ -1136,7 +1136,7 @@ mod tests {
     /// full nested-document payload, and `SetViewBox`/`SetTransform`'s typed geometry payloads.
     /// Reuses `demo_mutation_cases()` (the single source of truth also consumed by
     /// `⚙️engine/🦀️component.rs`'s `ops_grammar_conformance_law`/`protocol_walk_law`).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_text_binary_roundtrip_law() {
         for mutation in demo_mutation_cases() {
             let printed = mutation.print_op();
@@ -1151,7 +1151,7 @@ mod tests {
     }
 
     //#region 🔖️LosslessLogicalState
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn exact_native_direct_pack_and_dsl_roundtrips() {
         let original = exact_fixture_bytes();
         let imported = SvgSnapshot::import_utf8(&original).expect("direct import");
@@ -1173,7 +1173,7 @@ mod tests {
         assert_eq!(restored.export_utf8().expect("xml bridge export"), original);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn exact_native_between_noop_inverse_and_absorb_roundtrips() {
         let original = exact_fixture_bytes();
         let imported = exact_fixture();
@@ -1207,7 +1207,7 @@ mod tests {
         assert_eq!(absorbed_result.export_utf8().expect("absorbed export"), original);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn exact_native_logical_state_survives_diff_and_set_snapshot_codecs() {
         let original = exact_fixture_bytes();
         let imported = exact_fixture();

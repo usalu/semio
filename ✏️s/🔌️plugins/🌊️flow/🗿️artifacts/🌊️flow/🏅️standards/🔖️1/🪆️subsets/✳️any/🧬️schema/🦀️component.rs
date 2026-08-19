@@ -103,7 +103,7 @@ pub struct FlowArtifact {
 
 //#region 🔹Conversions
 impl Default for FlowArtifact {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self::from_snapshot(FlowSnapshot::default())
     }
 }
@@ -304,7 +304,7 @@ semio_framework_plugin::derive_artifact_facets!(
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn widget_id_and_kind_label_agree_across_variants() {
         let widget = Widget::InputSlider { id: "slider".into(), value: 3.0, min: 0.0, max: 10.0, step: 0.1 };
         assert_eq!(widget_id(&widget), "slider");

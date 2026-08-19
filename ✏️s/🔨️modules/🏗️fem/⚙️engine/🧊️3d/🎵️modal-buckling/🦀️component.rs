@@ -109,7 +109,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fem3d_modal_returns_requested_mode_count() {
         let doc = cantilever_fixture();
         let result = fem3d_modal(&doc).expect("modal solves");
@@ -122,7 +122,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fem3d_modal_mode_values_returns_node_displacements() {
         let doc = cantilever_fixture();
         let (freq, values) = fem3d_modal_mode_values(&doc, 0).expect("modal mode values solves");
@@ -131,7 +131,7 @@ mod tests {
         assert!(values.contains_key("n2"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fem3d_buckling_returns_requested_mode_count() {
         let doc = cantilever_fixture();
         let result = fem3d_buckling(&doc, "point").expect("buckling solves");
@@ -141,7 +141,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fem3d_buckling_mode_values_returns_node_displacements() {
         let doc = cantilever_fixture();
         let (factor, values) = fem3d_buckling_mode_values(&doc, "point", 0).expect("buckling mode values solves");
@@ -150,7 +150,7 @@ mod tests {
         assert!(values.contains_key("n2"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fem3d_buckling_unknown_case_errors() {
         let doc = cantilever_fixture();
         let err = fem3d_buckling(&doc, "missing").err().expect("expected error");

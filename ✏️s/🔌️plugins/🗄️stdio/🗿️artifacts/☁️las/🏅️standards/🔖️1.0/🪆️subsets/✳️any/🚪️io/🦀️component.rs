@@ -473,13 +473,13 @@ mod tests {
     use super::*;
     use crate::artifacts::las::schema::{demo_las_snapshot, empty_las_snapshot};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn empty_snapshot_matches_schema() {
         let snapshot = empty_las_snapshot();
         assert_eq!(snapshot.schema, STDIO_LAS_DOCUMENT_SCHEMA);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn codec_round_trip() {
         let snap = empty_las_snapshot();
         let text = store::ArtifactDsl::print_dsl(&snap);
@@ -585,7 +585,7 @@ mod tests {
     }
     //#endregion 🔖️Fixtures
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn format0_round_trip_all_fields() {
         let snap = snapshot_with(0, sample_vlrs());
         let bytes = encode_las(&snap).expect("encode fmt0");
@@ -611,7 +611,7 @@ mod tests {
         assert!((decoded.header.min_y - (-900.0)).abs() < 1e-9);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn format1_round_trip_gps_time() {
         let snap = snapshot_with(1, sample_vlrs());
         let bytes = encode_las(&snap).expect("encode fmt1");
@@ -625,7 +625,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn format2_round_trip_rgb() {
         let snap = snapshot_with(2, vec![]);
         let bytes = encode_las(&snap).expect("encode fmt2");
@@ -641,7 +641,7 @@ mod tests {
         assert_eq!(decoded.header.offset_to_point_data, 227, "offset_to_point_data with zero vlrs must equal the fixed header size");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn format3_round_trip_gps_time_and_rgb() {
         let snap = snapshot_with(3, sample_vlrs());
         let bytes = encode_las(&snap).expect("encode fmt3");
@@ -655,7 +655,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn vlrs_shift_offset_to_point_data() {
         let with_vlrs = snapshot_with(0, sample_vlrs());
         let without_vlrs = snapshot_with(0, vec![]);
@@ -670,7 +670,7 @@ mod tests {
         assert_eq!(decoded_with.header.number_of_vlrs, 2);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn point_offset_is_trusted_not_hardcoded_to_227() {
         let snap = snapshot_with(0, vec![]);
         let bytes = encode_las(&snap).expect("encode");
@@ -687,7 +687,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn las_1_4_extended_point_count_fallback() {
         let snap = snapshot_with(0, vec![]);
         let bytes = encode_las(&snap).expect("encode");
@@ -711,7 +711,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn unsupported_point_format_is_rejected() {
         let snap = snapshot_with(0, vec![]);
         let mut bytes = encode_las(&snap).expect("encode");
@@ -720,7 +720,7 @@ mod tests {
         assert!(err.contains("unsupported point data format"), "unexpected error: {err}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn bad_signature_is_rejected() {
         let mut bytes = vec![0u8; 300];
         bytes[0..4].copy_from_slice(b"NOPE");
@@ -728,7 +728,7 @@ mod tests {
         assert!(err.contains("signature"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn header_too_short_is_rejected() {
         let mut bytes = vec![0u8; 50];
         bytes[0..4].copy_from_slice(b"LASF");
@@ -736,7 +736,7 @@ mod tests {
         assert!(err.contains("too short"), "unexpected error: {err}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn demo_snapshot_round_trip() {
         let snap = demo_las_snapshot();
         let text = store::ArtifactDsl::print_dsl(&snap);
@@ -756,7 +756,7 @@ mod tests {
         use crate::artifacts::las::schema::{diff, mutations, snapshot};
         use protocol::{DiffCodec, OpBinary, OpText};
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn committed_facet_files_parse() {
             for (label, text) in [("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO)] {
                 let grammar = dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
@@ -767,7 +767,7 @@ mod tests {
             }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn grammar_conformance_law() {
             let grammar = dsl::parse_grammar(snapshot::text::COMPONENT_GRAMMAR_SEMIO).expect("parse snapshot grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
@@ -782,7 +782,7 @@ mod tests {
             assert!(recognizer.recognize(&empty_reconstructed).expect("recognize"), "grammar did not recognize empty dsl body:\n{empty_reconstructed}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn ops_grammar_conformance_law() {
             let grammar = dsl::parse_grammar(mutations::text::COMPONENT_GRAMMAR_SEMIO).expect("parse mutations grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
@@ -792,7 +792,7 @@ mod tests {
             }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn diff_grammar_conformance_law() {
             let grammar = dsl::parse_grammar(diff::text::COMPONENT_GRAMMAR_SEMIO).expect("parse diff grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
@@ -802,7 +802,7 @@ mod tests {
             }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn protocol_walk_law() {
             let pack_spec = dsl::parse_protocol(snapshot::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
             let packed = store::ArtifactPack::encode_pack(&demo_las_snapshot());
@@ -825,7 +825,7 @@ mod tests {
             }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn fixture_honesty_law() {
             const FIXTURE_DSL: &str = include_str!("../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
             const FIXTURE_PACK: &[u8] = include_bytes!("../📚️examples/🎬️demo/🖼️assets/🎒️example.pack.semio");

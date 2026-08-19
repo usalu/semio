@@ -36,7 +36,7 @@ impl protocol::Inference<WiresSnapshot> for WiresInference {
 /// derive structurally" trick `AddInference` uses in `📡️spr/🎮️command/🦀️component.rs`, anchored on
 /// this artifact's own `empty_wires_snapshot()` rather than `Default::default()`.
 impl Default for WiresInference {
-    async fn default() -> Self {
+    fn default() -> Self {
         <Self as protocol::Inference<WiresSnapshot>>::infer(&crate::artifacts::wires::empty_wires_snapshot())
     }
 }
@@ -139,18 +139,18 @@ mod tests {
         snapshot
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = chain_snapshot();
         assert_eq!(WiresInference::infer(&snapshot), WiresInference::infer(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(WiresInference::infer(&empty_wires_snapshot()), WiresInference::default());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn topology_counts_the_board_graph() {
         let inferred = WiresInference::infer(&chain_snapshot());
         assert_eq!(inferred.topology.node_count, 2);

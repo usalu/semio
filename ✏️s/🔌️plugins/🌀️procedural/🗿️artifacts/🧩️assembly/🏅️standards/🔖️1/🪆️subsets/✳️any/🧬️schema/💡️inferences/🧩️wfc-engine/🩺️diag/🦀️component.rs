@@ -140,14 +140,14 @@ pub struct Metrics {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn off_sink_records_nothing() {
         let mut sink = EventSink::new(DiagLevel::Off);
         sink.emit(Event::Solved);
         assert!(sink.into_events().is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn summary_sink_records_events() {
         let mut sink = EventSink::new(DiagLevel::Summary);
         sink.emit(Event::Solved);
@@ -157,21 +157,21 @@ mod tests {
         assert_eq!(events[0], Event::Solved);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn metrics_default_to_zero() {
         let m = Metrics::default();
         assert_eq!(m.observations, 0);
         assert_eq!(m.backtracks, 0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn diag_levels_are_ordered() {
         assert!(DiagLevel::Off < DiagLevel::Summary);
         assert!(DiagLevel::Summary < DiagLevel::Decisions);
         assert!(DiagLevel::Decisions < DiagLevel::Full);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn emit_detailed_is_suppressed_below_decisions_level() {
         let mut summary_sink = EventSink::new(DiagLevel::Summary);
         summary_sink.emit_detailed(Event::Observed { node: NodeId(0), chosen: PatternId(0) });
@@ -182,7 +182,7 @@ mod tests {
         assert_eq!(decisions_sink.into_events().len(), 1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn trace_replay_extracts_only_observed_events_in_order() {
         let report = RunReport {
             metrics: Metrics::default(),
@@ -196,7 +196,7 @@ mod tests {
         assert_eq!(trace.decisions, vec![(NodeId(0), PatternId(1)), (NodeId(0), PatternId(2))]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn trace_replay_matches_identical_sequences_and_rejects_divergent_ones() {
         let a = TraceReplay { model_fingerprint: 1, seed: 2, decisions: vec![(NodeId(0), PatternId(0))] };
         let b = TraceReplay { model_fingerprint: 1, seed: 2, decisions: vec![(NodeId(0), PatternId(0))] };

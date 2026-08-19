@@ -2275,7 +2275,7 @@ pub(crate) async fn demo_diff_cases() -> Vec<ObjDiff> {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn invalid_collection_targets_are_rejected_before_mutation() {
         let base = ObjSnapshot::default();
         let diff = ObjDiff { vertices: Some(ObjVerticesDiff { removed: vec![0], ..Default::default() }), ..Default::default() };
@@ -2290,7 +2290,7 @@ mod tests {
     /// inside a modified item), and all three collection-triple kinds — index-keyed
     /// (`vertices`/`texcoords`/`normals`/`faces`) AND name-keyed (`groups`/`objects`) — via a real
     /// `between()` result in both directions.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn diff_codec_text_binary_roundtrip_law() {
         let a = sweep_a();
         let b = sweep_b();

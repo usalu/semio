@@ -18,7 +18,7 @@ pub struct Puzzle2dPresence {
 }
 
 impl Default for Puzzle2dPresence {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self {
             camera_x: 0.0,
             camera_y: 0.0,

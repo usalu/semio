@@ -74,13 +74,13 @@ pub enum GltfMutationRegistryError {
 }
 
 impl From<GltfMutationLeafError> for GltfMutationRegistryError {
-    async fn from(error: GltfMutationLeafError) -> Self {
+    fn from(error: GltfMutationLeafError) -> Self {
         Self::Leaf(error)
     }
 }
 
 impl std::fmt::Display for GltfMutationRegistryError {
-    async fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::DuplicateCommand(id) => write!(formatter, "duplicate GLTF mutation command {id}"),
             Self::UnknownCommand(id) => write!(formatter, "unknown GLTF mutation command {id}"),
@@ -294,7 +294,7 @@ mod tests {
         serde_json::to_vec(&mutation::GltfChangeMaterialAlphaModePayload { material: 0, alpha_mode: GltfAlphaMode::Mask }).expect("canonical alpha-mode payload")
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn registry_rejects_duplicate_unknown_and_stale_descriptors() {
         assert!(matches!(GltfMutationRegistry::from_descriptors([DESCRIPTOR, DESCRIPTOR]), Err(GltfMutationRegistryError::DuplicateCommand(_))));
         let registry = GltfMutationRegistry::from_descriptors([DESCRIPTOR]).expect("one descriptor");
@@ -302,7 +302,7 @@ mod tests {
         assert!(matches!(registry.descriptor(DESCRIPTOR.command_id, 2), Err(GltfMutationRegistryError::StaleVersion { expected: 1, actual: 2, .. })));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn descriptor_plan_apply_and_inverse_validate_stale_base_and_paths() {
         let registry = GltfMutationRegistry::from_descriptors([DESCRIPTOR]).expect("one descriptor");
         let before = base();
@@ -324,7 +324,7 @@ mod tests {
         assert_eq!(restored, before);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mutation_outcome_and_inverse_round_trip() {
         let before = base();
         let forward = GltfMutation::new(DESCRIPTOR.command_id, DESCRIPTOR.version, payload()).expect("registered mutation");

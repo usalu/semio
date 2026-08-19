@@ -48,13 +48,13 @@ pub enum GltfJson {
 }
 
 impl Default for GltfJson {
-    async fn default() -> Self {
+    fn default() -> Self {
         GltfJson::Null
     }
 }
 
 impl Serialize for GltfJson {
-    async fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         match self {
             GltfJson::Null => serializer.serialize_unit(),
             GltfJson::Bool(b) => serializer.serialize_bool(*b),
@@ -81,34 +81,34 @@ impl Serialize for GltfJson {
 struct GltfJsonVisitor;
 impl<'de> Visitor<'de> for GltfJsonVisitor {
     type Value = GltfJson;
-    async fn expecting(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn expecting(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str("a JSON value (glTF extras/extensions)")
     }
-    async fn visit_unit<E>(self) -> Result<Self::Value, E> {
+    fn visit_unit<E>(self) -> Result<Self::Value, E> {
         Ok(GltfJson::Null)
     }
-    async fn visit_none<E>(self) -> Result<Self::Value, E> {
+    fn visit_none<E>(self) -> Result<Self::Value, E> {
         Ok(GltfJson::Null)
     }
-    async fn visit_bool<E>(self, v: bool) -> Result<Self::Value, E> {
+    fn visit_bool<E>(self, v: bool) -> Result<Self::Value, E> {
         Ok(GltfJson::Bool(v))
     }
-    async fn visit_i64<E>(self, v: i64) -> Result<Self::Value, E> {
+    fn visit_i64<E>(self, v: i64) -> Result<Self::Value, E> {
         Ok(GltfJson::Number(v as f64))
     }
-    async fn visit_u64<E>(self, v: u64) -> Result<Self::Value, E> {
+    fn visit_u64<E>(self, v: u64) -> Result<Self::Value, E> {
         Ok(GltfJson::Number(v as f64))
     }
-    async fn visit_f64<E>(self, v: f64) -> Result<Self::Value, E> {
+    fn visit_f64<E>(self, v: f64) -> Result<Self::Value, E> {
         Ok(GltfJson::Number(v))
     }
-    async fn visit_str<E>(self, v: &str) -> Result<Self::Value, E> {
+    fn visit_str<E>(self, v: &str) -> Result<Self::Value, E> {
         Ok(GltfJson::String(v.to_string()))
     }
-    async fn visit_string<E>(self, v: String) -> Result<Self::Value, E> {
+    fn visit_string<E>(self, v: String) -> Result<Self::Value, E> {
         Ok(GltfJson::String(v))
     }
-    async fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
+    fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
     where
         A: SeqAccess<'de>,
     {
@@ -118,7 +118,7 @@ impl<'de> Visitor<'de> for GltfJsonVisitor {
         }
         Ok(GltfJson::Array(items))
     }
-    async fn visit_map<A>(self, mut map: A) -> Result<Self::Value, A::Error>
+    fn visit_map<A>(self, mut map: A) -> Result<Self::Value, A::Error>
     where
         A: MapAccess<'de>,
     {
@@ -131,7 +131,7 @@ impl<'de> Visitor<'de> for GltfJsonVisitor {
 }
 
 impl<'de> Deserialize<'de> for GltfJson {
-    async fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+    fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         deserializer.deserialize_any(GltfJsonVisitor)
     }
 }
@@ -156,10 +156,10 @@ mod ordered_attr_map {
     struct AttrVisitor;
     impl<'de> Visitor<'de> for AttrVisitor {
         type Value = Vec<(String, usize)>;
-        async fn expecting(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        fn expecting(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
             f.write_str("a JSON object mapping attribute semantic to accessor index")
         }
-        async fn visit_map<A: MapAccess<'de>>(self, mut map: A) -> Result<Self::Value, A::Error> {
+        fn visit_map<A: MapAccess<'de>>(self, mut map: A) -> Result<Self::Value, A::Error> {
             let mut out = Vec::new();
             while let Some((k, v)) = map.next_entry::<String, usize>()? {
                 out.push((k, v));
@@ -246,7 +246,7 @@ pub struct GltfAsset {
 }
 
 impl Default for GltfAsset {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { version: "2.0".into(), generator: None, copyright: None, min_version: None, extensions: None, extras: None }
     }
 }
@@ -512,7 +512,7 @@ pub struct GltfPbrMetallicRoughness {
 }
 
 impl Default for GltfPbrMetallicRoughness {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { base_color_factor: default_vec4_one(), base_color_texture: None, metallic_factor: 1.0, roughness_factor: 1.0, metallic_roughness_texture: None, extensions: None, extras: None }
     }
 }
@@ -562,7 +562,7 @@ pub struct GltfMaterial {
 }
 
 impl Default for GltfMaterial {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self {
             name: None,
             pbr_metallic_roughness: None,
@@ -637,7 +637,7 @@ pub struct GltfSampler {
 }
 
 impl Default for GltfSampler {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { mag_filter: None, min_filter: None, wrap_s: 10497, wrap_t: 10497, name: None, extensions: None, extras: None }
     }
 }
@@ -799,7 +799,7 @@ pub struct GltfCamera {
 }
 
 impl Serialize for GltfCamera {
-    async fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         #[derive(Serialize)]
         #[serde(rename_all = "camelCase")]
         struct Wire<'a> {
@@ -825,7 +825,7 @@ impl Serialize for GltfCamera {
 }
 
 impl<'de> Deserialize<'de> for GltfCamera {
-    async fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+    fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         #[derive(Deserialize)]
         #[serde(rename_all = "camelCase")]
         struct Wire {
@@ -899,7 +899,7 @@ pub struct GltfDocument {
 }
 
 impl Default for GltfDocument {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self {
             asset: GltfAsset::default(),
             scene: None,
@@ -947,7 +947,7 @@ pub struct GltfSnapshot {
 }
 
 impl Default for GltfSnapshot {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { schema: STDIO_GLTF_DOCUMENT_SCHEMA.into(), document: GltfDocument::default(), buffers: Vec::new(), source_form: GltfSourceForm::Json }
     }
 }

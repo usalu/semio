@@ -265,18 +265,18 @@ pub(crate) mod testkit {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_space_index_editor_builds_a_definition_for_this_dialect() {
         let definition = create_space_index_editor();
         assert_eq!(definition.dialect, SPACE_INDEX_DIALECT.into());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn editor_dialect_matches_the_artifact_coordinate() {
         assert_eq!(<SpaceIndexEditor as ArtifactEditor>::DIALECT, SPACE_INDEX_DIALECT);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn every_declared_mutation_action_is_registered() {
         let definition = create_space_index_editor();
         for command in ["createArtifact", "deleteArtifact", "renameArtifact", "touchArtifact", "requestDeleteArtifact", "openArtifact", "openArtifactWith", "inviteMember", "requestInviteMember", "removeMember", "setVisibility", "copyInviteLink", "foldDirectoryEvents", "presenceHeartbeat"] {
@@ -284,7 +284,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn the_three_dialogs_are_registered_with_the_right_submit_actions() {
         let definition = create_space_index_editor();
         assert_eq!(definition.dialogs.len(), 3);
@@ -296,14 +296,14 @@ mod tests {
         assert_eq!(by_id("inviteMember").args.len(), 2);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn known_artifact_kinds_resolve_by_id_and_reject_unknown_ids() {
         assert_eq!(known_artifact_kind("draw").unwrap().dialect_artifact_kind, "s.draw.draw");
         assert_eq!(known_artifact_kind("note").unwrap().schema, "note.document");
         assert!(known_artifact_kind("nope").is_none());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
         use semio_framework_plugin::{ArtifactView, ConfigView, HistoryView};
         let snapshot = SSpaceSnapshot::default();
@@ -315,7 +315,7 @@ mod tests {
         assert!(json.contains("Unknown body"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn the_members_panel_body_renders_through_the_editor_dispatch() {
         use semio_framework_plugin::{ArtifactView, ConfigView, HistoryView};
         let snapshot = SSpaceSnapshot::default();
@@ -332,7 +332,7 @@ mod tests {
     /// trait impl's unconditional error. Covers every declared action id, mirroring the sibling
     /// `command_from_action_covers_every_declared_action_and_rejects_unknown_ones` convention other
     /// artifact editors already use (e.g. `🌍️gis/🗿️artifacts/🗺️gismap`).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn command_from_action_covers_every_declared_action_and_rejects_unknown_ones() {
         let cases: Vec<(&str, Value)> = vec![
             ("createArtifact", serde_json::json!({ "name": "First", "kindId": "draw", "nowMs": 1, "actor": "user:1" })),
@@ -360,7 +360,7 @@ mod tests {
     /// 🆔️ Lane 4-F: `#s-space-create-artifact`'s no-args click must bridge to an EMPTY `CreateArtifact`
     /// payload (not error on missing fields) — its own handler treats empty `name`/`kindId` as "open
     /// the dialog", mirroring Home's `createSpace`.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn command_from_action_bridges_an_empty_create_artifact_click() {
         let SpaceIndexCommand::CreateArtifact(payload) = SpaceIndexEditor::command_from_action("createArtifact", None).expect("no-args click must bridge") else { panic!("expected CreateArtifact") };
         assert_eq!(payload.name, "");

@@ -23,7 +23,7 @@ pub struct PngIntoDag;
 impl Deserializer<DagSnapshot> for PngIntoDag {
     const FROM: Dialect = PNG_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    async fn deserialize(payload: &IoPayload) -> IoResult<DagSnapshot> {
+    fn deserialize(payload: &IoPayload) -> IoResult<DagSnapshot> {
         let IoPayload::Binary(bytes) = payload else {
             return Err(IoError { message: "PngIntoDag: expected a binary png payload".to_string(), diagnostics: Vec::new() });
         };

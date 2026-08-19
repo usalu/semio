@@ -50,14 +50,14 @@ mod tests {
     use super::run_command::Run;
     use super::stop_command::Stop;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn run_stores_result_and_renders_in_script() {
         let mut app = new_app();
         dispatch(&mut app, SequenceCommand::Run(Run {}));
         assert!(render(&mut app, crate::editor::sequence::modes::edit::windows::script::SEQUENCE_PLAY_BODY_SCRIPT).contains("run result"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn stop_command_clears_last_run_result() {
         let mut app = new_app();
         dispatch(&mut app, SequenceCommand::Run(Run {}));

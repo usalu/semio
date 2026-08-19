@@ -115,13 +115,13 @@ pub struct En1998Artifact {
 
 //#region 🔖️Conversions
 impl Default for En1998Artifact {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self::from_snapshot(En1998Snapshot::default())
     }
 }
 
 impl From<En1998Snapshot> for En1998Artifact {
-    async fn from(snapshot: En1998Snapshot) -> Self {
+    fn from(snapshot: En1998Snapshot) -> Self {
         Self::from_snapshot(snapshot)
     }
 }
@@ -1009,7 +1009,7 @@ pub async fn check_building_seismic(
 mod compliance_helpers_tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn zone2_spectrum_sd_at_t1() {
         let a_g = na_de::SeismicZone::Zone2.a_g();
         let (tb, tc, td, s) = na_de::GroundType::B.spectrum_params();
@@ -1019,7 +1019,7 @@ mod compliance_helpers_tests {
         assert!((sd - 0.375).abs() < 1e-9);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn zone2_spectrum_sd_at_half_second() {
         let a_g = na_de::SeismicZone::Zone2.a_g();
         let (tb, tc, td, s) = na_de::GroundType::B.spectrum_params();
@@ -1031,7 +1031,7 @@ mod compliance_helpers_tests {
         assert!((s_d - 0.075).abs() < 1e-9);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn base_shear_uses_design_spectrum() {
         let a_g = 0.15;
         let (tb, tc, td, s) = na_de::GroundType::B.spectrum_params();
@@ -1046,7 +1046,7 @@ mod compliance_helpers_tests {
         assert!((part_1::base_shear_from_design_kn(s_d, 100.0) - v_b).abs() < 1e-6);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn drift_rho_limit() {
         let rho = part_1::redundancy_factor(false);
         assert!((rho - 1.3).abs() < 1e-9);
@@ -1054,7 +1054,7 @@ mod compliance_helpers_tests {
         assert!((limit - 109.2).abs() < 0.1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn building_seismic_base_shear_uses_sd() {
         let a_g = na_de::SeismicZone::Zone2.a_g();
         let (tb, tc, td, s) = na_de::GroundType::B.spectrum_params();
@@ -1069,7 +1069,7 @@ mod compliance_helpers_tests {
         assert!((report.checks[0].computed.value - expected_v_b * 1000.0).abs() < 1e-3);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn en_type1_vs_de_zone_divergence_same_nominal_ag() {
         let a_g = 0.15;
         let annex_de = AnnexParams::De { zone: na_de::SeismicZone::Zone2, ground: na_de::GroundType::B };
@@ -1081,13 +1081,13 @@ mod compliance_helpers_tests {
         assert!((s_e_en - s_e_de).abs() > 0.05);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn building_seismic_e2e() {
         let report = check_building_seismic(na_de::SeismicZone::Zone2, na_de::GroundType::B, part_1::ImportanceClass::Cc2, part_1::StructuralSystem::MomentFrameDch, 0.3, 500.0, 800.0, 20.0, 12.0, true);
         assert_eq!(report.checks.len(), 2);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn silo_impulsive_convective() {
         let h = 10.0;
         let r = 5.0;
@@ -1098,13 +1098,13 @@ mod compliance_helpers_tests {
         assert!((v - 250.0).abs() < 1e-6);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn silo_behaviour_factor_capped() {
         assert!((part_4::silo_behaviour_factor(2.0) - 1.5).abs() < 1e-9);
         assert!((part_4::silo_behaviour_factor(1.0) - 1.0).abs() < 1e-9);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn tank_base_shear_combines_impulsive_and_convective() {
         let a_g = 0.15;
         let (tb, tc, td, s) = na_de::GroundType::B.spectrum_params();
@@ -1116,13 +1116,13 @@ mod compliance_helpers_tests {
         assert!((v_tank - 412.8624420576831).abs() < 1e-6);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn bridge_isolation_distinct() {
         let q_isol = part_2::isolation_reduction_factor(2.0);
         assert!((q_isol - 4.0).abs() < 1e-9);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn retrofit_confidence_factor_scales_capacity_exactly() {
         let r_k = 400.0;
         let r_d_kl3 = part_3::design_capacity_kn(r_k, part_3::KnowledgeLevel::Kl3.confidence_factor(), 1.0);
@@ -1130,7 +1130,7 @@ mod compliance_helpers_tests {
         assert!((r_d_kl3 / r_d_kl1 - 1.35).abs() < 1e-9);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mononobe_okabe_k_ae_matches_hand_calc_and_reduces_to_rankine() {
         let k_ae = part_5::mononobe_okabe_k_ae(30.0, 0.2);
         assert!((k_ae - 0.46407409106465564).abs() < 1e-9);
@@ -1139,7 +1139,7 @@ mod compliance_helpers_tests {
         assert!((k_a_static - rankine_ka).abs() < 1e-9);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn retaining_wall_thrust_from_k_ae() {
         let k_h = part_5::horizontal_seismic_coefficient(0.15, 1.0, 1.5);
         assert!((k_h - 0.1).abs() < 1e-9);
@@ -1148,13 +1148,13 @@ mod compliance_helpers_tests {
         assert!((thrust - 66.82666911331042).abs() < 1e-6);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn cantilever_modal_participation_factor_matches_closed_form() {
         let gamma = part_6::cantilever_modal_participation_factor();
         assert!((gamma - 1.602484997695127).abs() < 1e-9);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn tower_behaviour_factor_capped_by_type() {
         assert!((part_6::tower_behaviour_factor(3.0, true) - 1.5).abs() < 1e-9);
         assert!((part_6::tower_behaviour_factor(3.0, false) - 2.0).abs() < 1e-9);

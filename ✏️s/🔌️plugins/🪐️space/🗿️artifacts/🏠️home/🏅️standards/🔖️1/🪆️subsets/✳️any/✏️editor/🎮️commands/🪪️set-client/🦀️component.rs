@@ -28,7 +28,7 @@ pub async fn handle(payload: &SetClient, _doc: &ArtifactView<'_, SHomeSnapshot>,
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_client_emits_exactly_one_config_mutation() {
         let history = semio_framework_plugin::HistoryView::empty();
         let doc_snapshot = SHomeSnapshot::default();

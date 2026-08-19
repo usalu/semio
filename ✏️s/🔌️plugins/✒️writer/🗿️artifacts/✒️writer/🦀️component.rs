@@ -33,7 +33,7 @@ pub struct WriterCamera {
 }
 
 impl Default for WriterCamera {
-    async fn default() -> Self {
+    fn default() -> Self {
         default_camera()
     }
 }
@@ -57,7 +57,7 @@ pub struct WriterEditorSettings {
 }
 
 impl Default for WriterEditorSettings {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { show_line_numbers: true, font_px: 14, line_height: 22, tab_size: 2 }
     }
 }
@@ -214,13 +214,13 @@ pub async fn artifact_kind() -> ArtifactKindSpec {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn artifact_kind_keeps_the_media_schema_matching_the_store_schema() {
         assert_eq!(artifact_kind().schema, WRITER_DOCUMENT_SCHEMA);
         assert_eq!(WRITER_DOCUMENT_SCHEMA, "writer.document");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn default_camera_is_centered_and_unzoomed() {
         assert_eq!(WriterCamera::default(), WriterCamera { x: 0.0, y: 0.0, zoom: 1.0 });
     }

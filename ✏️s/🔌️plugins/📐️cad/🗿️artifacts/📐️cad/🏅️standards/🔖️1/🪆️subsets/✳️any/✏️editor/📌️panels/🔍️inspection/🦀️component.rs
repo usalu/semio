@@ -285,7 +285,7 @@ mod tests {
 
 
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn multi_selection_inspector_shows_mixed_values() {
         // ⚠️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 3: `build_properties_panel`
         // no longer resolves object selection into an inspector group (documented gap, see its own
@@ -310,7 +310,7 @@ mod tests {
     // can no longer exercise `object_inspector_group`/`primitive_inspector_group`'s terminology
     // labels — every test below that needs those groups now calls the real, still-working builder
     // directly instead (same pattern `multi_selection_inspector_shows_mixed_values` already uses).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn cad_labels_resolve_native_by_default() {
         let object = make_object_for_typology("spatial.shape.primitive.box", 0, CadPaneId::Shape);
         let json = serde_json::to_string(&ui_inspector_groups_to_tree(&[object_inspector_group(&[&object], cad_labels(&CadConfig::default()))])).unwrap();
@@ -318,7 +318,7 @@ mod tests {
         assert!(!json.contains("Building component"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn cad_labels_resolve_reuse_terminology_in_english() {
         let config = CadConfig { terminology: "reuse".into(), locale: "en".into(), ..CadConfig::default() };
         let json = selected_box_panel(&config);
@@ -326,13 +326,13 @@ mod tests {
         assert!(!json.contains("\"Object\""));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn cad_labels_resolve_reuse_terminology_in_german() {
         let config = CadConfig { terminology: "reuse".into(), locale: "de".into(), ..CadConfig::default() };
         assert!(selected_box_panel(&config).contains("Baukomponente"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn cad_labels_resolve_native_terminology_in_german() {
         let config = CadConfig { terminology: "native".into(), locale: "de".into(), ..CadConfig::default() };
         let object = make_object_for_typology("spatial.shape.primitive.box", 0, CadPaneId::Shape);
@@ -340,7 +340,7 @@ mod tests {
         assert!(json.contains("\"Objekt\""));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn cad_labels_resolve_reuse_terminology_for_primitive() {
         let config = CadConfig { terminology: "reuse".into(), locale: "de".into(), ..CadConfig::default() };
         let object = make_object_for_typology("spatial.shape.primitive.box", 0, CadPaneId::Shape);

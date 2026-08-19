@@ -30,7 +30,7 @@ impl protocol::MutationKind<GltfSnapshot, GltfMutation> for BindNodeMesh {
 }
 
 impl GltfSemanticMutation for BindNodeMesh {
-    async fn apply(&self, snapshot: &mut GltfSnapshot) -> Result<(), GltfMutationRejection> {
+    fn apply(&self, snapshot: &mut GltfSnapshot) -> Result<(), GltfMutationRejection> {
         check_index("document/nodes", self.index, snapshot.document.nodes.len())?;
         if let Some(mesh) = self.mesh {
             check_index("document/meshes", mesh, snapshot.document.meshes.len())?;

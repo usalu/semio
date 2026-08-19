@@ -35,7 +35,7 @@ mod tests {
     use crate::artifacts::gisterrain::schema::mutations::change_imported_features::mutation::ChangeImportedFeatures;
     use crate::artifacts::gisterrain::{GisTerrainSnapshot, GIS_3D_TERRAIN_SCHEMA};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_binary_round_trips_and_agrees_with_text() {
         let operation = GisTerrainMutation::ChangeExaggeration(ChangeExaggeration { new_exaggeration: 2.0 });
         store::os_store::test_support::assert_op_text_binary_equivalence(&operation);
@@ -43,17 +43,17 @@ mod tests {
         assert_eq!(decode_op(&bytes).expect("decode"), operation);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn gis3d_terrain_change_exaggeration_op_line_round_trips() {
         store::os_store::test_support::assert_op_line_round_trip(&GisTerrainMutation::ChangeExaggeration(ChangeExaggeration { new_exaggeration: 3.0 }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn gis3d_terrain_change_imported_features_op_line_round_trips() {
         store::os_store::test_support::assert_op_line_round_trip(&GisTerrainMutation::ChangeImportedFeatures(ChangeImportedFeatures { new_imported_features_json: r#"{"positions":[]}"#.into() }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn gis3d_terrain_document_text_round_trips_through_store() {
         let initial = GisTerrainSnapshot { exaggeration: 1.0, imported_features_json: String::new(), ..Default::default() };
         let envelope = store::create_document_envelope(GIS_3D_TERRAIN_SCHEMA, "gis3d-demo", initial, None);

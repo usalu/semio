@@ -21,7 +21,7 @@ pub struct RemodelPresence {
 }
 
 impl Default for RemodelPresence {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self {
             world_camera_position: [4.0, -4.0, 3.0],
             world_camera_target: [0.0, 0.0, 0.0],

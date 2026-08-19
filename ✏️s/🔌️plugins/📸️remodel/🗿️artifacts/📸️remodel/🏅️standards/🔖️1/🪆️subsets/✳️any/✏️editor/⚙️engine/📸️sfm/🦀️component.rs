@@ -281,7 +281,7 @@ pub enum SfmError {
 }
 
 impl std::fmt::Display for SfmError {
-    async fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::TooFewFrames => write!(f, "fewer than the minimum required number of frames"),
             Self::DegenerateGeometry => write!(f, "two-view geometry is degenerate"),
@@ -1879,7 +1879,7 @@ pub struct SfmConfig {
 }
 
 impl Default for SfmConfig {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self {
             ransac_threshold_px: 2.0,
             min_track_length: 3,
@@ -2501,7 +2501,7 @@ mod tests {
     type CorrByPoint = HashMap<usize, (Option<[f64; 2]>, Option<[f64; 2]>)>;
 
     // #region 🔖️TwoViewTests
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn estimate_fundamental_recovers_planted_outliers_and_satisfies_epipolar_constraint() {
         let scene = synthetic_scene(20260719, 2, 60, false);
         let scene_obs = project_observations(&scene, 0.3, 0.0, 20260719);
@@ -2536,7 +2536,7 @@ mod tests {
         assert!(max_err < 2.0, "epipolar constraint violated: max sampson distance {max_err}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn estimate_homography_recovers_planted_outliers_on_planar_scene() {
         let intr = Intrinsics { fx: 800.0, fy: 800.0, cx: 320.0, cy: 240.0, skew: 0.0, distortion: Distortion::None };
         let pose_a = CameraPose(Se3::identity());
@@ -2566,7 +2566,7 @@ mod tests {
         assert!(max_err < 2.0, "homography point-transfer error too high: {max_err}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn decompose_essential_recovers_relative_pose_within_tolerance() {
         let scene = synthetic_scene(778, 2, 80, false);
         let scene_obs = project_observations(&scene, 0.5, 0.0, 778);
@@ -2604,7 +2604,7 @@ mod tests {
         assert!(dir_err < 0.04, "baseline direction error {dir_err} (want < ~2%)");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn select_two_view_model_prefers_homography_on_planar_scene() {
         let intr = Intrinsics { fx: 800.0, fy: 800.0, cx: 320.0, cy: 240.0, skew: 0.0, distortion: Distortion::None };
         let pose_a = CameraPose(Se3::identity());
@@ -2622,7 +2622,7 @@ mod tests {
     // #endregion 🔖️TwoViewTests
 
     // #region 🔖️TriangulateTests
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn triangulate_dlt_and_refine_point_lm_recover_points_within_reprojection_tolerance() {
         let scene = synthetic_scene(555, 5, 30, false);
         let scene_obs = project_observations(&scene, 0.5, 0.0, 555);
@@ -2658,7 +2658,7 @@ mod tests {
         assert!(checked >= 5, "expected several multi-view points to test, got {checked}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn triangulate_and_validate_rejects_low_angle_and_accepts_well_conditioned_points() {
         let intr = Intrinsics { fx: 800.0, fy: 800.0, cx: 320.0, cy: 240.0, skew: 0.0, distortion: Distortion::None };
         let pose_a = CameraPose(Se3::identity());
@@ -2678,7 +2678,7 @@ mod tests {
     // #endregion 🔖️TriangulateTests
 
     // #region 🔖️PnpTests
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn p3p_grunert_returns_ground_truth_among_solutions() {
         let world_pts: [[f64; 3]; 3] = [[0.3, 0.1, 4.0], [-0.4, 0.2, 4.5], [0.1, -0.5, 3.8]];
         let true_pose = Se3 { r: So3::exp([0.1, -0.2, 0.05]), t: [0.3, -0.1, 0.2] };
@@ -2694,7 +2694,7 @@ mod tests {
         assert!(best_err < 1e-4, "no P3P candidate matched ground truth closely enough: best combined error {best_err}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn epnp_and_refine_pose_lm_recover_pose_within_tolerance_at_one_pixel_noise() {
         let intr = Intrinsics { fx: 800.0, fy: 800.0, cx: 320.0, cy: 240.0, skew: 0.0, distortion: Distortion::None };
         let true_pose = Se3 { r: So3::exp([0.15, -0.1, 0.2]), t: [0.4, -0.2, 0.1] };
@@ -2731,7 +2731,7 @@ mod tests {
         assert!(t_err < 0.06, "relative translation error {t_err}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn pnp_ransac_recovers_pose_despite_planted_outliers() {
         let intr = Intrinsics { fx: 800.0, fy: 800.0, cx: 320.0, cy: 240.0, skew: 0.0, distortion: Distortion::None };
         let true_pose = Se3 { r: So3::exp([0.1, 0.05, -0.15]), t: [0.2, 0.1, -0.1] };
@@ -2761,7 +2761,7 @@ mod tests {
     // #endregion 🔖️PnpTests
 
     // #region 🔖️IncrementalTests
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn run_all_reconstructs_synthetic_multi_camera_scene() {
         let n_cams = 6;
         let scene = synthetic_scene(2026, n_cams, 50, false);
@@ -2848,7 +2848,7 @@ mod tests {
     /// photoset): confirms `init_pair` -> [`estimate_init_pair_essential`] actually routes through the
     /// five-point solver end to end (not just at the primitive level) and comes out with a usable pose and
     /// a fully triangulated seed point cloud.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn init_pair_recovers_pose_and_triangulates_on_low_parallax_pair() {
         let intr = Intrinsics { fx: 800.0, fy: 800.0, cx: 320.0, cy: 240.0, skew: 0.0, distortion: Distortion::None };
         let pose_a = CameraPose(Se3::identity());
@@ -2885,7 +2885,7 @@ mod tests {
     // #endregion 🔖️IncrementalTests
 
     // #region 🔖️GlobalTests
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn rotation_and_translation_averaging_recover_pose_graph_from_noisy_relative_measurements() {
         let n = 7;
         let mut rng = Rng::from_seed(24_681_357);
@@ -2932,7 +2932,7 @@ mod tests {
     // #endregion 🔖️GlobalTests
 
     // #region 🔖️LoopClosureTests
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn keyframe_index_and_detect_loops_find_a_planted_revisit() {
         let mut rng = Rng::from_seed(112_233);
         let n_frames = 5;
@@ -2977,7 +2977,7 @@ mod tests {
         assert!(loops.iter().any(|c| c.frame == 0), "expected the planted revisit at frame 0 to be detected, got {:?}", loops.iter().map(|c| c.frame).collect::<Vec<_>>());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn pose_graph_optimize_reduces_drift_at_loop_closure_edge() {
         let n = 5;
         let mut rng = Rng::from_seed(998_877);
@@ -3013,7 +3013,7 @@ mod tests {
     // #endregion 🔖️LoopClosureTests
 
     // #region 🔖️PriorsTests
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn align_to_priors_recovers_planted_similarity() {
         let mut rng = Rng::from_seed(135_791);
         let intr = Intrinsics { fx: 800.0, fy: 800.0, cx: 320.0, cy: 240.0, skew: 0.0, distortion: Distortion::None };
@@ -3035,7 +3035,7 @@ mod tests {
         assert!(t_err < 1e-6, "translation error {t_err}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn apply_gcp_prior_residual_matches_scaled_difference() {
         let point = [1.0, 2.0, 3.0];
         let known = [1.1, 1.9, 3.2];
@@ -3065,7 +3065,7 @@ mod tests {
     }
 
     /// 📸️ Fixtures self-test: [`project_observations`] at zero noise must match direct [`reproject`] exactly.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fixtures_are_internally_consistent() {
         let scene = synthetic_scene(1, 4, 30, false);
         let obs = project_observations(&scene, 0.0, 0.0, 2);
@@ -3083,7 +3083,7 @@ mod tests {
     /// within a tight angular tolerance (the ticket's "1%" read as a small-angle equivalent: `sin(err) <
     /// 0.02`, i.e. roughly a bit over 1°, generous enough to absorb RANSAC sampling variance while still
     /// being a tight geometric bound) at 0.5px Gaussian pixel noise plus 30% gross outliers.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn eight_point_ransac_recovers_relative_pose_with_noise_and_outliers() {
         let scene = synthetic_scene(10, 8, 260, false);
         let obs = project_observations(&scene, 0.5, 0.3, 11);
@@ -3127,7 +3127,7 @@ mod tests {
     /// non-degenerate) 5-correspondence sample: the true essential matrix `E = [t]_x R` must appear
     /// (Frobenius-normalized, up to the usual sign ambiguity) among the returned candidates. This isolates
     /// the Nistér polynomial-elimination algebra itself from RANSAC/scoring concerns.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn five_point_candidates_include_the_true_essential_matrix() {
         let scene = synthetic_scene(77, 2, 5, false);
         let obs = project_observations(&scene, 0.0, 0.0, 78);
@@ -3178,7 +3178,7 @@ mod tests {
     /// the unconstrained 8-point/fundamental fit): asserts the 5-point solver recovers rotation within
     /// 0.5°, and that plain 8-point on the identical data does measurably worse (or fails outright) — the
     /// "5-point wins on planar/low-parallax" contract.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn five_point_recovers_pose_on_planar_scene_where_eight_point_struggles() {
         // A controlled, moderate-baseline planar/near-planar configuration (mirroring
         // `select_two_view_model_prefers_homography_on_planar_scene`'s relative pose and depth range,
@@ -3247,7 +3247,7 @@ mod tests {
     /// test proves 8-point struggles on — the concrete regression this ticket exists to fix: `init_pair`
     /// used to call 8-point unconditionally, silently keeping the worse model on video-like low-parallax
     /// pairs even though the better one was one function call away.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn estimate_init_pair_essential_prefers_five_point_on_planar_scene() {
         let intr = Intrinsics { fx: 800.0, fy: 800.0, cx: 320.0, cy: 240.0, skew: 0.0, distortion: Distortion::None };
         let pose_a = CameraPose(Se3::identity());
@@ -3282,7 +3282,7 @@ mod tests {
     /// 🎯️ P3P (Grunert, via [`p3p_grunert`]): the true camera pose must appear (near-exactly, since the
     /// input is noiseless) among the returned candidate roots for a synthetic non-degenerate 3-point
     /// configuration.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn p3p_true_pose_is_among_the_candidate_roots() {
         let scene = synthetic_scene(30, 1, 3, false);
         let (intr, pose) = &scene.cameras[0];
@@ -3300,7 +3300,7 @@ mod tests {
 
     /// 📐️ `n`-view DLT triangulation + LM polish: recovers known 3D points within a tolerance scaled to
     /// the injected 0.5px pixel noise.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn triangulation_recovers_points_within_noise_scaled_tolerance() {
         let scene = synthetic_scene(40, 5, 80, false);
         let noise_std = 0.5;
@@ -3335,7 +3335,7 @@ mod tests {
     /// 🎯️ Bundle adjustment ([`SfmBundleProblem`] via [`schur_lm`]): starting from perturbed
     /// cameras/points, converges to near the noise floor — post-BA per-coordinate reprojection RMSE below
     /// `1.05x` the injected pixel-noise std, not merely "better than the perturbed start".
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn bundle_adjustment_converges_near_noise_floor() {
         let scene = synthetic_scene(50, 4, 45, false);
         let noise_std = 0.4;
@@ -3404,7 +3404,7 @@ mod tests {
         /// feeding [`pose_graph_optimize`] both the biased sequential edges *and* one accurate
         /// loop-closing edge (frame 39 back to frame 0, as if geometrically re-verified on revisit) must
         /// bring every camera's recovered position back to within 1% of the orbit radius.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn loop_closure_corrects_accumulated_drift() {
             const N: usize = 40;
             let scene = synthetic_scene(900, N, 5, false);

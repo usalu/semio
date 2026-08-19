@@ -160,7 +160,7 @@ mod tests {
         ]
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn every_variant_round_trips_and_restores_base() {
         let base = En1994Snapshot::default();
         for mutation in demo_mutation_cases() {
@@ -168,7 +168,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn change_annex_round_trips() {
         let base = En1994Snapshot::default();
         let mutation = En1994Mutation::ChangeAnnex(change_annex::mutation::ChangeAnnex { new_annex: AnnexChoice::En });
@@ -177,7 +177,7 @@ mod tests {
         assert_ne!(base.annex, AnnexChoice::En, "fixture default must differ from the new value to exercise a real change");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn change_m_ed_knm_round_trips() {
         let base = En1994Snapshot::default();
         let mutation = En1994Mutation::ChangeMEdKnm(change_m_ed_knm::mutation::ChangeMEdKnm { new_m_ed_knm: 999.0 });
@@ -187,7 +187,7 @@ mod tests {
         assert_eq!(undo, vec![En1994Mutation::ChangeMEdKnm(change_m_ed_knm::mutation::ChangeMEdKnm { new_m_ed_knm: base.m_ed_knm })]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn change_fire_rating_round_trips() {
         let base = En1994Snapshot::default();
         let mutation = En1994Mutation::ChangeFireRating(change_fire_rating::mutation::ChangeFireRating { new_fire_rating: "r120".into() });
@@ -195,7 +195,7 @@ mod tests {
         assert_eq!(after.fire_rating, "r120");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn change_eta_inverse_restores_base_value() {
         let base = En1994Snapshot { eta: 0.6, ..En1994Snapshot::default() };
         let mutation = En1994Mutation::ChangeEta(change_eta::mutation::ChangeEta { new_eta: 0.9 });
@@ -205,7 +205,7 @@ mod tests {
         assert_eq!(undo, vec![En1994Mutation::ChangeEta(change_eta::mutation::ChangeEta { new_eta: 0.6 })]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn semantic_kinds_cover_every_variant() {
         assert_eq!(En1994Mutation::kinds().len(), 22);
         let mutation = En1994Mutation::ChangeAnnex(change_annex::mutation::ChangeAnnex { new_annex: AnnexChoice::De });
@@ -214,7 +214,7 @@ mod tests {
         assert_eq!(mutation.semantics().verb, "change");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn labels_are_human_readable() {
         let mutation = En1994Mutation::ChangeSpanM(change_span_m::mutation::ChangeSpanM { new_span_m: 12.0 });
         assert_eq!(mutation.label(), "Change span to 12");
@@ -225,7 +225,7 @@ mod tests {
     /// this facet is entirely one verb family (root-scoped `change-<field>`) — see en1992's own
     /// `🔖️OutcomeLaws` note for why `assert_missing_target_is_error`/`assert_outcome_policy_matrix`
     /// don't apply/aren't landed yet.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn change_eta_non_finite_is_fatal() {
         let base = En1994Snapshot::default();
         let mutation = En1994Mutation::ChangeEta(change_eta::mutation::ChangeEta { new_eta: f64::NAN });
@@ -234,7 +234,7 @@ mod tests {
         assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn change_annex_same_value_is_no_op() {
         let base = En1994Snapshot::default();
         let mutation = En1994Mutation::ChangeAnnex(change_annex::mutation::ChangeAnnex { new_annex: base.annex });
@@ -243,7 +243,7 @@ mod tests {
         assert_eq!(outcome.diff(), &En1994Diff::default());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn change_span_m_is_deterministic() {
         let base = En1994Snapshot::default();
         let mutation = En1994Mutation::ChangeSpanM(change_span_m::mutation::ChangeSpanM { new_span_m: 12.0 });

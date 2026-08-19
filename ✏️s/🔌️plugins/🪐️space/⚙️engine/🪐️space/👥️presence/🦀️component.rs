@@ -25,7 +25,7 @@ pub struct SpacePresence {
 }
 
 impl Default for SpacePresence {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self {
             camera: BTreeMap::new(),
             active_node_id: None,

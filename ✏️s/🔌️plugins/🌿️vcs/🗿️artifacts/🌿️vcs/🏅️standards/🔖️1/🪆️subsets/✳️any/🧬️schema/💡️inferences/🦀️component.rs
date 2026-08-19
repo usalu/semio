@@ -37,7 +37,7 @@ impl protocol::Inference<VcsSnapshot> for VcsInference {
 /// `VcsSnapshot::default()`'s `tags`/`notes` ever stop being empty. Same "match `infer` of the real
 /// default, don't derive structurally" trick `AddInference` uses in `📡️spr/🎮️command/🦀️component.rs`.
 impl Default for VcsInference {
-    async fn default() -> Self {
+    fn default() -> Self {
         <Self as protocol::Inference<VcsSnapshot>>::infer(&VcsSnapshot::default())
     }
 }
@@ -102,18 +102,18 @@ mod tests {
         VcsSnapshot { tags: vec!["alpha".into(), "beta".into()], notes: "demo notes here".into(), ..VcsSnapshot::default() }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = tagged_snapshot();
         assert_eq!(VcsInference::infer(&snapshot), VcsInference::infer(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(VcsInference::infer(&VcsSnapshot::default()), VcsInference::default());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn summary_counts_tags_and_words() {
         let inferred = VcsInference::infer(&tagged_snapshot());
         assert_eq!(inferred.summary.tag_count, 2);

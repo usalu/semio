@@ -135,14 +135,14 @@ mod tests {
     //#endregion 🧸️Fixtures
 
     //#region 🧪️FlatPositionLaws
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn flat_position_bfs_walks_from_root() {
         let flat = compute_flat_position(&mini_fixture());
         assert_eq!(flat.positions.get("root"), Some(&JackFlatPositionUv { u: 0.0, v: 0.0 }));
         assert_eq!(flat.positions.get("child"), Some(&JackFlatPositionUv { u: 1.2, v: -0.6 }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn flat_position_covers_disconnected_components() {
         let fixture = JackSnapshot::with_content(
             JackSnapshot::SCHEMA.into(),
@@ -167,7 +167,7 @@ mod tests {
         assert_eq!(flat.positions.get("child-b"), Some(&JackFlatPositionUv { u: 3.0, v: -1.0 }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn flat_position_handles_cycles_without_looping() {
         let fixture = JackSnapshot::with_content(
             JackSnapshot::SCHEMA.into(),
@@ -190,7 +190,7 @@ mod tests {
         assert!(flat.positions.contains_key("b"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn flat_position_empty_snapshot_yields_default() {
         assert_eq!(compute_flat_position(&JackSnapshot::default()), JackFlatPosition::default());
     }

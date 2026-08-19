@@ -22,7 +22,7 @@ pub enum SemioTopology {
 }
 
 impl Default for SemioTopology {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self::Triangles
     }
 }
@@ -121,7 +121,7 @@ pub struct SemioMeshSnapshot {
 }
 
 impl Default for SemioMeshSnapshot {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { schema: STDIO_SEMIOMESH_DOCUMENT_SCHEMA.into(), meshes: Default::default(), materials: Default::default(), textures: Default::default() }
     }
 }
@@ -646,7 +646,7 @@ mod tests {
         demo_mesh_snapshot()
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn json_pack_round_trips() {
         let snap = populated();
         let bytes = <SemioMeshSnapshot as store::ArtifactPack>::encode_pack(&snap);
@@ -654,7 +654,7 @@ mod tests {
         assert_eq!(snap, back);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dsl_text_round_trips() {
         let snap = populated();
         let text = <SemioMeshSnapshot as store::ArtifactDsl>::print_dsl(&snap);
@@ -662,7 +662,7 @@ mod tests {
         assert_eq!(snap, back);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn default_snapshot_has_no_meshes_materials_or_textures() {
         let snap = SemioMeshSnapshot::default();
         assert!(snap.meshes.is_empty() && snap.materials.is_empty() && snap.textures.is_empty());

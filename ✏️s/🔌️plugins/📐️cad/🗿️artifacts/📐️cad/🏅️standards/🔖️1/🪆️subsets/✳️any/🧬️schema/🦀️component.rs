@@ -19,7 +19,7 @@ pub struct CadSelectionTargets {
 }
 
 impl Default for CadSelectionTargets {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { mesh: true, vertex: false, edge: true, face: false }
     }
 }
@@ -34,7 +34,7 @@ pub struct CadComponentSelection {
 }
 
 impl Default for CadComponentSelection {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { targets: CadSelectionTargets::default(), mode: "mesh".into(), ids: Vec::new() }
     }
 }
@@ -48,7 +48,7 @@ pub struct CadDislocateOptions {
 }
 
 impl Default for CadDislocateOptions {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { move_enabled: true, rotate_enabled: true }
     }
 }
@@ -111,7 +111,7 @@ pub struct CadArtifact {
 
 //#region 🔖️Conversions
 impl Default for CadArtifact {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self::from_snapshot(crate::artifacts::cad::empty_cad_snapshot())
     }
 }

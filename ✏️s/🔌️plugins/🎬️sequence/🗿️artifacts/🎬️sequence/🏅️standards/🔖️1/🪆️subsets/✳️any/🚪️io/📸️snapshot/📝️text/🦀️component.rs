@@ -130,18 +130,18 @@ mod tests {
     use super::*;
     use crate::artifacts::sequence::{default_snapshot, SequenceStep, SlotRef, StepParams};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dsl_round_trips_default_snapshot() {
         store::os_store::test_support::assert_dsl_round_trip(&default_snapshot());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn default_sequence_example_dsl_round_trips() {
         let snapshot = parse_dsl(SEQUENCE_EXAMPLE_TEXT).expect("🎬️default.sequence must parse");
         store::os_store::test_support::assert_dsl_round_trip(&snapshot);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dsl_round_trips_snapshot_with_slots_and_nested_params() {
         use neural_engine::{Atom, Dictionary, Value};
         let mut fixture = default_snapshot().to_fixture();

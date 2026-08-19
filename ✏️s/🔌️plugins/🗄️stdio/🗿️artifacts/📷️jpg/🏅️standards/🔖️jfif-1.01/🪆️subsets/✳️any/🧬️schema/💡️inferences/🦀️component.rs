@@ -33,7 +33,7 @@ impl protocol::Inference<JpgSnapshot> for JpgInference {
 /// don't derive structurally" trick as `AddInference`'s hand-written `Default` in
 /// `📡️spr/🎮️command/🦀️component.rs`.
 impl Default for JpgInference {
-    async fn default() -> Self {
+    fn default() -> Self {
         <Self as protocol::Inference<JpgSnapshot>>::infer(&JpgSnapshot::default())
     }
 }
@@ -83,13 +83,13 @@ mod tests {
     use super::*;
     use protocol::Inference;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = JpgSnapshot::default();
         assert_eq!(JpgInference::infer(&snapshot), JpgInference::infer(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(JpgInference::infer(&JpgSnapshot::default()), JpgInference::default());
     }

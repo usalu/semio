@@ -2402,7 +2402,7 @@ mod handcrafted_diff_codec_tests {
     /// `JpgFrameChange` enum (both `Modify` and `Replace`), all three tri-state scalars in both
     /// transition directions, and all three id/index-keyed collection triples with removed,
     /// modified, AND added entries all populated across the two `between()` directions.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn diff_codec_text_binary_roundtrip_law() {
         let a = snap_a();
         let b = snap_b();

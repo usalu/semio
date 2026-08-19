@@ -72,7 +72,7 @@ mod tests {
     /// Fixed the same way writer's own `app_with_jack()` and cad's `two_instances_converge_…` tests
     /// already do: call `PluginApp::load_document_pack` directly, the same technique a real host uses
     /// when it receives the effect.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn renders_document_tree() {
         let mut app = note_app();
         let document = crate::artifacts::note::schema::semio_example_snapshot();
@@ -84,7 +84,7 @@ mod tests {
         assert!(json.contains("Welcome"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn note_labels_resolve_native_by_default() {
         let mut app = note_app();
         let document_json = render_body(&mut app, BODY_DOCUMENT);

@@ -33,7 +33,7 @@ mod tests {
     use crate::editor::layout::testkit::{dispatch, layout_app};
     use crate::editor::layout::LayoutCommand;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn export_actions_wire_to_real_layout_exporters() {
         // 🌉️ SVG/PDF export routes through stdio's real `s.stdio.semio/v1/drawing`→svg bridge
         // (`io_dispatch`, ticket 26/08/11/SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-MEDIA-FORMAT-RETIREMENT
@@ -61,14 +61,14 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn engagement_submit_triggers_export() {
         let mut app = layout_app();
         let result = dispatch(&mut app, LayoutCommand::EngagementSubmit(engagement_submit::EngagementSubmit { value: "export png".into() }));
         assert!(matches!(result.requested_effects.first(), Some(Effect::DownloadMediaExport { mime_type, .. }) if mime_type == "image/png"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn engagement_submit_triggers_export_from_normalized_shell_draft() {
         // The React shell PascalCases and strips separators from every draft before submitting it
         // (`normalizeEngagementActionText`), so "export png" arrives as "ExportPng".
@@ -77,7 +77,7 @@ mod tests {
         assert!(matches!(result.requested_effects.first(), Some(Effect::DownloadMediaExport { mime_type, .. }) if mime_type == "image/png"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn registry_backed_engagement_submit_is_shell_effect_not_operation() {
         // 🧬️ engagementSubmit is declared `Shell`: through the real registry the kind-discipline
         // check must accept it because its handler only routes an export `Effect`, never operations.

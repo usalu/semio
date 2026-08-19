@@ -70,7 +70,7 @@ pub async fn measure(_config: &LowpolyConfig, labels: &LowpolyLabels) -> WindowM
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn select_window_options_expose_mesh_domain_granularity_and_mode_toggles() {
         let measure = measure(&LowpolyConfig::default(), semio_framework_plugin::resolve_labels_for_locale::<LowpolyLabels>("en-US"));
         let (active_utility_id, children) = match measure {

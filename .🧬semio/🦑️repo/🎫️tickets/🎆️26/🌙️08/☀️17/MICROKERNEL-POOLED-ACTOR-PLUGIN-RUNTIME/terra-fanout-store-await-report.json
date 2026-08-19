@@ -1,0 +1,21 @@
+{
+  "crate": "semio-framework-os-kernel",
+  "history": [
+    {
+      "pass": 1,
+      "errors": 1,
+      "edits": 0,
+      "ambiguous": 0,
+      "other": 1
+    }
+  ],
+  "residual_errors": 1,
+  "ambiguous": [],
+  "other": [
+    {
+      "at": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:296",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    }
+  ]
+}

@@ -31,13 +31,13 @@ mod tests {
     use super::*;
     use crate::editor::writer::testkit::{new_app, render as render_body};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn renders_catalogue_panel() {
         let mut app = new_app();
         assert!(render_body(&mut app, WRITER_PLAY_BODY_CATALOGUE).contains("jack"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn definition_binds_the_framework_catalogue_tab_to_this_body_key() {
         let definition = definition();
         assert_eq!(definition.id(), FRAMEWORK_PANEL_TAB_CATALOGUE_ID);

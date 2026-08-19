@@ -67,7 +67,7 @@ mod tests {
     use super::*;
     use crate::editor::procedural3d::testkit::{app, render as render_body};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn generate_preview_hints_without_evaluated_output() {
         let mut app = app();
         assert!(render_body(&mut app, PROCEDURAL_3D_PLAY_BODY_GENERATE_PREVIEW).contains("evaluate a generation"));

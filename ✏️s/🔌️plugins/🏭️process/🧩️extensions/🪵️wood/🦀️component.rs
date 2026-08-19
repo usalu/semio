@@ -159,8 +159,8 @@ impl MachineCatalog for WoodCatalog {
     }
 }
 
-pub async fn catalog() -> Box<dyn MachineCatalog> {
-    Box::new(WoodCatalog)
+pub async fn catalog() -> WoodCatalog {
+    WoodCatalog
 }
 //#endregion 🔖️Catalog
 
@@ -193,7 +193,7 @@ semio_framework_plugin::extension_exports!(bundle);
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn every_machine_and_capability_id_is_unique() {
         let machines = WoodCatalog.machines();
         let mut machine_ids: Vec<&str> = machines.iter().map(|machine| machine.id.as_str()).collect();
@@ -209,7 +209,7 @@ mod tests {
     }
 
     /// ✅️ Every recipe field and rule parameter must resolve within its own capability's parameters.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn every_recipe_and_rule_parameter_resolves() {
         for machine in WoodCatalog.machines() {
             for capability in &machine.capabilities {
@@ -235,7 +235,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn machines_round_trip_json() {
         let machines = WoodCatalog.machines();
         let json = serde_json::to_string(&machines).expect("serialize");
@@ -243,14 +243,14 @@ mod tests {
         assert_eq!(parsed, machines);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn catalog_has_wood_identity() {
         let catalog = WoodCatalog;
         assert_eq!(catalog.catalog_id(), "wood");
         assert_eq!(catalog.label(), "Wood");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn bundle_contributes_wood_machines_for_process3d_play() {
         let manifest = bundle().manifest;
         assert_eq!(manifest.extension_id, "process-extension-wood");

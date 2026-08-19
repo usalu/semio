@@ -611,7 +611,7 @@ mod tests {
         (0..3).all(|c| (0..3).all(|r| (a.cols[c][r] - b.cols[c][r]).abs() < tol))
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn so3_exp_log_round_trips_small_moderate_and_near_pi() {
         let axis = vec3d_normalize([1.0, 2.0, -2.0]);
         let cases = [[1e-9, -2e-9, 1.5e-9], [0.3, -0.4, 0.5], [1.2, 0.7, -0.9], vec3_scale(axis, PI - 1e-4), vec3_scale(axis, PI - 1e-6)];
@@ -620,7 +620,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn so3_log_matrix_round_trip_at_pi() {
         let axis = vec3d_normalize([0.3, -0.5, 0.81]);
         let r = So3::exp(vec3_scale(axis, PI));
@@ -628,7 +628,7 @@ mod tests {
         assert!(mat_close(&r.0, &back.0, 1e-9));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn so3_compose_inverse_and_hat_vee_round_trip() {
         let r = So3::exp([0.4, -0.9, 0.2]);
         assert!(mat_close(&r.semio_compose_rs(&r.inverse()).0, &Mat3d::IDENTITY, 1e-12));
@@ -638,7 +638,7 @@ mod tests {
         assert!(vec3_close(So3::hat(w).mul_vec3(v), vec3d_cross(w, v), 1e-12));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn quat_matrix_round_trip_covers_all_shepperd_branches() {
         let axes = [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0], vec3d_normalize([0.6, 0.64, 0.48])];
         for axis in axes {
@@ -653,7 +653,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn quat_rotate_matches_matrix_action() {
         let q = So3::exp([0.5, -0.3, 0.9]).to_quat();
         let v = [1.2, -0.7, 0.4];
@@ -661,7 +661,7 @@ mod tests {
         assert!(vec3_close(q.conjugate().rotate(q.rotate(v)), v, 1e-12));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn quat_slerp_hits_endpoints_and_stays_unit() {
         let a = So3::exp([0.2, 0.0, 0.0]).to_quat();
         let b = So3::exp([0.0, 1.1, 0.4]).to_quat();
@@ -675,7 +675,7 @@ mod tests {
         assert!((lerped.dot(lerped) - 1.0).abs() < 1e-12);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn jl_times_jl_inv_is_identity() {
         for w in [[1e-6, -2e-6, 1e-6], [0.4, -0.2, 0.7], [1.5, 0.9, -1.1]] {
             let product = So3::jl(w).mul(So3::jl_inv(w));
@@ -683,7 +683,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn se3_exp_log_round_trips() {
         let axis = vec3d_normalize([-0.2, 0.9, 0.4]);
         let near_pi = vec3_scale(axis, PI - 1e-4);
@@ -696,7 +696,7 @@ mod tests {
         assert!(mat_close(&round.r.0, &Mat3d::IDENTITY, 1e-12) && vec3_close(round.t, [0.0; 3], 1e-12));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn sim3_exp_log_round_trips() {
         let axis = vec3d_normalize([0.5, -0.1, 0.86]);
         let near_pi = vec3_scale(axis, PI - 1e-4);
@@ -709,7 +709,7 @@ mod tests {
         assert!((round.s - 1.0).abs() < 1e-12 && mat_close(&round.r.0, &Mat3d::IDENTITY, 1e-12) && vec3_close(round.t, [0.0; 3], 1e-12));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn se3_adjoint_matches_conjugation() {
         let g = Se3::exp([0.4, -0.2, 0.3, 0.5, 0.2, -0.4]);
         let xi = [0.3, 0.1, -0.2, 0.25, -0.15, 0.2];
@@ -724,7 +724,7 @@ mod tests {
         assert!(vec3_close(lhs.t, rhs.t, 1e-8));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn umeyama_recovers_planted_similarity() {
         let mut state = 12345_u64;
         let src: Vec<[f64; 3]> = (0..10).map(|_| [lcg(&mut state), lcg(&mut state), lcg(&mut state)]).collect();
@@ -739,7 +739,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn umeyama_rigid_without_scale() {
         let mut state = 777_u64;
         let src: Vec<[f64; 3]> = (0..10).map(|_| [lcg(&mut state), lcg(&mut state), lcg(&mut state)]).collect();
@@ -751,7 +751,7 @@ mod tests {
         assert!(vec3_close(sim.t, truth.t, 1e-9));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn umeyama_rejects_degenerate_inputs() {
         assert!(umeyama(&[[0.0; 3], [1.0; 3]], &[[0.0; 3], [1.0; 3]], true).is_none());
         let line: Vec<[f64; 3]> = (0..10).map(|k| vec3_scale([1.0, 1.0, 1.0], k as f64)).collect();
@@ -761,7 +761,7 @@ mod tests {
         assert!(umeyama(&coincident, &coincident, true).is_none());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn project_to_so3_restores_perturbed_rotation() {
         let r_true = So3::exp([0.4, -0.8, 0.3]);
         assert!(mat_close(&So3::project_to_so3(&r_true.0).0, &r_true.0, 1e-9));
@@ -773,7 +773,7 @@ mod tests {
         assert!(mat_close(&projected.0, &r_true.0, 0.15));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn se3_lerp_endpoints_and_midpoint() {
         let a = Se3::exp([0.5, -0.3, 0.8, 0.4, 0.2, -0.6]);
         let b = Se3::exp([-0.9, 0.6, 0.2, 1.2, -0.5, 0.7]);
@@ -787,7 +787,7 @@ mod tests {
         assert!(vecn_close(&rel_half, &xi6_scale(rel_full, 0.5), 1e-9));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn se3_spline_tracks_constant_velocity() {
         let v = [0.1, -0.05, 0.2, 0.3, 0.1, -0.2];
         let poses: Vec<(f64, Se3)> = (0..7).map(|k| (k as f64, Se3::exp(xi6_scale(v, k as f64)))).collect();

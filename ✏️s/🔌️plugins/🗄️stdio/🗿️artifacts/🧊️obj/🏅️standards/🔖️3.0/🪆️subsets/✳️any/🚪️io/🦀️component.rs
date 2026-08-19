@@ -333,13 +333,13 @@ pub use derived_composition::*;
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn empty_snapshot_matches_schema() {
         let snapshot = crate::artifacts::obj::engine::empty_obj_snapshot();
         assert_eq!(snapshot.schema, STDIO_OBJ_DOCUMENT_SCHEMA);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn codec_round_trip() {
         let snap = crate::artifacts::obj::engine::empty_obj_snapshot();
         let text = store::ArtifactDsl::print_dsl(&snap);
@@ -350,7 +350,7 @@ mod tests {
         assert_eq!(decoded, snap);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn negative_indices_resolve_correctly() {
         let text = "v 0 0 0\nv 1 0 0\nv 0 1 0\nf -3 -2 -1\n";
         let snap = decode_obj(text).expect("parse");
@@ -359,14 +359,14 @@ mod tests {
         assert_eq!(idxs, vec![0, 1, 2]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn out_of_range_negative_index_is_error() {
         let text = "v 0 0 0\nf -2 1 1\n";
         let err = decode_obj(text).unwrap_err();
         assert!(err.contains("out of range"), "unexpected error: {err}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn face_index_forms_all_supported() {
         let text = "v 0 0 0\nv 1 0 0\nv 0 1 0\nvt 0 0\nvt 1 0\nvt 0 1\nvn 0 0 1\n\
                      f 1/1/1 2/2/1 3/3/1\nf 1//1 2//1 3//1\nf 1/1 2/2 3/3\nf 1 2 3\n";
@@ -382,7 +382,7 @@ mod tests {
         assert_eq!(snap.faces[3].vertices[0].normal, None);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn multi_group_multi_material_negative_index_round_trip() {
         let text = "v 0 0 0\nv 1 0 0\nv 1 1 0\nv 0 1 0\nv 0 0 1\nv 1 0 1\n\
                      vt 0 0\nvt 1 0\nvt 1 1\nvn 0 0 1\nvn 0 0 -1\n\
@@ -419,7 +419,7 @@ mod tests {
         assert_eq!(snap2, snap, "round trip through encode/decode must be lossless");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn optional_w_components_retained() {
         let text = "v 0 0 0 1.5\nv 1 0 0\nvt 0.1 0.2 0.3\nvt 0.5 0.5\nvn 0 0 1\nf 1/1/1 2/2/1 1/1/1\n";
         let snap = decode_obj(text).expect("parse");
@@ -429,7 +429,7 @@ mod tests {
         assert_eq!(snap.texcoords[1].w, None);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mtllib_last_occurrence_wins() {
         let text = "mtllib a.mtl\nv 0 0 0\nv 1 0 0\nv 0 1 0\nmtllib b.mtl c.mtl\nf 1 2 3\n";
         let snap = decode_obj(text).expect("parse");
@@ -442,7 +442,7 @@ mod tests {
     /// documented normal form, `unknown_statements[].line_index` is renumbered on re-encode
     /// (comments/unrecognized lines move into a trailer), so from the SECOND generation onward
     /// decode/encode is a true fixed point.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn codec_retention_law() {
         let fixture = "# leading comment\nmtllib materials.mtl\n\
                         v 0 0 0\nv 1 0 0\nv 0 1 0 1\n\
@@ -493,7 +493,7 @@ mod tests {
         /// parse under the real dialect — independent of, and cheaper than, the two
         /// `recognize`/`walk_protocol` laws below (a parse failure here fails fast with a clearer
         /// message).
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn committed_facet_files_parse() {
             for (label, text) in [("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO)] {
                 let grammar = dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
@@ -509,7 +509,7 @@ mod tests {
         /// `m5_handcrafted_grammar_conformance`'s own `dsl_body_from_fixture` uses, so this is a
         /// direct proof this artifact will pass that harness once graduated, not merely an
         /// analogue.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn grammar_conformance_law() {
             let grammar = dsl::parse_grammar(snapshot::text::COMPONENT_GRAMMAR_SEMIO).expect("parse snapshot grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
@@ -524,7 +524,7 @@ mod tests {
         /// including `SetSnapshot`'s whole nested `ObjSnapshot` tree, precisely field-by-field
         /// (this artifact's own leaf collections are all flat records, no `REST` fallback
         /// needed).
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn ops_grammar_conformance_law() {
             let grammar = dsl::parse_grammar(mutations::text::COMPONENT_GRAMMAR_SEMIO).expect("parse mutations grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
@@ -538,7 +538,7 @@ mod tests {
         /// output for every representative `ObjDiff` (`diff::demo_diff_cases()`), incl. the empty
         /// diff and a two-directional `between()` result exercising every index-/name-keyed
         /// collection triple and both tri-states.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn diff_grammar_conformance_law() {
             let grammar = dsl::parse_grammar(diff::text::COMPONENT_GRAMMAR_SEMIO).expect("parse diff grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
@@ -554,7 +554,7 @@ mod tests {
         /// mutation's `encode_op`, and every demo diff's `encode_diff`. All three facets are
         /// plain `framing record` payloads (no `backward`/`jump`), so the ordinary
         /// `consumed == bytes.len()` law holds for all of them.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn protocol_walk_law() {
             let pack_spec = dsl::parse_protocol(snapshot::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
             let packed = store::ArtifactPack::encode_pack(&crate::artifacts::obj::engine::demo_obj_snapshot());
@@ -581,7 +581,7 @@ mod tests {
         /// `print_dsl`/`encode_pack` output of `demo_obj_snapshot()` — `parse_dsl(fixture) ==
         /// demo()`, `print_dsl(demo()) == fixture` (byte-for-byte), and the pack twin — so the
         /// fixtures can never silently drift back to a fake again.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn fixture_honesty_law() {
             const FIXTURE_DSL: &str = include_str!("../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
             const FIXTURE_PACK: &[u8] = include_bytes!("../📚️examples/🎬️demo/🖼️assets/🎒️example.pack.semio");

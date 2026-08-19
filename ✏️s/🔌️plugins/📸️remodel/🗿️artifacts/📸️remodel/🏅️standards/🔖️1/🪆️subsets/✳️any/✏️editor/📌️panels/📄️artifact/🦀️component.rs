@@ -45,14 +45,14 @@ mod tests {
     use super::*;
     use crate::editor::remodel::testkit::{app, render as render_body};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn definition_binds_the_framework_document_tab_to_this_body_key() {
         let definition = definition();
         assert_eq!(definition.id(), FRAMEWORK_PANEL_TAB_ARTIFACT_ID);
         assert_eq!(definition.body_key.as_deref(), Some(REMODEL_PLAY_BODY_PIPELINE));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn a_fresh_document_reports_an_idle_job() {
         let mut app = app();
         let body = render_body(&mut app, REMODEL_PLAY_BODY_PIPELINE);

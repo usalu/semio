@@ -177,7 +177,7 @@ pub async fn diff_replace_content(nodes: Vec<Node>, edges: Vec<Edge>) -> JackDif
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn jack_diff_absorb_merges_content() {
         let mut diff = JackDiff::default();
         let other = diff_replace_content(

@@ -45,7 +45,7 @@ pub async fn layout() -> WindowLayout {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn the_default_layout_lists_every_window() {
         let json = serde_json::to_string(&layout()).expect("layout json");
         for id in [pool::SOURCING_CURATE_WINDOW_POOL, curated::SOURCING_CURATE_WINDOW_CURATED, preview::SOURCING_CURATE_WINDOW_PREVIEW, grid::SOURCING_CURATE_WINDOW_GRID] {

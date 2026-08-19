@@ -50,7 +50,7 @@ pub struct SemioObjectSnapshot {
 }
 
 impl Default for SemioObjectSnapshot {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { schema: STDIO_SEMIOOBJECT_DOCUMENT_SCHEMA.into(), transform: SemioTransform::identity(), brep: None, mesh: None, properties: None }
     }
 }
@@ -299,7 +299,7 @@ pub(crate) async fn demo_object_snapshot() -> SemioObjectSnapshot {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn json_pack_round_trips() {
         let snap = SemioObjectSnapshot::default();
         let bytes = <SemioObjectSnapshot as store::ArtifactPack>::encode_pack(&snap);
@@ -307,7 +307,7 @@ mod tests {
         assert_eq!(snap, back);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dsl_text_round_trips() {
         let snap = SemioObjectSnapshot::default();
         let text = <SemioObjectSnapshot as store::ArtifactDsl>::print_dsl(&snap);
@@ -317,7 +317,7 @@ mod tests {
 
     /// 🧪️ codec_retention_law on a fully-populated snapshot (all 3 child handles present, non-
     /// identity transform), not just the default.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn codec_retention_law() {
         let snap = demo_object_snapshot();
         let bytes = <SemioObjectSnapshot as store::ArtifactPack>::encode_pack(&snap);
@@ -331,7 +331,7 @@ mod tests {
     /// 🧪️ A parent snapshot NEVER embeds child content — only the handle's two strings. Proven by
     /// asserting the printed DSL contains the child's `child_id`/target URI but never a byte
     /// sequence that could only come from parsing the CHILD's own snapshot type.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn parent_snapshot_stores_only_child_handles_never_content() {
         let snap = demo_object_snapshot();
         let text = <SemioObjectSnapshot as store::ArtifactDsl>::print_dsl(&snap);

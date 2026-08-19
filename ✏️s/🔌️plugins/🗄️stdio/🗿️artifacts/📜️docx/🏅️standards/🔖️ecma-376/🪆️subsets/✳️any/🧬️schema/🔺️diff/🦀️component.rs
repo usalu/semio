@@ -45,7 +45,7 @@ pub struct IndexedTripleDiff<D, T> {
 }
 
 impl<D, T> Default for IndexedTripleDiff<D, T> {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { removed: Vec::new(), modified: Vec::new(), added: Vec::new() }
     }
 }
@@ -78,7 +78,7 @@ pub struct NamedTripleDiff<K, D, T> {
 }
 
 impl<K, D, T> Default for NamedTripleDiff<K, D, T> {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { removed: Vec::new(), modified: Vec::new(), added: Vec::new() }
     }
 }
@@ -2871,7 +2871,7 @@ mod handcrafted_diff_codec_tests {
     /// table-cell block list), both `style`/`based_on` tri-states, the OPC layer's content-types/
     /// parts/relationships-by-owner triples, and every removed/modified/added flavor via a real
     /// `between()` result in both directions.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn diff_codec_text_binary_roundtrip_law() {
         let a = snapshot_a();
         let b = snapshot_b();
@@ -2917,7 +2917,7 @@ mod handcrafted_diff_codec_tests {
 mod result_apply_tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn rejects_missing_style_target_without_mutating_base() {
         let base = DocxSnapshot::default();
         let diff =

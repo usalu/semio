@@ -661,7 +661,7 @@ mod tests {
         KERNEL_TEST_LOCK.write().unwrap_or_else(|poisoned| poisoned.into_inner())
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn rect_operator_creates_drawing() {
         let mut reg = Registry::new();
         register(&mut reg);
@@ -678,14 +678,14 @@ mod tests {
         assert!(handle.chars().all(|c| c.is_ascii_hexdigit() && !c.is_ascii_uppercase()));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn manifest_lists_draw_operators() {
         let json = build_manifest_json("draw", "Draw", "0.1.0", &module_registry(), vec!["onStartup".into()], vec![], vec![], vec![]);
         assert!(json.contains("draw.shape.rect"));
         assert!(json.contains("draw.drawing"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dwg_export_import_round_trips_a_rect() {
         let _guard = kernel_read_guard();
         let mut reg = Registry::new();
@@ -708,7 +708,7 @@ mod tests {
         assert!(scene_json.contains("nodes"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn render_scene_json_returns_nodes() {
         let _guard = kernel_read_guard();
         let mut reg = Registry::new();
@@ -756,7 +756,7 @@ mod tests {
         drawing_handle_of(&ShapeRect.evaluate(&input).unwrap())
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn ellipse_operator_creates_drawing() {
         let input = Dictionary::new()
             .insert("cx", Value::Dictionary(number_dictionary(5.0)))
@@ -767,14 +767,14 @@ mod tests {
         assert_eq!(drawing_kind_of(&out), "ellipse");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn circle_operator_creates_drawing() {
         let input = Dictionary::new().insert("cx", Value::Dictionary(number_dictionary(0.0))).insert("cy", Value::Dictionary(number_dictionary(0.0))).insert("r", Value::Dictionary(number_dictionary(4.0)));
         let out = ShapeCircle.evaluate(&input).unwrap();
         assert_eq!(drawing_kind_of(&out), "circle");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn line_operator_creates_drawing() {
         let input = Dictionary::new()
             .insert("x1", Value::Dictionary(number_dictionary(0.0)))
@@ -785,33 +785,33 @@ mod tests {
         assert_eq!(drawing_kind_of(&out), "line");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn polygon_operator_creates_drawing_from_points() {
         let input = Dictionary::new().insert("points", Value::Dictionary(point_list(&[(0.0, 0.0), (10.0, 0.0), (5.0, 10.0)])));
         let out = ShapePolygon.evaluate(&input).unwrap();
         assert_eq!(drawing_kind_of(&out), "polygon");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn polygon_operator_errors_with_fewer_than_three_points() {
         let input = Dictionary::new().insert("points", Value::Dictionary(point_list(&[(0.0, 0.0), (10.0, 0.0)])));
         assert!(matches!(ShapePolygon.evaluate(&input), Err(EvalError::InvalidInput(_))));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn polyline_path_operator_creates_open_path() {
         let input = Dictionary::new().insert("points", Value::Dictionary(point_list(&[(0.0, 0.0), (10.0, 0.0), (10.0, 10.0)])));
         let out = PathPolyline.evaluate(&input).unwrap();
         assert_eq!(drawing_kind_of(&out), "path");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn polyline_path_operator_errors_with_fewer_than_two_points() {
         let input = Dictionary::new().insert("points", Value::Dictionary(point_list(&[(0.0, 0.0)])));
         assert!(matches!(PathPolyline.evaluate(&input), Err(EvalError::InvalidInput(_))));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn rect_path_operator_creates_path() {
         let input = Dictionary::new()
             .insert("x", Value::Dictionary(number_dictionary(0.0)))
@@ -822,7 +822,7 @@ mod tests {
         assert_eq!(drawing_kind_of(&out), "path");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fill_operator_applies_solid_color() {
         let _guard = kernel_read_guard();
         let handle = make_rect(0.0, 0.0, 5.0, 5.0);
@@ -835,7 +835,7 @@ mod tests {
         assert_eq!(drawing_kind_of(&out), "rect");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn stroke_operator_defaults_width_when_missing() {
         let _guard = kernel_read_guard();
         let handle = make_rect(0.0, 0.0, 5.0, 5.0);
@@ -843,7 +843,7 @@ mod tests {
         assert_eq!(drawing_kind_of(&out), "rect");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn translate_operator_moves_drawing() {
         let _guard = kernel_read_guard();
         let handle = make_rect(0.0, 0.0, 5.0, 5.0);
@@ -852,7 +852,7 @@ mod tests {
         assert_ne!(drawing_handle_of(&out), handle);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn rotate_operator_rotates_drawing() {
         let _guard = kernel_read_guard();
         let handle = make_rect(0.0, 0.0, 5.0, 5.0);
@@ -861,7 +861,7 @@ mod tests {
         assert_ne!(drawing_handle_of(&out), handle);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn scale_operator_defaults_sy_to_sx_when_missing() {
         let _guard = kernel_read_guard();
         let handle = make_rect(0.0, 0.0, 5.0, 5.0);
@@ -870,7 +870,7 @@ mod tests {
         assert_ne!(drawing_handle_of(&out), handle);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn group_merge_operator_combines_two_drawings() {
         let _guard = kernel_read_guard();
         let a = make_rect(0.0, 0.0, 5.0, 5.0);
@@ -880,7 +880,7 @@ mod tests {
         assert_eq!(drawing_kind_of(&out), "group");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn bool_union_operator_combines_two_drawings() {
         let _guard = kernel_read_guard();
         let a = make_rect(0.0, 0.0, 5.0, 5.0);
@@ -890,7 +890,7 @@ mod tests {
         assert_eq!(drawing_kind_of(&out), "path");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn bool_difference_operator_combines_two_drawings() {
         let _guard = kernel_read_guard();
         let a = make_rect(0.0, 0.0, 5.0, 5.0);
@@ -900,7 +900,7 @@ mod tests {
         assert_eq!(drawing_kind_of(&out), "path");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn bool_intersection_operator_combines_two_drawings() {
         let _guard = kernel_read_guard();
         let a = make_rect(0.0, 0.0, 5.0, 5.0);
@@ -910,7 +910,7 @@ mod tests {
         assert_eq!(drawing_kind_of(&out), "path");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn text_operator_creates_drawing_with_default_size() {
         let input =
             Dictionary::new().insert("x", Value::Dictionary(number_dictionary(0.0))).insert("y", Value::Dictionary(number_dictionary(0.0))).insert("text", Value::Dictionary(Dictionary::new().insert("value", Value::Atom(Atom::String("hi".into())))));
@@ -918,7 +918,7 @@ mod tests {
         assert_eq!(drawing_kind_of(&out), "text");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn gradient_linear_operator_creates_drawing() {
         let _guard = kernel_read_guard();
         let handle = make_rect(0.0, 0.0, 5.0, 5.0);
@@ -933,7 +933,7 @@ mod tests {
         assert_eq!(drawing_kind_of(&out), "rect");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn clip_apply_operator_creates_drawing() {
         let _guard = kernel_read_guard();
         let target = make_rect(0.0, 0.0, 10.0, 10.0);
@@ -943,7 +943,7 @@ mod tests {
         assert_eq!(drawing_kind_of(&out), "rect");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn export_svg_json_returns_svg_for_known_handle() {
         let _guard = kernel_read_guard();
         let handle = make_rect(0.0, 0.0, 5.0, 5.0);
@@ -951,13 +951,13 @@ mod tests {
         assert!(json.get("svg").and_then(|v| v.as_str()).is_some_and(|svg| svg.contains("svg")));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn export_svg_json_returns_error_for_unknown_handle() {
         let json: serde_json::Value = serde_json::from_str(&export_svg_json("drawing-missing-999")).unwrap();
         assert!(json.get("error").is_some());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn export_pdf_json_returns_pdf_for_known_handle() {
         let _guard = kernel_read_guard();
         let handle = make_rect(0.0, 0.0, 5.0, 5.0);
@@ -965,25 +965,25 @@ mod tests {
         assert!(json.get("pdf").and_then(|v| v.as_str()).is_some_and(|pdf| !pdf.is_empty()));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn export_pdf_json_returns_error_for_unknown_handle() {
         let json: serde_json::Value = serde_json::from_str(&export_pdf_json("drawing-missing-999")).unwrap();
         assert!(json.get("error").is_some());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn render_scene_json_returns_error_for_unknown_handle() {
         let json: serde_json::Value = serde_json::from_str(&render_scene_json("drawing-missing-999")).unwrap();
         assert!(json.get("error").is_some());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn import_dwg_json_rejects_invalid_base64() {
         let json: serde_json::Value = serde_json::from_str(&import_dwg_json("not-@@-base64!!")).unwrap();
         assert!(json.get("error").and_then(|v| v.as_str()).unwrap_or_default().contains("base64"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dispose_drawing_removes_the_handle() {
         let _guard = kernel_write_guard();
         let handle = make_rect(0.0, 0.0, 5.0, 5.0);
@@ -992,7 +992,7 @@ mod tests {
         assert!(json.get("error").is_some());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn retain_drawing_handles_disposes_unreferenced_drawings() {
         let _guard = kernel_write_guard();
         let kept = make_rect(0.0, 0.0, 5.0, 5.0);
@@ -1004,14 +1004,14 @@ mod tests {
         assert!(dropped_json.get("error").is_some());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn trace_bitmap_json_returns_segments_for_a_filled_mask() {
         let mask = vec![255u8; 16];
         let json: serde_json::Value = serde_json::from_str(&trace_bitmap_json(4, 4, &mask, 0.5, 0.0)).unwrap();
         assert!(json.get("segments").is_some());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn boolean_segments_json_unions_two_traced_masks() {
         let mask = vec![255u8; 16];
         let segments_json = trace_bitmap_json(4, 4, &mask, 0.5, 0.0);
@@ -1019,51 +1019,51 @@ mod tests {
         assert!(result.get("segments").is_some());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn boolean_segments_json_reports_malformed_json_input() {
         let result: serde_json::Value = serde_json::from_str(&boolean_segments_json("not json", "{}", "union")).unwrap();
         assert!(result.get("error").is_some());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn boolean_segments_json_propagates_upstream_error() {
         let upstream_error = serde_json::json!({ "error": "upstream boom" }).to_string();
         let result: serde_json::Value = serde_json::from_str(&boolean_segments_json(&upstream_error, "{\"segments\":[]}", "union")).unwrap();
         assert_eq!(result.get("error").and_then(|v| v.as_str()), Some("upstream boom"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn boolean_segments_json_reports_missing_segments_field() {
         let result: serde_json::Value = serde_json::from_str(&boolean_segments_json("{}", "{\"segments\":[]}", "union")).unwrap();
         assert_eq!(result.get("error").and_then(|v| v.as_str()), Some("missing segments"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn read_channel_number_errors_when_key_missing() {
         let input = Dictionary::new();
         assert!(matches!(read_channel_number(&input, "x"), Err(EvalError::MissingInput(ref key)) if key == "x"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn read_text_errors_when_key_missing() {
         let input = Dictionary::new();
         assert!(matches!(read_text(&input, "text"), Err(EvalError::MissingInput(ref key)) if key == "text"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn read_drawing_errors_when_handle_missing() {
         let input = Dictionary::new().insert("drawing", Value::Dictionary(Dictionary::new()));
         assert!(matches!(read_drawing(&input, "drawing"), Err(EvalError::MissingInput(ref key)) if key == "drawing.handle"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn read_point_list_errors_when_entry_is_not_a_point() {
         let list = Dictionary::with_schema("list").insert("0", Value::Atom(Atom::Decimal(1.0)));
         let input = Dictionary::new().insert("points", Value::Dictionary(list));
         assert!(matches!(read_point_list(&input, "points"), Err(EvalError::InvalidInput(_))));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn bundle_contributes_draw_for_flow_and_procedural3d_play() {
         use flow_extension_sdk::{build_manifest_json, evaluate_json};
         use semio_framework_plugin::{extension_activate, extension_invoke, extension_manifest, install_extension_bundle, ExtensionBundle};

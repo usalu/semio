@@ -121,7 +121,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn real_round_trip_through_relocated_dwg_codec() {
         let drawing = sample_drawing();
         let dwg = semio_framework_plugin::resolve_ready(SemioDrawingToDwg::serialize(&drawing)).expect("serialize");

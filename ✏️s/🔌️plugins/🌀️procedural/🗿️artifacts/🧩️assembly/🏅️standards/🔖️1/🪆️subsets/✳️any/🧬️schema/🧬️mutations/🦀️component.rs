@@ -80,7 +80,7 @@ mod tests {
         forward
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dispatch_registers_semantic_descriptors_with_approved_verbs() {
         for kind in AssemblyMutation::kinds() {
             assert!(protocol::is_approved_verb(kind.verb), "verb '{}' must be in APPROVED_VERBS", kind.verb);
@@ -88,7 +88,7 @@ mod tests {
         assert_eq!(AssemblyMutation::kinds().len(), 9);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_slot_inverse_law_round_trips() {
         let base = AssemblySnapshot::default();
         let mutation = create_slot(0, AssemblySlot { id: "s1".into(), x: 1.0, y: 2.0, z: 0.0, pinned_module_id: None });
@@ -96,7 +96,7 @@ mod tests {
         assert_eq!(after.slots.len(), 1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn delete_slot_inverse_law_round_trips() {
         let mut base = AssemblySnapshot::default();
         base.slots.push(AssemblySlot { id: "s1".into(), x: 0.0, y: 0.0, z: 0.0, pinned_module_id: None });
@@ -105,7 +105,7 @@ mod tests {
         assert!(after.slots.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn delete_slot_cascades_incident_edges() {
         let mut base = AssemblySnapshot::default();
         base.slots.push(AssemblySlot { id: "s1".into(), ..Default::default() });
@@ -116,7 +116,7 @@ mod tests {
         assert!(after.edges.is_empty(), "deleting a slot must cascade-delete its incident edges");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_rule_inverse_law_round_trips() {
         let base = AssemblySnapshot::default();
         let mutation = create_rule(0, AssemblyRule { id: "r1".into(), module_a_id: "a".into(), module_b_id: "b".into(), allowed: true, params: SemioValue::default() });
@@ -124,7 +124,7 @@ mod tests {
         assert_eq!(after.rules.len(), 1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn delete_rule_inverse_law_round_trips() {
         let mut base = AssemblySnapshot::default();
         base.rules.push(AssemblyRule { id: "r1".into(), module_a_id: "a".into(), module_b_id: "b".into(), allowed: true, params: SemioValue::default() });
@@ -133,7 +133,7 @@ mod tests {
         assert!(after.rules.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn change_weight_inverse_law_restores_the_prior_value() {
         let mut base = AssemblySnapshot::default();
         base.weights.push(crate::artifacts::assembly::schema::snapshot::AssemblyModuleWeight { module_id: "m1".into(), weight: 1.0 });
@@ -142,7 +142,7 @@ mod tests {
         assert_eq!(after.weights[0].weight, 9.0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn change_weight_on_unknown_module_inserts_and_inverse_removes() {
         let base = AssemblySnapshot::default();
         let mutation = change_weight("m1".into(), 4.0);
@@ -150,7 +150,7 @@ mod tests {
         assert_eq!(after.weights.len(), 1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn connect_slots_inverse_law_round_trips() {
         let mut base = AssemblySnapshot::default();
         base.slots.push(AssemblySlot { id: "s1".into(), ..Default::default() });
@@ -160,7 +160,7 @@ mod tests {
         assert_eq!(after.edges.len(), 1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn disconnect_slots_inverse_law_round_trips() {
         let mut base = AssemblySnapshot::default();
         base.edges.push(AssemblySlotEdge { id: "e1".into(), from_slot_id: "s1".into(), to_slot_id: "s2".into() });
@@ -169,7 +169,7 @@ mod tests {
         assert!(after.edges.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn change_seed_inverse_law_round_trips() {
         let mut base = AssemblySnapshot::default();
         base.seed = 1;
@@ -178,7 +178,7 @@ mod tests {
         assert_eq!(after.seed, 42);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn diff_absorb_composes_two_change_seed_mutations() {
         let base = AssemblySnapshot::default();
         let d1 = change_seed(1).diff(&base);

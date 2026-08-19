@@ -193,19 +193,19 @@ pub async fn create_energy_model_editor() -> semio_framework_plugin::AppDefiniti
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_energy_model_editor_builds_a_definition_for_the_editor_role() {
         let def = create_energy_model_editor();
         assert_eq!(def.role, semio_framework_plugin::AppRole::Editor);
         assert_eq!(def.dialect, MODEL_DIALECT.into());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn editor_dialect_matches_the_artifact_coordinate() {
         assert_eq!(<EnergyModelEditor as ArtifactEditor>::DIALECT, MODEL_DIALECT);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn editor_declares_both_windows() {
         let def = create_energy_model_editor();
         assert!(def.window_kinds.iter().any(|w| w.id == structure::WINDOW_KIND_ID));

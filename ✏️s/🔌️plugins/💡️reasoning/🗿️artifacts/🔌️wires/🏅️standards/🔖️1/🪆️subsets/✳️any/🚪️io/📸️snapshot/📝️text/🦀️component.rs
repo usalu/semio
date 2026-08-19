@@ -161,13 +161,13 @@ mod tests {
         snapshot
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dsl_round_trip_empty_document() {
         let document = crate::artifacts::wires::empty_wires_snapshot();
         store::os_store::test_support::assert_dsl_round_trip(&document);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dsl_round_trip_metabolism_fixture() {
         let document = crate::artifacts::wires::schema::metabolism_wires_example_snapshot()
             .expect("valid metabolism fixture mutations");
@@ -178,7 +178,7 @@ mod tests {
         assert_eq!(crate::artifacts::wires::wires_working_board(&reparsed).get("nodes").and_then(|value| value.as_array()).map(|items| items.len()), Some(7));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dsl_text_round_trips_empty() {
         let snapshot = empty_wires_snapshot();
         let text = <WiresSnapshot as store::ArtifactDsl>::print_dsl(&snapshot);
@@ -190,7 +190,7 @@ mod tests {
     /// ⚖️ codec_retention_law: a populated snapshot (real node content, not just the default) survives
     /// BOTH codecs — this is what a bare-handle-only codec would silently fail (see this file's module
     /// doc, `dag`'s bug writeup).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn codec_retention_law_carries_real_node_content_not_just_the_handle() {
         let snapshot = populated();
         let text = <WiresSnapshot as store::ArtifactDsl>::print_dsl(&snapshot);

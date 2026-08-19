@@ -95,7 +95,7 @@ mod tests {
     use crate::artifacts::semio::standards::v1::subsets::value::io::import::deserializers::artifacts::json::v_rfc8259::any::semio_value_from_json;
     use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::{SemioValueEntry, SemioValueNode};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn int_and_float_lexemes_reemit_as_a_plain_number_verbatim() {
         let nodes = HashMap::new();
         let mut visiting = HashSet::new();
@@ -103,7 +103,7 @@ mod tests {
         assert_eq!(json_value_from_semio(&SemioValue::Float { lexeme: "1.2300".into() }, &nodes, &mut visiting).unwrap(), JsonValue::Number { lexeme: "1.2300".into() });
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn bytes_become_a_base64_string() {
         let nodes = HashMap::new();
         let mut visiting = HashSet::new();
@@ -111,7 +111,7 @@ mod tests {
         assert_eq!(out, JsonValue::String { value: base64_encode(&[0, 1, 2, 255]) });
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn ref_is_dereferenced_inline() {
         let target_id = ValueId::new("n1");
         let target_value = SemioValue::Str { value: "leaf".into() };
@@ -122,7 +122,7 @@ mod tests {
         assert_eq!(out, JsonValue::String { value: "leaf".into() });
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dangling_ref_is_a_hard_error() {
         let nodes: HashMap<&ValueId, &SemioValue> = HashMap::new();
         let mut visiting = HashSet::new();
@@ -130,7 +130,7 @@ mod tests {
         assert!(err.is_err());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn self_cycle_is_a_hard_error() {
         let id = ValueId::new("n1");
         let value = SemioValue::Ref { id: id.clone() };
@@ -144,7 +144,7 @@ mod tests {
     /// 🧪️ Required proof: json -> value -> json -> value round trip preserves everything the
     /// value subset can represent (Bytes/Ref excepted — documented one-directional gaps, proven
     /// separately above).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn json_to_value_to_json_to_value_round_trips() {
         let json = JsonValue::Object {
             members: vec![
@@ -161,7 +161,7 @@ mod tests {
         assert_eq!(s1.root, s2_value);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn nodes_graph_round_trips_through_dereferenced_json() {
         let s1 = SemioValueSnapshot {
             schema: crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::STDIO_SEMIOVALUE_DOCUMENT_SCHEMA.into(),

@@ -1,6 +1,7 @@
 //! 📏️ Norm core: shared quantities, clause identity, compliance results, and national annex selection.
 
 use protocol::{Mutation, MutationDiff, OpBinary, OpText, ProtocolError};
+use semio_framework_dispatch_macros::dyn_enum;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use std::fmt;
@@ -89,7 +90,7 @@ impl ClauseId {
 }
 
 impl fmt::Display for ClauseId {
-    async fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{} {} §{}", self.family, self.part, self.section)
     }
 }
@@ -210,6 +211,9 @@ impl AnnexChoice {
 }
 
 /// 🗺️ Trait for national annex parameter overrides.
+/// 🔀️ O1 de-dyn: closed set (`NaDe`/`NaEn`) — closes as `NationalAnnexes` via `dyn_enum_close!` in
+/// `en1990`'s schema module, where the two impls live (`🎫️tickets/…/📓️terra-dedyn-fleet-norm-report.md`).
+#[dyn_enum]
 pub trait NationalAnnex {
     async fn choice(&self) -> AnnexChoice;
     async fn gamma_g(&self) -> f64;
@@ -567,7 +571,7 @@ pub struct NormHost<F: NormFamily> {
 }
 
 impl<F: NormFamily> Default for NormHost<F> {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self::from_document(F::Document::default())
     }
 }
@@ -817,7 +821,7 @@ macro_rules! impl_norm_artifact_record {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn check_result_passes_when_utilization_below_one() {
         let clause = ClauseId::new("EN 1990", "§6.4", "6.10");
         let result = CheckResult::from_utilization(clause, Quantity::stress_mpa(250.0), Quantity::stress_mpa(300.0), "ULS stress check", AnnexChoice::De);
@@ -825,13 +829,13 @@ mod tests {
         assert!(result.utilization < 1.0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn table_lookup_linear_interpolates() {
         let table = [TableEntry1D { x: 0.0, y: 1.0 }, TableEntry1D { x: 10.0, y: 2.0 }];
         assert!((table_lookup_linear(&table, 5.0) - 1.5).abs() < 1e-9);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn check_minimum_passes_when_above_threshold() {
         let result = CheckResult::from_minimum(ClauseId::new("DIN 4108-3", "§6", "6.1"), Quantity::new(QuantityKind::Dimensionless, 0.8), Quantity::new(QuantityKind::Dimensionless, 0.25), "f_Rsi", AnnexChoice::De);
         assert_eq!(result.status, CheckStatus::Pass);
@@ -869,7 +873,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn norm_host_recomputes_report_after_apply() {
         let mut host = NormHost::<DemoFamily>::default();
         assert!(host.report().checks[0].utilization < 1.0);
@@ -877,18 +881,18 @@ mod tests {
         assert!(host.report().checks[0].utilization > 1.0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn demo_document_dsl_round_trips() {
         store::os_store::test_support::assert_dsl_round_trip(&DemoDocument { value: 4.5 });
         store::os_store::test_support::assert_dsl_pack_equivalence(&DemoDocument { value: 4.5 });
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_artifact_operation_op_text_round_trips() {
         store::os_store::test_support::assert_op_line_round_trip(&SetArtifactMutation::SetArtifact { document: DemoDocument { value: 4.5 } });
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_artifact_operation_op_text_escapes_multiline_dsl_text() {
         // ⚡️ The op-text field wraps the newline `print_dsl` always emits, so this exercises the
         // `\n` escape (not just the general round-trip law already covered above).
@@ -899,7 +903,7 @@ mod tests {
         assert_eq!(parsed, SetArtifactMutation::SetArtifact { document: DemoDocument { value: 7.0 } });
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn document_text_round_trips_for_a_norm_family_document() {
         let envelope = store::create_document_envelope("norm.demo/v1", "demo", DemoDocument { value: 1.0 }, None);
         let mut store = store::ArtifactStore::new(envelope).expect("valid artifact store fixture");
@@ -915,7 +919,7 @@ mod tests {
     /// as `dag`'s own `command_envelope_round_trip_holds_for_an_applied_operation`) — proves the law
     /// once for the shared generic `SetArtifactMutation<D>` bridge (`POLICY_DSL_COMPLETENESS_GENERIC_BRIDGE_ALLOWLIST`'s
     /// `"SetArtifactMutation"` entry), covering every norm family that reuses it.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn command_envelope_round_trip_holds_for_an_applied_operation() {
         use protocol::{ArtifactId, Edit, SchemaId};
 

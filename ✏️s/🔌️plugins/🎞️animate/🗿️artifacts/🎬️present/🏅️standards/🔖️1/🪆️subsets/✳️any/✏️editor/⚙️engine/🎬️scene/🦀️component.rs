@@ -6,11 +6,11 @@
 pub mod scene {
     //! 🎭️ Scene trait with construct/play/wait timeline and frame loop.
 
-    use crate::editor::animate::engine::animation::animation::{apply_parent_opacity_tree, compile_animations, interpolate_at, Animation, Wait};
+    use crate::editor::animate::engine::animation::animation::{apply_parent_opacity_tree, compile_animations, interpolate_at, Animation, Animations, Wait};
     use crate::editor::animate::engine::camera::camera::{Camera, MovingCamera, ThreeDCamera, ZoomedCamera};
     use crate::editor::animate::engine::config::config::AnimateConfig;
     use crate::editor::animate::engine::scene::section::SectionList;
-    use crate::editor::animate::engine::scene::sobject::Sobject;
+    use crate::editor::animate::engine::scene::sobject::{Sobject, Sobjects};
     use crate::editor::animate::engine::rate::updater::run_updaters;
     use std::collections::HashMap;
 
@@ -30,9 +30,9 @@ pub mod scene {
 
         async fn camera_mut(&mut self) -> &mut Camera;
 
-        async fn mobjects(&self) -> &HashMap<u64, Box<dyn Sobject>>;
+        async fn mobjects(&self) -> &HashMap<u64, Sobjects>;
 
-        async fn mobjects_mut(&mut self) -> &mut HashMap<u64, Box<dyn Sobject>>;
+        async fn mobjects_mut(&mut self) -> &mut HashMap<u64, Sobjects>;
 
         async fn sections(&self) -> &SectionList;
 
@@ -42,7 +42,7 @@ pub mod scene {
 
         async fn set_scene_time(&mut self, time: f64);
 
-        async fn add(&mut self, mobject: Box<dyn Sobject>) {
+        async fn add(&mut self, mobject: Sobjects) {
             let id = mobject.id();
             self.mobjects_mut().insert(id, mobject);
         }
@@ -51,7 +51,7 @@ pub mod scene {
             self.mobjects_mut().remove(&id);
         }
 
-        async fn play(&mut self, mut animation: Box<dyn Animation>) {
+        async fn play(&mut self, mut animation: Animations) {
             let pending_introducers = if animation.is_introducer() { animation.get_all_mobjects() } else { Vec::new() };
             for id in &pending_introducers {
                 debug_assert!(self.mobjects().contains_key(id), "introducer animation requires mobject {id} to exist in scene");
@@ -63,7 +63,7 @@ pub mod scene {
             let steps = steps.max(1);
             for frame in 0..=steps {
                 let alpha = frame as f64 / steps as f64;
-                interpolate_at(self.mobjects_mut(), animation.as_mut(), alpha);
+                interpolate_at(self.mobjects_mut(), &mut animation, alpha);
                 self.sample_frame(self.config().frame_duration());
             }
             animation.finish();
@@ -83,10 +83,10 @@ pub mod scene {
         }
 
         async fn wait(&mut self, seconds: f64) {
-            self.play(Box::new(Wait::new(seconds)));
+            self.play(Wait::new(seconds).into());
         }
 
-        async fn compile_and_play(&mut self, animations: Vec<Box<dyn Animation>>) {
+        async fn compile_and_play(&mut self, animations: Vec<Animations>) {
             let _durations = compile_animations(&animations);
             for anim in animations {
                 self.play(anim);
@@ -97,8 +97,8 @@ pub mod scene {
             let t = self.scene_time() + dt;
             self.set_scene_time(t);
             for m in self.mobjects_mut().values_mut() {
-                apply_parent_opacity_tree(m.as_mut(), 1.0);
-                run_updaters(m.as_mut(), dt);
+                apply_parent_opacity_tree(m, 1.0);
+                run_updaters(m, dt);
             }
         }
 
@@ -134,7 +134,7 @@ pub mod scene {
     pub struct BasicStage {
         pub config: AnimateConfig,
         pub camera: Camera,
-        pub mobjects: HashMap<u64, Box<dyn Sobject>>,
+        pub mobjects: HashMap<u64, Sobjects>,
         pub sections: SectionList,
         pub scene_time: f64,
     }
@@ -171,11 +171,11 @@ pub mod scene {
             &mut self.camera
         }
 
-        async fn mobjects(&self) -> &HashMap<u64, Box<dyn Sobject>> {
+        async fn mobjects(&self) -> &HashMap<u64, Sobjects> {
             &self.mobjects
         }
 
-        async fn mobjects_mut(&mut self) -> &mut HashMap<u64, Box<dyn Sobject>> {
+        async fn mobjects_mut(&mut self) -> &mut HashMap<u64, Sobjects> {
             &mut self.mobjects
         }
 
@@ -208,7 +208,7 @@ pub mod scene {
     }
 
     impl Default for TestScene {
-        async fn default() -> Self {
+        fn default() -> Self {
             Self::new()
         }
     }
@@ -227,10 +227,10 @@ pub mod scene {
         async fn camera_mut(&mut self) -> &mut Camera {
             self.inner.camera_mut()
         }
-        async fn mobjects(&self) -> &HashMap<u64, Box<dyn Sobject>> {
+        async fn mobjects(&self) -> &HashMap<u64, Sobjects> {
             self.inner.mobjects()
         }
-        async fn mobjects_mut(&mut self) -> &mut HashMap<u64, Box<dyn Sobject>> {
+        async fn mobjects_mut(&mut self) -> &mut HashMap<u64, Sobjects> {
             self.inner.mobjects_mut()
         }
         async fn sections(&self) -> &SectionList {
@@ -274,10 +274,10 @@ pub mod scene {
         async fn camera_mut(&mut self) -> &mut Camera {
             &mut self.moving_camera.camera
         }
-        async fn mobjects(&self) -> &HashMap<u64, Box<dyn Sobject>> {
+        async fn mobjects(&self) -> &HashMap<u64, Sobjects> {
             self.inner.mobjects()
         }
-        async fn mobjects_mut(&mut self) -> &mut HashMap<u64, Box<dyn Sobject>> {
+        async fn mobjects_mut(&mut self) -> &mut HashMap<u64, Sobjects> {
             self.inner.mobjects_mut()
         }
         async fn sections(&self) -> &SectionList {
@@ -325,10 +325,10 @@ pub mod scene {
         async fn camera_mut(&mut self) -> &mut Camera {
             &mut self.three_d_camera.camera
         }
-        async fn mobjects(&self) -> &HashMap<u64, Box<dyn Sobject>> {
+        async fn mobjects(&self) -> &HashMap<u64, Sobjects> {
             self.inner.mobjects()
         }
-        async fn mobjects_mut(&mut self) -> &mut HashMap<u64, Box<dyn Sobject>> {
+        async fn mobjects_mut(&mut self) -> &mut HashMap<u64, Sobjects> {
             self.inner.mobjects_mut()
         }
         async fn sections(&self) -> &SectionList {
@@ -372,10 +372,10 @@ pub mod scene {
         async fn camera_mut(&mut self) -> &mut Camera {
             &mut self.zoomed_camera.camera
         }
-        async fn mobjects(&self) -> &HashMap<u64, Box<dyn Sobject>> {
+        async fn mobjects(&self) -> &HashMap<u64, Sobjects> {
             self.inner.mobjects()
         }
-        async fn mobjects_mut(&mut self) -> &mut HashMap<u64, Box<dyn Sobject>> {
+        async fn mobjects_mut(&mut self) -> &mut HashMap<u64, Sobjects> {
             self.inner.mobjects_mut()
         }
         async fn sections(&self) -> &SectionList {
@@ -417,10 +417,10 @@ pub mod scene {
         async fn camera_mut(&mut self) -> &mut Camera {
             self.inner.camera_mut()
         }
-        async fn mobjects(&self) -> &HashMap<u64, Box<dyn Sobject>> {
+        async fn mobjects(&self) -> &HashMap<u64, Sobjects> {
             self.inner.mobjects()
         }
-        async fn mobjects_mut(&mut self) -> &mut HashMap<u64, Box<dyn Sobject>> {
+        async fn mobjects_mut(&mut self) -> &mut HashMap<u64, Sobjects> {
             self.inner.mobjects_mut()
         }
         async fn sections(&self) -> &SectionList {
@@ -454,7 +454,7 @@ pub mod scene {
 
         impl Scene for DemoScene {
             async fn construct(&mut self) {
-                self.add(Box::new(VSobject::new()));
+                self.add(VSobject::new().into());
                 self.wait(0.5);
             }
             async fn config(&self) -> &AnimateConfig {
@@ -469,10 +469,10 @@ pub mod scene {
             async fn camera_mut(&mut self) -> &mut Camera {
                 self.base.camera_mut()
             }
-            async fn mobjects(&self) -> &HashMap<u64, Box<dyn Sobject>> {
+            async fn mobjects(&self) -> &HashMap<u64, Sobjects> {
                 self.base.mobjects()
             }
-            async fn mobjects_mut(&mut self) -> &mut HashMap<u64, Box<dyn Sobject>> {
+            async fn mobjects_mut(&mut self) -> &mut HashMap<u64, Sobjects> {
                 self.base.mobjects_mut()
             }
             async fn sections(&self) -> &SectionList {
@@ -489,7 +489,7 @@ pub mod scene {
             }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn preview_loop_samples_frames() {
             let mut s = DemoScene::new();
             let mut frames = 0u64;
@@ -569,13 +569,13 @@ pub mod section {
     mod tests {
         use super::*;
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn section_duration_is_non_negative() {
             let s = Section::new("intro", 0.0, 2.5);
             assert!((s.duration() - 2.5).abs() < 1e-9);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn section_list_tracks_open_close() {
             let mut list = SectionList::new();
             list.begin_section("main", false);
@@ -593,6 +593,7 @@ pub mod sobject {
     use crate::editor::animate::engine::rate::updater::Updater;
     use kurbo::{ParamCurve, ParamCurveArclen, PathSeg, Shape};
     use geometry::{append_shape_to_path, bounding_box, polygon_centroid, Affine, BezPath, PathEl, Point, Vec2};
+    use semio_framework_dispatch_macros::{dyn_enum, dyn_enum_close};
 
 
     async fn next_id() -> u64 {
@@ -610,7 +611,7 @@ pub mod sobject {
     }
 
     impl Default for Style {
-        async fn default() -> Self {
+        fn default() -> Self {
             Self { fill: Some(Color::WHITE), stroke: None, fill_opacity: 1.0, stroke_opacity: 1.0, stroke_width: 4.0 }
         }
     }
@@ -641,6 +642,7 @@ pub mod sobject {
     }
 
     /// 🧬️ Base scene-graph object contract.
+    #[dyn_enum]
     pub trait Sobject: Send {
         async fn id(&self) -> u64;
         async fn name(&self) -> &str;
@@ -686,9 +688,9 @@ pub mod sobject {
             self.style_mut().stroke_width = width;
         }
         async fn paths(&self) -> Vec<BezPath>;
-        async fn children(&self) -> Vec<&dyn Sobject>;
-        async fn visit_children_mut(&mut self, f: &mut dyn FnMut(&mut dyn Sobject));
-        async fn add_child(&mut self, child: Box<dyn Sobject>);
+        async fn children(&self) -> Vec<&Sobjects>;
+        async fn visit_children_mut(&mut self, f: &mut dyn FnMut(&mut Sobjects));
+        async fn add_child(&mut self, child: Sobjects);
         async fn updaters(&self) -> &[Updater];
         async fn updaters_mut(&mut self) -> &mut Vec<Updater>;
         async fn save_state(&mut self);
@@ -696,7 +698,7 @@ pub mod sobject {
         async fn generate_target(&mut self);
         async fn has_target(&self) -> bool;
         async fn apply_target(&mut self);
-        async fn clone_box(&self) -> Box<dyn Sobject>;
+        async fn clone_box(&self) -> Sobjects;
         async fn as_any(&self) -> &dyn std::any::Any;
         async fn as_any_mut(&mut self) -> &mut dyn std::any::Any;
         async fn z_order(&self) -> i64 {
@@ -927,7 +929,7 @@ pub mod sobject {
     }
 
     impl Default for VSobject {
-        async fn default() -> Self {
+        fn default() -> Self {
             Self::new()
         }
     }
@@ -991,11 +993,11 @@ pub mod sobject {
                 })
                 .collect()
         }
-        async fn children(&self) -> Vec<&dyn Sobject> {
+        async fn children(&self) -> Vec<&Sobjects> {
             Vec::new()
         }
-        async fn visit_children_mut(&mut self, _f: &mut dyn FnMut(&mut dyn Sobject)) {}
-        async fn add_child(&mut self, _child: Box<dyn Sobject>) {}
+        async fn visit_children_mut(&mut self, _f: &mut dyn FnMut(&mut Sobjects)) {}
+        async fn add_child(&mut self, _child: Sobjects) {}
         async fn updaters(&self) -> &[Updater] {
             &self.updaters
         }
@@ -1021,8 +1023,8 @@ pub mod sobject {
                 self.restore_snapshot(t);
             }
         }
-        async fn clone_box(&self) -> Box<dyn Sobject> {
-            Box::new(self.clone())
+        async fn clone_box(&self) -> Sobjects {
+            self.clone().into()
         }
         async fn as_any(&self) -> &dyn std::any::Any {
             self
@@ -1045,7 +1047,7 @@ pub mod sobject {
     pub struct Group {
         pub id: u64,
         pub name: String,
-        pub children: Vec<Box<dyn Sobject>>,
+        pub children: Vec<Sobjects>,
         pub style: Style,
         pub opacity: f64,
         pub parent_opacity: f64,
@@ -1063,7 +1065,7 @@ pub mod sobject {
     }
 
     impl Group {
-        pub async fn new(children: Vec<Box<dyn Sobject>>) -> Self {
+        pub async fn new(children: Vec<Sobjects>) -> Self {
             Self { id: next_id(), name: String::new(), children, style: Style::default(), opacity: 1.0, parent_opacity: 1.0, transform: Affine::IDENTITY, z_order: 0, saved: None, target: None, updaters: Vec::new() }
         }
 
@@ -1137,15 +1139,15 @@ pub mod sobject {
         async fn paths(&self) -> Vec<BezPath> {
             self.children.iter().flat_map(|c| c.paths()).collect()
         }
-        async fn children(&self) -> Vec<&dyn Sobject> {
-            self.children.iter().map(|c| c.as_ref()).collect()
+        async fn children(&self) -> Vec<&Sobjects> {
+            self.children.iter().collect()
         }
-        async fn visit_children_mut(&mut self, f: &mut dyn FnMut(&mut dyn Sobject)) {
+        async fn visit_children_mut(&mut self, f: &mut dyn FnMut(&mut Sobjects)) {
             for child in &mut self.children {
-                f(child.as_mut());
+                f(child);
             }
         }
-        async fn add_child(&mut self, child: Box<dyn Sobject>) {
+        async fn add_child(&mut self, child: Sobjects) {
             self.children.push(child);
             self.propagate_parent_opacity();
         }
@@ -1188,8 +1190,8 @@ pub mod sobject {
                 self.transform = t.transform;
             }
         }
-        async fn clone_box(&self) -> Box<dyn Sobject> {
-            Box::new(Group {
+        async fn clone_box(&self) -> Sobjects {
+            Group {
                 id: next_id(),
                 name: self.name.clone(),
                 children: self.children.iter().map(|c| c.clone_box()).collect(),
@@ -1201,7 +1203,8 @@ pub mod sobject {
                 saved: None,
                 target: None,
                 updaters: self.updaters.clone(),
-            })
+            }
+            .into()
         }
         async fn as_any(&self) -> &dyn std::any::Any {
             self
@@ -1217,15 +1220,27 @@ pub mod sobject {
         }
     }
 
+    // 🔀️ R11 "closed set" case — three impls in this crate (`VSobject`, `Group` above,
+    // `ThreeDVSobject` in `⚙️engine/📐️geometry`), so `dyn_enum_close!` generates the enum +
+    // `impl Sobject for Sobjects` match-delegation (O1). Bare invocation is legal because this call
+    // site is in the SAME module as `#[dyn_enum] pub trait Sobject` above it (dyn-enum-macro finding 1).
+    dyn_enum_close! {
+        pub enum Sobjects: Sobject {
+            VSobject(VSobject),
+            Group(Group),
+            ThreeDVSobject(crate::editor::animate::engine::geometry::three_d::ThreeDVSobject),
+        }
+    }
+
     /// ✏️ Vector-only group convenience wrapper.
     pub type VGroup = Group;
 
-    pub async fn vgroup(children: Vec<Box<dyn Sobject>>) -> VGroup {
+    pub async fn vgroup(children: Vec<Sobjects>) -> VGroup {
         Group::new(children)
     }
 
     /// ↔ Place `mover` next to `anchor` along a direction.
-    pub async fn next_to(mover: &mut dyn Sobject, anchor: &dyn Sobject, direction: Vec2, buff: f64) {
+    pub async fn next_to(mover: &mut Sobjects, anchor: &Sobjects, direction: Vec2, buff: f64) {
         let mb = mover.bounds();
         let ab = anchor.bounds();
         let dir = if direction.hypot() < 1e-9 { Vec2::new(1.0, 0.0) } else { direction / direction.hypot() };
@@ -1266,7 +1281,7 @@ pub mod sobject {
         Center,
     }
 
-    pub async fn align_to(mover: &mut dyn Sobject, anchor: &dyn Sobject, edge: AlignEdge) {
+    pub async fn align_to(mover: &mut Sobjects, anchor: &Sobjects, edge: AlignEdge) {
         let mb = mover.bounds();
         let ab = anchor.bounds();
         let shift = match edge {
@@ -1326,14 +1341,14 @@ pub mod sobject {
         use super::*;
         use geometry::Circle;
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn vobject_has_finite_bounds() {
             let dot = VSobject::from_shape(&Circle::new(Point::new(0.0, 0.0), 1.0));
             let b = dot.bounds();
             assert!(b.max.x() > b.min.x());
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn parent_opacity_multiplies() {
             let mut v = VSobject::new();
             v.set_opacity(0.5);
@@ -1341,9 +1356,9 @@ pub mod sobject {
             assert!((v.effective_opacity() - 0.25).abs() < 1e-9);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn group_propagates_parent_opacity() {
-            let mut g = Group::new(vec![Box::new(VSobject::new())]);
+            let mut g = Group::new(vec![VSobject::new().into()]);
             g.set_opacity(0.5);
             assert!((g.children[0].effective_opacity() - 0.5).abs() < 1e-9);
         }
@@ -1358,36 +1373,36 @@ pub mod sobject {
             VSobject::from_path(path)
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn next_to_places_mover_right_of_anchor() {
-            let anchor = square_vobj(Point::ZERO, 1.0);
-            let mut mover = square_vobj(Point::ZERO, 0.5);
+            let anchor: Sobjects = square_vobj(Point::ZERO, 1.0).into();
+            let mut mover: Sobjects = square_vobj(Point::ZERO, 0.5).into();
             next_to(&mut mover, &anchor, Vec2::new(1.0, 0.0), 0.2);
             let b = mover.bounds();
             assert!((b.min.x() - 1.2).abs() < 1e-6);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn next_to_places_mover_below_anchor() {
-            let anchor = square_vobj(Point::ZERO, 1.0);
-            let mut mover = square_vobj(Point::ZERO, 0.5);
+            let anchor: Sobjects = square_vobj(Point::ZERO, 1.0).into();
+            let mut mover: Sobjects = square_vobj(Point::ZERO, 0.5).into();
             next_to(&mut mover, &anchor, Vec2::new(0.0, -1.0), 0.2);
             let b = mover.bounds();
             assert!((b.max.y() - (-1.2)).abs() < 1e-6);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn next_to_zero_direction_defaults_to_right() {
-            let anchor = square_vobj(Point::ZERO, 1.0);
-            let mut mover = square_vobj(Point::ZERO, 0.5);
+            let anchor: Sobjects = square_vobj(Point::ZERO, 1.0).into();
+            let mut mover: Sobjects = square_vobj(Point::ZERO, 0.5).into();
             next_to(&mut mover, &anchor, Vec2::new(0.0, 0.0), 0.2);
             let b = mover.bounds();
             assert!((b.min.x() - 1.2).abs() < 1e-6);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn arrange_lays_children_along_direction() {
-            let children: Vec<Box<dyn Sobject>> = vec![Box::new(square_vobj(Point::ZERO, 0.5)), Box::new(square_vobj(Point::ZERO, 0.5)), Box::new(square_vobj(Point::ZERO, 0.5))];
+            let children: Vec<Sobjects> = vec![square_vobj(Point::ZERO, 0.5).into(), square_vobj(Point::ZERO, 0.5).into(), square_vobj(Point::ZERO, 0.5).into()];
             let mut g = Group::new(children);
             arrange(&mut g, Vec2::new(1.0, 0.0), 0.5);
             assert!((g.children[0].center().x() - 0.0).abs() < 1e-6);
@@ -1395,18 +1410,18 @@ pub mod sobject {
             assert!((g.children[2].center().x() - 2.0).abs() < 1e-6);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn arrange_on_empty_group_is_noop() {
             let mut g = Group::empty();
             arrange(&mut g, Vec2::new(1.0, 0.0), 0.5);
             assert!(g.children.is_empty());
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn align_to_all_edges() {
-            let anchor = square_vobj(Point::ZERO, 1.0);
+            let anchor: Sobjects = square_vobj(Point::ZERO, 1.0).into();
             for edge in [AlignEdge::Left, AlignEdge::Right, AlignEdge::Up, AlignEdge::Down, AlignEdge::Center] {
-                let mut mover = square_vobj(Point::new(5.0, 5.0), 0.5);
+                let mut mover: Sobjects = square_vobj(Point::new(5.0, 5.0), 0.5).into();
                 align_to(&mut mover, &anchor, edge);
                 let b = mover.bounds();
                 match edge {
@@ -1422,12 +1437,12 @@ pub mod sobject {
             }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn center_of_points_empty_is_zero() {
             assert_eq!(center_of_points(&[]), Point::ZERO);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn center_of_points_nonempty_matches_centroid() {
             let pts = [Point::new(-1.0, -1.0), Point::new(1.0, -1.0), Point::new(1.0, 1.0), Point::new(-1.0, 1.0)];
             let c = center_of_points(&pts);
@@ -1435,7 +1450,7 @@ pub mod sobject {
             assert!(c.y().abs() < 1e-9);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn trim_path_at_ratio_boundary_and_partial() {
             let mut path = BezPath::new();
             path.move_to(Point::new(0.0, 0.0));

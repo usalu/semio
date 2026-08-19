@@ -36,7 +36,7 @@ impl protocol::Inference<WriterSnapshot> for WriterInference {
 /// `WriterSnapshot::default()`'s `text` field ever stops being empty (same trick the sequence
 /// plugin's own inference facet uses for its non-empty default snapshot).
 impl Default for WriterInference {
-    async fn default() -> Self {
+    fn default() -> Self {
         <Self as protocol::Inference<WriterSnapshot>>::infer(&WriterSnapshot::default())
     }
 }
@@ -145,13 +145,13 @@ mod tests {
     use super::*;
     use protocol::Inference;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = WriterSnapshot::default();
         assert_eq!(WriterInference::infer(&snapshot), WriterInference::infer(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(WriterInference::infer(&WriterSnapshot::default()), WriterInference::default());
     }

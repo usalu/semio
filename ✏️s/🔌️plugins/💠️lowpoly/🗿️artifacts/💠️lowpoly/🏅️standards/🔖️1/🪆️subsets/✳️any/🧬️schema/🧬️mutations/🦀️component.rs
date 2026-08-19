@@ -80,7 +80,7 @@ mod tests {
     /// ⚖️ `assert_mutation_inverse_law`/`assert_mutation_diff_absorb_law` (`protocol::os_spr::testkit`,
     /// reachable via this crate's existing `semio-framework-os-kernel` dependency — no new Cargo
     /// dependency needed) against an id-keyed create/delete pair and a scalar rename.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_object_obeys_the_inverse_and_absorb_laws() {
         let base = default_snapshot();
         let create = LowpolyMutation::CreateObject(super::super::create_object::mutation::CreateObject { index: base.objects.len(), object: tiny_object("obj-99", "Extra") });
@@ -91,14 +91,14 @@ mod tests {
         protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn delete_object_of_a_missing_id_has_an_empty_inverse() {
         let base = default_snapshot();
         let delete = LowpolyMutation::DeleteObject(super::super::delete_object::mutation::DeleteObject { id: "nope".into() });
         assert!(delete.inverse(&base).is_empty(), "deleting an absent id has nothing to undo");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn move_object_obeys_the_inverse_law() {
         let base = default_snapshot();
         let id = base.objects[0].id.clone();
@@ -113,28 +113,28 @@ mod tests {
     /// per representative verb family. `assert_outcome_policy_matrix` is not landed yet (checked at
     /// `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️testkit/🦀️component.rs`); TODO(1-D testkit
     /// laws pending): add a `MergePolicy` × `Severity` matrix test per verb family here once it lands.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn delete_object_missing_target_is_an_error() {
         let base = default_snapshot();
         let mutation = LowpolyMutation::DeleteObject(super::super::delete_object::mutation::DeleteObject { id: "does-not-exist".into() });
         protocol::os_spr::testkit::assert_missing_target_is_error(&base, &mutation);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn move_object_missing_target_is_an_error() {
         let base = default_snapshot();
         let mutation = LowpolyMutation::MoveObject(super::super::move_object::mutation::MoveObject { id: "does-not-exist".into(), new_position: [1.0, 2.0, 3.0] });
         protocol::os_spr::testkit::assert_missing_target_is_error(&base, &mutation);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn rename_object_missing_target_is_an_error() {
         let base = default_snapshot();
         let mutation = LowpolyMutation::RenameObject(super::super::rename_object::mutation::RenameObject { id: "does-not-exist".into(), new_name: "X".into() });
         protocol::os_spr::testkit::assert_missing_target_is_error(&base, &mutation);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_object_duplicate_id_is_fatal_and_never_applies() {
         let base = default_snapshot();
         let existing_id = base.objects[0].id.clone();

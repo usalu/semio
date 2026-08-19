@@ -70,7 +70,7 @@ mod tests {
 
     /// 🧪️ Real round trip through tiff's own codec (drops alpha, per the engine's own documented
     /// encode scope — RGB channels and the description tag must survive).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn real_byte_round_trip_through_tiff_codec() {
         let semio = sample_semio();
         let tiff = semio_framework_plugin::resolve_ready(SemioImageToTiff::serialize(&semio)).expect("serialize");

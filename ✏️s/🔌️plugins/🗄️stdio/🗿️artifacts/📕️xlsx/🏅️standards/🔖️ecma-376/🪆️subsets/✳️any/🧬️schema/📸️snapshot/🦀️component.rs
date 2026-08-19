@@ -37,7 +37,7 @@ pub enum XlsxCellValue {
 }
 
 impl Default for XlsxCellValue {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self::Empty
     }
 }
@@ -98,7 +98,7 @@ pub struct XlsxSnapshot {
 }
 
 impl Default for XlsxSnapshot {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { schema: STDIO_XLSX_DOCUMENT_SCHEMA.into(), opc: OpcPackage::default(), workbook: XlsxWorkbook::default() }
     }
 }

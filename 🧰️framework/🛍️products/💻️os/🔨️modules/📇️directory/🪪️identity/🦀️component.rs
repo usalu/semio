@@ -33,7 +33,7 @@ pub struct Identity {
 
 /// 🎭️ `user:{userId}#{sessionId}` (contract §C0) — `session_id` is the caller's own per-tab/
 /// per-process id (e.g. wgpu's `session.instance_id`), never derived here.
-pub fn actor_id(identity: &Identity, session_id: &str) -> String {
+pub async fn actor_id(identity: &Identity, session_id: &str) -> String {
     format!("user:{}#{session_id}", identity.user_id)
 }
 
@@ -68,7 +68,7 @@ pub struct IdentityEnv {
 }
 
 impl IdentityEnv {
-    pub fn from_process_env() -> Option<Self> {
+    pub async fn from_process_env() -> Option<Self> {
         let hub_url = std::env::var("S_HUB_URL").ok()?;
         let user_email = std::env::var("S_USER").ok()?;
         let data_dir = std::env::var("S_DATA_DIR").ok().map(std::path::PathBuf::from);
@@ -83,23 +83,23 @@ mod cache {
     use super::Identity;
     use std::path::{Path, PathBuf};
 
-    fn path(data_dir: &Path) -> PathBuf {
+    async fn path(data_dir: &Path) -> PathBuf {
         data_dir.join("os").join("🪪️identity.json")
     }
 
-    pub fn load(data_dir: &Path) -> Option<Identity> {
-        let bytes = std::fs::read(path(data_dir)).ok()?;
+    pub async fn load(data_dir: &Path) -> Option<Identity> {
+        let bytes = std::fs::read(path(data_dir).await).ok()?;
         serde_json::from_slice(&bytes).ok()
     }
 
-    pub fn save(data_dir: &Path, identity: &Identity) {
-        let target = path(data_dir);
+    pub async fn save(data_dir: &Path, identity: &Identity) {
+        let target = path(data_dir).await;
         let Some(parent) = target.parent() else { return };
         if std::fs::create_dir_all(parent).is_err() {
             return;
         }
         if let Ok(bytes) = serde_json::to_vec_pretty(identity) {
-            let _ = std::fs::write(target, bytes);
+            let _ = std::fs::write(&target, bytes);
         }
     }
 }
@@ -111,10 +111,10 @@ mod cache {
 #[cfg(target_arch = "wasm32")]
 mod cache {
     use super::Identity;
-    pub fn load(_data_dir: &std::path::Path) -> Option<Identity> {
+    pub async fn load(_data_dir: &std::path::Path) -> Option<Identity> {
         None
     }
-    pub fn save(_data_dir: &std::path::Path, _identity: &Identity) {}
+    pub async fn save(_data_dir: &std::path::Path, _identity: &Identity) {}
 }
 //#endregion 🔖️Cache
 
@@ -122,18 +122,18 @@ mod cache {
 /// ⏰️ Millisecond wall-clock read, native `SystemTime` / wasm32 `js_sys::Date` — same split
 /// `🏪️store/🔄️sync`'s own `now_ms` already uses.
 #[cfg(not(target_arch = "wasm32"))]
-fn now_ms() -> i64 {
+async fn now_ms() -> i64 {
     std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|duration| duration.as_millis() as i64).unwrap_or(0)
 }
 
 #[cfg(target_arch = "wasm32")]
-fn now_ms() -> i64 {
+async fn now_ms() -> i64 {
     js_sys::Date::now() as i64
 }
 
-fn persist(env: &IdentityEnv, identity: &Identity) {
+async fn persist(env: &IdentityEnv, identity: &Identity) {
     if let Some(data_dir) = &env.data_dir {
-        cache::save(data_dir, identity);
+        cache::save(data_dir, identity).await;
     }
 }
 
@@ -148,7 +148,12 @@ fn persist(env: &IdentityEnv, identity: &Identity) {
 /// (typically one scoped to "this boot attempt" or "this process"), same as every other
 /// `DirectoryClient` call site.
 pub async fn mint_or_restore<T: DirectoryTransport>(ctx: &OperationContext, client: &DirectoryClient<T>, env: &IdentityEnv) -> Result<IdentityOutcome, IdentityError> {
-    let cached = env.data_dir.as_deref().and_then(cache::load);
+    // 🪡️ `cache::load` does real I/O — its own consumer must stay async, so the closure form
+    // (`Option::and_then` is sync, E0728) is replaced with an explicit match (R10 residue #1).
+    let cached = match env.data_dir.as_deref() {
+        Some(data_dir) => cache::load(data_dir).await,
+        None => None,
+    };
 
     if let Some(cached_identity) = &cached {
         client.set_token(Some(cached_identity.session_token.clone()));
@@ -162,7 +167,7 @@ pub async fn mint_or_restore<T: DirectoryTransport>(ctx: &OperationContext, clie
                     session_token: cached_identity.session_token.clone(),
                     issued_at_ms: cached_identity.issued_at_ms,
                 };
-                persist(env, &identity);
+                persist(env, &identity).await;
                 return Ok(IdentityOutcome { identity, status: IdentityStatus::Online });
             }
             Err(DirectoryClientError::Unauthorized) => {}
@@ -178,10 +183,10 @@ pub async fn mint_or_restore<T: DirectoryTransport>(ctx: &OperationContext, clie
                 display_name: env.user_email.clone(),
                 hub_base_url: env.hub_url.clone(),
                 session_token: minted.token,
-                issued_at_ms: now_ms(),
+                issued_at_ms: now_ms().await,
             };
             client.set_token(Some(identity.session_token.clone()));
-            persist(env, &identity);
+            persist(env, &identity).await;
             Ok(IdentityOutcome { identity, status: IdentityStatus::Online })
         }
         Err(_) => cached.map(|identity| IdentityOutcome { identity, status: IdentityStatus::Offline }).ok_or_else(|| IdentityError::Unavailable(env.user_email.clone())),
@@ -197,22 +202,22 @@ mod tests {
     use super::*;
     use semio_framework_async::{CancelToken, TraceId};
 
-    fn env(data_dir: &std::path::Path) -> IdentityEnv {
+    async fn env(data_dir: &std::path::Path) -> IdentityEnv {
         IdentityEnv { hub_url: "http://hub.local".to_string(), user_email: "amara@semio.dev".to_string(), data_dir: Some(data_dir.to_path_buf()) }
     }
 
-    fn root_ctx() -> OperationContext {
+    async fn root_ctx() -> OperationContext {
         OperationContext { actor: 0, generation: 0, trace: TraceId(0), lane: 0, deadline_ms: None, cancel: CancelToken::root(), capability: None }
     }
 
     #[test]
-    fn actor_id_matches_contract_grammar() {
+    async fn actor_id_matches_contract_grammar() {
         let identity = Identity { user_id: "u-amara".to_string(), email: "amara@semio.dev".to_string(), display_name: "Amara".to_string(), hub_base_url: "http://hub.local".to_string(), session_token: "tok".to_string(), issued_at_ms: 0 };
         assert_eq!(actor_id(&identity, "sess-1"), "user:u-amara#sess-1");
     }
 
     #[test]
-    fn no_cache_mints_a_fresh_session() {
+    async fn no_cache_mints_a_fresh_session() {
         let dir = tempfile::tempdir().expect("tempdir");
         let transport = FakeTransport::default();
         transport.push_response(FakeTransport::json_response(200, &serde_json::json!({ "token": "tok-new", "user_id": "u-1" })));
@@ -226,7 +231,7 @@ mod tests {
     }
 
     #[test]
-    fn valid_cache_restores_without_minting() {
+    async fn valid_cache_restores_without_minting() {
         let dir = tempfile::tempdir().expect("tempdir");
         let cached = Identity { user_id: "u-1".to_string(), email: "amara@semio.dev".to_string(), display_name: "Amara".to_string(), hub_base_url: "http://hub.local".to_string(), session_token: "tok-old".to_string(), issued_at_ms: 111 };
         cache::save(dir.path(), &cached);
@@ -243,7 +248,7 @@ mod tests {
     }
 
     #[test]
-    fn expired_cache_falls_through_to_mint() {
+    async fn expired_cache_falls_through_to_mint() {
         let dir = tempfile::tempdir().expect("tempdir");
         let cached = Identity { user_id: "u-1".to_string(), email: "amara@semio.dev".to_string(), display_name: "Amara".to_string(), hub_base_url: "http://hub.local".to_string(), session_token: "tok-expired".to_string(), issued_at_ms: 111 };
         cache::save(dir.path(), &cached);
@@ -261,7 +266,7 @@ mod tests {
     }
 
     #[test]
-    fn unreachable_hub_degrades_to_cached_identity_offline() {
+    async fn unreachable_hub_degrades_to_cached_identity_offline() {
         let dir = tempfile::tempdir().expect("tempdir");
         let cached = Identity { user_id: "u-1".to_string(), email: "amara@semio.dev".to_string(), display_name: "Amara".to_string(), hub_base_url: "http://hub.local".to_string(), session_token: "tok-old".to_string(), issued_at_ms: 111 };
         cache::save(dir.path(), &cached);
@@ -275,7 +280,7 @@ mod tests {
     }
 
     #[test]
-    fn unreachable_hub_with_no_cache_is_unavailable_not_a_panic() {
+    async fn unreachable_hub_with_no_cache_is_unavailable_not_a_panic() {
         let dir = tempfile::tempdir().expect("tempdir");
         let transport = FakeTransport::default();
         transport.push_response(Err(super::super::client::TransportError::Io("connection refused".to_string())));

@@ -242,17 +242,17 @@ mod tests {
         KnotVector::new(vec![0.0, 0.0, 0.0, 0.0, 0.5, 1.0, 1.0, 1.0, 1.0], 3, 5).unwrap()
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn knot_vector_rejects_wrong_length() {
         assert!(KnotVector::new(vec![0.0, 0.0, 1.0, 1.0], 3, 5).is_none());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn knot_vector_rejects_decreasing_sequence() {
         assert!(KnotVector::new(vec![0.0, 0.5, 0.2, 1.0, 1.0], 1, 3).is_none());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn clamped_uniform_has_correct_domain_and_multiplicity() {
         let kv = KnotVector::clamped_uniform(5, 3);
         assert_eq!(kv.domain(), (0.0, 1.0));
@@ -261,7 +261,7 @@ mod tests {
         assert_eq!(kv.control_point_count(), 5);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn find_span_matches_brute_force_scan() {
         let kv = cubic_clamped_5cp();
         for i in 0..=100 {
@@ -281,7 +281,7 @@ mod tests {
         n
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn basis_functions_sum_to_one_everywhere_in_domain() {
         let kv = cubic_clamped_5cp();
         for i in 0..=50 {
@@ -293,7 +293,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn basis_functions_are_nonnegative() {
         let kv = cubic_clamped_5cp();
         for i in 0..=50 {
@@ -304,7 +304,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn de_boor_interpolates_endpoints_of_clamped_curve() {
         let kv = cubic_clamped_5cp();
         let values = vec![0.0, 1.0, -2.0, 3.0, 5.0];
@@ -313,7 +313,7 @@ mod tests {
         assert!((de_boor(&kv, &values, hi) - *values.last().unwrap()).abs() < 1e-9);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn basis_function_derivatives_match_finite_differences() {
         let kv = cubic_clamped_5cp();
         let u = 0.37;
@@ -328,7 +328,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn basis_function_derivatives_order_zero_matches_basis_functions() {
         let kv = cubic_clamped_5cp();
         let u = 0.63;
@@ -340,7 +340,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn insert_knot_does_not_change_the_curve() {
         let kv = cubic_clamped_5cp();
         let values = vec![0.0, 2.0, -1.0, 3.0, 1.0];
@@ -354,7 +354,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn elevate_bezier_span_preserves_curve_value() {
         // Single bezier span is a B-spline with degree = n and a clamped, no-interior-knot vector.
         let control_values = vec![0.0, 3.0, -2.0, 5.0];
@@ -371,7 +371,7 @@ mod tests {
     mod quick {
         use super::*;
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn de_boor_matches_bernstein_sum_oracle_on_random_bezier_span_curves() {
             // A single-span (no interior knots) clamped B-spline of degree p is exactly the
             // Bernstein-basis polynomial with the same control values — an independent oracle.
@@ -391,7 +391,7 @@ mod tests {
             }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn knot_insertion_is_geometrically_a_no_op_on_random_curves() {
             let mut rng = semio_framework_geometry::random::Rng::from_seed(43);
             for _ in 0..100 {

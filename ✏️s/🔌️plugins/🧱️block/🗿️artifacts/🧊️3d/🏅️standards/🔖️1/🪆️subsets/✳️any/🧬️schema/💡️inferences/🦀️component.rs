@@ -133,18 +133,18 @@ mod tests {
     //#endregion 🧸️Fixtures
 
     //#region 🧪️InferenceLaws
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = snapshot_with_vortices(vec![vortex("v0", [1.0, 2.0, 3.0], 0.5), vortex("v1", [-1.0, 0.0, 4.0], 0.25)]);
         assert_eq!(Block3dInference::infer(&snapshot), Block3dInference::infer(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(Block3dInference::infer(&Block3dSnapshot::default()), Block3dInference::default());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn bounds_match_vortex_positions_inflated_by_radius() {
         let snapshot = snapshot_with_vortices(vec![vortex("v0", [1.0, 2.0, 3.0], 0.5), vortex("v1", [-1.0, 0.0, 4.0], 0.25)]);
         let inferred = Block3dInference::infer(&snapshot);
@@ -156,7 +156,7 @@ mod tests {
     //#endregion 🧪️InferenceLaws
 
     //#region 🧪️PuzzleCatalogFragment
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn resolve_active_mesh_url_prefers_matching_tags() {
         let mut definition = Block3dSnapshot::default();
         definition.representations.push(BlockRepresentation { id: "r0".into(), name: "1:500".into(), mesh_url: Some("/mesh/low.glb".into()), tags: vec!["1to500".into()], lod: None, description: String::new(), attributes: Vec::new() });
@@ -165,7 +165,7 @@ mod tests {
         assert_eq!(resolve_active_mesh_url(&definition, &["missing"]), Some("/mesh/low.glb"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn puzzle3d_catalog_fragment_maps_vortices() {
         let mut definition = Block3dSnapshot { schema: BLOCK_3D_SCHEMA.into(), object_kind: BlockKindIdentity { id: "capsule".into(), name: "capsule".into(), label: "Capsule".into(), ..Default::default() }, ..Block3dSnapshot::default() };
         definition.vortices.push(Block3dVortexTemplate { id: "v0".into(), vortex_kind: "door".into(), position: [0.0, 0.0, 0.0], direction: [0.0, 1.0, 0.0], radius: 0.3, label: None });

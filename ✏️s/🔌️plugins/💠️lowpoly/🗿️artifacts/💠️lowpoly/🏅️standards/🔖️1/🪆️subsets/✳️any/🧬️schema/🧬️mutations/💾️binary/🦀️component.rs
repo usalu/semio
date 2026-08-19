@@ -32,7 +32,7 @@ mod tests {
     use crate::artifacts::lowpoly::mutations::rename_object;
     use crate::artifacts::lowpoly::LOWPOLY_DOCUMENT_SCHEMA;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_binary_round_trips_and_agrees_with_text() {
         let projection = default_snapshot();
         let object_id = projection.objects[0].id.clone();
@@ -42,7 +42,7 @@ mod tests {
         assert_eq!(decode_op(&bytes).expect("decode"), operation);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn document_text_round_trip_after_applying_an_operation() {
         let projection = default_snapshot();
         let object_id = projection.objects[0].id.clone();

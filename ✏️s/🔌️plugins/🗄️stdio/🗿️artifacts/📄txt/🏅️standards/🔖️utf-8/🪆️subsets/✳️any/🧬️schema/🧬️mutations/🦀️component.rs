@@ -185,7 +185,7 @@ mod tests {
         ]
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mutation_diff_law() {
         let b = base();
         for m in all_variants(&b) {
@@ -197,7 +197,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inverse_law() {
         let b = base();
         for m in all_variants(&b) {
@@ -215,7 +215,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_law_cartesian() {
         let b = base();
         let variants = all_variants(&b);
@@ -235,7 +235,7 @@ mod tests {
     /// 🧪️ F6: `OpText`/`OpBinary` round-trip laws (handcrafted impls over the
     /// `dsl::DslOps`-derived `DslVariants`), exercised over every variant incl. `SetSnapshot`'s
     /// full nested-record payload.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_text_binary_roundtrip_law() {
         let b = base();
         for m in all_variants(&b) {
@@ -253,7 +253,7 @@ mod tests {
     //#region 🔖️OpsGrammarConformanceLaw
     /// 🧪️ P2-P3: `dsl::parse_grammar` + `dsl::Recognizer::compile` + `.recognize` against REAL
     /// `print_op` output for every variant, incl. `SetSnapshot`'s full nested-block payload.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn ops_grammar_conformance_law() {
         let grammar_text = crate::artifacts::txt::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO;
         let grammar = dsl::parse_grammar(grammar_text).expect("parse mutations grammar");

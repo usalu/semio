@@ -24,7 +24,7 @@ pub async fn encode_result(indicators: &GltfEntityIndicators) -> Result<serde_js
 #[cfg(test)]
 mod tests {
     use super::*;
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn descriptor_is_versioned_and_cacheable() {
         assert_eq!(descriptor().id, "s.stdio.gltf.inference.overall-size.v1");
         assert_eq!(descriptor().algorithm_version, 1);
@@ -42,7 +42,7 @@ mod canonical_vectors {
     struct Contract {
         vectors: Vec<Vector>,
     }
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn shared_analytic_unavailable_and_deterministic_vectors_are_typed() {
         let contract: Contract = serde_json::from_str(include_str!("🧪️contract/🔣️component.json")).unwrap();
         assert_eq!(contract.vectors[0].value, Some(5.0));

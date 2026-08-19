@@ -554,7 +554,7 @@ mod tests {
     /// 🏷️ Every declared manifest action id must be reachable as exactly one command row, and every
     /// row's wire keyword must be distinct — the cross-cutting invariant `app_commands!` is there to
     /// hold.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn command_ids_are_unique_across_every_row() {
         let app = ShootingPlayApp;
         let ids: Vec<&str> = every_command().iter().map(|command| ShootingPlayApp::command_id(command)).collect();
@@ -566,7 +566,7 @@ mod tests {
     }
 
     /// ⚖️ LAW: text and binary are two projections of the same command, for every single row.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn every_command_round_trips_through_text_and_binary() {
         for command in every_command() {
             store::os_store::test_support::assert_op_text_binary_equivalence(&command);
@@ -619,7 +619,7 @@ mod tests {
     //#endregion 🔖️CommandSurface
 
     //#region 🔖️ManifestSanity
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn the_manifest_stitches_every_taxonomy_node() {
         let json = serde_json::to_string(&create_shooting_app()).expect("app definition json");
         for id in [SHOOTING_PLAY_WINDOW_SCENE, SHOOTING_PLAY_WINDOW_ICON] {
@@ -631,7 +631,7 @@ mod tests {
         assert!(json.contains("2d.shooting"), "artifact kind missing from the manifest");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn utility_registry_scopes_transform_gumball_and_actions_are_declared() {
         let definition = create_shooting_app();
         let utility_ids: Vec<&str> = definition.utilities.iter().map(|utility| utility.id.as_str()).collect();
@@ -654,7 +654,7 @@ mod tests {
     /// `world_pick_is_declared_as_a_view_action_and_emits_no_operations` test — asset pick/select is the
     /// framework-injected `interactionSelect` verb now (no app-declared action id), asserted here
     /// instead of a bespoke `worldPick` action.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn interaction_select_is_reachable_as_a_framework_injected_action_under_registry_enforcement() {
         let mut app = shooting_app_with_registry();
         let asset_id = app.snapshot().expect("snapshot").assets[0].id.clone();
@@ -662,7 +662,7 @@ mod tests {
         app.handle_action("interactionSelect", Some(&json!({ "domainId": SHOOTING_INTERACTION_DOMAIN, "targets": targets, "merge": "replace" })), &testkit::meta("local")).expect("interactionSelect");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn assets_interaction_domain_is_declared_and_scoped_to_the_scene_window() {
         let definition = create_shooting_app();
         let domain = definition.interactions.iter().find(|interaction| interaction.id == SHOOTING_INTERACTION_DOMAIN).expect("assets interaction domain declared");
@@ -675,7 +675,7 @@ mod tests {
     //#endregion 🔖️ManifestSanity
 
     //#region 🔖️Locale
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn shooting_labels_resolve_native_english_by_default() {
         let mut app = shooting_app();
         let document_json = crate::editor::shooting::testkit::render(&mut app, SHOOTING_PLAY_BODY_DOCUMENT);
@@ -690,7 +690,7 @@ mod tests {
     }
 
     /// 🗣️ B1: locale is now `cfg.locale`, set via the typed `SetLocale` config command.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn shooting_labels_resolve_native_german() {
         let mut app = shooting_app();
         dispatch(&mut app, ShootingCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }));
@@ -704,7 +704,7 @@ mod tests {
     //#endregion 🔖️Locale
 
     //#region 🔖️CrossCutting
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn undo_redo_round_trip_through_the_wrapper() {
         let mut app = shooting_app();
         testkit::assert_undo_redo_round_trip(&mut app, ShootingCommand::AddShot(add_shot::AddShot { format: "png".into(), shape: "rectangle".into() }), |app| app.snapshot().expect("snapshot").shots.len(), 2, 3);
@@ -712,7 +712,7 @@ mod tests {
 
     /// 🎥️ `SetCamera` is config-only — dragging the viewport camera through several ticks must never
     /// create a VCS edit/undo step on the DOCUMENT store at all.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn camera_drag_never_creates_a_document_undo_step() {
         let mut app = shooting_app();
         for position in [[1.0, 0.0, 0.0], [2.0, 0.0, 0.0], [3.0, 0.0, 0.0]] {
@@ -732,7 +732,7 @@ mod tests {
     /// 🧪️ The definitional regression proof: two independent instances start from the same fixture,
     /// apply DISJOINT edits, and exchanging operations over a `MemoryBackbone` converges both sides to
     /// contain BOTH edits.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn two_instances_converge_disjoint_edits_via_backbone() {
         testkit::assert_two_instances_converge::<EditorApp<ShootingPlayApp>, (String, [f64; 3])>(
             "mem://shooting-convergence",
@@ -745,14 +745,14 @@ mod tests {
         );
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn ingest_operations_is_idempotent_for_shooting() {
         testkit::assert_ingest_idempotent::<EditorApp<ShootingPlayApp>, String>(ShootingCommand::SetActiveShotLabel(set_active_shot_label::SetActiveShotLabel { value: "Hero".into() }), |app| {
             crate::artifacts::shooting::schema::active_shot(&app.snapshot().expect("snapshot")).unwrap().label.clone()
         });
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
         let mut app = shooting_app();
         assert!(crate::editor::shooting::testkit::render(&mut app, "shooting.play.nope").contains("Unknown body"));
@@ -760,7 +760,7 @@ mod tests {
     //#endregion 🔖️CrossCutting
 
     //#region 🔖️Io
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn shooting_io_mirrors_the_declared_artifact_kind() {
         let io = shooting_io();
         assert_eq!(io.document_schema, "shooting.scene");
@@ -777,7 +777,7 @@ mod tests {
 
     /// 🔌️ WORKFLOWS-END-TO-END-TYPED-PORTS-REAL-SCHEMA-FLOW-CONFIG-ON-NODE Wave 2 port recipe:
     /// `photos:out` is declared, optional/`Many`, and pinned to the `2d.image` kind.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn shooting_io_declares_the_photos_out_port() {
         let io = shooting_io();
         let port = io.ports.iter().find(|port| port.id == "photos:out").expect("photos:out declared");
@@ -790,7 +790,7 @@ mod tests {
     }
 
     /// 🖼️ `shooting_photo_media` renders the same scene as `exportActiveShot`'s PNG (base64, non-empty).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn shooting_photo_media_exports_a_raster_2d_image() {
         let snapshot = crate::artifacts::shooting::schema::default_snapshot();
         let media = shooting_photo_media(&snapshot).expect("photo export succeeds");
@@ -807,7 +807,7 @@ mod tests {
     //#endregion 🔖️Io
 
     //#region 🔖️Export
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn export_import_and_download_operations() {
         let mut app = shooting_app();
         let result = dispatch(&mut app, ShootingCommand::LoadRequest(load_request::LoadRequest {}));

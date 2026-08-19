@@ -238,7 +238,7 @@ pub enum TopologyError {
 }
 
 impl std::fmt::Display for TopologyError {
-    async fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::NonManifoldEdge { a, b, face_count } => write!(f, "edge ({a},{b}) has {face_count} incident faces"),
             Self::InconsistentOrientation { a, b } => write!(f, "edge ({a},{b}) is traversed the same direction by two faces"),
@@ -944,7 +944,7 @@ pub enum OrientError {
 }
 
 impl std::fmt::Display for OrientError {
-    async fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "could not consistently orient mesh after retry")
     }
 }
@@ -1052,7 +1052,7 @@ pub struct HoleFillParams {
 }
 
 impl Default for HoleFillParams {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { max_boundary_verts: 512 }
     }
 }
@@ -1826,7 +1826,7 @@ pub struct SimplifyParams {
 }
 
 impl Default for SimplifyParams {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { max_error: f64::INFINITY }
     }
 }
@@ -1913,13 +1913,13 @@ struct HeapEntry {
 impl Eq for HeapEntry {}
 
 impl Ord for HeapEntry {
-    async fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         other.cost.partial_cmp(&self.cost).unwrap_or(std::cmp::Ordering::Equal)
     }
 }
 
 impl PartialOrd for HeapEntry {
-    async fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         Some(self.cmp(other))
     }
 }
@@ -2685,7 +2685,7 @@ pub struct MeshParams {
 }
 
 impl Default for MeshParams {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self {
             guarantee_watertight: true,
             hole_fill_max_boundary_verts: 512,
@@ -3108,7 +3108,7 @@ mod tests {
     }
 
     // #region 🔖️TriMeshTests
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn edge_map_counts_faces_per_edge() {
         let mesh = TriMesh { positions: vec![[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [1.0, 1.0, 0.0]], triangles: vec![[0, 1, 2], [1, 3, 2]] };
         let edges = mesh.edge_map();
@@ -3116,7 +3116,7 @@ mod tests {
         assert_eq!(edges.get(&(0, 1)).map(Vec::len), Some(1));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn signed_volume_positive_for_outward_sphere() {
         let mesh = make_uv_sphere(1.0, 12, 16);
         assert!(mesh.signed_volume() > 0.0, "expected outward-wound sphere to have positive signed volume");
@@ -3124,7 +3124,7 @@ mod tests {
     // #endregion 🔖️TriMeshTests
 
     // #region 🔖️TopologyTests
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn topology_error_display_messages() {
         assert_eq!(TopologyError::NonManifoldEdge { a: 1, b: 2, face_count: 3 }.to_string(), "edge (1,2) has 3 incident faces");
         assert_eq!(TopologyError::InconsistentOrientation { a: 1, b: 2 }.to_string(), "edge (1,2) is traversed the same direction by two faces");
@@ -3132,32 +3132,32 @@ mod tests {
         assert_eq!(TopologyError::DegenerateTriangle(7).to_string(), "triangle 7 is degenerate");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn orient_error_display_message() {
         assert_eq!(OrientError::UnresolvableConflict.to_string(), "could not consistently orient mesh after retry");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn halfedge_topology_build_rejects_degenerate_triangle() {
         let mesh = TriMesh { positions: vec![[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0]], triangles: vec![[0, 0, 1]] };
         assert_eq!(HalfedgeTopology::build(&mesh).err().expect("degenerate triangle must be rejected"), TopologyError::DegenerateTriangle(0));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn halfedge_topology_build_rejects_non_manifold_edge() {
         let mesh = TriMesh { positions: vec![[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, -1.0, 0.0], [0.0, 0.0, 1.0]], triangles: vec![[0, 1, 2], [0, 1, 3], [0, 1, 4]] };
         let err = HalfedgeTopology::build(&mesh).err().expect("edge shared by 3 faces must be rejected");
         assert!(matches!(err, TopologyError::NonManifoldEdge { a: 0, b: 1, face_count: 3 }), "unexpected error: {err:?}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn halfedge_topology_build_rejects_inconsistent_orientation() {
         let mesh = TriMesh { positions: vec![[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, -1.0, 0.0]], triangles: vec![[0, 1, 2], [0, 1, 3]] };
         let err = HalfedgeTopology::build(&mesh).err().expect("same-direction shared edge must be rejected");
         assert!(matches!(err, TopologyError::InconsistentOrientation { a: 0, b: 1 }), "unexpected error: {err:?}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn halfedge_topology_build_rejects_non_manifold_vertex() {
         let mesh = two_spheres_sharing_vertex();
         let err = HalfedgeTopology::build(&mesh).err().expect("pinch vertex must be rejected");
@@ -3166,7 +3166,7 @@ mod tests {
     // #endregion 🔖️TopologyTests
 
     // #region 🔖️CloseUnitTest
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn close_voxel_alone_is_always_closed_and_manifold() {
         let mut state = 42u64;
         let mut positions = Vec::new();
@@ -3191,7 +3191,7 @@ mod tests {
     // #endregion 🔖️CloseUnitTest
 
     // #region 🔖️DenseFieldTests
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dense_field_get_set_out_of_range_are_noops() {
         let mut field = DenseField::new(2, 2, 2, [0.0; 3], 1.0, 0.0);
         assert_eq!(field.get(-1, 0, 0), None);
@@ -3204,7 +3204,7 @@ mod tests {
     // #endregion 🔖️DenseFieldTests
 
     // #region 🔖️WatertightSuite
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn tsdf_sphere_across_blocks_is_watertight_and_correct() {
         let voxel = 0.05;
         let radius = 0.6;
@@ -3221,7 +3221,7 @@ mod tests {
         assert!(error < 0.03, "sphere volume error {error} too large: got {volume}, expected {expected}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn tsdf_torus_across_blocks_has_genus_one() {
         let voxel = 0.05;
         let (major, minor) = (0.5, 0.2);
@@ -3277,7 +3277,7 @@ mod tests {
         mesh.triangles = mesh.triangles.iter().enumerate().filter(|&(f, _)| !removed.contains(&(f as u32))).map(|(_, t)| *t).collect();
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn planted_holes_fill_and_trigger_all_three_strategies() {
         let mut mesh = make_uv_sphere(1.0, 100, 150);
         let original_volume = mesh.signed_volume().abs();
@@ -3299,7 +3299,7 @@ mod tests {
     // #endregion 🔖️WatertightSuite
 
     // #region 🔖️HoleFillStatsTests
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fill_holes_skips_loops_larger_than_max_boundary_verts() {
         let mut mesh = make_uv_sphere(1.0, 30, 40);
         delete_patch(&mut mesh, 0, 50);
@@ -3371,7 +3371,7 @@ mod tests {
         mesh
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn repair_splits_bowtie_edge_into_two_components() {
         let mut mesh = two_spheres_sharing_edge();
         let stats = repair_non_manifold(&mut mesh);
@@ -3382,7 +3382,7 @@ mod tests {
         assert_eq!(report.connected_components, 2, "report: {report:?}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn repair_splits_pinch_vertex_into_two_components() {
         let mut mesh = two_spheres_sharing_vertex();
         let stats = repair_non_manifold(&mut mesh);
@@ -3393,7 +3393,7 @@ mod tests {
         assert_eq!(report.connected_components, 2, "report: {report:?}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn orient_consistently_recovers_from_flipped_windings() {
         let mut mesh = make_uv_sphere(1.0, 20, 30);
         let mut state = 7u64;
@@ -3411,7 +3411,7 @@ mod tests {
     // #endregion 🔖️RepairTests
 
     // #region 🔖️CleanTests
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn clean_mesh_welds_duplicate_vertices() {
         let mut mesh = TriMesh { positions: vec![[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 0.0]], triangles: vec![[0, 1, 2], [3, 1, 2]] };
         let stats = clean_mesh(&mut mesh, 0, 0.0);
@@ -3419,7 +3419,7 @@ mod tests {
         assert_eq!(mesh.vertex_count(), 3);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn clean_mesh_removes_degenerate_triangles() {
         let mut mesh = TriMesh { positions: vec![[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [2.0, 0.0, 0.0], [0.0, 1.0, 0.0]], triangles: vec![[0, 1, 2], [0, 1, 3]] };
         let stats = clean_mesh(&mut mesh, 0, 0.0);
@@ -3427,14 +3427,14 @@ mod tests {
         assert_eq!(mesh.triangle_count(), 1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn clean_mesh_collapses_near_zero_length_edges() {
         let mut mesh = TriMesh { positions: vec![[0.0, 0.0, 0.0], [1e-13, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0]], triangles: vec![[0, 1, 3], [1, 2, 3]] };
         let stats = clean_mesh(&mut mesh, 0, 0.0);
         assert!(stats.zero_length_edges_collapsed >= 1, "stats={stats:?}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn clean_mesh_removes_small_disconnected_components() {
         let mut mesh = make_uv_sphere(1.0, 10, 10);
         let shift = mesh.positions.len() as u32;
@@ -3446,14 +3446,14 @@ mod tests {
     // #endregion 🔖️CleanTests
 
     // #region 🔖️TaubinTests
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn taubin_smooth_noop_on_empty_mesh() {
         let mut mesh = TriMesh::new();
         taubin_smooth(&mut mesh, 0.5, -0.53, 5);
         assert!(mesh.positions.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn taubin_smooth_reduces_vertex_noise_amplitude() {
         let mut state = 99u64;
         let mut mesh = make_uv_sphere(1.0, 20, 30);
@@ -3474,7 +3474,7 @@ mod tests {
     // #endregion 🔖️TaubinTests
 
     // #region 🔖️SimplifyTests
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn qem_simplification_preserves_watertight_invariant() {
         let mut mesh = make_uv_sphere(1.0, 30, 45);
         let before = validate_watertight(&mesh, false);
@@ -3486,14 +3486,14 @@ mod tests {
         assert!(after.is_watertight, "simplified sphere must stay watertight, report: {after:?}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn simplify_qem_rejects_collapses_that_violate_link_condition() {
         let mut mesh = two_spheres_sharing_edge();
         let stats = simplify_qem(&mut mesh, 4, &SimplifyParams::default());
         assert!(stats.collapses_rejected_by_link_condition > 0, "expected the shared bowtie edge to force at least one link-condition rejection, stats={stats:?}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn simplify_qem_stops_when_error_exceeds_max_error() {
         let mut mesh = make_uv_sphere(1.0, 20, 30);
         let total_before = mesh.triangle_count();
@@ -3505,7 +3505,7 @@ mod tests {
     // #endregion 🔖️SimplifyTests
 
     // #region 🔖️SegmentChartsTests
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn segment_charts_keeps_coplanar_faces_in_one_chart() {
         let mesh = TriMesh { positions: vec![[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [1.0, 1.0, 0.0], [0.0, 1.0, 0.0]], triangles: vec![[0, 1, 2], [0, 2, 3]] };
         let charts = segment_charts(&mesh, 10.0);
@@ -3513,7 +3513,7 @@ mod tests {
         assert_eq!(charts[0].faces.len(), 2);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn segment_charts_cuts_at_sharp_dihedral_angle() {
         let mesh = TriMesh { positions: vec![[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [1.0, 1.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0], [0.0, 1.0, 1.0]], triangles: vec![[0, 1, 2], [0, 2, 3], [0, 3, 5], [0, 5, 4]] };
         let charts = segment_charts(&mesh, 45.0);
@@ -3525,7 +3525,7 @@ mod tests {
     // #endregion 🔖️SegmentChartsTests
 
     // #region 🔖️UnwrapTests
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn lscm_unwrap_is_bijective_per_chart() {
         let mut mesh = make_uv_sphere(1.0, 12, 18);
         let target = (mesh.triangles.len() as f64 * 0.5) as usize;
@@ -3554,14 +3554,14 @@ mod tests {
     // #endregion 🔖️UnwrapTests
 
     // #region 🔖️SelfIntersectionTests
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn validate_watertight_detects_self_intersections_when_requested() {
         let mesh = TriMesh { positions: vec![[-1.0, 0.0, -1.0], [1.0, 0.0, -1.0], [0.0, 0.0, 2.0], [0.0, -1.0, -0.5], [0.0, 1.0, -0.5], [0.0, 0.0, 1.0]], triangles: vec![[0, 1, 2], [3, 4, 5]] };
         let report = validate_watertight(&mesh, true);
         assert_eq!(report.self_intersection_pairs, Some(1), "report: {report:?}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn validate_watertight_reports_no_self_intersections_for_disjoint_triangles() {
         let mesh = TriMesh { positions: vec![[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [10.0, 10.0, 10.0], [11.0, 10.0, 10.0], [10.0, 11.0, 10.0]], triangles: vec![[0, 1, 2], [3, 4, 5]] };
         let report = validate_watertight(&mesh, true);
@@ -3570,7 +3570,7 @@ mod tests {
     // #endregion 🔖️SelfIntersectionTests
 
     // #region 🔖️ContractTest
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn pipeline_falls_back_to_close_on_pathological_input() {
         let mut mesh = make_uv_sphere(1.0, 40, 60);
         delete_patch(&mut mesh, 0, 60);
@@ -3629,7 +3629,7 @@ mod tests {
         mesh
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn pipeline_falls_back_to_close_on_catastrophically_fragmented_reconstruction() {
         let mesh = make_scattered_fragment_soup(300);
         let raw_report = validate_watertight(&mesh, false);
@@ -3656,13 +3656,13 @@ mod tests {
     // #endregion 🔖️ContractTest
 
     // #region 🔖️TextureTests
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn image_gradient_magnitude_zero_on_flat_image() {
         let img = solid_color_image(32, 32, 100);
         assert_eq!(image_gradient_magnitude(&img, 16.0, 16.0), 0.0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn image_gradient_magnitude_detects_vertical_edge() {
         let img = vertical_edge_image(32, 32);
         let at_edge = image_gradient_magnitude(&img, 16.0, 16.0);
@@ -3671,7 +3671,7 @@ mod tests {
         assert_eq!(away_from_edge, 0.0, "expected zero gradient away from the edge, got {away_from_edge}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn face_projected_area_none_behind_camera_some_in_front() {
         let intr = intrinsics_for(64, 64);
         let identity_pose = remodel_camera::CameraPose(crate::lie::Se3 { r: crate::lie::So3(crate::algebra::Mat3d::IDENTITY), t: [0.0, 0.0, 0.0] });
@@ -3682,7 +3682,7 @@ mod tests {
         assert!(area > 0.0, "expected a positive projected area, got {area}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn level_seam_solves_gain_and_offset() {
         let a: Vec<[f32; 3]> = (0..5).map(|i| [f64::from(i) as f32 * 10.0; 3]).collect();
         let b: Vec<[f32; 3]> = a.iter().map(|p| [p[0] * 2.0 + 5.0, p[1] * 2.0 + 5.0, p[2] * 2.0 + 5.0]).collect();
@@ -3693,12 +3693,12 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn level_seam_returns_identity_for_insufficient_samples() {
         assert_eq!(level_seam(&[[1.0, 2.0, 3.0]], &[[4.0, 5.0, 6.0]]), [(1.0, 0.0); 3]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn bake_texture_paints_atlas_from_multiple_views() {
         let mut mesh = make_uv_sphere(0.4, 10, 14);
         let target = (mesh.triangle_count() as f64 * 0.3) as usize;
@@ -3712,7 +3712,7 @@ mod tests {
         assert!(painted > 0, "expected bake_texture to paint at least some atlas pixels from {} views", views.len());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn bake_texture_is_empty_with_no_views() {
         let mut mesh = make_uv_sphere(0.4, 6, 8);
         let charts = segment_charts(&mesh, 60.0);
@@ -3725,7 +3725,7 @@ mod tests {
     mod long {
         use super::*;
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn full_pipeline_from_tsdf_sphere_is_watertight() {
             let voxel = 0.05;
             let radius = 0.6;
@@ -3748,7 +3748,7 @@ mod tests {
             assert!(!mesh_data.uvs.is_empty());
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn full_pipeline_with_views_bakes_and_encodes_texture() {
             let mesh = make_uv_sphere(0.4, 10, 14);
             let intr = intrinsics_for(48, 48);

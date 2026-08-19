@@ -85,7 +85,7 @@ pub struct SemioFlowSnapshot {
 }
 
 impl Default for SemioFlowSnapshot {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { schema: STDIO_SEMIOFLOW_DOCUMENT_SCHEMA.into(), nodes: Default::default(), edges: Default::default() }
     }
 }
@@ -375,7 +375,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn json_pack_round_trips() {
         let snap = sample();
         let bytes = <SemioFlowSnapshot as store::ArtifactPack>::encode_pack(&snap);
@@ -383,7 +383,7 @@ mod tests {
         assert_eq!(snap, back);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dsl_text_round_trips() {
         let snap = sample();
         let text = <SemioFlowSnapshot as store::ArtifactDsl>::print_dsl(&snap);
@@ -391,7 +391,7 @@ mod tests {
         assert_eq!(snap, back);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn default_snapshot_has_no_nodes_or_edges() {
         let snap = SemioFlowSnapshot::default();
         assert!(snap.nodes.is_empty());

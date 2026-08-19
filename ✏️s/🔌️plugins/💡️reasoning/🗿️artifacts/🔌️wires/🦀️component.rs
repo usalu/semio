@@ -280,13 +280,13 @@ pub async fn artifact_kind() -> ArtifactKindSpec {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn artifact_kind_uses_the_wires_fixture_schema() {
         assert_eq!(artifact_kind().schema, MINDMAP_WIRES_SCHEMA);
         assert_eq!(artifact_kind().id, "graph.wires");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn empty_snapshot_has_empty_fixtures() {
         let snapshot = empty_wires_snapshot();
         assert_eq!(snapshot.wires_fixture.get("identities").and_then(|value| value.as_array()).map(|items| items.len()), Some(0));
@@ -296,7 +296,7 @@ mod tests {
     /// 🧪️ Round-trip law: every board node/edge field survives `wires_content_snapshot_from_scene`
     /// → `scene_from_wires_content_snapshot`, including fields the neutral `SemioGraphNode`/
     /// `SemioGraphEdge` shape has no native slot for (`radius`/`root`/`edgeKind`/...).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn node_edge_content_round_trips_through_the_composed_child_snapshot() {
         let node = dsl::to_dsl_value(&serde_json::json!({
             "id": "node-1", "nodeKind": "identity", "shape": "circle", "x": 3.0, "y": 4.0,
@@ -314,7 +314,7 @@ mod tests {
         assert_eq!(edges, vec![edge]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn content_child_handle_is_content_addressed_and_deterministic() {
         let node = dsl::to_dsl_value(&serde_json::json!({ "id": "a", "nodeKind": "identity", "shape": "circle", "x": 0.0, "y": 0.0, "text": "A", "handles": [] })).unwrap();
         let handle_a = wires_content_child_handle(std::slice::from_ref(&node), &[]);

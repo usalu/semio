@@ -26,11 +26,11 @@ struct Cursor {
 }
 
 impl Cursor {
-    fn peek(&self) -> &crate::os_dsl::SpannedToken {
+    async fn peek(&self) -> &crate::os_dsl::SpannedToken {
         &self.tokens[self.pos.min(self.tokens.len() - 1)]
     }
 
-    fn advance(&mut self) -> crate::os_dsl::SpannedToken {
+    async fn advance(&mut self) -> crate::os_dsl::SpannedToken {
         let token = self.tokens[self.pos.min(self.tokens.len() - 1)].clone();
         if self.pos < self.tokens.len() - 1 {
             self.pos += 1;
@@ -38,20 +38,20 @@ impl Cursor {
         token
     }
 
-    fn expect(&mut self, kind: TokenKind) -> Result<crate::os_dsl::SpannedToken, TextError> {
-        if self.peek().kind == kind {
-            Ok(self.advance())
+    async fn expect(&mut self, kind: TokenKind) -> Result<crate::os_dsl::SpannedToken, TextError> {
+        if self.peek().await.kind == kind {
+            Ok(self.advance().await)
         } else {
-            Err(TextError::new(format!("expected {kind:?}, found {:?}", self.peek().kind), self.peek().span))
+            Err(TextError::new(format!("expected {kind:?}, found {:?}", self.peek().await.kind), self.peek().await.span))
         }
     }
 
-    fn span(&self) -> TextSpan {
-        self.peek().span
+    async fn span(&self) -> TextSpan {
+        self.peek().await.span
     }
 }
 
-fn arg_text(token: &crate::os_dsl::SpannedToken) -> Result<String, TextError> {
+async fn arg_text(token: &crate::os_dsl::SpannedToken) -> Result<String, TextError> {
     match token.kind {
         TokenKind::Ident | TokenKind::Int | TokenKind::Float => Ok(token.text.as_str().to_string()),
         TokenKind::Text => Ok(format!("\"{}\"", crate::os_dsl::escape_text(&token.text.as_str()))),
@@ -61,31 +61,31 @@ fn arg_text(token: &crate::os_dsl::SpannedToken) -> Result<String, TextError> {
 
 /// @emoji 🔌️ Parses one standalone recipe step: `name: target(arg1 arg2)`. `target` may be a
 /// dotted call path (`state.set`) since `.` is `dsl_core` ident-continue — it lexes as one `Ident`.
-pub fn parse_step_text(text: &str) -> Result<RecipeStep, TextError> {
+pub async fn parse_step_text(text: &str) -> Result<RecipeStep, TextError> {
     let limits = Limits::default();
     // Keeps the `Eof` sentinel (only trivia is filtered) — `Cursor::advance`'s clamp-at-last-index
     // logic needs a real final token to land on and stay at once input is exhausted; dropping it
     // makes `peek()` re-return whatever the last REAL token was forever instead of signaling Eof.
-    let tokens: Vec<_> = lex(text, &limits, false)?.into_iter().filter(|t| !t.kind.is_trivia()).collect();
+    let tokens: Vec<_> = lex(text, &limits, false).await?.into_iter().filter(|t| !t.kind.is_trivia()).collect();
     let mut cursor = Cursor { tokens, pos: 0 };
 
-    let name = cursor.expect(TokenKind::Ident)?.text.as_str().to_string();
-    cursor.expect(TokenKind::Colon)?;
-    let target = cursor.expect(TokenKind::Ident)?.text.as_str().to_string();
-    cursor.expect(TokenKind::LParen)?;
+    let name = cursor.expect(TokenKind::Ident).await?.text.as_str().to_string();
+    cursor.expect(TokenKind::Colon).await?;
+    let target = cursor.expect(TokenKind::Ident).await?.text.as_str().to_string();
+    cursor.expect(TokenKind::LParen).await?;
     let mut args = Vec::new();
-    while cursor.peek().kind != TokenKind::RParen {
-        args.push(arg_text(&cursor.advance())?);
+    while cursor.peek().await.kind != TokenKind::RParen {
+        args.push(arg_text(&cursor.advance().await).await?);
     }
-    cursor.expect(TokenKind::RParen)?;
-    if cursor.peek().kind != TokenKind::Eof {
-        return Err(TextError::new(format!("unexpected trailing {:?} after recipe step", cursor.peek().kind), cursor.span()));
+    cursor.expect(TokenKind::RParen).await?;
+    if cursor.peek().await.kind != TokenKind::Eof {
+        return Err(TextError::new(format!("unexpected trailing {:?} after recipe step", cursor.peek().await.kind), cursor.span().await));
     }
     Ok(RecipeStep { name, target, args })
 }
 
 /// @emoji 🖨️ Canonical printer — the inverse of [`parse_step_text`]: `name: target(arg1 arg2)`.
-pub fn print_step(step: &RecipeStep) -> String {
+pub async fn print_step(step: &RecipeStep) -> String {
     format!("{}: {}({})", step.name, step.target, step.args.join(" "))
 }
 //#endregion 🔖️Step
@@ -95,39 +95,39 @@ pub fn print_step(step: &RecipeStep) -> String {
 mod tests {
     use super::*;
 
-    #[test]
-    fn parses_a_typed_call_step_with_a_dotted_target() {
+    #[semio_framework_async_macros::async_test]
+    async fn parses_a_typed_call_step_with_a_dotted_target() {
         let step = parse_step_text("step-1: state.set(counter 0)").expect("parse_step_text");
         assert_eq!(step, RecipeStep { name: "step-1".to_string(), target: "state.set".to_string(), args: vec!["counter".to_string(), "0".to_string()] });
         assert_eq!(print_step(&step), "step-1: state.set(counter 0)");
     }
 
-    #[test]
-    fn parses_a_step_with_no_args() {
+    #[semio_framework_async_macros::async_test]
+    async fn parses_a_step_with_no_args() {
         let step = parse_step_text("step-2: state.reset()").expect("parse_step_text");
         assert_eq!(step.args, Vec::<String>::new());
         assert_eq!(print_step(&step), "step-2: state.reset()");
     }
 
-    #[test]
-    fn parses_a_step_with_a_text_argument() {
+    #[semio_framework_async_macros::async_test]
+    async fn parses_a_step_with_a_text_argument() {
         let step = parse_step_text("step-3: log.write(\"hello world\")").expect("parse_step_text");
         assert_eq!(step.args, vec!["\"hello world\"".to_string()]);
     }
 
-    #[test]
-    fn rejects_a_missing_colon() {
+    #[semio_framework_async_macros::async_test]
+    async fn rejects_a_missing_colon() {
         let err = parse_step_text("step-1 state.set(counter 0)").unwrap_err();
         assert!(err.message.contains("Colon"), "unexpected message: {}", err.message);
     }
 
-    #[test]
-    fn rejects_trailing_content() {
+    #[semio_framework_async_macros::async_test]
+    async fn rejects_trailing_content() {
         assert!(parse_step_text("step-1: state.set(counter 0) extra").is_err());
     }
 
-    #[test]
-    fn round_trip_matrix() {
+    #[semio_framework_async_macros::async_test]
+    async fn round_trip_matrix() {
         let sources = vec!["step-1: state.set(counter 0)", "step-2: state.reset()", "step-3: math.add(1 2 3)"];
         for source in sources {
             let step = parse_step_text(source).unwrap_or_else(|e| panic!("parse of {source:?} failed: {e:?}"));
@@ -139,8 +139,8 @@ mod tests {
     }
 
     /// @emoji 📖️ The fragment's `.grammar` file must at least parse under `dsl_grammar`'s parser.
-    #[test]
-    fn grammar_file_is_syntactically_valid() {
+    #[semio_framework_async_macros::async_test]
+    async fn grammar_file_is_syntactically_valid() {
         let source = include_str!("📖️family-recipe.grammar.semio");
         let grammar = crate::os_dsl::grammar::parse_grammar(source).expect("family-recipe.grammar must parse");
         assert_eq!(grammar.id, "family-recipe");

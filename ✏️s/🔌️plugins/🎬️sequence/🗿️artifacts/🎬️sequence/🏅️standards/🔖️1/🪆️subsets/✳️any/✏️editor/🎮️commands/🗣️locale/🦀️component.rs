@@ -30,7 +30,7 @@ mod tests {
 
     use super::set_locale::SetLocale;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn sequence_labels_render_native_english_by_default() {
         let mut app = new_app();
         let document_json = render(&mut app, crate::editor::sequence::panels::document::SEQUENCE_PLAY_BODY_DOCUMENT);
@@ -38,7 +38,7 @@ mod tests {
         assert!(document_json.contains("\"Flow edges\""));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn sequence_labels_render_german_locale() {
         let mut app = new_app();
         dispatch(&mut app, SequenceCommand::SetLocale(SetLocale { value: "de".into() }));

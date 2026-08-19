@@ -88,19 +88,19 @@ pub async fn create_remodel_viewer() -> semio_framework_plugin::AppDefinition {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_remodel_viewer_builds_a_definition_for_the_viewer_role() {
         let def = create_remodel_viewer();
         assert_eq!(def.role, semio_framework::AppRole::Viewer);
         assert_eq!(def.dialect, REMODEL_DIALECT.into());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn viewer_dialect_matches_the_artifact_coordinate() {
         assert_eq!(<RemodelViewer as ArtifactViewer>::DIALECT, REMODEL_DIALECT);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn render_renders_the_model_window_body_and_falls_back_by_name_otherwise() {
         let scene = default_remodel_scene();
         let history = semio_framework_plugin::HistoryView::empty();

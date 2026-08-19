@@ -1342,7 +1342,7 @@ pub(crate) async fn demo_diff_cases() -> Vec<StepDiff> {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn invalid_collection_targets_are_rejected_before_mutation() {
         let base = StepSnapshot::default();
         let diff = StepDiff { entities: Some(StepEntitiesDiff { removed: vec![1], ..Default::default() }), ..Default::default() };
@@ -1384,7 +1384,7 @@ mod tests {
 
     /// 🧪️ Canonical absorb case 1: `InsertEntity(2,e)` then `RemoveEntity(base-id-at-0)` →
     /// removed base id survives, added index shifts down by one.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_insert_then_remove_before_shifts_index() {
         let e = entity(50, "THING", vec![]);
         let d1 = StepEntitiesDiff { added: vec![StepEntityAdded { index: 2, entity: e.clone() }], ..Default::default() };
@@ -1402,7 +1402,7 @@ mod tests {
     /// then d2's entry (listed second) also inserts at 2, pushing d1's entry to 3. Applying the
     /// merged diff proves both survive at the right FINAL positions even though the stored
     /// `index` fields are both still `2`.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_insert_insert_same_index_both_survive() {
         let e = entity(50, "A", vec![]);
         let f = entity(51, "B", vec![]);
@@ -1420,7 +1420,7 @@ mod tests {
 
     /// 🧪️ Canonical absorb case 3: `InsertEntity(1,e)` then `SetEntityName(e.id, "X")` patches
     /// INTO the added payload.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_insert_then_set_field_patches_into_added() {
         let e = entity(50, "A", vec![]);
         let d1 = StepEntitiesDiff { added: vec![StepEntityAdded { index: 1, entity: e.clone() }], ..Default::default() };
@@ -1432,7 +1432,7 @@ mod tests {
         assert_eq!(d1.added[0].index, 1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_law_holds_over_curated_ops() {
         let base = base_snapshot();
         let mid = {
@@ -1455,7 +1455,7 @@ mod tests {
         assert_eq!(d1.apply(&base).expect("valid absorbed diff"), after);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn between_roundtrip_law() {
         let a = base_snapshot();
         let mut b = a.clone();
@@ -1468,7 +1468,7 @@ mod tests {
         assert!(<StepDiff as DiffAlgebra<StepSnapshot>>::between(&a, &a).is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inverse_law() {
         let base = base_snapshot();
         let next = {
@@ -1489,7 +1489,7 @@ mod tests {
     /// field, with asymmetric collection lengths split across both `between()` directions (F1's
     /// structural trap — a single index/id-keyed `between()` call can show `removed` XOR `added`,
     /// never both, from one direction alone).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn field_sweep_covers_every_mutable_field() {
         let sweep_a = StepSnapshot {
             schema: STDIO_STEP_DOCUMENT_SCHEMA.into(),
@@ -1591,7 +1591,7 @@ mod handcrafted_diff_codec_tests {
     /// 🧪️ `diff_codec_text_binary_roundtrip_law`: exercises `StepValue`'s every variant (incl. the
     /// recursive `Aggregate`/`TypedValue` cases), `StepComplexType`, and all three `entities`
     /// collection-triple flavors (removed/modified/added) at once via a real `between()` result.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn diff_codec_text_binary_roundtrip_law() {
         let a = snapshot();
         let mut b = a.clone();

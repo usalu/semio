@@ -24,7 +24,7 @@ mod tests {
     use crate::editor::dag::{DagCommand, DAG_PLAY_BODY_DOCUMENT};
     use semio_framework_plugin::PluginApp;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dag_play_labels_resolve_native_english_and_german() {
         let mut app = testkit::new_app();
         let node = app.render(DAG_PLAY_BODY_DOCUMENT, None, &semio_framework_plugin::ViewModel::default()).expect("render");

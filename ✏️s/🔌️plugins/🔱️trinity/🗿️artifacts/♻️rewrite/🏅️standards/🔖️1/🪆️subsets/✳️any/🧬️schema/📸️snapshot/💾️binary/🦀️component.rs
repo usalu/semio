@@ -45,7 +45,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn pack_round_trips_and_agrees_with_dsl() {
         let document = sample_rule_state();
         assert_dsl_pack_equivalence(&document);

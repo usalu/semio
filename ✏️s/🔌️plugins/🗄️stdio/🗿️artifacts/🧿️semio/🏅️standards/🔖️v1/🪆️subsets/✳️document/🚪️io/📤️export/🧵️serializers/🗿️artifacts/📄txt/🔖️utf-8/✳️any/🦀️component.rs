@@ -78,7 +78,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn extracts_plain_text_lines_and_drops_pagebreak() {
         let txt = semio_framework_plugin::resolve_ready(SemioDocumentToTxt::serialize(&sample_semio())).expect("serialize");
         assert_eq!(txt.lines, vec!["Title".to_string(), "Body text.".to_string(), "item one".to_string()]);

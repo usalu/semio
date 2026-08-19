@@ -119,7 +119,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn quantizes_and_real_byte_round_trips_through_gif_codec() {
         let semio = sample_semio();
         let gif = semio_framework_plugin::resolve_ready(SemioImageToGif::serialize(&semio)).expect("serialize");
@@ -138,7 +138,7 @@ mod tests {
         assert_eq!(decoded.comments, semio.metadata.iter().filter(|m| m.key == "comment").map(|m| m.value.clone()).collect::<Vec<_>>());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn errors_past_256_distinct_colors() {
         let mut rgba = Vec::new();
         for i in 0..257u32 {

@@ -41,7 +41,7 @@ pub enum IfcValue {
 }
 
 impl Default for IfcValue {
-    async fn default() -> Self {
+    fn default() -> Self {
         IfcValue::Unset
     }
 }
@@ -156,7 +156,7 @@ pub struct IfcSnapshot {
 }
 
 impl Default for IfcSnapshot {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { schema: STDIO_IFC_DOCUMENT_SCHEMA.into(), header: IfcHeader::default(), entities: Vec::new() }
     }
 }
@@ -285,7 +285,7 @@ mod tests {
 
     const FIXTURE: &str = "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION((''),'2;1');\nFILE_NAME('semio.ifc','2026-08-10T00:00:00',('Ueli'),('semio'),'semio','','');\nFILE_SCHEMA(('IFC4'));\nENDSEC;\nDATA;\n#1=IFCPROJECT('gid-project',#2,'Demo Project',$,$,$,$,(#10),#11);\n#2=IFCOWNERHISTORY($,$,$,$,$,$,$,0);\n#6=IFCWALL('gid-wall',#2,'Wall-01',$,$,#80,$,$,$);\nENDSEC;\nEND-ISO-10303-21;\n";
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn part21_round_trip_is_lossless() {
         let doc = parse_part21(FIXTURE).expect("parse");
         let snapshot = from_part21_document("stdio.ifc", &doc);
@@ -297,7 +297,7 @@ mod tests {
         assert_eq!(back, doc, "snapshot <-> Part21Document must be lossless");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn complex_instance_retains_every_type() {
         let text =
             "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION((''),'2;1');\nFILE_NAME('','',(''),(''),'','','');\nFILE_SCHEMA(('IFC4'));\nENDSEC;\nDATA;\n#1=(IFCQUANTITYAREA($,$,$,10.5,$)IFCPHYSICALSIMPLEQUANTITY($,$,$,$));\nENDSEC;\nEND-ISO-10303-21;\n";
@@ -310,7 +310,7 @@ mod tests {
         assert_eq!(to_part21_document(&snapshot), doc);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn codec_round_trip_via_dsl_and_pack() {
         let snapshot = from_part21_document("stdio.ifc", &parse_part21(FIXTURE).expect("parse"));
         let text = store::ArtifactDsl::print_dsl(&snapshot);

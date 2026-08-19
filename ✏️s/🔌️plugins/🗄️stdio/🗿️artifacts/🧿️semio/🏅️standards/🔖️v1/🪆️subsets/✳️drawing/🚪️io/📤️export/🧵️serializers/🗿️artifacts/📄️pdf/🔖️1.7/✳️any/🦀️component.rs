@@ -87,7 +87,7 @@ mod tests {
     /// 🧪️ Real round trip through pdf's own real writer/reader — `encode_pdf` regenerates a
     /// content stream from `text` and `decode_pdf` re-extracts it, so this proves genuinely
     /// working PDF bytes, not just a plausible struct.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn real_byte_round_trip_through_pdf_codec() {
         let drawing = sample_drawing();
         let pdf = semio_framework_plugin::resolve_ready(SemioDrawingToPdf::serialize(&drawing)).expect("serialize");

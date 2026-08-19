@@ -36,7 +36,7 @@ struct EntityRefDsl {
 }
 
 impl From<&EntityRef> for EntityRefDsl {
-    async fn from(value: &EntityRef) -> Self {
+    fn from(value: &EntityRef) -> Self {
         match value {
             EntityRef::Node(id) => EntityRefDsl { kind: EntityKindDsl::Node, id: id.clone() },
             EntityRef::Edge(id) => EntityRefDsl { kind: EntityKindDsl::Edge, id: id.clone() },
@@ -45,7 +45,7 @@ impl From<&EntityRef> for EntityRefDsl {
 }
 
 impl From<EntityRefDsl> for EntityRef {
-    async fn from(value: EntityRefDsl) -> Self {
+    fn from(value: EntityRefDsl) -> Self {
         match value.kind {
             EntityKindDsl::Node => EntityRef::Node(value.id),
             EntityKindDsl::Edge => EntityRef::Edge(value.id),
@@ -219,7 +219,7 @@ mod tests {
     use super::*;
     use crate::artifacts::jack::TRINITY_GRAPH_SCHEMA;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn rename_op_binary_round_trips_and_agrees_with_text() {
         let operation = rename_node("node-1".into(), "Renamed".into());
         ::store::os_store::test_support::assert_op_text_binary_equivalence(&operation);
@@ -227,7 +227,7 @@ mod tests {
         assert_eq!(decode_op(&bytes).expect("decode"), operation);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn nakagin_document_text_round_trips_store_with_applied_operation() {
         let envelope = create_document_envelope_for_test();
         let mut doc_store = store::ArtifactStore::new(envelope).expect("valid artifact store fixture");
@@ -241,12 +241,12 @@ mod tests {
     }
     use store::create_document_envelope;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn rename_op_text_round_trips() {
         ::store::os_store::test_support::assert_op_line_round_trip(&rename_node("node-1".into(), "Renamed".into()));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_text_round_trip_create_node() {
         ::store::os_store::test_support::assert_op_line_round_trip(&create_node(Node {
             id: "new".into(),
@@ -261,12 +261,12 @@ mod tests {
         }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_text_round_trip_delete_node() {
         ::store::os_store::test_support::assert_op_line_round_trip(&delete_node("root".into()));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_text_round_trip_create_edge() {
         let mut properties = crate::artifacts::jack::PropertyBag::new();
         properties.insert("u".into(), PropertyValue::Number(1.2));
@@ -282,38 +282,38 @@ mod tests {
         }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_text_round_trip_delete_edge() {
         ::store::os_store::test_support::assert_op_line_round_trip(&delete_edge("e1".into()));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_text_round_trip_rename_node() {
         ::store::os_store::test_support::assert_op_line_round_trip(&rename_node("root".into(), "renamed \"piece\"".into()));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_text_round_trip_move_node() {
         ::store::os_store::test_support::assert_op_line_round_trip(&move_node("root".into(), 10.0, -20.5));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_text_round_trip_change_data_property() {
         ::store::os_store::test_support::assert_op_line_round_trip(&change_data_property(EntityRef::Node("root".into()), "label".into(), PropertyValue::String("hi 'there'".into())));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_text_round_trip_remove_data_property() {
         ::store::os_store::test_support::assert_op_line_round_trip(&remove_data_property(EntityRef::Edge("e1".into()), "u".into()));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn parse_op_rejects_unknown_keyword() {
         let err = TrinityGraphMutation::parse_op("bogusOp x").expect_err("unknown op");
         assert!(err.message.contains("unknown mutation line"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn command_envelope_round_trip_holds_for_an_applied_operation() {
         use protocol::{ArtifactId, Edit, SchemaId};
         use crate::artifacts::jack::schema::mutations::text::TrinityGraphStore;

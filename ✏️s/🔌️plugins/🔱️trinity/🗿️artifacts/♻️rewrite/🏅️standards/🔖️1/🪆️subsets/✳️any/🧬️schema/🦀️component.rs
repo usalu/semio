@@ -29,7 +29,7 @@ pub struct RewriteArtifact {
 
 //#region 🔖️Conversions
 impl Default for RewriteArtifact {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self {
             before_fixture_json: String::new(),
             lhs_json: String::new(),
@@ -360,14 +360,14 @@ mod rule_application_tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn jack_query_on_nakagin() {
         let mut g = nakagin_graph();
         let result = crate::executor::run(&mut g, "MATCH (a:Piece) WHERE a.name = 'b' RETURN a.name").unwrap();
         assert_eq!(result.rows.len(), 1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn rewrite_rule_labels_core() {
         let mut g = nakagin_graph();
         let rule = Rule {
@@ -380,7 +380,7 @@ mod rule_application_tests {
         assert_eq!(core.properties.get("label"), Some(&PropertyValue::String("nakagin-core".into())));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn rewrite_rule_parameter_substitution() {
         let mut g = nakagin_graph();
         let rule = Rule {
@@ -409,7 +409,7 @@ mod rule_application_tests {
         assert!(query.contains("SET a.label = \"override-core\""));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn rewrite_labeled_fixture_reloads() {
         let mut g = Graph::from_fixture(crate::artifacts::jack::JackSnapshot::parse_dsl(NAKAGIN_EXAMPLE_TEXT).unwrap()).unwrap();
         let rule = Rule {
@@ -424,7 +424,7 @@ mod rule_application_tests {
         assert_eq!(core.properties.get("label"), Some(&PropertyValue::String("nakagin-core".into())));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn pattern_to_match_clause_edge_variants() {
         let base = |edge_var: Option<&str>, edge_kind: Option<&str>| PatternJson {
             left_var: "a".into(),
@@ -440,7 +440,7 @@ mod rule_application_tests {
         assert_eq!(pattern_to_match_clause(&base(None, None)), "(a:Piece)-[]->(b:Piece)");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn build_rule_query_edge_pattern_and_all_clauses() {
         let rule = Rule {
             name: "full".into(),
@@ -464,7 +464,7 @@ mod rule_application_tests {
         assert!(query.contains("MERGE (a:Piece)-[m]->(c:Piece)"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn resolve_parameter_value_variants() {
         let mut rule = empty_rule();
         rule.rhs.parameters.push(ParameterSpec { name: "label".into(), kind: ParameterKind::String, default: PropertyValue::String("default-label".into()) });
@@ -479,7 +479,7 @@ mod rule_application_tests {
         assert_eq!(resolve_parameter_value(&rule, &BTreeMap::new(), &PropertyValue::String("$".into())), PropertyValue::String("$".into()));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn assignment_value_jack_formats_each_property_variant() {
         let rule = empty_rule();
         let bindings = BTreeMap::new();
@@ -491,7 +491,7 @@ mod rule_application_tests {
         assert_eq!(assignment_value_jack(&rule, &bindings, &arr), serde_json::to_string(&arr).unwrap());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn parse_bindings_json_handles_empty_and_invalid() {
         assert_eq!(parse_bindings_json("").unwrap(), BTreeMap::new());
         assert_eq!(parse_bindings_json("   ").unwrap(), BTreeMap::new());
@@ -501,7 +501,7 @@ mod rule_application_tests {
         assert_eq!(parse_bindings_json("{\"x\":1}").unwrap(), expected);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn apply_rule_json_and_rule_query_json_end_to_end() {
         let mut g = nakagin_graph();
         let mut rule = empty_rule();

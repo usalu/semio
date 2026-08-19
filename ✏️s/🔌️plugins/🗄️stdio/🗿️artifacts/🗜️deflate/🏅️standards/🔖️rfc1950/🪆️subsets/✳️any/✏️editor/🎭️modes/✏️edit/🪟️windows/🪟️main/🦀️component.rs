@@ -78,7 +78,7 @@ pub async fn render(document: &DeflateSnapshot) -> UiNode {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn definition_declares_an_editable_text_window() {
         let def = definition();
         assert_eq!(def.id, WINDOW_KIND_ID);
@@ -86,7 +86,7 @@ mod tests {
         assert!(def.actions.iter().any(|action| action.id == "replace-text"), "editable text window must carry the replace-text catalog action");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn render_carries_the_header_fields_as_editable_text() {
         let document = DeflateSnapshot { compression_method: 8, window_bits: 7, compression_level_hint: DeflateLevelHint::Fast, dict_id: Some(42), payload: vec![1, 2, 3], ..DeflateSnapshot::default() };
         let UiNode::ComponentScene(node) = render(&document) else { panic!("expected ComponentScene") };

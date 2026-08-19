@@ -47,7 +47,7 @@ mod tests {
     use super::*;
     use crate::editor::procedural3d::testkit::{app, render as render_body};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn procedural3d_labels_resolve_native_english_by_default() {
         let _serial = crate::editor::procedural3d::test_support::lock();
         let mut app = app();

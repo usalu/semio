@@ -18,7 +18,7 @@ mod tests {
     use super::*;
     use crate::artifacts::space::standards::v1::subsets::any::schema::snapshot::SSpaceSnapshot;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn bundled_example_parses_as_a_valid_space_index() {
         let document = <SSpaceSnapshot as store::ArtifactDsl>::parse_dsl(PRIMARY_TEXT).expect("bundled example parses");
         assert_eq!(document.space_id, "demo-space");

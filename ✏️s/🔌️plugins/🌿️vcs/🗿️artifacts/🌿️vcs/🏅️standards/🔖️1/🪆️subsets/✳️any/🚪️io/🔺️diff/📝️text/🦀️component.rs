@@ -167,7 +167,7 @@ impl MutationDiff<VcsSnapshot> for VcsDiff {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn empty_diff_is_a_no_operation() {
         let base = crate::artifacts::vcs::standards::v1::subsets::any::schema::empty_vcs_snapshot();
         let diff = VcsDiff::default();

@@ -34,7 +34,7 @@ pub struct PngIntoCurate;
 impl Deserializer<CurateSnapshot> for PngIntoCurate {
     const FROM: Dialect = PNG_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    async fn deserialize(payload: &IoPayload) -> IoResult<CurateSnapshot> {
+    fn deserialize(payload: &IoPayload) -> IoResult<CurateSnapshot> {
         let IoPayload::Binary(bytes) = payload else {
             return Err(IoError { message: "PngIntoCurate: expected a binary png payload".to_string(), diagnostics: Vec::new() });
         };

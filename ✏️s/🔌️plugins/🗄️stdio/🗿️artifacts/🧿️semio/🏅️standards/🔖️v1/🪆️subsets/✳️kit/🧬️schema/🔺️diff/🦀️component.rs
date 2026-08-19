@@ -293,7 +293,7 @@ mod tests {
     use crate::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::demo_kit_snapshot;
     use protocol::DiffCodec;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn apply_replaces_touched_fields_only() {
         let base = demo_kit_snapshot();
         let diff = SemioKitDiff { properties: Some(None), ..Default::default() };
@@ -302,7 +302,7 @@ mod tests {
         assert_eq!(next.types, base.types, "untouched fields must be preserved");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_last_write_wins_per_field() {
         let mut d1 = SemioKitDiff { properties: Some(None), ..Default::default() };
         let d2 = SemioKitDiff { objects: Some(SemioKitObjectChildList::default()), ..Default::default() };
@@ -311,7 +311,7 @@ mod tests {
         assert_eq!(d1.objects, Some(SemioKitObjectChildList::default()));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn diff_codec_text_binary_roundtrip_law() {
         for d in demo_diff_cases() {
             let printed = d.print_diff();

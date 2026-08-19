@@ -23,7 +23,7 @@ pub struct ShootingPresence {
 }
 
 impl Default for ShootingPresence {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { selected_shot_ids: Vec::new(), camera: ShootingCamera::default(), active_utility_id: "move".into() }
     }
 }

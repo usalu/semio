@@ -52,7 +52,7 @@ mod tests {
     use crate::artifacts::din18599::op::Din18599Mutation;
     use semio_framework_plugin::HistoryView;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn handle_commits_the_payload_document_under_its_action_id() {
         let projection = Din18599Snapshot::default();
         let config = NormConfig::default();
@@ -66,7 +66,7 @@ mod tests {
     /// 🌡️ Regression guard: this command's whole reason for using `ArtifactDsl` text instead of
     /// `serde_json` — a value whose shortest round-trip representation needs its full 17
     /// significant digits must survive the command's own payload encoding exactly.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn handle_preserves_full_f64_precision_through_the_payload() {
         let projection = Din18599Snapshot::default();
         let config = NormConfig::default();

@@ -84,7 +84,7 @@ impl TiledModelBuilder {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn tile_to_pattern_is_one_to_one() {
         let mut b = TiledModelBuilder::new();
         let grass = b.tile(3.0);
@@ -93,7 +93,7 @@ mod tests {
         assert_eq!(b.tile_count(), 2);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn allow_and_deny_compile_correctly() {
         let mut b = TiledModelBuilder::new();
         let a = b.tile(1.0);
@@ -109,7 +109,7 @@ mod tests {
         assert!(!m.allowed(r, pa).get(pd));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn allow_where_compiles_predicate_eagerly() {
         let mut b = TiledModelBuilder::new();
         let tiles: Vec<TileId> = (0..4).map(|_| b.tile(1.0)).collect();
@@ -125,7 +125,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn tags_round_trip_through_tiles() {
         let mut b = TiledModelBuilder::new();
         let t = b.tile(1.0);

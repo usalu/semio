@@ -31,7 +31,7 @@ pub async fn measure(config: &LowpolyConfig, labels: &LowpolyLabels) -> WindowMe
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn measure_builds_the_snap_grid_slider() {
         let config = LowpolyConfig::default();
         let m = measure(&config, semio_framework_plugin::resolve_labels_for_locale::<LowpolyLabels>("en-US"));

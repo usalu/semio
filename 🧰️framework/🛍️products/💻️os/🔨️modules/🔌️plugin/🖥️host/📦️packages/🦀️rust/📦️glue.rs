@@ -1,4 +1,10 @@
 //! 🖥️ Plugin host — Shape V2 glue.
+// 👶️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (host-dedyn), ruling R7: `GuestRuntime`'s async
+// methods are plain AFIT (`async fn` in a public trait) — the lint's real concern (callers cannot
+// assume the returned future is `Send`) is answered STRUCTURALLY by R3: every dyn seam here is a
+// concrete enum (`GuestRuntimes`), so the future's concrete type is known at each call site and
+// `Send` falls out of the compiler's own analysis, never a bound on the trait method itself.
+#![allow(async_fn_in_trait)]
 extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;

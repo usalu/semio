@@ -24,7 +24,7 @@ pub async fn layout() -> WindowLayout {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn the_default_layout_lists_both_blueprint_windows() {
         let json = serde_json::to_string(&layout()).expect("layout json");
         assert!(json.contains(builder::FORMS_PLAY_WINDOW_BLUEPRINT) && json.contains(try_wizard::FORMS_PLAY_WINDOW_TRY), "layout must reference both window kinds: {json}");

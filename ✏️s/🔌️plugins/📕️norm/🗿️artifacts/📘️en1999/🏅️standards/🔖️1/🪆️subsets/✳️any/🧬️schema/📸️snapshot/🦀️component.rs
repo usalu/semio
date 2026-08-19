@@ -76,7 +76,7 @@ crate::impl_norm_artifact_record!(En1999Snapshot, extension = "en1999", envelope
 //#endregion 🔖️HandcraftedArtifactCodecs
 
 impl Default for En1999Snapshot {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self {
             n_ed_kn: 80.0,
             m_ed_knm: 4.0,

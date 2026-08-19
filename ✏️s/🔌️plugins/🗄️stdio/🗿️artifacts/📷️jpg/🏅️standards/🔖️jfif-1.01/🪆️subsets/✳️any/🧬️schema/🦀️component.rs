@@ -26,7 +26,7 @@ pub struct JpgArtifact {
 }
 
 impl Default for JpgArtifact {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self::from_snapshot(JpgSnapshot::default())
     }
 }

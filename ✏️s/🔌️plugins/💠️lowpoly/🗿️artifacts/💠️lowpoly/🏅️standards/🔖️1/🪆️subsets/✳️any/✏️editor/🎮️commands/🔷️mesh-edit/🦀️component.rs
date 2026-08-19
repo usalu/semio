@@ -323,7 +323,7 @@ mod tests {
     /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: picking a face is now the
     /// framework's injected `interactionSelect`, so this needs `app_with_registry()` (the "mesh" domain
     /// must be declared to select against).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn extrude_selected_face_grows_mesh_and_undo_restores() {
         let mut a = app_with_registry();
         let object_id = a.snapshot().expect("projection").objects[0].id.clone();
@@ -337,7 +337,7 @@ mod tests {
         assert_eq!(restored_mesh, before_mesh, "undo restores the pre-extrude mesh handle");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn extrude_reads_staged_arg_distance_into_the_operation() {
         // 🧪️ Arg-form action: the staged `extrudeDistance` (not the config backing store) drives the edit.
         let mut small = app_with_registry();
@@ -352,7 +352,7 @@ mod tests {
         assert_ne!(small_handle, large_handle, "different staged extrude distances must produce different meshes");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn toggle_smooth_emits_op_and_flips_shading() {
         let mut a = app();
         let before = a.snapshot().expect("projection").objects[0].smooth_shading;

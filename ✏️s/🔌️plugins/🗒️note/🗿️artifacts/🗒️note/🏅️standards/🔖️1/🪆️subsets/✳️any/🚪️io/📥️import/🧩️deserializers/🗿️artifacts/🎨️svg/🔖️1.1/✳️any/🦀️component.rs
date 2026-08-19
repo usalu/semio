@@ -16,7 +16,7 @@ pub struct SvgIntoNote;
 impl Deserializer<NoteSnapshot> for SvgIntoNote {
     const FROM: Dialect = SVG_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    async fn deserialize(payload: &IoPayload) -> IoResult<NoteSnapshot> {
+    fn deserialize(payload: &IoPayload) -> IoResult<NoteSnapshot> {
         let IoPayload::Text(xml) = payload else {
             return Err(IoError { message: "SvgIntoNote: expected a text svg payload".to_string(), diagnostics: Vec::new() });
         };

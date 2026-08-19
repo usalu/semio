@@ -7237,7 +7237,7 @@ impl_patchable!(
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn stakeholder_patch_round_trips() {
         let mut item = Stakeholder {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("stakeholder", "Base Stakeholder"), "Base Stakeholder") },
@@ -7309,7 +7309,7 @@ mod tests {
         assert_eq!(item, original);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn user_profile_patch_round_trips() {
         let mut item = UserProfile {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("userprofile", "Base UserProfile"), "Base UserProfile") },
@@ -7381,7 +7381,7 @@ mod tests {
         assert_eq!(item, original);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn activity_patch_round_trips() {
         let mut item = Activity {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("activity", "Base Activity"), "Base Activity") },
@@ -7453,7 +7453,7 @@ mod tests {
         assert_eq!(item, original);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn function_patch_round_trips() {
         let mut item = Function {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("function", "Base Function"), "Base Function") },
@@ -7521,7 +7521,7 @@ mod tests {
         assert_eq!(item, original);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn program_element_patch_round_trips() {
         let mut item = ProgramElement {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("programelement", "Base ProgramElement"), "Base ProgramElement") },
@@ -7595,7 +7595,7 @@ mod tests {
         assert_eq!(item, original);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn quantity_requirement_patch_round_trips() {
         let mut item = QuantityRequirement {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("quantityrequirement", "Base QuantityRequirement"), "Base QuantityRequirement") },
@@ -7659,7 +7659,7 @@ mod tests {
         assert_eq!(item, original);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn relationship_patch_round_trips() {
         let mut item = Relationship {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("relationship", "Base Relationship"), "Base Relationship") },
@@ -7731,7 +7731,7 @@ mod tests {
         assert_eq!(item, original);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn adjacency_patch_round_trips() {
         let mut item = Adjacency {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("adjacency", "Base Adjacency"), "Base Adjacency") },
@@ -7795,7 +7795,7 @@ mod tests {
         assert_eq!(item, original);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn process_patch_round_trips() {
         let mut item = Process {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("process", "Base Process"), "Base Process") },
@@ -7865,7 +7865,7 @@ mod tests {
         assert_eq!(item, original);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn flow_requirement_patch_round_trips() {
         let mut item = FlowRequirement {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("flowrequirement", "Base FlowRequirement"), "Base FlowRequirement") },
@@ -7931,7 +7931,7 @@ mod tests {
         assert_eq!(item, original);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn access_rule_patch_round_trips() {
         let mut item = AccessRule {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("accessrule", "Base AccessRule"), "Base AccessRule") },
@@ -7995,7 +7995,7 @@ mod tests {
         assert_eq!(item, original);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn operational_requirement_patch_round_trips() {
         let mut item = OperationalRequirement {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("operationalrequirement", "Base OperationalRequirement"), "Base OperationalRequirement") },
@@ -8067,7 +8067,7 @@ mod tests {
         assert_eq!(item, original);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn equipment_patch_round_trips() {
         let mut item = Equipment {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("equipment", "Base Equipment"), "Base Equipment") },
@@ -8139,7 +8139,7 @@ mod tests {
         assert_eq!(item, original);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn resource_patch_round_trips() {
         let mut item = Resource {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("resource", "Base Resource"), "Base Resource") },
@@ -8209,7 +8209,7 @@ mod tests {
         assert_eq!(item, original);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn storage_requirement_patch_round_trips() {
         let mut item = StorageRequirement {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("storagerequirement", "Base StorageRequirement"), "Base StorageRequirement") },
@@ -8273,7 +8273,7 @@ mod tests {
         assert_eq!(item, original);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn environmental_requirement_patch_round_trips() {
         let mut item = EnvironmentalRequirement {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("environmentalrequirement", "Base EnvironmentalRequirement"), "Base EnvironmentalRequirement") },
@@ -8339,7 +8339,7 @@ mod tests {
         assert_eq!(item, original);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn human_factor_requirement_patch_round_trips() {
         let mut item = HumanFactorRequirement {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("humanfactorrequirement", "Base HumanFactorRequirement"), "Base HumanFactorRequirement") },
@@ -8405,7 +8405,7 @@ mod tests {
         assert_eq!(item, original);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn accessibility_requirement_patch_round_trips() {
         let mut item = AccessibilityRequirement {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("accessibilityrequirement", "Base AccessibilityRequirement"), "Base AccessibilityRequirement") },
@@ -8473,7 +8473,7 @@ mod tests {
         assert_eq!(item, original);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn privacy_requirement_patch_round_trips() {
         let mut item = PrivacyRequirement {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("privacyrequirement", "Base PrivacyRequirement"), "Base PrivacyRequirement") },
@@ -8537,7 +8537,7 @@ mod tests {
         assert_eq!(item, original);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn safety_requirement_patch_round_trips() {
         let mut item = SafetyRequirement {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("safetyrequirement", "Base SafetyRequirement"), "Base SafetyRequirement") },
@@ -8601,7 +8601,7 @@ mod tests {
         assert_eq!(item, original);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn security_requirement_patch_round_trips() {
         let mut item = SecurityRequirement {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("securityrequirement", "Base SecurityRequirement"), "Base SecurityRequirement") },
@@ -8665,7 +8665,7 @@ mod tests {
         assert_eq!(item, original);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn regulatory_requirement_patch_round_trips() {
         let mut item = RegulatoryRequirement {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("regulatoryrequirement", "Base RegulatoryRequirement"), "Base RegulatoryRequirement") },
@@ -8727,7 +8727,7 @@ mod tests {
         assert_eq!(item, original);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn site_context_patch_round_trips() {
         let mut item = SiteContext {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("sitecontext", "Base SiteContext"), "Base SiteContext") },
@@ -8791,7 +8791,7 @@ mod tests {
         assert_eq!(item, original);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn organizational_requirement_patch_round_trips() {
         let mut item = OrganizationalRequirement {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("organizationalrequirement", "Base OrganizationalRequirement"), "Base OrganizationalRequirement") },
@@ -8853,7 +8853,7 @@ mod tests {
         assert_eq!(item, original);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn service_requirement_patch_round_trips() {
         let mut item = ServiceRequirement {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("servicerequirement", "Base ServiceRequirement"), "Base ServiceRequirement") },
@@ -8915,7 +8915,7 @@ mod tests {
         assert_eq!(item, original);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn infrastructure_requirement_patch_round_trips() {
         let mut item = InfrastructureRequirement {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("infrastructurerequirement", "Base InfrastructureRequirement"), "Base InfrastructureRequirement") },
@@ -8977,7 +8977,7 @@ mod tests {
         assert_eq!(item, original);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn information_requirement_patch_round_trips() {
         let mut item = InformationRequirement {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("informationrequirement", "Base InformationRequirement"), "Base InformationRequirement") },
@@ -9039,7 +9039,7 @@ mod tests {
         assert_eq!(item, original);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn communication_requirement_patch_round_trips() {
         let mut item = CommunicationRequirement {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("communicationrequirement", "Base CommunicationRequirement"), "Base CommunicationRequirement") },
@@ -9101,7 +9101,7 @@ mod tests {
         assert_eq!(item, original);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn wayfinding_requirement_patch_round_trips() {
         let mut item = WayfindingRequirement {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("wayfindingrequirement", "Base WayfindingRequirement"), "Base WayfindingRequirement") },
@@ -9163,7 +9163,7 @@ mod tests {
         assert_eq!(item, original);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn schedule_requirement_patch_round_trips() {
         let mut item = ScheduleRequirement {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("schedulerequirement", "Base ScheduleRequirement"), "Base ScheduleRequirement") },
@@ -9227,7 +9227,7 @@ mod tests {
         assert_eq!(item, original);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn flexibility_requirement_patch_round_trips() {
         let mut item = FlexibilityRequirement {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("flexibilityrequirement", "Base FlexibilityRequirement"), "Base FlexibilityRequirement") },
@@ -9287,7 +9287,7 @@ mod tests {
         assert_eq!(item, original);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn growth_plan_patch_round_trips() {
         let mut item = GrowthPlan {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("growthplan", "Base GrowthPlan"), "Base GrowthPlan") },
@@ -9349,7 +9349,7 @@ mod tests {
         assert_eq!(item, original);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn sustainability_requirement_patch_round_trips() {
         let mut item = SustainabilityRequirement {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("sustainabilityrequirement", "Base SustainabilityRequirement"), "Base SustainabilityRequirement") },
@@ -9413,7 +9413,7 @@ mod tests {
         assert_eq!(item, original);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn resilience_requirement_patch_round_trips() {
         let mut item = ResilienceRequirement {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("resiliencerequirement", "Base ResilienceRequirement"), "Base ResilienceRequirement") },
@@ -9475,7 +9475,7 @@ mod tests {
         assert_eq!(item, original);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn cost_requirement_patch_round_trips() {
         let mut item = CostRequirement {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("costrequirement", "Base CostRequirement"), "Base CostRequirement") },
@@ -9537,7 +9537,7 @@ mod tests {
         assert_eq!(item, original);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn delivery_constraint_patch_round_trips() {
         let mut item = DeliveryConstraint {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("deliveryconstraint", "Base DeliveryConstraint"), "Base DeliveryConstraint") },
@@ -9601,7 +9601,7 @@ mod tests {
         assert_eq!(item, original);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn risk_patch_round_trips() {
         let mut item = Risk {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("risk", "Base Risk"), "Base Risk") },
@@ -9663,7 +9663,7 @@ mod tests {
         assert_eq!(item, original);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn conflict_patch_round_trips() {
         let mut item = Conflict {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("conflict", "Base Conflict"), "Base Conflict") },
@@ -9725,7 +9725,7 @@ mod tests {
         assert_eq!(item, original);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn requirement_patch_round_trips() {
         let mut item = Requirement {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("requirement", "Base Requirement"), "Base Requirement") },
@@ -9789,7 +9789,7 @@ mod tests {
         assert_eq!(item, original);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn priority_record_patch_round_trips() {
         let mut item = PriorityRecord {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("priorityrecord", "Base PriorityRecord"), "Base PriorityRecord") },
@@ -9851,7 +9851,7 @@ mod tests {
         assert_eq!(item, original);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn scenario_patch_round_trips() {
         let mut item = Scenario {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("scenario", "Base Scenario"), "Base Scenario") },
@@ -9913,7 +9913,7 @@ mod tests {
         assert_eq!(item, original);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn option_evaluation_patch_round_trips() {
         let mut item = OptionEvaluation {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("optionevaluation", "Base OptionEvaluation"), "Base OptionEvaluation") },
@@ -9975,7 +9975,7 @@ mod tests {
         assert_eq!(item, original);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn decision_patch_round_trips() {
         let mut item = Decision {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("decision", "Base Decision"), "Base Decision") },
@@ -10037,7 +10037,7 @@ mod tests {
         assert_eq!(item, original);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn validation_record_patch_round_trips() {
         let mut item = ValidationRecord {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("validationrecord", "Base ValidationRecord"), "Base ValidationRecord") },
@@ -10099,7 +10099,7 @@ mod tests {
         assert_eq!(item, original);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn performance_criterion_patch_round_trips() {
         let mut item = PerformanceCriterion {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("performancecriterion", "Base PerformanceCriterion"), "Base PerformanceCriterion") },
@@ -10161,7 +10161,7 @@ mod tests {
         assert_eq!(item, original);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn quality_record_patch_round_trips() {
         let mut item = QualityRecord {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("qualityrecord", "Base QualityRecord"), "Base QualityRecord") },
@@ -10223,7 +10223,7 @@ mod tests {
         assert_eq!(item, original);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn document_record_patch_round_trips() {
         let mut item = ArtifactRecord {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("documentrecord", "Base ArtifactRecord"), "Base ArtifactRecord") },
@@ -10285,7 +10285,7 @@ mod tests {
         assert_eq!(item, original);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn change_record_patch_round_trips() {
         let mut item = ChangeRecord {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("changerecord", "Base ChangeRecord"), "Base ChangeRecord") },
@@ -10347,7 +10347,7 @@ mod tests {
         assert_eq!(item, original);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn collaboration_record_patch_round_trips() {
         let mut item = CollaborationRecord {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("collaborationrecord", "Base CollaborationRecord"), "Base CollaborationRecord") },
@@ -10407,7 +10407,7 @@ mod tests {
         assert_eq!(item, original);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn analysis_record_patch_round_trips() {
         let mut item = AnalysisRecord {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("analysisrecord", "Base AnalysisRecord"), "Base AnalysisRecord") },
@@ -10467,7 +10467,7 @@ mod tests {
         assert_eq!(item, original);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn report_record_patch_round_trips() {
         let mut item = ReportRecord {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("reportrecord", "Base ReportRecord"), "Base ReportRecord") },
@@ -10527,7 +10527,7 @@ mod tests {
         assert_eq!(item, original);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn search_filter_patch_round_trips() {
         let mut item = SearchFilter {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("searchfilter", "Base SearchFilter"), "Base SearchFilter") },
@@ -10589,7 +10589,7 @@ mod tests {
         assert_eq!(item, original);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn status_record_patch_round_trips() {
         let mut item = StatusRecord {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("statusrecord", "Base StatusRecord"), "Base StatusRecord") },
@@ -10649,7 +10649,7 @@ mod tests {
         assert_eq!(item, original);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn workshop_patch_round_trips() {
         let mut item = Workshop {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("workshop", "Base Workshop"), "Base Workshop") },
@@ -10711,7 +10711,7 @@ mod tests {
         assert_eq!(item, original);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn survey_patch_round_trips() {
         let mut item = Survey {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("survey", "Base Survey"), "Base Survey") },
@@ -10773,7 +10773,7 @@ mod tests {
         assert_eq!(item, original);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn issue_patch_round_trips() {
         let mut item = Issue {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("issue", "Base Issue"), "Base Issue") },
@@ -10835,7 +10835,7 @@ mod tests {
         assert_eq!(item, original);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn audit_event_patch_round_trips() {
         let mut item = AuditEvent {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("auditevent", "Base AuditEvent"), "Base AuditEvent") },
@@ -10895,7 +10895,7 @@ mod tests {
         assert_eq!(item, original);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn template_record_patch_round_trips() {
         let mut item = TemplateRecord {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("templaterecord", "Base TemplateRecord"), "Base TemplateRecord") },
@@ -10957,7 +10957,7 @@ mod tests {
         assert_eq!(item, original);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn knowledge_record_patch_round_trips() {
         let mut item = KnowledgeRecord {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("knowledgerecord", "Base KnowledgeRecord"), "Base KnowledgeRecord") },
@@ -11017,7 +11017,7 @@ mod tests {
         assert_eq!(item, original);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn benchmark_record_patch_round_trips() {
         let mut item = BenchmarkRecord {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("benchmarkrecord", "Base BenchmarkRecord"), "Base BenchmarkRecord") },
@@ -11079,7 +11079,7 @@ mod tests {
         assert_eq!(item, original);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn assumption_patch_round_trips() {
         let mut item = Assumption {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("assumption", "Base Assumption"), "Base Assumption") },
@@ -11141,7 +11141,7 @@ mod tests {
         assert_eq!(item, original);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn constraint_record_patch_round_trips() {
         let mut item = ConstraintRecord {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("constraintrecord", "Base ConstraintRecord"), "Base ConstraintRecord") },
@@ -11207,7 +11207,7 @@ mod tests {
         assert_eq!(item, original);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn compliance_record_patch_round_trips() {
         let mut item = ComplianceRecord {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("compliancerecord", "Base ComplianceRecord"), "Base ComplianceRecord") },
@@ -11273,7 +11273,7 @@ mod tests {
         assert_eq!(item, original);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn approval_record_patch_round_trips() {
         let mut item = ApprovalRecord {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("approvalrecord", "Base ApprovalRecord"), "Base ApprovalRecord") },
@@ -11335,7 +11335,7 @@ mod tests {
         assert_eq!(item, original);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn meeting_record_patch_round_trips() {
         let mut item = MeetingRecord {
             header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("meetingrecord", "Base MeetingRecord"), "Base MeetingRecord") },

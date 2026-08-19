@@ -29,7 +29,7 @@ mod tests {
 
     /// 🎥️ `SetCamera` is a config-only command — it must never emit a `WriterMutation` (no VCS edit,
     /// no undo entry) and instead write into `WriterConfig`, reflected in render.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_camera_command_writes_config_not_operations() {
         let mut app = new_app();
         let result = app.dispatch_typed(WriterCommand::SetCamera(SetCamera { camera: WriterCamera { x: 3.0, y: 4.0, zoom: 2.0 } }), &semio_framework_plugin::testkit::meta("local")).expect("set camera");

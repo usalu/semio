@@ -19,7 +19,7 @@ pub struct WavFmt {
 }
 
 impl Default for WavFmt {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { audio_format: 1, channels: 1, sample_rate: 44_100, byte_rate: 88_200, block_align: 2, bits_per_sample: 16, ext: None }
     }
 }
@@ -40,7 +40,7 @@ pub enum WavData {
 }
 
 impl Default for WavData {
-    async fn default() -> Self {
+    fn default() -> Self {
         WavData::Raw(Vec::new())
     }
 }
@@ -79,7 +79,7 @@ pub struct WavSnapshot {
 }
 
 impl Default for WavSnapshot {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { schema: STDIO_WAV_DOCUMENT_SCHEMA.into(), fmt: WavFmt::default(), data: WavData::default(), other_chunks: Default::default() }
     }
 }
@@ -151,7 +151,7 @@ mod tests {
         WavSnapshot { data: WavData::Pcm16(vec![1, -1, 100, -100]), ..WavSnapshot::default() }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn json_pack_round_trips() {
         let snap = sample_snapshot();
         let bytes = <WavSnapshot as store::ArtifactPack>::encode_pack(&snap);
@@ -159,7 +159,7 @@ mod tests {
         assert_eq!(snap, back);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dsl_text_round_trips() {
         let snap = sample_snapshot();
         let text = <WavSnapshot as store::ArtifactDsl>::print_dsl(&snap);

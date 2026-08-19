@@ -115,7 +115,7 @@ async fn default_gis2d_vector_style() -> String {
 }
 
 impl Default for Gis2dConfig {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self {
             layer_visibility: BTreeMap::new(),
             camera_json: default_gis2d_camera_json(),
@@ -322,7 +322,7 @@ impl Mutation<Gis2dConfig> for Gis2dConfigMutation {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn gis2d_config_default_matches_the_existing_action_arg_sticky_defaults() {
         let config = Gis2dConfig::default();
         assert_eq!(config.render_mode, "combined");
@@ -331,12 +331,12 @@ mod tests {
         assert_eq!(config.locale, "en-US");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn gis2d_config_default_lod_mode_matches_the_tiled_map_surface_constant() {
         assert_eq!(Gis2dConfig::default().lod_mode, framework_surface::tiled_map::GIS_MAP_LOD_MODE_AUTOMATIC);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn layer_visible_defaults_to_true_and_honours_explicit_entries() {
         let mut config = Gis2dConfig::default();
         assert!(layer_visible(&config, "water"), "a layer with no entry is visible");
@@ -344,7 +344,7 @@ mod tests {
         assert!(!layer_visible(&config, "water"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn gis2d_config_dsl_round_trips_default_and_populated() {
         store::os_store::test_support::assert_dsl_round_trip(&Gis2dConfig::default());
         let mut populated = Gis2dConfig::default();
@@ -354,7 +354,7 @@ mod tests {
         store::os_store::test_support::assert_dsl_pack_equivalence(&populated);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn gis2d_config_operation_diff_writes_the_targeted_field_and_leaves_the_rest() {
         let base = Gis2dConfig::default();
         let next = Gis2dConfigMutation::SetRenderMode { value: "vector".into() }.diff(&base).diff().clone();
@@ -362,7 +362,7 @@ mod tests {
         assert_eq!(next.vector_style, base.vector_style, "untouched fields survive the diff");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn gis2d_config_operation_backwards_restores_the_pre_operation_snapshot() {
         let base = Gis2dConfig::default();
         let operation = Gis2dConfigMutation::SetLayerVisibility { layer_id: "water".into(), visible: false };
@@ -376,7 +376,7 @@ mod tests {
 
     /// ⚖️ `SetLayerStrokeScale`'s inverse has the same absent-entry-vs-default subtlety as
     /// `SetLayerVisibility` above, covered separately since it defaults to `1.0` not `true`.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn gis2d_config_layer_stroke_scale_backwards_restores_an_absent_entry() {
         let base = Gis2dConfig::default();
         let operation = Gis2dConfigMutation::SetLayerStrokeScale { layer_id: "roads".into(), value: 2.0 };
@@ -388,7 +388,7 @@ mod tests {
         assert!(!restored.layer_stroke_scale.contains_key("roads"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn gis2d_config_operation_lines_round_trip() {
         store::os_store::test_support::assert_op_line_round_trip(&Gis2dConfigMutation::SetLayerVisibility { layer_id: "water".into(), visible: false });
         store::os_store::test_support::assert_op_line_round_trip(&Gis2dConfigMutation::SetCamera { camera_json: r#"{"x":1,"y":2,"zoom":3}"#.into() });

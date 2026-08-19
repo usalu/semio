@@ -177,7 +177,7 @@ mod tests {
     use crate::editor::puzzle3d::terminology::puzzle3d_labels;
     use crate::editor::puzzle3d::{nakagin_fixture, Puzzle3dScene, PUZZLE3D_DEFAULT_UTILITY};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn kinds_tree_object_drag_data_carries_object_kind_and_mesh_url() {
         let envelope = Puzzle3dScene { fixture: nakagin_fixture(), runtime: Puzzle3dRuntime::default(), active_utility: PUZZLE3D_DEFAULT_UTILITY.into() };
         let labels = puzzle3d_labels(&Puzzle3dConfig::default());

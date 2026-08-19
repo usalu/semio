@@ -251,7 +251,7 @@ mod tests {
     use crate::demo_space_projection;
     use serde_json::json;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn patch_parameter_op_updates_numeric_value() {
         let projection = demo_space_projection();
         let operation = patch_parameter_operation(&projection, "param-brush-size", &json!({ "value": 48.0 })).expect("operation");
@@ -264,7 +264,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn compiled_dag_wire_literal_mentions_app_instances() {
         let wire = compiled_dag_wire_literal(&demo_space_projection());
         assert!(wire.contains("appInstance") || wire.contains("draw"));

@@ -17,7 +17,7 @@ pub struct VcsIntoXlsx;
 impl Serializer<VcsSnapshot> for VcsIntoXlsx {
     const INTO: Dialect = XLSX_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    async fn serialize(from: &VcsSnapshot) -> IoResult<IoPayload> {
+    fn serialize(from: &VcsSnapshot) -> IoResult<IoPayload> {
         let value = serde_json::to_value(from).map_err(|error| IoError { message: format!("VcsIntoXlsx: {error}"), diagnostics: Vec::new() })?;
         let xlsx: XlsxSnapshot = serde_json::from_value(value).map_err(|error| IoError { message: format!("VcsIntoXlsx: {error}"), diagnostics: Vec::new() })?;
         Ok(IoOutcome::clean(IoPayload::Binary(<XlsxSnapshot as store::ArtifactPack>::encode_pack(&xlsx))))

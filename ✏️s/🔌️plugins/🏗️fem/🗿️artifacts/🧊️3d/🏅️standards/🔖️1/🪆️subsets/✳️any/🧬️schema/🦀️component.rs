@@ -31,7 +31,7 @@ pub struct Fem3dArtifact {
 
 //#region 🔖️Conversions
 impl Default for Fem3dArtifact {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self {
             nodes: Default::default(),
             elements: Default::default(),

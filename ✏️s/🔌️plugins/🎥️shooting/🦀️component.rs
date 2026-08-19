@@ -33,12 +33,12 @@ mod surface_tests {
     //! stand-ins), so these call the canonical framework versions directly.
     use semio_framework_plugin::testkit::{assert_editor_and_viewer_share_dialect, assert_viewer_never_mutates};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn shooting_viewer_never_mutates() {
         assert_viewer_never_mutates::<crate::viewer::shooting::ShootingViewer>();
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn shooting_editor_and_viewer_share_dialect() {
         assert_editor_and_viewer_share_dialect::<crate::editor::shooting::ShootingPlayApp, crate::viewer::shooting::ShootingViewer>();
     }

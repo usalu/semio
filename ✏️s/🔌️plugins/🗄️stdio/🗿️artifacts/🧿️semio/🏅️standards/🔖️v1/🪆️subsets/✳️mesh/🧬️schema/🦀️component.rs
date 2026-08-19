@@ -23,7 +23,7 @@ pub struct SemioMeshArtifact {
 }
 
 impl Default for SemioMeshArtifact {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self::from_snapshot(SemioMeshSnapshot::default())
     }
 }

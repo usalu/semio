@@ -210,7 +210,7 @@ mod tests {
         )
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn writer_diff_print_parse_round_trips() {
         let diffs = vec![
             diff_set_text("hello", "jack", "jack"),
@@ -225,7 +225,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn writer_diff_encode_decode_round_trips_and_matches_text() {
         let diffs = vec![
             diff_set_text("hello", "jack", "jack"),
@@ -242,7 +242,7 @@ mod tests {
     /// 🔺️ `diff_set_text` mints a real content-addressed `document` handle and seeds the working-
     /// scene cache, honestly replacing the retired byte-range-edit law (composed-child handles are
     /// whole-value replacements, not sub-string patches — see this file's `🔖️Builders` doc comment).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn diff_set_text_mints_a_document_handle_and_caches_its_text() {
         let base = WriterSnapshot::default();
         let diff = diff_set_text("hio", "jack", "plaintext");
@@ -256,7 +256,7 @@ mod tests {
 mod semio_grammar_conformance {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn component_grammar_semio_is_grammar_dialect() {
         let g = ::dsl::parse_grammar(COMPONENT_GRAMMAR_SEMIO).expect("parse grammar.semio");
         assert_eq!(g.dialect, ::dsl::SemioDialect::Grammar);

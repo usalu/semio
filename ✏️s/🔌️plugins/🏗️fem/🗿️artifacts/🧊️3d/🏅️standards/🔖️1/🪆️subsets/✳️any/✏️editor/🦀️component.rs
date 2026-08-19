@@ -685,7 +685,7 @@ mod tests {
 
     /// 🏷️ Every declared manifest action id must be reachable as exactly one command row, and every
     /// row's wire keyword must be distinct.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn command_ids_are_unique_and_match_the_declared_manifest_actions() {
         let commands = every_command();
         let ids: Vec<&str> = commands.iter().map(|command| command.command_id()).collect();
@@ -697,7 +697,7 @@ mod tests {
     }
 
     /// ⚖️ LAW: text and binary are two projections of the same command, for every single row.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn every_command_round_trips_through_text_and_binary() {
         for command in every_command() {
             semio_framework_os_kernel::os_store::test_support::assert_op_text_binary_equivalence(&command);
@@ -710,7 +710,7 @@ mod tests {
     /// `🧪️wire-baseline-before-3d.txt`). Row order is the binary variant ordinal, so a reordering — which
     /// no round-trip law can catch — shows up here as a leading-byte mismatch. `addNodalLoad`'s `None`
     /// case is pinned separately below because `every_command()` only carries its `Some` shape.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn every_command_keeps_its_pre_migration_bytes() {
         use protocol::OpBinary;
         let expected = [
@@ -750,7 +750,7 @@ mod tests {
     /// (`setActiveExample`/`setCamera`/`setResultDisplay`) prove the wire keyword is NOT simply the
     /// kebab-cased command id — this is exactly what a missing `#[dsl(keyword = ..)]` on a payload struct
     /// silently breaks (the record prints with no keyword at all and no longer parses).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
         let expected_keys = [
             "add-node",
@@ -780,7 +780,7 @@ mod tests {
     //#endregion 🔖️CommandSurface
 
     //#region 🔖️ManifestSanity
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn the_manifest_stitches_every_taxonomy_node() {
         let json = serde_json::to_string(&create_fem3d_app()).expect("app definition json");
         for id in [window_model::FEM3D_WINDOW_MODEL, window_results::FEM3D_WINDOW_RESULTS] {
@@ -790,7 +790,7 @@ mod tests {
         assert!(json.contains("computation.fem3d"), "artifact kind missing from the manifest");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn manifest_labels_resolve_german_3d() {
         use semio_framework_plugin::{Locale, Terminology};
         let definition = create_fem3d_app();
@@ -803,14 +803,14 @@ mod tests {
     //#endregion 🔖️ManifestSanity
 
     //#region 🔖️CrossCutting
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn undo_restores_document_after_add_node() {
         let mut app = fem3d_app();
         let before = app.snapshot().expect("snapshot").nodes.len();
         assert_undo_redo_round_trip(&mut app, Fem3dCommand::AddNode(add_node::AddNode { x: 1.0, y: 2.0, z: 3.0 }), |app| app.snapshot().expect("snapshot").nodes.len(), before, before + 1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
         use crate::editor::fem3d::testkit::render;
         let mut app = fem3d_app();
@@ -822,7 +822,7 @@ mod tests {
     /// 🎞️ `"results:out"` runs every load case fresh and returns a `Structured` JSON payload — build a
     /// doc with the bundled example (which has load cases), export, assert the JSON round-trips through
     /// `serde_json` and names a case id.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn export_media_results_out_returns_solved_json_for_every_case_3d() {
         let mut app: Fem3dApp = fem3d_app();
         dispatch(&mut app, Fem3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "default".into() }));
@@ -841,7 +841,7 @@ mod tests {
 
     /// 🎞️ `"results:out"` on a document with no load cases errors rather than panicking or returning an
     /// empty payload.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn export_media_results_out_errors_without_load_cases_3d() {
         let snapshot = crate::artifacts::fem3d::schema::empty_fem3d_snapshot();
         let history = semio_framework_plugin::HistoryView::empty();
@@ -851,7 +851,7 @@ mod tests {
     }
 
     /// 🎞️ `"geometry:in"` decodes an extruded-footprint JSON contract into a new `FemSolid` operation.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn import_media_geometry_in_adds_a_new_solid_3d() {
         let mut app: Fem3dApp = fem3d_app();
         dispatch(&mut app, Fem3dCommand::AddMaterial(add_material::AddMaterial { name: "Concrete".into(), e: 30e9, g: 12.5e9 }));
@@ -881,7 +881,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fem3d_io_matches_declared_artifact_identity_3d() {
         let io = Fem3dPlayApp::io().expect("fem3d declares typed media I/O");
         assert_eq!(io.artifact.id, "3d.fem");
@@ -892,7 +892,7 @@ mod tests {
     /// 🔌️ Wave-1's `required: true` unwired-input enforcement (`validate_edge_kinds`) lives in the run
     /// crate, not here — this test only proves the port DECLARATION is correct; the cross-crate
     /// enforcement is exercised at the run-crate level.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fem3d_io_declares_geometry_in_and_results_out_ports() {
         let io = fem3d_io();
         assert_eq!(io.document_schema, crate::artifacts::fem3d::FEM_3D_SCHEMA);
@@ -918,17 +918,17 @@ mod tests {
     //#endregion 🔖️MediaPorts
 
     //#region 🎬️SceneRender
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn quat_z_to_identity_for_parallel_direction() {
         assert_eq!(quat_z_to([0.0, 0.0, 1.0]), [0.0, 0.0, 0.0, 1.0]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn quat_z_to_handles_antiparallel_direction() {
         assert_eq!(quat_z_to([0.0, 0.0, -1.0]), [1.0, 0.0, 0.0, 0.0]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fem3d_camera_json_falls_back_to_world3d_default_for_empty_object() {
         let camera = crate::artifacts::fem3d::FemCamera::default();
         assert_eq!(fem3d_camera_json(&camera), semio_framework_plugin::world3d_default_camera());
@@ -936,7 +936,7 @@ mod tests {
         assert_eq!(fem3d_camera_json(&custom), "{\"x\":1}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fem3d_scene_parts_include_solid_mesh_and_oriented_member_instances() {
         let doc: Fem3dSnapshot = crate::artifacts::fem3d::dsl::parse_dsl(crate::artifacts::fem3d::dsl::FEM3D_EXAMPLE_TEXT).expect("example fixture parses");
         let (meshes_json, instances_json) = fem3d_scene_parts(&doc, None, doc.analysis.deformation_scale, None);

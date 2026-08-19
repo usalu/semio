@@ -22,7 +22,7 @@ pub struct WriterPresence {
 }
 
 impl Default for WriterPresence {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self {
             editor_selection: None,
             camera: WriterCamera::default(),

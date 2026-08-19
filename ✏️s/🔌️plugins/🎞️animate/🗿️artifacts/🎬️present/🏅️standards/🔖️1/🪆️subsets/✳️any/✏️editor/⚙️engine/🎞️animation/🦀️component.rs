@@ -7,8 +7,9 @@ pub mod animation {
     //! 🎞️ Animation trait, leaf animations, composites, and `.animate()` builder.
 
     use crate::editor::animate::engine::rate::rate::{map_child_alpha, RateFunc};
-    use crate::editor::animate::engine::scene::sobject::{Sobject, VSobject};
+    use crate::editor::animate::engine::scene::sobject::{Sobject, Sobjects, VSobject};
     use geometry::{cubic_point_at, Affine, CubicBez, Point, Vec2};
+    use semio_framework_dispatch_macros::{dyn_enum, dyn_enum_close};
     use std::collections::HashMap;
     use std::time::Duration;
 
@@ -21,13 +22,14 @@ pub mod animation {
     }
 
     /// 🎬️ Core animation contract with recursive alpha propagation.
+    #[dyn_enum]
     pub trait Animation: Send {
         async fn duration(&self) -> f64;
         async fn rate_func(&self) -> RateFunc;
         async fn begin(&mut self);
         async fn finish(&mut self);
         async fn interpolate_mobject(&mut self, alpha: f64);
-        async fn apply(&mut self, mobjects: &mut HashMap<u64, Box<dyn Sobject>>, parent_alpha: f64) {
+        async fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
             let rate = self.rate_func();
             let alpha = rate(parent_alpha.clamp(0.0, 1.0));
             let _ = mobjects;
@@ -42,16 +44,16 @@ pub mod animation {
         }
     }
 
-    async fn eased_alpha(animation: &dyn Animation, alpha: f64) -> f64 {
+    async fn eased_alpha(animation: &Animations, alpha: f64) -> f64 {
         (animation.rate_func())(alpha.clamp(0.0, 1.0))
     }
 
-    pub(crate) async fn eased_alpha_for(animation: &dyn Animation, alpha: f64) -> f64 {
+    pub(crate) async fn eased_alpha_for(animation: &Animations, alpha: f64) -> f64 {
         eased_alpha(animation, alpha)
     }
 
     /// 🎯️ Resolve a VSobject by id and run a closure on it.
-    pub async fn with_vsobject<F>(mobjects: &mut HashMap<u64, Box<dyn Sobject>>, id: u64, f: F)
+    pub async fn with_vsobject<F>(mobjects: &mut HashMap<u64, Sobjects>, id: u64, f: F)
     where
         F: FnOnce(&mut VSobject),
     {
@@ -63,7 +65,7 @@ pub mod animation {
     }
 
     /// ▶️ Drive an animation to a parent alpha in [0,1], mutating scene mobjects.
-    pub async fn interpolate_at(mobjects: &mut HashMap<u64, Box<dyn Sobject>>, animation: &mut dyn Animation, parent_alpha: f64) {
+    pub async fn interpolate_at(mobjects: &mut HashMap<u64, Sobjects>, animation: &mut Animations, parent_alpha: f64) {
         animation.apply(mobjects, parent_alpha);
     }
 
@@ -102,7 +104,7 @@ pub mod animation {
         async fn interpolate_mobject(&mut self, alpha: f64) {
             let _ = (self.target_id, alpha, self.started, self.snapshot_ratio);
         }
-        async fn apply(&mut self, mobjects: &mut HashMap<u64, Box<dyn Sobject>>, parent_alpha: f64) {
+        async fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
             let alpha = eased_alpha(self, parent_alpha);
             with_vsobject(mobjects, self.target_id, |v| {
                 v.set_point_ratio(alpha * self.snapshot_ratio);
@@ -146,7 +148,7 @@ pub mod animation {
         async fn interpolate_mobject(&mut self, alpha: f64) {
             let _ = (self.target_id, alpha * self.target_opacity);
         }
-        async fn apply(&mut self, mobjects: &mut HashMap<u64, Box<dyn Sobject>>, parent_alpha: f64) {
+        async fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
             let alpha = eased_alpha(self, parent_alpha);
             with_vsobject(mobjects, self.target_id, |v| {
                 if !self.primed {
@@ -194,7 +196,7 @@ pub mod animation {
         async fn interpolate_mobject(&mut self, alpha: f64) {
             let _ = (self.target_id, 1.0 - alpha);
         }
-        async fn apply(&mut self, mobjects: &mut HashMap<u64, Box<dyn Sobject>>, parent_alpha: f64) {
+        async fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
             let alpha = eased_alpha(self, parent_alpha);
             with_vsobject(mobjects, self.target_id, |v| {
                 if !self.primed {
@@ -240,7 +242,7 @@ pub mod animation {
         async fn interpolate_mobject(&mut self, alpha: f64) {
             let _ = (self.target_id, alpha);
         }
-        async fn apply(&mut self, mobjects: &mut HashMap<u64, Box<dyn Sobject>>, parent_alpha: f64) {
+        async fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
             let alpha = eased_alpha(self, parent_alpha);
             with_vsobject(mobjects, self.target_id, |v| {
                 if !self.primed {
@@ -287,7 +289,7 @@ pub mod animation {
         async fn interpolate_mobject(&mut self, alpha: f64) {
             let _ = (self.target_id, self.angle * alpha);
         }
-        async fn apply(&mut self, mobjects: &mut HashMap<u64, Box<dyn Sobject>>, parent_alpha: f64) {
+        async fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
             let alpha = eased_alpha(self, parent_alpha);
             with_vsobject(mobjects, self.target_id, |v| {
                 if self.start_transform.is_none() {
@@ -334,7 +336,7 @@ pub mod animation {
         async fn interpolate_mobject(&mut self, alpha: f64) {
             let _ = self.position_at(alpha);
         }
-        async fn apply(&mut self, mobjects: &mut HashMap<u64, Box<dyn Sobject>>, parent_alpha: f64) {
+        async fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
             let alpha = eased_alpha(self, parent_alpha);
             let point = self.position_at(alpha);
             with_vsobject(mobjects, self.target_id, |v| {
@@ -348,14 +350,14 @@ pub mod animation {
 
     /// 🔁️ Play animations in parallel with shared parent alpha.
     pub struct AnimationGroup {
-        pub animations: Vec<Box<dyn Animation>>,
+        pub animations: Vec<Animations>,
         pub run_time: Option<f64>,
         pub rate: RateFunc,
         begun: Vec<bool>,
     }
 
     impl AnimationGroup {
-        pub async fn new(animations: Vec<Box<dyn Animation>>) -> Self {
+        pub async fn new(animations: Vec<Animations>) -> Self {
             let n = animations.len();
             Self { animations, run_time: None, rate: crate::editor::animate::engine::rate::rate::linear, begun: vec![false; n] }
         }
@@ -388,13 +390,13 @@ pub mod animation {
         async fn interpolate_mobject(&mut self, parent_alpha: f64) {
             let alpha = eased_alpha(self, parent_alpha);
             for a in &mut self.animations {
-                interpolate_at(&mut HashMap::new(), a.as_mut(), alpha);
+                interpolate_at(&mut HashMap::new(), a, alpha);
             }
         }
-        async fn apply(&mut self, mobjects: &mut HashMap<u64, Box<dyn Sobject>>, parent_alpha: f64) {
+        async fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
             let alpha = eased_alpha(self, parent_alpha);
             for a in &mut self.animations {
-                interpolate_at(mobjects, a.as_mut(), alpha);
+                interpolate_at(mobjects, a, alpha);
             }
         }
         async fn get_all_mobjects(&self) -> Vec<u64> {
@@ -404,7 +406,7 @@ pub mod animation {
 
     /// ⏭️ Play animations sequentially with lazy child activation.
     pub struct Succession {
-        pub animations: Vec<Box<dyn Animation>>,
+        pub animations: Vec<Animations>,
         pub rate: RateFunc,
         active_index: Option<usize>,
         begun: Vec<bool>,
@@ -413,7 +415,7 @@ pub mod animation {
     }
 
     impl Succession {
-        pub async fn new(animations: Vec<Box<dyn Animation>>) -> Self {
+        pub async fn new(animations: Vec<Animations>) -> Self {
             let durations: Vec<f64> = animations.iter().map(|a| a.duration()).collect();
             let total = durations.iter().sum();
             let n = animations.len();
@@ -448,7 +450,7 @@ pub mod animation {
         async fn interpolate_mobject(&mut self, parent_alpha: f64) {
             self.apply(&mut HashMap::new(), parent_alpha);
         }
-        async fn apply(&mut self, mobjects: &mut HashMap<u64, Box<dyn Sobject>>, parent_alpha: f64) {
+        async fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
             let alpha = eased_alpha(self, parent_alpha);
             if self.animations.is_empty() {
                 return;
@@ -475,11 +477,11 @@ pub mod animation {
                     self.begun[i] = true;
                 }
                 if i < chosen {
-                    interpolate_at(mobjects, a.as_mut(), 1.0);
+                    interpolate_at(mobjects, a, 1.0);
                 } else {
                     let (start, end) = bounds[i];
                     let child_alpha = map_child_alpha(alpha, start, end);
-                    interpolate_at(mobjects, a.as_mut(), child_alpha);
+                    interpolate_at(mobjects, a, child_alpha);
                 }
             }
         }
@@ -495,7 +497,7 @@ pub mod animation {
     }
 
     impl LaggedStart {
-        pub async fn new(animations: Vec<Box<dyn Animation>>, lag_ratio: f64) -> Self {
+        pub async fn new(animations: Vec<Animations>, lag_ratio: f64) -> Self {
             Self { group: AnimationGroup::new(animations), lag_ratio: lag_ratio.clamp(0.0, 1.0) }
         }
 
@@ -533,7 +535,7 @@ pub mod animation {
         async fn interpolate_mobject(&mut self, parent_alpha: f64) {
             self.apply(&mut HashMap::new(), parent_alpha);
         }
-        async fn apply(&mut self, mobjects: &mut HashMap<u64, Box<dyn Sobject>>, parent_alpha: f64) {
+        async fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
             let alpha = eased_alpha(self, parent_alpha);
             let n = self.group.animations.len();
             let starts: Vec<f64> = (0..n).map(|i| self.child_start(i, n)).collect();
@@ -545,7 +547,7 @@ pub mod animation {
                         a.begin();
                         self.group.begun[i] = true;
                     }
-                    interpolate_at(mobjects, a.as_mut(), child_alpha);
+                    interpolate_at(mobjects, a, child_alpha);
                 }
             }
         }
@@ -555,31 +557,31 @@ pub mod animation {
     }
 
     /// 🗺️ Lagged start over a mapped collection.
-    pub struct LaggedStartMap<F>
-    where
-        F: Fn(usize) -> Box<dyn Animation> + Send,
-    {
+    ///
+    /// 🔀️ R11 "closed set" case: `LaggedStartMap` used to be generic over its factory closure type `F`
+    /// (`impl<F> Animation for LaggedStartMap<F>`), which is incompatible with `dyn_enum_close!` — an
+    /// enum variant needs ONE concrete type, and an unconstrained `F` is an open family of anonymous
+    /// closure types, not a closed set. The factory has no live caller in this crate (nothing constructs
+    /// a `LaggedStartMap` outside this file), so the generic is concretized away here rather than solved
+    /// with a per-caller monomorphized variant: the factory is boxed behind `dyn Fn` (R1-legal — the
+    /// erased type is `Fn`, a std trait, not a first-party one), matching the existing `Arc<dyn Fn(&mut
+    /// Sobjects, f64) + Send + Sync>` pattern already used for the `Updater` callback in `⏱️rate`.
+    pub struct LaggedStartMap {
         pub count: usize,
         pub lag_ratio: f64,
-        pub factory: F,
+        pub factory: Box<dyn Fn(usize) -> Animations + Send>,
         pub run_time: f64,
-        cache: Vec<Option<Box<dyn Animation>>>,
+        cache: Vec<Option<Animations>>,
         begun: Vec<bool>,
     }
 
-    impl<F> LaggedStartMap<F>
-    where
-        F: Fn(usize) -> Box<dyn Animation> + Send,
-    {
-        pub async fn new(count: usize, lag_ratio: f64, run_time: f64, factory: F) -> Self {
-            Self { count, lag_ratio, factory, run_time, cache: (0..count).map(|_| None).collect(), begun: vec![false; count] }
+    impl LaggedStartMap {
+        pub async fn new(count: usize, lag_ratio: f64, run_time: f64, factory: impl Fn(usize) -> Animations + Send + 'static) -> Self {
+            Self { count, lag_ratio, factory: Box::new(factory), run_time, cache: (0..count).map(|_| None).collect(), begun: vec![false; count] }
         }
     }
 
-    impl<F> Animation for LaggedStartMap<F>
-    where
-        F: Fn(usize) -> Box<dyn Animation> + Send,
-    {
+    impl Animation for LaggedStartMap {
         async fn duration(&self) -> f64 {
             self.run_time * (1.0 + self.lag_ratio)
         }
@@ -595,7 +597,7 @@ pub mod animation {
         async fn interpolate_mobject(&mut self, parent_alpha: f64) {
             self.apply(&mut HashMap::new(), parent_alpha);
         }
-        async fn apply(&mut self, mobjects: &mut HashMap<u64, Box<dyn Sobject>>, parent_alpha: f64) {
+        async fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
             let alpha = eased_alpha(self, parent_alpha);
             for i in 0..self.count {
                 let start = if self.count <= 1 { 0.0 } else { i as f64 / (self.count - 1) as f64 * self.lag_ratio };
@@ -613,7 +615,7 @@ pub mod animation {
                     self.begun[i] = true;
                 }
                 if let Some(a) = self.cache[i].as_mut() {
-                    interpolate_at(mobjects, a.as_mut(), child_alpha);
+                    interpolate_at(mobjects, a, child_alpha);
                 }
             }
         }
@@ -649,14 +651,20 @@ pub mod animation {
     }
 
     /// 🏗️ Fluent `.animate()` builder for common tweens.
-    pub struct AnimateBuilder<'a> {
-        pub target: &'a mut dyn Sobject,
+    ///
+    /// 🔀️ R11 "trivially generic" case (not the closed-set enum): this holds a single erased
+    /// receiver, never heterogeneous storage, so it stays generic over `S: Sobject` instead of routing
+    /// through `Sobjects` — that keeps `AnimateExt`'s blanket `impl<T: Sobject + Sized> AnimateExt for
+    /// T` working for `VSobject`/`Group`/`ThreeDVSobject` (and `Sobjects` itself) alike, exactly as the
+    /// pre-dyn-removal `&mut dyn Sobject` receiver did.
+    pub struct AnimateBuilder<'a, S: Sobject> {
+        pub target: &'a mut S,
         pub run_time: f64,
         pub rate: RateFunc,
     }
 
-    impl<'a> AnimateBuilder<'a> {
-        pub async fn new(target: &'a mut dyn Sobject, run_time: f64) -> Self {
+    impl<'a, S: Sobject> AnimateBuilder<'a, S> {
+        pub async fn new(target: &'a mut S, run_time: f64) -> Self {
             Self { target, run_time, rate: crate::editor::animate::engine::rate::rate::smooth }
         }
 
@@ -717,7 +725,7 @@ pub mod animation {
         }
         async fn finish(&mut self) {}
         async fn interpolate_mobject(&mut self, _alpha: f64) {}
-        async fn apply(&mut self, mobjects: &mut HashMap<u64, Box<dyn Sobject>>, parent_alpha: f64) {
+        async fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
             let alpha = eased_alpha(self, parent_alpha);
             let target_id = self.target_id;
             let delta = self.delta * alpha;
@@ -766,7 +774,7 @@ pub mod animation {
         }
         async fn finish(&mut self) {}
         async fn interpolate_mobject(&mut self, _alpha: f64) {}
-        async fn apply(&mut self, mobjects: &mut HashMap<u64, Box<dyn Sobject>>, parent_alpha: f64) {
+        async fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
             let alpha = eased_alpha(self, parent_alpha);
             let target_id = self.target_id;
             let factor = self.scale_factor;
@@ -815,7 +823,7 @@ pub mod animation {
         }
         async fn finish(&mut self) {}
         async fn interpolate_mobject(&mut self, _alpha: f64) {}
-        async fn apply(&mut self, mobjects: &mut HashMap<u64, Box<dyn Sobject>>, parent_alpha: f64) {
+        async fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
             let alpha = eased_alpha(self, parent_alpha);
             let target_id = self.target_id;
             let mut start = self.start_transform;
@@ -865,7 +873,7 @@ pub mod animation {
         }
         async fn finish(&mut self) {}
         async fn interpolate_mobject(&mut self, _alpha: f64) {}
-        async fn apply(&mut self, mobjects: &mut HashMap<u64, Box<dyn Sobject>>, parent_alpha: f64) {
+        async fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
             let alpha = eased_alpha(self, parent_alpha);
             let target_id = self.target_id;
             if !self.primed {
@@ -911,7 +919,7 @@ pub mod animation {
         }
         async fn finish(&mut self) {}
         async fn interpolate_mobject(&mut self, _alpha: f64) {}
-        async fn apply(&mut self, mobjects: &mut HashMap<u64, Box<dyn Sobject>>, parent_alpha: f64) {
+        async fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
             let alpha = eased_alpha(self, parent_alpha);
             let target_id = self.target_id;
             if !self.primed {
@@ -930,12 +938,12 @@ pub mod animation {
 
     /// ⏩️ Remap playback speed of a nested animation.
     pub struct ChangeSpeed {
-        pub animation: Box<dyn Animation>,
+        pub animation: Animations,
         pub speed_factor: f64,
     }
 
     impl ChangeSpeed {
-        pub async fn new(animation: Box<dyn Animation>, speed_factor: f64) -> Self {
+        pub async fn new(animation: Animations, speed_factor: f64) -> Self {
             Self { animation, speed_factor: speed_factor.max(1e-9) }
         }
     }
@@ -956,7 +964,7 @@ pub mod animation {
         async fn interpolate_mobject(&mut self, alpha: f64) {
             self.animation.interpolate_mobject(alpha);
         }
-        async fn apply(&mut self, mobjects: &mut HashMap<u64, Box<dyn Sobject>>, parent_alpha: f64) {
+        async fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
             let remapped = (parent_alpha * self.speed_factor).clamp(0.0, 1.0);
             self.animation.apply(mobjects, remapped);
         }
@@ -973,7 +981,7 @@ pub mod animation {
 
     /// 🪄️ Extension trait for `.animate()` on Sobjects.
     pub trait AnimateExt: Sobject + Sized {
-        async fn animate(&mut self, run_time: f64) -> AnimateBuilder<'_> {
+        async fn animate(&mut self, run_time: f64) -> AnimateBuilder<'_, Self> {
             AnimateBuilder::new(self, run_time)
         }
     }
@@ -981,14 +989,14 @@ pub mod animation {
     impl<T: Sobject + Sized> AnimateExt for T {}
 
     /// 🧮️ Apply parent opacity recursively to an Sobject tree (Manim parity).
-    pub async fn apply_parent_opacity_tree(root: &mut dyn Sobject, parent_opacity: f64) {
+    pub async fn apply_parent_opacity_tree(root: &mut Sobjects, parent_opacity: f64) {
         root.set_parent_opacity(parent_opacity);
         let eff = root.effective_opacity();
         root.visit_children_mut(&mut |child| apply_parent_opacity_tree(child, eff));
     }
 
     /// 🎞️ Compile animations into a flat timeline with durations.
-    pub async fn compile_animations(animations: &[Box<dyn Animation>]) -> Vec<Duration> {
+    pub async fn compile_animations(animations: &[Animations]) -> Vec<Duration> {
         animations.iter().map(|a| Duration::from_secs_f64(a.duration().max(0.0))).collect()
     }
 
@@ -998,23 +1006,23 @@ pub mod animation {
         use crate::editor::animate::engine::animation::animation::AnimateExt;
         use crate::editor::animate::engine::scene::sobject::VSobject;
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn succession_lazy_activation_order() {
-            let a1 = Box::new(Wait::new(1.0)) as Box<dyn Animation>;
-            let a2 = Box::new(Wait::new(1.0)) as Box<dyn Animation>;
+            let a1: Animations = Wait::new(1.0).into();
+            let a2: Animations = Wait::new(1.0).into();
             let mut s = Succession::new(vec![a1, a2]);
             s.interpolate_mobject(0.25);
             s.interpolate_mobject(0.75);
             assert!(s.active_index.is_some());
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn animation_group_parallel_duration_is_max() {
-            let g = AnimationGroup::new(vec![Box::new(Wait::new(2.0)), Box::new(Wait::new(5.0))]);
+            let g = AnimationGroup::new(vec![Wait::new(2.0).into(), Wait::new(5.0).into()]);
             assert!((g.duration() - 5.0).abs() < 1e-9);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn animate_builder_reads_target_id() {
             let mut v = VSobject::new();
             let id = v.id();
@@ -1073,7 +1081,7 @@ pub mod animations_catalog {
         }
         async fn finish(&mut self) {}
         async fn interpolate_mobject(&mut self, _alpha: f64) {}
-        async fn apply(&mut self, mobjects: &mut HashMap<u64, Box<dyn Sobject>>, parent_alpha: f64) {
+        async fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
             let alpha = eased_alpha_for(self, parent_alpha);
             let target_id = self.target_id;
             if !self.primed {
@@ -1131,7 +1139,7 @@ pub mod animations_catalog {
         }
         async fn finish(&mut self) {}
         async fn interpolate_mobject(&mut self, _alpha: f64) {}
-        async fn apply(&mut self, mobjects: &mut HashMap<u64, Box<dyn Sobject>>, parent_alpha: f64) {
+        async fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
             let alpha = eased_alpha_for(self, parent_alpha);
             let target_id = self.target_id;
             let mut primed = self.primed;
@@ -1183,7 +1191,7 @@ pub mod animations_catalog {
             let _ = self.target_id;
         }
         async fn interpolate_mobject(&mut self, _alpha: f64) {}
-        async fn apply(&mut self, mobjects: &mut HashMap<u64, Box<dyn Sobject>>, parent_alpha: f64) {
+        async fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
             let alpha = eased_alpha_for(self, parent_alpha);
             let target_id = self.target_id;
             let mut primed = self.primed;
@@ -1233,7 +1241,7 @@ pub mod animations_catalog {
         }
         async fn finish(&mut self) {}
         async fn interpolate_mobject(&mut self, _alpha: f64) {}
-        async fn apply(&mut self, mobjects: &mut HashMap<u64, Box<dyn Sobject>>, parent_alpha: f64) {
+        async fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
             let alpha = eased_alpha_for(self, parent_alpha);
             let target_id = self.target_id;
             let mut primed = self.primed;
@@ -1296,7 +1304,7 @@ pub mod animations_catalog {
         }
         async fn finish(&mut self) {}
         async fn interpolate_mobject(&mut self, _alpha: f64) {}
-        async fn apply(&mut self, mobjects: &mut HashMap<u64, Box<dyn Sobject>>, parent_alpha: f64) {
+        async fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
             let alpha = eased_alpha_for(self, parent_alpha);
             let target_id = self.target_id;
             let mut primed = self.primed;
@@ -1344,7 +1352,7 @@ pub mod animations_catalog {
         }
         async fn finish(&mut self) {}
         async fn interpolate_mobject(&mut self, _alpha: f64) {}
-        async fn apply(&mut self, mobjects: &mut HashMap<u64, Box<dyn Sobject>>, parent_alpha: f64) {
+        async fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
             let alpha = eased_alpha_for(self, parent_alpha);
             let target_id = self.target_id;
             let mut primed = self.primed;
@@ -1394,7 +1402,7 @@ pub mod animations_catalog {
         }
         async fn finish(&mut self) {}
         async fn interpolate_mobject(&mut self, _alpha: f64) {}
-        async fn apply(&mut self, mobjects: &mut HashMap<u64, Box<dyn Sobject>>, parent_alpha: f64) {
+        async fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
             let alpha = eased_alpha_for(self, parent_alpha);
             let target_id = self.target_id;
             if !self.primed {
@@ -1442,7 +1450,7 @@ pub mod animations_catalog {
         }
         async fn finish(&mut self) {}
         async fn interpolate_mobject(&mut self, _alpha: f64) {}
-        async fn apply(&mut self, mobjects: &mut HashMap<u64, Box<dyn Sobject>>, parent_alpha: f64) {
+        async fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
             let alpha = eased_alpha_for(self, parent_alpha);
             let target_id = self.target_id;
             let mut start = self.start_transform;
@@ -1492,7 +1500,7 @@ pub mod animations_catalog {
         }
         async fn finish(&mut self) {}
         async fn interpolate_mobject(&mut self, _alpha: f64) {}
-        async fn apply(&mut self, mobjects: &mut HashMap<u64, Box<dyn Sobject>>, parent_alpha: f64) {
+        async fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
             let alpha = eased_alpha_for(self, parent_alpha);
             let target_id = self.target_id;
             let grow_point = self.grow_point;
@@ -1546,7 +1554,7 @@ pub mod animations_catalog {
         }
         async fn finish(&mut self) {}
         async fn interpolate_mobject(&mut self, _alpha: f64) {}
-        async fn apply(&mut self, mobjects: &mut HashMap<u64, Box<dyn Sobject>>, parent_alpha: f64) {
+        async fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
             let alpha = eased_alpha_for(self, parent_alpha);
             let target_id = self.target_id;
             if !self.primed {
@@ -1607,7 +1615,7 @@ pub mod animations_catalog {
         }
         async fn finish(&mut self) {}
         async fn interpolate_mobject(&mut self, _alpha: f64) {}
-        async fn apply(&mut self, mobjects: &mut HashMap<u64, Box<dyn Sobject>>, parent_alpha: f64) {
+        async fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
             let alpha = eased_alpha_for(self, parent_alpha);
             let target_id = self.target_id;
             let angle = self.angle;
@@ -1662,7 +1670,7 @@ pub mod animations_catalog {
         }
         async fn finish(&mut self) {}
         async fn interpolate_mobject(&mut self, _alpha: f64) {}
-        async fn apply(&mut self, mobjects: &mut HashMap<u64, Box<dyn Sobject>>, parent_alpha: f64) {
+        async fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
             let alpha = eased_alpha_for(self, parent_alpha);
             let target_id = self.target_id;
             if !self.primed {
@@ -1712,7 +1720,7 @@ pub mod animations_catalog {
         }
         async fn finish(&mut self) {}
         async fn interpolate_mobject(&mut self, _alpha: f64) {}
-        async fn apply(&mut self, mobjects: &mut HashMap<u64, Box<dyn Sobject>>, parent_alpha: f64) {
+        async fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
             let alpha = eased_alpha_for(self, parent_alpha);
             let target_id = self.target_id;
             let mut start = self.start_transform;
@@ -1762,7 +1770,7 @@ pub mod animations_catalog {
         }
         async fn finish(&mut self) {}
         async fn interpolate_mobject(&mut self, _alpha: f64) {}
-        async fn apply(&mut self, mobjects: &mut HashMap<u64, Box<dyn Sobject>>, parent_alpha: f64) {
+        async fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
             let alpha = eased_alpha_for(self, parent_alpha);
             let target_id = self.target_id;
             let amplitude = self.amplitude;
@@ -1811,7 +1819,7 @@ pub mod animations_catalog {
         }
         async fn finish(&mut self) {}
         async fn interpolate_mobject(&mut self, _alpha: f64) {}
-        async fn apply(&mut self, mobjects: &mut HashMap<u64, Box<dyn Sobject>>, parent_alpha: f64) {
+        async fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
             let alpha = eased_alpha_for(self, parent_alpha);
             let target_id = self.target_id;
             let angle = self.angle;
@@ -1860,7 +1868,7 @@ pub mod animations_catalog {
         }
         async fn finish(&mut self) {}
         async fn interpolate_mobject(&mut self, _alpha: f64) {}
-        async fn apply(&mut self, mobjects: &mut HashMap<u64, Box<dyn Sobject>>, parent_alpha: f64) {
+        async fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
             let alpha = eased_alpha_for(self, parent_alpha);
             let n = self.cycle_ids.len();
             if n == 0 {
@@ -1932,7 +1940,7 @@ pub mod animations_catalog {
         }
         async fn finish(&mut self) {}
         async fn interpolate_mobject(&mut self, _alpha: f64) {}
-        async fn apply(&mut self, mobjects: &mut HashMap<u64, Box<dyn Sobject>>, parent_alpha: f64) {
+        async fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
             let alpha = eased_alpha_for(self, parent_alpha);
             let target_id = self.target_id;
             let swap_id = self.swap_id;
@@ -1991,7 +1999,7 @@ pub mod animations_catalog {
         }
         async fn finish(&mut self) {}
         async fn interpolate_mobject(&mut self, _alpha: f64) {}
-        async fn apply(&mut self, mobjects: &mut HashMap<u64, Box<dyn Sobject>>, parent_alpha: f64) {
+        async fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
             let alpha = eased_alpha_for(self, parent_alpha);
             let target_id = self.target_id;
             let mut primed = self.primed;
@@ -2039,7 +2047,7 @@ pub mod animations_catalog {
         }
         async fn finish(&mut self) {}
         async fn interpolate_mobject(&mut self, _alpha: f64) {}
-        async fn apply(&mut self, mobjects: &mut HashMap<u64, Box<dyn Sobject>>, parent_alpha: f64) {
+        async fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
             let alpha = eased_alpha_for(self, parent_alpha);
             let target_id = self.target_id;
             let mut start = self.start_transform;
@@ -2088,7 +2096,7 @@ pub mod animations_catalog {
         }
         async fn finish(&mut self) {}
         async fn interpolate_mobject(&mut self, _alpha: f64) {}
-        async fn apply(&mut self, mobjects: &mut HashMap<u64, Box<dyn Sobject>>, parent_alpha: f64) {
+        async fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
             let alpha = eased_alpha_for(self, parent_alpha);
             let target_id = self.target_id;
             if !self.primed {
@@ -2134,7 +2142,7 @@ pub mod animations_catalog {
         }
         async fn finish(&mut self) {}
         async fn interpolate_mobject(&mut self, _alpha: f64) {}
-        async fn apply(&mut self, mobjects: &mut HashMap<u64, Box<dyn Sobject>>, parent_alpha: f64) {
+        async fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
             let alpha = eased_alpha_for(self, parent_alpha);
             let target_id = self.target_id;
             let origin = self.origin;
@@ -2187,7 +2195,7 @@ pub mod animations_catalog {
         }
         async fn finish(&mut self) {}
         async fn interpolate_mobject(&mut self, _alpha: f64) {}
-        async fn apply(&mut self, mobjects: &mut HashMap<u64, Box<dyn Sobject>>, parent_alpha: f64) {
+        async fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
             let alpha = eased_alpha_for(self, parent_alpha);
             if !self.primed {
                 with_vsobject(mobjects, self.target_id, |v| v.set_point_ratio(1.0));
@@ -2225,7 +2233,7 @@ pub mod animations_catalog {
         }
         async fn finish(&mut self) {}
         async fn interpolate_mobject(&mut self, _alpha: f64) {}
-        async fn apply(&mut self, mobjects: &mut HashMap<u64, Box<dyn Sobject>>, parent_alpha: f64) {
+        async fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
             let alpha = eased_alpha_for(self, parent_alpha);
             if !self.primed {
                 with_vsobject(mobjects, self.target_id, |v| v.set_point_ratio(0.0));
@@ -2266,7 +2274,7 @@ pub mod animations_catalog {
         }
         async fn finish(&mut self) {}
         async fn interpolate_mobject(&mut self, _alpha: f64) {}
-        async fn apply(&mut self, mobjects: &mut HashMap<u64, Box<dyn Sobject>>, parent_alpha: f64) {
+        async fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
             let alpha = eased_alpha_for(self, parent_alpha);
             let target_id = self.target_id;
             let mut start = self.start_transform;
@@ -2317,7 +2325,7 @@ pub mod animations_catalog {
         }
         async fn finish(&mut self) {}
         async fn interpolate_mobject(&mut self, _alpha: f64) {}
-        async fn apply(&mut self, mobjects: &mut HashMap<u64, Box<dyn Sobject>>, parent_alpha: f64) {
+        async fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
             let alpha = eased_alpha_for(self, parent_alpha);
             let target_id = self.target_id;
             let mut start = self.start_transform;
@@ -2366,7 +2374,7 @@ pub mod animations_catalog {
         }
         async fn finish(&mut self) {}
         async fn interpolate_mobject(&mut self, _alpha: f64) {}
-        async fn apply(&mut self, mobjects: &mut HashMap<u64, Box<dyn Sobject>>, parent_alpha: f64) {
+        async fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
             let alpha = eased_alpha_for(self, parent_alpha);
             let target_id = self.target_id;
             let mut start = self.start_transform;
@@ -2388,6 +2396,59 @@ pub mod animations_catalog {
         }
     }
 
+    // 🔀️ R11 "closed set" case — the largest family in this plugin: 43 impls, all in this crate (leaf
+    // tweens, composites `AnimationGroup`/`Succession`/`LaggedStart`/`LaggedStartMap`, every builder
+    // returned from `.animate()` below). `dyn_enum_close!` generates the enum + match-delegating
+    // `impl Animation for Animations` (O1). Bare invocation is legal — same module as `#[dyn_enum] pub
+    // trait Animation` above (dyn-enum-macro finding 1).
+    dyn_enum_close! {
+        pub enum Animations: Animation {
+            Create(Create),
+            FadeIn(FadeIn),
+            FadeOut(FadeOut),
+            Transform(Transform),
+            Rotate(Rotate),
+            MoveAlongPath(MoveAlongPath),
+            AnimationGroup(AnimationGroup),
+            Succession(Succession),
+            LaggedStart(LaggedStart),
+            LaggedStartMap(LaggedStartMap),
+            Wait(Wait),
+            Shift(Shift),
+            ApplyMethod(ApplyMethod),
+            FocusOn(FocusOn),
+            Blink(Blink),
+            TracedPath(TracedPath),
+            ChangeSpeed(ChangeSpeed),
+            DrawBorderThenFill(DrawBorderThenFill),
+            FadeTransform(FadeTransform),
+            ReplacementTransform(ReplacementTransform),
+            TransformFromCopy(TransformFromCopy),
+            MoveToTarget(MoveToTarget),
+            Restore(Restore),
+            Flash(Flash),
+            Circumscribe(Circumscribe),
+            GrowFromPoint(GrowFromPoint),
+            ShrinkToCenter(ShrinkToCenter),
+            SpinInFromNothing(SpinInFromNothing),
+            ChangeDecimalToValue(ChangeDecimalToValue),
+            Broadcast(Broadcast),
+            ApplyWave(ApplyWave),
+            Wiggle(Wiggle),
+            CyclicReplace(CyclicReplace),
+            Swap(Swap),
+            TransformMatchingShapes(TransformMatchingShapes),
+            Homotopy(Homotopy),
+            ShowPassingFlash(ShowPassingFlash),
+            SpiralIn(SpiralIn),
+            Uncreate(Uncreate),
+            Write(Write),
+            GrowFromCenter(GrowFromCenter),
+            Indicate(Indicate),
+            Rotating(Rotating),
+        }
+    }
+
     #[cfg(test)]
     mod tests {
         use super::*;
@@ -2395,43 +2456,43 @@ pub mod animations_catalog {
         use crate::editor::animate::engine::geometry::geometry::circle;
         use crate::editor::animate::engine::scene::sobject::VSobject;
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn catalog_stubs_compile_and_apply() {
-            let mut map: HashMap<u64, Box<dyn Sobject>> = HashMap::new();
+            let mut map: HashMap<u64, Sobjects> = HashMap::new();
             let v = VSobject::new();
             let id = v.id();
-            map.insert(id, Box::new(v));
+            map.insert(id, v.into());
             let v2 = circle(Point::new(2.0, 0.0), 0.5, Color::WHITE, None, 1.0);
             let id2 = v2.id();
-            map.insert(id2, Box::new(v2));
+            map.insert(id2, v2.into());
 
-            let stubs: Vec<Box<dyn Animation>> = vec![
-                Box::new(Uncreate::new(id, 1.0)),
-                Box::new(Write::new(id, 1.0)),
-                Box::new(DrawBorderThenFill::new(id, 1.0)),
-                Box::new(FadeTransform::new(id, 1.0)),
-                Box::new(ReplacementTransform::new(id, 1.0)),
-                Box::new(TransformFromCopy::new(id, 1.0)),
-                Box::new(MoveToTarget::new(id, 1.0)),
-                Box::new(Restore::new(id, 1.0)),
-                Box::new(Indicate::new(id, 1.0)),
-                Box::new(Flash::new(id, 1.0)),
-                Box::new(Circumscribe::new(id, 1.0)),
-                Box::new(GrowFromCenter::new(id, 1.0)),
-                Box::new(GrowFromPoint::new(id, 1.0)),
-                Box::new(ShrinkToCenter::new(id, 1.0)),
-                Box::new(SpinInFromNothing::new(id, 1.0)),
-                Box::new(ChangeDecimalToValue::new(id, 1.0)),
-                Box::new(Broadcast::new(id, 1.0)),
-                Box::new(ApplyWave::new(id, 1.0)),
-                Box::new(Wiggle::new(id, 1.0)),
-                Box::new(CyclicReplace::new(id, 1.0)),
-                Box::new(Swap::new(id, id2, 1.0)),
-                Box::new(TransformMatchingShapes::new(id, 1.0)),
-                Box::new(Homotopy::new(id, 1.0)),
-                Box::new(ShowPassingFlash::new(id, 1.0)),
-                Box::new(SpiralIn::new(id, 1.0)),
-                Box::new(Rotating::new(id, 1.0)),
+            let stubs: Vec<Animations> = vec![
+                Uncreate::new(id, 1.0).into(),
+                Write::new(id, 1.0).into(),
+                DrawBorderThenFill::new(id, 1.0).into(),
+                FadeTransform::new(id, 1.0).into(),
+                ReplacementTransform::new(id, 1.0).into(),
+                TransformFromCopy::new(id, 1.0).into(),
+                MoveToTarget::new(id, 1.0).into(),
+                Restore::new(id, 1.0).into(),
+                Indicate::new(id, 1.0).into(),
+                Flash::new(id, 1.0).into(),
+                Circumscribe::new(id, 1.0).into(),
+                GrowFromCenter::new(id, 1.0).into(),
+                GrowFromPoint::new(id, 1.0).into(),
+                ShrinkToCenter::new(id, 1.0).into(),
+                SpinInFromNothing::new(id, 1.0).into(),
+                ChangeDecimalToValue::new(id, 1.0).into(),
+                Broadcast::new(id, 1.0).into(),
+                ApplyWave::new(id, 1.0).into(),
+                Wiggle::new(id, 1.0).into(),
+                CyclicReplace::new(id, 1.0).into(),
+                Swap::new(id, id2, 1.0).into(),
+                TransformMatchingShapes::new(id, 1.0).into(),
+                Homotopy::new(id, 1.0).into(),
+                ShowPassingFlash::new(id, 1.0).into(),
+                SpiralIn::new(id, 1.0).into(),
+                Rotating::new(id, 1.0).into(),
             ];
             for mut anim in stubs {
                 anim.apply(&mut map, 0.5);
@@ -2447,12 +2508,12 @@ pub mod animations_catalog {
             });
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn write_reveals_point_ratio() {
-            let mut map: HashMap<u64, Box<dyn Sobject>> = HashMap::new();
+            let mut map: HashMap<u64, Sobjects> = HashMap::new();
             let v = circle(Point::ZERO, 1.0, Color::WHITE, None, 1.0);
             let id = v.id();
-            map.insert(id, Box::new(v));
+            map.insert(id, v.into());
             let mut write = Write::new(id, 1.0);
             write.apply(&mut map, 0.5);
             with_vsobject(&mut map, id, |v| assert!((v.point_ratio - 0.5).abs() < 1e-9));

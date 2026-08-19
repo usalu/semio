@@ -262,7 +262,7 @@ mod tests {
     use super::*;
     use testgen::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn checkerboard_path_is_satisfiable_and_alternates() {
         let fx = checkerboard_path(4);
         let result = enumerate(&fx.model, fx.node_count, &fx.arcs, &fx.init_domains, 100);
@@ -278,7 +278,7 @@ mod tests {
         assert_eq!(result.solutions.len(), 2);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn unsat_odd_cycle_has_no_solutions() {
         let fx = unsat_odd_cycle(5);
         let result = enumerate(&fx.model, fx.node_count, &fx.arcs, &fx.init_domains, 100);
@@ -286,7 +286,7 @@ mod tests {
         assert!(result.solutions.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn even_cycle_is_satisfiable() {
         let mut fx = checkerboard_path(6);
         let adj = RelationId(0);
@@ -297,7 +297,7 @@ mod tests {
         assert_eq!(result.solutions.len(), 2);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn complete_graph_coloring_matches_chromatic_condition() {
         let sat = complete_graph_coloring(4, 4);
         let r1 = enumerate(&sat.model, sat.node_count, &sat.arcs, &sat.init_domains, 1000);
@@ -311,7 +311,7 @@ mod tests {
         assert!(r2.solutions.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn check_assignment_detects_violation() {
         let fx = checkerboard_path(3);
         let bad = vec![PatternId(0), PatternId(0), PatternId(1)];
@@ -320,7 +320,7 @@ mod tests {
         assert!(check_assignment(&fx.model, &good, &fx.arcs).is_ok());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn limit_caps_collected_solutions() {
         let fx = complete_graph_coloring(4, 4);
         let result = enumerate(&fx.model, fx.node_count, &fx.arcs, &fx.init_domains, 5);
@@ -330,7 +330,7 @@ mod tests {
     mod quick {
         use super::*;
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn random_instances_every_solution_passes_check_assignment() {
             let mut rng = geometry::random::Rng::from_seed(2024);
             for _ in 0..200 {

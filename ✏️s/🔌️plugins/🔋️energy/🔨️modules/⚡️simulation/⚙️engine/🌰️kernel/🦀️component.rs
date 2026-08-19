@@ -47,7 +47,7 @@ pub struct ConvergenceTolerances {
 }
 
 impl Default for ConvergenceTolerances {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { temperature_k: 0.01, humidity_ratio: 1e-5, mass_flow: 1e-4, energy_w: 1.0, max_iterations: 20 }
     }
 }
@@ -69,7 +69,7 @@ pub struct SimulationConfig {
 }
 
 impl Default for SimulationConfig {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self {
             environment: SimulationEnvironment::WeatherRunPeriod,
             zone_timestep_minutes: 60,
@@ -153,7 +153,7 @@ pub struct SimulationModel {
 }
 
 impl Default for SimulationModel {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { zones: HashMap::new(), surfaces: HashMap::new(), warmup_complete: false, hour: 0, delivered_total: DeliveredEnergy::default(), battery_soc: 0.5, plant_supply_c: 55.0 }
     }
 }
@@ -641,7 +641,7 @@ mod tests {
     use super::*;
     use crate::precompute::PrecomputedModel;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn initialize_creates_zone_states() {
         let model = crate::sim::test_model_single_zone();
         let pre = PrecomputedModel::build(&model, 60, 60);
@@ -650,19 +650,19 @@ mod tests {
         assert!(state.zones.contains_key(&EntityId(1)));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn energy_balance_near_zero_for_steady_state() {
         let residual = SimulationKernel::energy_balance_check(1000.0, 200.0, 800.0);
         assert!(residual < 1e-6);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn run_period_from_config() {
         let config = SimulationConfig { run_period_start_month: 1, run_period_start_day: 1, run_period_end_month: 1, run_period_end_day: 7, ..Default::default() };
         assert_eq!(SimulationKernel::run_period(&config).total_hours(), 168);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn advance_timestep_with_mechanical_ventilation_and_fan_coil_zone_equipment() {
         use crate::model::*;
         let mut model = crate::sim::test_model_single_zone();
@@ -678,7 +678,7 @@ mod tests {
         assert!(state.zones.contains_key(&EntityId(1)));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn advance_timestep_with_baseboard_zone_equipment_and_humidistat() {
         use crate::model::*;
         let mut model = crate::sim::test_model_single_zone();
@@ -702,7 +702,7 @@ mod tests {
         assert!(zs.delivered.heating_w >= 0.0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn advance_timestep_handles_ground_and_adiabatic_surfaces() {
         use crate::model::*;
         let mut model = crate::sim::test_model_single_zone();
@@ -728,7 +728,7 @@ mod tests {
         assert!(result.is_ok());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn advance_timestep_with_airflow_network() {
         use crate::model::*;
         let mut model = crate::sim::test_model_single_zone();
@@ -742,7 +742,7 @@ mod tests {
         assert!(result.is_ok());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn advance_timestep_applies_fault_severity_to_ideal_loads() {
         use crate::model::*;
         let mut model = crate::sim::test_model_single_zone();

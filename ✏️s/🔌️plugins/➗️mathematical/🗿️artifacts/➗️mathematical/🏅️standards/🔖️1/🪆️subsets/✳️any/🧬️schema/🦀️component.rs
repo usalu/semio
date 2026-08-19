@@ -39,7 +39,7 @@ pub struct MathematicalArtifact {
 
 //#region 🔖️Conversions
 impl Default for MathematicalArtifact {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self::from_snapshot(crate::artifacts::mathematical::MathematicalSnapshot::default())
     }
 }

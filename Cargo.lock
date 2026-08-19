@@ -6688,6 +6688,7 @@ name = "semio-framework-geometry"
 version = "0.1.0"
 dependencies = [
  "kurbo 0.13.1",
+ "semio-framework-async-macros",
  "serde",
 ]
 
@@ -6735,6 +6736,7 @@ dependencies = [
 name = "semio-framework-math"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-async-macros",
  "semio-framework-dispatch-macros",
  "semio-framework-geometry",
  "wasm-bindgen",
@@ -6861,6 +6863,7 @@ dependencies = [
  "rusqlite",
  "semio-framework-actor",
  "semio-framework-async",
+ "semio-framework-async-macros",
  "semio-framework-hash",
  "semio-framework-os-kernel-dsl-derive",
  "semio-framework-os-services",
@@ -7033,7 +7036,6 @@ dependencies = [
 name = "semio-framework-pack"
 version = "0.1.0"
 dependencies = [
- "async-trait",
  "blake3",
  "futures-lite",
  "semio-framework-async-macros",
@@ -7050,6 +7052,8 @@ version = "0.1.0"
 dependencies = [
  "console_error_panic_hook",
  "semio-framework",
+ "semio-framework-async-macros",
+ "semio-framework-dispatch-macros",
  "semio-framework-os-kernel",
  "semio-framework-schema",
  "semio-framework-ui",
@@ -7064,6 +7068,7 @@ name = "semio-framework-plugin-describe"
 version = "0.1.0"
 dependencies = [
  "semio-framework",
+ "semio-framework-async-macros",
  "semio-framework-os-kernel",
  "serde_json",
  "sha2",
@@ -7231,6 +7236,7 @@ name = "semio-s-imperative"
 version = "0.1.0"
 dependencies = [
  "semio-framework",
+ "semio-framework-async-macros",
  "semio-framework-os-kernel",
  "semio-framework-os-kernel-neural-engine",
  "semio-s-imperative-extension-sdk",
@@ -7261,6 +7267,8 @@ dependencies = [
  "kurbo 0.13.1",
  "pollster",
  "semio-framework",
+ "semio-framework-async-macros",
+ "semio-framework-dispatch-macros",
  "semio-framework-geometry",
  "semio-framework-hash",
  "semio-framework-os",
@@ -7286,6 +7294,7 @@ name = "semio-s-plugin-architect"
 version = "0.1.0"
 dependencies = [
  "blake3",
+ "semio-framework-async-macros",
  "semio-framework-graph",
  "semio-framework-os-kernel",
  "semio-framework-plugin",
@@ -7301,6 +7310,7 @@ name = "semio-s-plugin-block"
 version = "0.1.0"
 dependencies = [
  "semio-framework",
+ "semio-framework-async-macros",
  "semio-framework-os-kernel",
  "semio-framework-plugin",
  "semio-framework-schema",
@@ -7317,6 +7327,7 @@ dependencies = [
  "getrandom 0.3.4",
  "semio-framework",
  "semio-framework-3d",
+ "semio-framework-async-macros",
  "semio-framework-graph",
  "semio-framework-math",
  "semio-framework-os",
@@ -7335,6 +7346,7 @@ name = "semio-s-plugin-cad-aec-building"
 version = "0.1.0"
 dependencies = [
  "semio-framework",
+ "semio-framework-async-macros",
  "semio-framework-os-kernel",
  "semio-framework-plugin",
  "semio-s-plugin-cad",
@@ -7348,6 +7360,7 @@ name = "semio-s-plugin-cad-aec-building-energy"
 version = "0.1.0"
 dependencies = [
  "semio-framework",
+ "semio-framework-async-macros",
  "semio-framework-plugin",
  "serde",
  "serde_json",
@@ -7359,6 +7372,7 @@ name = "semio-s-plugin-cad-aec-building-structure"
 version = "0.1.0"
 dependencies = [
  "semio-framework",
+ "semio-framework-async-macros",
  "semio-framework-plugin",
  "serde",
  "serde_json",
@@ -7370,6 +7384,7 @@ name = "semio-s-plugin-cad-spatial-shape"
 version = "0.1.0"
 dependencies = [
  "semio-framework",
+ "semio-framework-async-macros",
  "semio-framework-plugin",
  "serde",
  "serde_json",
@@ -7381,6 +7396,7 @@ name = "semio-s-plugin-dag"
 version = "0.1.0"
 dependencies = [
  "semio-framework",
+ "semio-framework-async-macros",
  "semio-framework-graph",
  "semio-framework-os-infinite",
  "semio-framework-os-kernel",
@@ -7397,6 +7413,7 @@ dependencies = [
 name = "semio-s-plugin-demonstrator"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-async-macros",
  "semio-framework-os-kernel",
  "semio-framework-plugin",
  "semio-framework-schema",
@@ -7419,6 +7436,7 @@ dependencies = [
  "image",
  "semio-framework",
  "semio-framework-2d",
+ "semio-framework-async-macros",
  "semio-framework-os-kernel",
  "semio-framework-plugin",
  "semio-framework-schema",
@@ -7434,6 +7452,8 @@ name = "semio-s-plugin-draw-fsm"
 version = "0.1.0"
 dependencies = [
  "js-sys",
+ "semio-framework-async-macros",
+ "semio-framework-dispatch-macros",
  "semio-s-plugin-draw-fsm-macros",
  "serde",
  "serde_json",
@@ -7447,6 +7467,7 @@ version = "0.1.0"
 dependencies = [
  "proc-macro2",
  "quote",
+ "semio-framework-async-macros",
  "syn 2.0.117",
 ]
 
@@ -7454,6 +7475,7 @@ dependencies = [
 name = "semio-s-plugin-energy"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-async-macros",
  "semio-framework-geometry",
  "semio-framework-os-kernel",
  "semio-framework-plugin",
@@ -7468,6 +7490,7 @@ name = "semio-s-plugin-fem"
 version = "0.1.0"
 dependencies = [
  "semio-framework",
+ "semio-framework-async-macros",
  "semio-framework-os-kernel",
  "semio-framework-plugin",
  "semio-framework-schema",
@@ -7483,6 +7506,7 @@ dependencies = [
 name = "semio-s-plugin-flow"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-async-macros",
  "semio-framework-os-flow",
  "semio-framework-os-infinite",
  "semio-framework-os-kernel",
@@ -7500,6 +7524,7 @@ name = "semio-s-plugin-flow-extension-bim"
 version = "0.1.0"
 dependencies = [
  "semio-framework",
+ "semio-framework-async-macros",
  "semio-framework-os-flow",
  "semio-framework-os-kernel-neural-engine",
  "semio-framework-plugin",
@@ -7514,6 +7539,7 @@ dependencies = [
  "base64",
  "semio-framework",
  "semio-framework-3d",
+ "semio-framework-async-macros",
  "semio-framework-os-flow",
  "semio-framework-os-kernel-neural-engine",
  "semio-framework-plugin",
@@ -7528,6 +7554,7 @@ name = "semio-s-plugin-flow-extension-dictionary"
 version = "0.1.0"
 dependencies = [
  "semio-framework",
+ "semio-framework-async-macros",
  "semio-framework-os-flow",
  "semio-framework-os-kernel-neural-engine",
  "semio-framework-plugin",
@@ -7541,6 +7568,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-2d",
+ "semio-framework-async-macros",
  "semio-framework-os-flow",
  "semio-framework-os-kernel-neural-engine",
  "semio-framework-plugin",
@@ -7553,6 +7581,7 @@ name = "semio-s-plugin-flow-extension-list"
 version = "0.1.0"
 dependencies = [
  "semio-framework",
+ "semio-framework-async-macros",
  "semio-framework-os-flow",
  "semio-framework-os-kernel-neural-engine",
  "semio-framework-plugin",
@@ -7565,6 +7594,7 @@ name = "semio-s-plugin-flow-extension-logic"
 version = "0.1.0"
 dependencies = [
  "semio-framework",
+ "semio-framework-async-macros",
  "semio-framework-os-flow",
  "semio-framework-os-kernel-neural-engine",
  "semio-framework-plugin",
@@ -7577,6 +7607,7 @@ name = "semio-s-plugin-flow-extension-math"
 version = "0.1.0"
 dependencies = [
  "semio-framework",
+ "semio-framework-async-macros",
  "semio-framework-os-flow",
  "semio-framework-os-kernel-neural-engine",
  "semio-framework-plugin",
@@ -7589,6 +7620,7 @@ name = "semio-s-plugin-flow-extension-primitive"
 version = "0.1.0"
 dependencies = [
  "semio-framework",
+ "semio-framework-async-macros",
  "semio-framework-os-flow",
  "semio-framework-os-kernel-neural-engine",
  "semio-framework-plugin",
@@ -7601,6 +7633,7 @@ name = "semio-s-plugin-flow-extension-text"
 version = "0.1.0"
 dependencies = [
  "semio-framework",
+ "semio-framework-async-macros",
  "semio-framework-os-flow",
  "semio-framework-os-kernel-neural-engine",
  "semio-framework-plugin",
@@ -7614,6 +7647,7 @@ version = "0.1.0"
 dependencies = [
  "blake3",
  "semio-framework",
+ "semio-framework-async-macros",
  "semio-framework-os-flow",
  "semio-framework-os-kernel",
  "semio-framework-plugin",
@@ -7628,6 +7662,7 @@ name = "semio-s-plugin-gis"
 version = "0.1.0"
 dependencies = [
  "semio-framework",
+ "semio-framework-async-macros",
  "semio-framework-os",
  "semio-framework-os-kernel",
  "semio-framework-plugin",
@@ -7644,6 +7679,7 @@ name = "semio-s-plugin-imperative"
 version = "0.1.0"
 dependencies = [
  "semio-framework",
+ "semio-framework-async-macros",
  "semio-framework-os-kernel",
  "semio-framework-os-kernel-neural-engine",
  "semio-framework-plugin",
@@ -7662,6 +7698,7 @@ name = "semio-s-plugin-imperative-control"
 version = "0.1.0"
 dependencies = [
  "semio-framework",
+ "semio-framework-async-macros",
  "semio-framework-os-kernel-neural-engine",
  "semio-framework-plugin",
  "semio-s-imperative-extension-sdk",
@@ -7674,6 +7711,7 @@ name = "semio-s-plugin-imperative-effect"
 version = "0.1.0"
 dependencies = [
  "semio-framework",
+ "semio-framework-async-macros",
  "semio-framework-os-kernel-neural-engine",
  "semio-framework-plugin",
  "semio-s-imperative-extension-sdk",
@@ -7686,6 +7724,7 @@ name = "semio-s-plugin-imperative-logic"
 version = "0.1.0"
 dependencies = [
  "semio-framework",
+ "semio-framework-async-macros",
  "semio-framework-os-kernel-neural-engine",
  "semio-framework-plugin",
  "semio-s-imperative-extension-sdk",
@@ -7698,6 +7737,7 @@ name = "semio-s-plugin-imperative-math"
 version = "0.1.0"
 dependencies = [
  "semio-framework",
+ "semio-framework-async-macros",
  "semio-framework-os-kernel-neural-engine",
  "semio-framework-plugin",
  "semio-s-imperative-extension-sdk",
@@ -7710,6 +7750,7 @@ name = "semio-s-plugin-imperative-text"
 version = "0.1.0"
 dependencies = [
  "semio-framework",
+ "semio-framework-async-macros",
  "semio-framework-os-kernel-neural-engine",
  "semio-framework-plugin",
  "semio-s-imperative-extension-sdk",
@@ -7728,6 +7769,7 @@ dependencies = [
  "parley",
  "png 0.17.16",
  "semio-framework",
+ "semio-framework-async-macros",
  "semio-framework-os",
  "semio-framework-os-infinite",
  "semio-framework-os-kernel",
@@ -7753,6 +7795,7 @@ dependencies = [
  "base64",
  "png 0.17.16",
  "semio-framework-3d",
+ "semio-framework-async-macros",
  "semio-framework-os-kernel",
  "semio-framework-plugin",
  "semio-framework-schema",
@@ -7768,6 +7811,7 @@ name = "semio-s-plugin-mathematical"
 version = "0.1.0"
 dependencies = [
  "semio-framework",
+ "semio-framework-async-macros",
  "semio-framework-geometry",
  "semio-framework-graph",
  "semio-framework-number",
@@ -7784,6 +7828,8 @@ dependencies = [
 name = "semio-s-plugin-norm"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-async-macros",
+ "semio-framework-dispatch-macros",
  "semio-framework-os-kernel",
  "semio-framework-plugin",
  "semio-framework-schema",
@@ -7800,6 +7846,7 @@ version = "0.1.0"
 dependencies = [
  "blake3",
  "semio-framework",
+ "semio-framework-async-macros",
  "semio-framework-os",
  "semio-framework-os-kernel",
  "semio-framework-plugin",
@@ -7815,6 +7862,7 @@ name = "semio-s-plugin-playbook"
 version = "0.1.0"
 dependencies = [
  "semio-framework",
+ "semio-framework-async-macros",
  "semio-framework-os-flow",
  "semio-framework-os-kernel",
  "semio-framework-plugin",
@@ -7830,6 +7878,7 @@ name = "semio-s-plugin-playbook-procedural"
 version = "0.1.0"
 dependencies = [
  "semio-framework",
+ "semio-framework-async-macros",
  "semio-framework-os-flow",
  "semio-framework-os-kernel",
  "semio-framework-plugin",
@@ -7842,6 +7891,8 @@ name = "semio-s-plugin-procedural"
 version = "0.1.0"
 dependencies = [
  "semio-framework",
+ "semio-framework-async-macros",
+ "semio-framework-dispatch-macros",
  "semio-framework-geometry",
  "semio-framework-graph",
  "semio-framework-os",
@@ -7866,6 +7917,8 @@ dependencies = [
  "blake3",
  "semio-framework",
  "semio-framework-3d",
+ "semio-framework-async-macros",
+ "semio-framework-dispatch-macros",
  "semio-framework-os",
  "semio-framework-os-kernel",
  "semio-framework-plugin",
@@ -7881,6 +7934,7 @@ name = "semio-s-plugin-process-concrete"
 version = "0.1.0"
 dependencies = [
  "semio-framework",
+ "semio-framework-async-macros",
  "semio-framework-plugin",
  "semio-s-plugin-process",
  "serde_json",
@@ -7892,6 +7946,7 @@ name = "semio-s-plugin-process-metal"
 version = "0.1.0"
 dependencies = [
  "semio-framework",
+ "semio-framework-async-macros",
  "semio-framework-plugin",
  "semio-s-plugin-process",
  "serde_json",
@@ -7903,6 +7958,7 @@ name = "semio-s-plugin-process-robotic"
 version = "0.1.0"
 dependencies = [
  "semio-framework",
+ "semio-framework-async-macros",
  "semio-framework-plugin",
  "semio-s-plugin-process",
  "serde_json",
@@ -7914,6 +7970,7 @@ name = "semio-s-plugin-process-wood"
 version = "0.1.0"
 dependencies = [
  "semio-framework",
+ "semio-framework-async-macros",
  "semio-framework-plugin",
  "semio-s-plugin-process",
  "serde_json",
@@ -7929,6 +7986,7 @@ dependencies = [
  "nalgebra 0.33.3",
  "parry3d",
  "semio-framework",
+ "semio-framework-async-macros",
  "semio-framework-geometry",
  "semio-framework-graph",
  "semio-framework-hash",
@@ -7953,6 +8011,7 @@ dependencies = [
  "base64",
  "blake3",
  "semio-framework",
+ "semio-framework-async-macros",
  "semio-framework-os",
  "semio-framework-os-kernel",
  "semio-framework-plugin",
@@ -7968,6 +8027,7 @@ name = "semio-s-plugin-reasoning-mindmap"
 version = "0.1.0"
 dependencies = [
  "semio-framework",
+ "semio-framework-async-macros",
  "semio-framework-os-infinite",
  "semio-framework-os-kernel",
  "semio-framework-plugin",
@@ -7985,6 +8045,7 @@ dependencies = [
  "base64",
  "png 0.17.16",
  "semio-framework",
+ "semio-framework-async-macros",
  "semio-framework-geometry",
  "semio-framework-graph",
  "semio-framework-number",
@@ -8003,6 +8064,7 @@ version = "0.1.0"
 dependencies = [
  "js-sys",
  "semio-framework",
+ "semio-framework-async-macros",
  "semio-framework-graph",
  "semio-framework-os-infinite",
  "semio-framework-os-kernel",
@@ -8028,6 +8090,7 @@ name = "semio-s-plugin-shooting"
 version = "0.1.0"
 dependencies = [
  "semio-framework",
+ "semio-framework-async-macros",
  "semio-framework-os",
  "semio-framework-os-kernel",
  "semio-framework-plugin",
@@ -8043,6 +8106,8 @@ name = "semio-s-plugin-sourcing"
 version = "0.1.0"
 dependencies = [
  "semio-framework",
+ "semio-framework-async-macros",
+ "semio-framework-dispatch-macros",
  "semio-framework-os-kernel",
  "semio-framework-plugin",
  "semio-framework-schema",
@@ -8057,6 +8122,7 @@ name = "semio-s-plugin-sourcing-beams"
 version = "0.1.0"
 dependencies = [
  "semio-framework",
+ "semio-framework-async-macros",
  "semio-framework-plugin",
  "semio-s-plugin-sourcing",
  "serde_json",
@@ -8068,6 +8134,7 @@ name = "semio-s-plugin-sourcing-slabs"
 version = "0.1.0"
 dependencies = [
  "semio-framework",
+ "semio-framework-async-macros",
  "semio-framework-plugin",
  "semio-s-plugin-sourcing",
  "serde_json",
@@ -8079,6 +8146,7 @@ name = "semio-s-plugin-sourcing-windows"
 version = "0.1.0"
 dependencies = [
  "semio-framework",
+ "semio-framework-async-macros",
  "semio-framework-plugin",
  "semio-s-plugin-sourcing",
  "serde_json",
@@ -8091,6 +8159,7 @@ version = "0.1.0"
 dependencies = [
  "base64",
  "semio-framework",
+ "semio-framework-async-macros",
  "semio-framework-os",
  "semio-framework-os-infinite",
  "semio-framework-os-kernel",
@@ -8115,6 +8184,7 @@ dependencies = [
  "pollster",
  "semio-framework",
  "semio-framework-3d",
+ "semio-framework-async-macros",
  "semio-framework-geometry",
  "semio-framework-graph",
  "semio-framework-math",
@@ -8136,6 +8206,7 @@ version = "0.1.0"
 dependencies = [
  "js-sys",
  "semio-framework",
+ "semio-framework-async-macros",
  "semio-framework-geometry",
  "semio-framework-graph",
  "semio-framework-math",
@@ -8164,6 +8235,7 @@ dependencies = [
 name = "semio-s-plugin-trinity-jack-shell"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-async-macros",
  "semio-framework-os-kernel",
  "semio-s-plugin-trinity",
  "thiserror 2.0.18",
@@ -8174,6 +8246,7 @@ name = "semio-s-plugin-vcs"
 version = "0.1.0"
 dependencies = [
  "semio-framework",
+ "semio-framework-async-macros",
  "semio-framework-os-kernel",
  "semio-framework-plugin",
  "semio-framework-schema",
@@ -8187,6 +8260,7 @@ name = "semio-s-plugin-writer"
 version = "0.1.0"
 dependencies = [
  "semio-framework",
+ "semio-framework-async-macros",
  "semio-framework-editor",
  "semio-framework-os",
  "semio-framework-os-kernel",

@@ -84,7 +84,7 @@ mod tests {
     use crate::wfc_engine::ids::RelationId;
     use crate::wfc_engine::topology::GraphTopologyBuilder;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn isomorphic_rooted_neighborhoods_get_identical_signatures() {
         // Two disjoint triangles: every node in each triangle has the exact same rooted
         // 1-hop neighborhood shape (two same-labeled neighbors), so 1 round of refinement must
@@ -101,7 +101,7 @@ mod tests {
         assert!(colors.iter().all(|&c| c == colors[0]));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn structurally_different_neighborhoods_get_different_signatures() {
         // A 4-node "star" (node0 connects to 1,2,3; they don't connect to each other): the semio_hub
         // has 3 neighbors, the leaves have 1 each — must not collide after refinement.
@@ -119,7 +119,7 @@ mod tests {
         assert_eq!(colors[2], colors[3], "the three leaves are structurally identical");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn different_base_labels_propagate_into_different_signatures() {
         let mut b = GraphTopologyBuilder::new(2);
         let r = RelationId(0);
@@ -132,7 +132,7 @@ mod tests {
         assert_ne!(different_labels[0], different_labels[1]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn zero_rounds_is_the_identity_on_labels_modulo_hashing() {
         // With 0 rounds, colors are exactly `initial_labels` unchanged (no hashing applied at all).
         let b = GraphTopologyBuilder::new(3);
@@ -141,7 +141,7 @@ mod tests {
         assert_eq!(refine_colors(&topo, &labels, 0), labels);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn refine_colors_is_deterministic() {
         let mut b = GraphTopologyBuilder::new(5);
         let r = RelationId(0);
@@ -154,14 +154,14 @@ mod tests {
         assert_eq!(refine_colors(&topo, &labels, 3), refine_colors(&topo, &labels, 3));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn canonicalize_produces_dense_first_seen_ids() {
         let (ids, k) = canonicalize(&[100, 200, 100, 300, 200]);
         assert_eq!(ids, vec![0, 1, 0, 2, 1]);
         assert_eq!(k, 3);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn canonicalize_of_empty_input_is_empty() {
         let (ids, k) = canonicalize(&[]);
         assert!(ids.is_empty());

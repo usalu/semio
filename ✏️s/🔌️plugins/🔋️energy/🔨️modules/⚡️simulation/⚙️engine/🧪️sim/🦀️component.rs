@@ -244,7 +244,7 @@ mod tests {
     use super::*;
     use crate::calendar::RunPeriod;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn engine_runs_single_zone() {
         let model = test_model_single_zone();
         let config = SimulationConfig { warmup_days: 1, run_period_end_month: 1, run_period_end_day: 3, environment: SimulationEnvironment::WeatherRunPeriod, ..Default::default() };
@@ -253,7 +253,7 @@ mod tests {
         assert!(results.meters.facility_total_kwh(FuelType::Electricity) >= 0.0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn engine_deterministic_repeatability() {
         let model = test_model_single_zone();
         let config = SimulationConfig { warmup_days: 0, run_period_end_month: 1, run_period_end_day: 2, ..Default::default() };
@@ -263,7 +263,7 @@ mod tests {
         assert!((r1.meters.facility_total_kwh(FuelType::Electricity) - r2.meters.facility_total_kwh(FuelType::Electricity)).abs() < 1e-3);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn ashrae_140_case600_base() {
         let model = test_model_single_zone();
         let config = SimulationConfig { warmup_days: 0, run_period_end_month: 1, run_period_end_day: 1, environment: SimulationEnvironment::HeatingDesignDay, ..Default::default() };
@@ -272,13 +272,13 @@ mod tests {
         assert!(temps.is_some());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn invalid_model_rejected() {
         let model = Model::default();
         assert!(Engine::run(&model, &SimulationConfig::default()).is_err());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn energy_conservation_order_of_magnitude() {
         let model = test_model_single_zone();
         let config = SimulationConfig { warmup_days: 0, run_period_end_month: 1, run_period_end_day: 2, ..Default::default() };
@@ -287,7 +287,7 @@ mod tests {
         assert!(total_kwh < 1_000_000.0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn full_topology_e2e() {
         let model = test_model_full_topology();
         let config = SimulationConfig { warmup_days: 0, run_period_end_month: 1, run_period_end_day: 2, ..Default::default() };
@@ -296,7 +296,7 @@ mod tests {
         assert!(results.summaries.annual_energy.len() >= 3);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn hvac_bestest_heating_day() {
         let model = test_model_single_zone();
         let config = SimulationConfig { warmup_days: 0, run_period_end_month: 1, run_period_end_day: 1, environment: SimulationEnvironment::HeatingDesignDay, ..Default::default() };
@@ -305,7 +305,7 @@ mod tests {
         assert!(results.time_series.get("Zone Air Temperature [Zone1]").is_some());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn run_period_honors_calendar() {
         let period = RunPeriod { start_month: 1, start_day: 1, end_month: 1, end_day: 7, year: 2026 };
         assert_eq!(period.total_hours(), 168);

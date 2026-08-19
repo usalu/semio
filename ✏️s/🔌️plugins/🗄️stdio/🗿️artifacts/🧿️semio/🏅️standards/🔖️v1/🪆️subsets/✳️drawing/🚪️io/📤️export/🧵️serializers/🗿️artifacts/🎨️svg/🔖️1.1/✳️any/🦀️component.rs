@@ -182,7 +182,7 @@ mod tests {
     }
 
     /// 🧪️ Real round trip through svg's own real XML text codec.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn real_text_round_trip_through_svg_codec() {
         let drawing = sample_drawing();
         let svg = semio_framework_plugin::resolve_ready(SemioDrawingToSvg::serialize(&drawing)).expect("serialize");
@@ -195,7 +195,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn image_node_round_trips_through_data_uri_convention() {
         let drawing = sample_drawing();
         let svg = semio_framework_plugin::resolve_ready(SemioDrawingToSvg::serialize(&drawing)).expect("serialize");

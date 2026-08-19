@@ -434,7 +434,7 @@ mod tests {
         (vertex_ids.len(), edge_ids.len(), faces.len())
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn extrude_rectangle_matches_box_topology_and_volume() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
@@ -456,7 +456,7 @@ mod tests {
         assert!(ring_issues.is_empty(), "{ring_issues:?}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn extrude_rejects_zero_direction_and_distance() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
@@ -465,7 +465,7 @@ mod tests {
         assert!(extrude_face(&mut body, face, Vec3::Z, 0.0, &mut rec).is_err());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn revolve_face_produces_solid() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
@@ -474,7 +474,7 @@ mod tests {
         assert!(solid_volume(&body, solid, 1e-3).unwrap() > 0.0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn extrude_uses_rectangle_wire_helper() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();

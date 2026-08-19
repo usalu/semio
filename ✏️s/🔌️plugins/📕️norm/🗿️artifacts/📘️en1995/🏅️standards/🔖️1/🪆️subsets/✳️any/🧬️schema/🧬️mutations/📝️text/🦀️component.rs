@@ -158,7 +158,7 @@ mod tests {
 
     /// ⚖️ Every variant — full-coverage `OpText` round trip over the closed vocabulary, one sample
     /// value per field.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn every_variant_op_text_round_trips() {
         for mutation in every_mutation() {
             store::os_store::test_support::assert_op_line_round_trip(&mutation);

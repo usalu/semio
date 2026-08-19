@@ -39,7 +39,7 @@ mod tests {
     use crate::editor::procedural2d::testkit::{app, dispatch};
     use crate::editor::procedural2d::Procedural2dCommand;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_widget_emits_op_and_grows_document() {
         let mut app = app();
         let before = app.snapshot().expect("snapshot").fixture.widgets.len();

@@ -23,7 +23,7 @@ pub struct JackPresence {
 }
 
 impl Default for JackPresence {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self {
             active_fixture_id: String::new(),
             jack_query: String::new(),

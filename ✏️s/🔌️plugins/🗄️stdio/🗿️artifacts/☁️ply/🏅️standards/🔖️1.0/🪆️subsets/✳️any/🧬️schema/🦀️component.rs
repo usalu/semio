@@ -27,7 +27,7 @@ pub struct PlyArtifact {
 
 //#region 🔖️Conversions
 impl Default for PlyArtifact {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self::from_snapshot(PlySnapshot::default())
     }
 }

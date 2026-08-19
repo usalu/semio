@@ -510,14 +510,14 @@ pub async fn sample_plugin() -> ProgramSnapshot {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn empty_plugin_has_schema() {
         let program = empty_plugin();
         assert_eq!(program.schema, ARCHITECT_PROGRAM_SCHEMA);
         assert_eq!(program.meta.schema, ARCHITECT_PROGRAM_SCHEMA);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn sample_plugin_round_trips_json() {
         let program = sample_plugin();
         let json = serde_json::to_string(&program).expect("serialize");
@@ -527,13 +527,13 @@ mod tests {
     }
 
     // #region 🔖️DslArtifact
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn empty_plugin_dsl_round_trips() {
         semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&empty_plugin());
         semio_framework_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&empty_plugin());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn sample_plugin_dsl_round_trips() {
         semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&sample_plugin());
     }
@@ -545,7 +545,7 @@ mod tests {
         semio_framework_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&sample_plugin());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn sample_plugin_dsl_text_is_parseable_and_reflects_registers() {
         let printed = sample_plugin().print_dsl();
         assert!(printed.contains("Sample Clinic"), "printed dsl text must contain program title: {printed}");
@@ -558,7 +558,7 @@ mod tests {
     /// freshly called `sample_plugin()`, because `EntityId::new_serial` draws from a
     /// process-wide counter shared with every other test in this binary, so the serial ids a
     /// fresh call mints depend on test execution order and never match the fixture's baked-in ids.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn architect_example_text_parses_to_sample_plugin_and_round_trips() {
         let parsed = ProgramSnapshot::parse_dsl(crate::artifacts::program::dsl::ARCHITECT_EXAMPLE_TEXT).expect("parse bundled .architect example");
         let expected = sample_plugin();

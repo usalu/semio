@@ -500,7 +500,7 @@ mod tests {
     use super::*;
 
     // #subregion CrudDirection
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_edge_respects_direction() {
         let mut g = DirectedGraph::new();
         let a = g.add_node();
@@ -515,7 +515,7 @@ mod tests {
         assert_eq!(g.in_degree(b), 1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_edge_upserts_and_auto_creates_nodes() {
         let mut g = DirectedGraph::new();
         let id1 = g.add_edge(10, 20);
@@ -528,7 +528,7 @@ mod tests {
         assert_eq!(g.number_of_edges(), 1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn remove_edge_is_directional() {
         let mut g = DirectedGraph::new();
         g.add_edge(1, 2);
@@ -541,7 +541,7 @@ mod tests {
     // #endsubregion
 
     // #subregion SelfLoopDegree
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn selfloop_counts_twice_towards_degree() {
         let mut g = DirectedGraph::new();
         let a = g.add_node();
@@ -555,7 +555,7 @@ mod tests {
     // #endsubregion
 
     // #subregion Density
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn density_on_small_complete_digraph() {
         let mut g = DirectedGraph::new();
         let (a, b, c) = (g.add_node(), g.add_node(), g.add_node());
@@ -570,7 +570,7 @@ mod tests {
         assert!((g.density() - 1.0).abs() < 1e-12);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn density_is_zero_below_two_nodes() {
         let mut g = DirectedGraph::new();
         assert_eq!(g.density(), 0.0);
@@ -580,7 +580,7 @@ mod tests {
     // #endsubregion
 
     // #subregion IndependentCopies
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn subgraph_is_an_independent_copy() {
         let mut g = DirectedGraph::new();
         let (a, b, c) = (g.add_node(), g.add_node(), g.add_node());
@@ -594,7 +594,7 @@ mod tests {
         assert!(!g.has_edge(a, a));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn edge_subgraph_is_an_independent_copy() {
         let mut g = DirectedGraph::new();
         let (a, b, c) = (g.add_node(), g.add_node(), g.add_node());
@@ -610,7 +610,7 @@ mod tests {
     // #endsubregion
 
     // #subregion Reverse
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn reverse_swaps_every_edge_and_round_trips() {
         let mut g = DirectedGraph::new();
         let (a, b, c) = (g.add_node(), g.add_node(), g.add_node());
@@ -630,7 +630,7 @@ mod tests {
     // #endsubregion
 
     // #subregion ToUndirected
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn to_undirected_non_reciprocal_dedupes() {
         let mut g = DirectedGraph::new();
         let (a, b, c) = (g.add_node(), g.add_node(), g.add_node());
@@ -643,7 +643,7 @@ mod tests {
         assert_eq!(u.edges_between(b, c).count(), 1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn to_undirected_reciprocal_keeps_only_mutual_edges() {
         let mut g = DirectedGraph::new();
         let (a, b, c) = (g.add_node(), g.add_node(), g.add_node());
@@ -658,7 +658,7 @@ mod tests {
     // #endsubregion
 
     // #subregion Builders
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn path_cycle_star_respect_direction() {
         let mut g = DirectedGraph::new();
         g.add_path(&[1, 2, 3]);
@@ -679,7 +679,7 @@ mod tests {
         assert!(!g3.has_edge(1, 0));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn single_node_cycle_is_a_selfloop() {
         let mut g = DirectedGraph::new();
         let ids = g.add_cycle(&[7]);
@@ -689,7 +689,7 @@ mod tests {
     // #endsubregion
 
     // #subregion AllNeighbors
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn all_neighbors_is_union_of_predecessors_and_successors() {
         let mut g = DirectedGraph::new();
         let (a, b, c) = (g.add_node(), g.add_node(), g.add_node());
@@ -702,7 +702,7 @@ mod tests {
     // #endsubregion
 
     // #subregion Attributes
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn node_and_edge_attributes_round_trip() {
         let mut g = DirectedGraph::new();
         let (a, b) = (g.add_node(), g.add_node());
@@ -715,13 +715,13 @@ mod tests {
         assert_eq!(g.name(), "demo");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn name_defaults_to_empty_string() {
         let g = DirectedGraph::new();
         assert_eq!(g.name(), "");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn get_node_and_edge_attributes_skip_entries_without_the_key() {
         let mut g = DirectedGraph::new();
         let (a, b) = (g.add_node(), g.add_node());
@@ -731,7 +731,7 @@ mod tests {
         assert!(g.get_edge_attributes("weight").is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_node_and_edge_attributes_skip_missing_ids() {
         let mut g = DirectedGraph::new();
         let a = g.add_node();
@@ -743,7 +743,7 @@ mod tests {
     // #endsubregion
 
     // #subregion NodeCrud
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_node_with_attrs_and_merge_by_id() {
         let mut g = DirectedGraph::new();
         let mut attrs = PropertyBag::new();
@@ -759,7 +759,7 @@ mod tests {
         assert_eq!(g.get_node_attributes("region").get(&a), Some(&PropertyValue::String("eu".to_string())));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_nodes_from_and_remove_nodes_from() {
         let mut g = DirectedGraph::new();
         g.add_nodes_from([1, 2, 3]);
@@ -776,7 +776,7 @@ mod tests {
         assert!(!g.has_edge(1, 2));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn remove_node_cascades_incident_edges() {
         let mut g = DirectedGraph::new();
         let (a, b) = (g.add_node(), g.add_node());
@@ -789,7 +789,7 @@ mod tests {
     // #endsubregion
 
     // #subregion EdgeBulk
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_edges_from_and_weighted_edges_from() {
         let mut g = DirectedGraph::new();
         let ids = g.add_edges_from([(1, 2), (2, 3)]);
@@ -803,7 +803,7 @@ mod tests {
         assert_eq!(g2.get_edge_data(1, 2).and_then(|a| a.get("weight")).cloned(), Some(PropertyValue::Number(2.5)));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn get_edge_data_is_none_for_missing_pair() {
         let mut g = DirectedGraph::new();
         let (a, b) = (g.add_node(), g.add_node());
@@ -812,7 +812,7 @@ mod tests {
     // #endsubregion
 
     // #subregion BuildersEdgeCases
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn single_node_path_adds_isolated_node_without_edges() {
         let mut g = DirectedGraph::new();
         let ids = g.add_path(&[5]);
@@ -821,7 +821,7 @@ mod tests {
         assert_eq!(g.number_of_edges(), 0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn star_with_only_center_or_no_nodes_adds_no_edges() {
         let mut g = DirectedGraph::new();
         let ids = g.add_star(&[9]);
@@ -835,7 +835,7 @@ mod tests {
     // #endsubregion
 
     // #subregion InOutEdgesEmpty
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn in_edges_and_out_edges_are_direction_filtered() {
         let mut g = DirectedGraph::new();
         let (a, b, c) = (g.add_node(), g.add_node(), g.add_node());
@@ -848,7 +848,7 @@ mod tests {
         assert_eq!(into_b, vec![a, c]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn is_empty_reflects_edge_count_not_node_count() {
         let mut g = DirectedGraph::new();
         assert!(g.is_empty());
@@ -861,7 +861,7 @@ mod tests {
     // #endsubregion
 
     // #subregion CopyClear
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn copy_is_independent_of_original() {
         let mut g = DirectedGraph::new();
         let (a, b) = (g.add_node(), g.add_node());
@@ -872,7 +872,7 @@ mod tests {
         assert!(c.has_edge(b, a));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn clear_removes_everything_clear_edges_keeps_nodes() {
         let mut g = DirectedGraph::new();
         let (a, b) = (g.add_node(), g.add_node());
@@ -890,7 +890,7 @@ mod tests {
     // #endsubregion
 
     // #subregion PathHelpersCoverage
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn is_path_rejects_missing_node_and_wrong_direction() {
         let mut g = DirectedGraph::new();
         let (a, b, c) = (g.add_node(), g.add_node(), g.add_node());
@@ -901,7 +901,7 @@ mod tests {
         assert!(!g.is_path(&[a, b, 999]));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn path_weight_sums_weights_and_is_none_off_path() {
         let mut g = DirectedGraph::new();
         let (a, b, c) = (g.add_node(), g.add_node(), g.add_node());
@@ -915,7 +915,7 @@ mod tests {
         assert_eq!(g.path_weight(&[c, b, a]), None);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn common_neighbors_uses_successors_only() {
         let mut g = DirectedGraph::new();
         let (a, b, c, d) = (g.add_node(), g.add_node(), g.add_node(), g.add_node());
@@ -927,7 +927,7 @@ mod tests {
         assert_eq!(common, vec![c]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn non_neighbors_excludes_self_and_successors() {
         let mut g = DirectedGraph::new();
         let (a, b, c) = (g.add_node(), g.add_node(), g.add_node());
@@ -937,7 +937,7 @@ mod tests {
         assert_eq!(non, vec![c]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn non_edges_lists_every_missing_ordered_pair() {
         let mut g = DirectedGraph::new();
         let (a, b, c) = (g.add_node(), g.add_node(), g.add_node());
@@ -951,7 +951,7 @@ mod tests {
     // #endsubregion
 
     // #subregion TraitImpls
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn graph_view_trait_methods_delegate_to_storage() {
         let mut g = DirectedGraph::new();
         let (a, b, c) = (g.add_node(), g.add_node(), g.add_node());
@@ -977,7 +977,7 @@ mod tests {
         assert_eq!(inn, vec![a]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn attr_view_and_edge_weights_trait_methods() {
         let mut g = DirectedGraph::new();
         let a = g.add_node();

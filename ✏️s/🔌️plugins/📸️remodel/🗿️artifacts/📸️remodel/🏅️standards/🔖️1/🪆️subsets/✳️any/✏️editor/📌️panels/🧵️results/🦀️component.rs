@@ -38,7 +38,7 @@ mod tests {
     use super::*;
     use crate::editor::remodel::testkit::{app, render as render_body};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn a_fresh_document_reports_no_sparse_dense_trajectory_or_geo_products() {
         let mut app = app();
         let body = render_body(&mut app, REMODEL_PLAY_BODY_RESULTS);

@@ -8,6 +8,13 @@
 //! dangles. Do not inline any component file back into this one: the taxonomy validator and the
 //! `TaxonomyLibShape` policy lint both fail on it (see master ticket
 //! `26/08/05/CRATE-CONSOLIDATION-AND-PLUGIN-TAXONOMY-RESTRUCTURE`, Single-File-Repo hazard ruling).
+//!
+//! 🚫️ `#![allow(async_fn_in_trait)]`: `MachineCatalog` (below) carries `#[dyn_enum]` async methods, which
+//! trips rustc's "use of `async fn` in public traits is discouraged .. auto trait bounds cannot be
+//! specified" lint. Per ruling **R7**: silenced here, never by adding `+ Send` to a signature (R3 — Send
+//! comes structurally from the concrete `MachineCatalogs` enum, never a bound) and never by making the
+//! method sync.
+#![allow(async_fn_in_trait)]
 
 extern crate semio_framework_schema as schema;
 

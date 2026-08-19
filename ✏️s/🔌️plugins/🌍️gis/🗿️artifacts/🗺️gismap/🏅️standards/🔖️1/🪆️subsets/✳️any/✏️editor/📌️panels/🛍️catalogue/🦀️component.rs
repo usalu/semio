@@ -38,13 +38,13 @@ mod tests {
     use super::*;
     use crate::editor::gis2d::testkit::{app, render as render_body};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn catalogue_lists_layer_toggles() {
         let mut app = app();
         assert!(render_body(&mut app, GIS2D_PLAY_BODY_CATALOGUE).contains("gis2d-play-catalogue.layer.water"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn the_definition_binds_the_framework_catalogue_tab_to_this_body() {
         assert_eq!(definition().body_key.as_deref(), Some(GIS2D_PLAY_BODY_CATALOGUE));
     }

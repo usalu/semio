@@ -61,7 +61,7 @@ mod tests {
     use crate::artifacts::forms::schema::onboarding_example_spec;
     use SetSpecJson;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_active_example_switches_to_the_onboarding_fixture() {
         // 🩹️ `replace_spec_operations` deliberately never touches `id` (only title/steps — `id` is the
         // document's own stable identity, not part of the "example" content it swaps) — assert on the
@@ -73,7 +73,7 @@ mod tests {
         assert_eq!(spec.title, onboarding_example_spec().title);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_active_example_with_blank_id_clears_the_document() {
         let mut app = forms_app();
         dispatch(&mut app, FormsCommand::SetActiveExample(SetActiveExample { example_id: "".into() }));
@@ -81,7 +81,7 @@ mod tests {
         assert!(crate::artifacts::forms::schema::flatten_questions(&spec).is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_spec_json_replaces_the_document() {
         // 🩹️ `SetSpecJson`'s payload is raw `flow::playbook::PlaybookSpec`-shaped JSON (see
         // `handle`'s own doc comment, ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM)
@@ -104,7 +104,7 @@ mod tests {
         assert_eq!(spec.title, onboarding_example_spec().title);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_spec_json_with_invalid_json_is_a_no_operation() {
         let mut app = forms_app();
         let before = app.snapshot().expect("projection");

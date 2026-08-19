@@ -55,7 +55,7 @@ mod tests {
     use crate::editor::remodel::testkit::{app, dispatch};
     use crate::editor::remodel::RemodelCommand;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn edit_calibration_inserts_then_updates_the_same_camera_entry() {
         let mut app = app();
         let payload = |fx: f64| {
@@ -84,7 +84,7 @@ mod tests {
         assert_eq!(cameras[0].fx, 2000.0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn gcps_are_added_observed_and_removed() {
         let mut app = app();
         dispatch(&mut app, RemodelCommand::AddGcp(add_gcp::AddGcp { name: "Corner".into(), world_x: 1.0, world_y: 2.0, world_z: 3.0 }));
@@ -97,7 +97,7 @@ mod tests {
 
     /// 🎯️ `calibrateCameras` only derives intrinsics for stream-referenced cameras that have a decoded
     /// first frame — a stream with no frames contributes nothing.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn calibrate_cameras_skips_streams_without_frames() {
         let mut app = app();
         dispatch(&mut app, RemodelCommand::AddStream(crate::editor::remodel::commands::add_stream::AddStream { name: "Front".into(), kind: "video".into(), camera_id: "cam-0".into() }));

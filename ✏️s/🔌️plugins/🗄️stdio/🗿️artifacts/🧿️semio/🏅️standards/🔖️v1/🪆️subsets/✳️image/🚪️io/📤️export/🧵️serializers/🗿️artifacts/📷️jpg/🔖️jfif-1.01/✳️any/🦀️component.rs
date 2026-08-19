@@ -58,7 +58,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn real_byte_round_trip_through_jpg_codec() {
         let semio = sample_semio();
         let jpg = semio_framework_plugin::resolve_ready(SemioImageToJpg::serialize(&semio)).expect("serialize");

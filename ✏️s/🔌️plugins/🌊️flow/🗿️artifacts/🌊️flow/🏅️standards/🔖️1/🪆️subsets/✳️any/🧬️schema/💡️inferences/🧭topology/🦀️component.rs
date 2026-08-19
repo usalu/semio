@@ -22,7 +22,7 @@ pub struct FlowTopology {
 }
 
 impl Default for FlowTopology {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { topo_order: Vec::new(), depth: BTreeMap::new(), cycle_free: true, node_count: 0 }
     }
 }
@@ -96,7 +96,7 @@ mod tests {
         SynapseSpec { id: id.into(), from: from.into(), to: to.into(), from_port: String::new(), to_port: String::new() }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn linear_chain_orders_roots_before_leaves_with_increasing_depth() {
         let widgets = vec![slider("a"), slider("b"), slider("c")];
         let synapses = vec![synapse("s1", "a", "b"), synapse("s2", "b", "c")];
@@ -107,7 +107,7 @@ mod tests {
         assert_eq!(topology.node_count, 3);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn a_cycle_is_reported_as_not_cycle_free_but_still_totals_every_widget() {
         let widgets = vec![slider("a"), slider("b")];
         let synapses = vec![synapse("s1", "a", "b"), synapse("s2", "b", "a")];

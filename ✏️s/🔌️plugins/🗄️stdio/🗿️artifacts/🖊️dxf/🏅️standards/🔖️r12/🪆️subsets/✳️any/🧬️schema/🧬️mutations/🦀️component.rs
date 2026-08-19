@@ -643,7 +643,7 @@ mod tests {
     use crate::artifacts::dxf::schema::snapshot::{DxfOtherTable, DxfTables, DxfTag, DxfValue, DxfVertex};
     use protocol::command::DiffAlgebra;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn missing_entity_target_is_rejected_before_mutation() {
         let base = DxfSnapshot::default();
         let diff = DxfDiff { entities: Some(DxfEntitiesDiff { removed: vec![0], ..Default::default() }), ..Default::default() };
@@ -744,7 +744,7 @@ mod tests {
     //#endregion 🔖️FieldSweepFixtures
 
     //#region 🔖️MutationDiffLaw
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mutation_diff_law() {
         let base = base_snapshot();
         for m in variants() {
@@ -761,7 +761,7 @@ mod tests {
     //#endregion 🔖️MutationDiffLaw
 
     //#region 🔖️InverseLaw
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inverse_law() {
         let base = base_snapshot();
         for m in variants() {
@@ -781,7 +781,7 @@ mod tests {
     //#endregion 🔖️InverseLaw
 
     //#region 🔖️AbsorbLaw
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_law() {
         let base = base_snapshot();
 
@@ -877,7 +877,7 @@ mod tests {
     //#endregion 🔖️AbsorbLaw
 
     //#region 🔖️BetweenRoundtripLaw
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn between_roundtrip_law() {
         let a = sweep_a();
         let b = sweep_b();
@@ -888,7 +888,7 @@ mod tests {
     //#endregion 🔖️BetweenRoundtripLaw
 
     //#region 🔖️FieldSweep
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn field_sweep_every_mutable_field_changes() {
         let a = sweep_a();
         let b = sweep_b();
@@ -944,7 +944,7 @@ mod tests {
     /// 🕳️ `DxfVertex.unknown_group_codes` participates in equality (weak leaf, whole-vec
     /// replaced by the parent `Polyline` diff — confirms it isn't silently dropped by the
     /// snapshot type even though no dedicated mutation targets it directly).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn vertex_unknown_group_codes_are_part_of_equality() {
         let v1 = DxfVertex { x: 0.0, y: 0.0, z: 0.0, bulge: 0.0, unknown_group_codes: vec![] };
         let v2 = DxfVertex { x: 0.0, y: 0.0, z: 0.0, bulge: 0.0, unknown_group_codes: vec![(40, DxfValue::Double { value: 1.0 })] };
@@ -957,7 +957,7 @@ mod tests {
     /// variant from the existing `variants()` fixture, including `SetSnapshot` (exercises the
     /// whole-snapshot grammar, incl. `other_tables` raw retention and a nested block's own
     /// entities) and every typed-entity/table Insert/Set/Remove keyword.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_text_binary_roundtrip_law() {
         for m in variants() {
             let printed = m.print_op();

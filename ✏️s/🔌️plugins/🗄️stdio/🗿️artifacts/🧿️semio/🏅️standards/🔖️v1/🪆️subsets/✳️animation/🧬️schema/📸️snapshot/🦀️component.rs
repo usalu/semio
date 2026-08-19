@@ -31,7 +31,7 @@ pub enum AnimTargetProperty {
 }
 
 impl Default for AnimTargetProperty {
-    async fn default() -> Self {
+    fn default() -> Self {
         AnimTargetProperty::Translation
     }
 }
@@ -57,7 +57,7 @@ pub enum AnimInterpolation {
 }
 
 impl Default for AnimInterpolation {
-    async fn default() -> Self {
+    fn default() -> Self {
         AnimInterpolation::Linear
     }
 }
@@ -79,7 +79,7 @@ pub enum AnimValue {
 }
 
 impl Default for AnimValue {
-    async fn default() -> Self {
+    fn default() -> Self {
         AnimValue::Scalar { value: 0.0 }
     }
 }
@@ -140,7 +140,7 @@ pub struct SemioAnimationSnapshot {
 }
 
 impl Default for SemioAnimationSnapshot {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { schema: STDIO_SEMIOANIMATION_DOCUMENT_SCHEMA.into(), timelines: Default::default() }
     }
 }
@@ -639,7 +639,7 @@ mod tests {
     /// 🧪️ codec_retention_law: decode(encode(x)) == x through both the pack (binary) and dsl
     /// (text) envelopes, on a snapshot exercising every `AnimValue` variant and both `AnimTarget`
     /// property kinds (incl. `Custom`).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn codec_retention_law() {
         let snap = demo_animation_snapshot();
         let bytes = <SemioAnimationSnapshot as store::ArtifactPack>::encode_pack(&snap);
@@ -651,7 +651,7 @@ mod tests {
         assert_eq!(snap, back_text);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn default_snapshot_round_trips() {
         let snap = SemioAnimationSnapshot::default();
         let bytes = <SemioAnimationSnapshot as store::ArtifactPack>::encode_pack(&snap);

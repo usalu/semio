@@ -67,7 +67,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn serialize_derives_real_delay_from_keyframe_time_deltas() {
         let gif = semio_framework_plugin::resolve_ready(SemioAnimationToGif::serialize(&real_world_animation())).expect("serialize");
         assert_eq!(gif.frames.len(), 3);
@@ -77,7 +77,7 @@ mod tests {
         assert!(gif.frames.iter().all(|f| f.indices.is_empty()), "no fabricated pixel data");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn single_keyframe_uses_the_minimum_one_centisecond_floor() {
         let snap = SemioAnimationSnapshot {
             schema: STDIO_SEMIOANIMATION_DOCUMENT_SCHEMA.into(),
@@ -95,7 +95,7 @@ mod tests {
         assert_eq!(gif.frames[0].delay_cs, 1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn empty_animation_serializes_to_zero_frames() {
         let snap = SemioAnimationSnapshot { schema: STDIO_SEMIOANIMATION_DOCUMENT_SCHEMA.into(), timelines: Vec::new() };
         let gif = semio_framework_plugin::resolve_ready(SemioAnimationToGif::serialize(&snap)).expect("serialize");

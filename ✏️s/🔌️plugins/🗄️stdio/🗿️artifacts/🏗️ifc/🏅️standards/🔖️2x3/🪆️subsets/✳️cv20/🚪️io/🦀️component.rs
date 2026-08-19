@@ -89,7 +89,7 @@ pub mod derived_composition {
         use semio_framework_plugin::AnalyzeSource;
         use semio_framework_plugin::ArtifactBuilder as _;
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn conforming_builder_snapshot_composes_and_stamps_cv20() {
             let snapshot = Ifc2x3Cv20Builder::new().build().expect("clean CV2.0 document must build");
             let bytes = <Ifc2x3Snapshot as store::ArtifactPack>::encode_pack(&snapshot);
@@ -98,7 +98,7 @@ pub mod derived_composition {
             assert!(composed.diagnostics.iter().all(|d| d.severity != Severity::Error), "no hard diagnostics expected: {:?}", composed.diagnostics);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn wrong_view_definition_fails_compose_with_real_diagnostic() {
             let mut snapshot = Ifc2x3Cv20Builder::new().build().expect("build");
             snapshot.document.header.file_description[0] = crate::artifacts::step::engine::part21::Part21Value::List(vec![crate::artifacts::step::engine::part21::Part21Value::Str("ViewDefinition [StructuralAnalysisView]".into())]);
@@ -108,7 +108,7 @@ pub mod derived_composition {
             assert!(err.diagnostics.iter().any(|d| d.code.0 == CODE_VIEW_DEFINITION && d.severity == Severity::Error), "got {:?}", err.diagnostics);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn subset_validator_recheck_is_clean_for_a_conforming_document() {
             let snapshot = Ifc2x3Cv20Builder::new().build().expect("build");
             let bytes = <Ifc2x3Snapshot as store::ArtifactPack>::encode_pack(&snapshot);

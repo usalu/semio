@@ -696,7 +696,7 @@ mod tests {
 
     /// 🧪️ Canonical absorb case 1: `InsertChannel(2,c)` then `RemoveChannel(0)` →
     /// `{removed:[0], added:[(1,c)]}`.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_insert_then_remove_before_shifts_index() {
         let c = channel(9.0, 2);
         let mut d1: SemioAudioChannelsDiff = IndexedTripleDiff { added: vec![IndexAdded { index: 2, item: c.clone() }], ..Default::default() };
@@ -708,7 +708,7 @@ mod tests {
     }
 
     /// 🧪️ Canonical absorb case 2: `InsertChannel(2,c)` then `InsertChannel(2,d)` → BOTH survive.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_insert_insert_same_index_both_survive() {
         let c = channel(1.0, 2);
         let d = channel(2.0, 2);
@@ -720,7 +720,7 @@ mod tests {
 
     /// 🧪️ Canonical absorb case 3: `InsertChannel(1,c)` then `SetChannelSamples(1,..)` patches
     /// INTO the added payload — merged has only `added`, no separate `modified` entry.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_insert_then_set_field_patches_into_added() {
         let c = channel(1.0, 2);
         let mut d1: SemioAudioChannelsDiff = IndexedTripleDiff { added: vec![IndexAdded { index: 1, item: c.clone() }], ..Default::default() };
@@ -732,7 +732,7 @@ mod tests {
         assert_eq!(d1.added[0].index, 1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_law_holds_over_curated_ops() {
         let base = base_snapshot();
         let mid = {
@@ -755,7 +755,7 @@ mod tests {
         assert_eq!(d1.apply(&base).expect("apply must succeed for a well-formed fixture"), after);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn between_roundtrip_law() {
         let a = base_snapshot();
         let mut b = base_snapshot();
@@ -768,7 +768,7 @@ mod tests {
         assert!(<SemioAudioDiff as DiffAlgebra<SemioAudioSnapshot>>::between(&a, &a).is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inverse_law() {
         let base = base_snapshot();
         let next = {
@@ -789,7 +789,7 @@ mod tests {
     /// 🧪️ Field sweep — the acceptance criterion: `sweep_a`/`sweep_b` differ in EVERY mutable
     /// field, with asymmetric collection lengths so both `removed` and `added` get exercised
     /// (split across both directions, matching the recipe's own guidance).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn field_sweep_covers_every_mutable_field() {
         let sweep_a =
             SemioAudioSnapshot { sample_rate: 44_100, format: SemioAudioFormat::Pcm16, channels: vec![channel(0.0, 4), channel(1.0, 4)], tags: vec![SemioAudioTag { key: "title".into(), value: "first".into() }], ..SemioAudioSnapshot::default() };
@@ -817,7 +817,7 @@ mod tests {
 
     /// 🧪️ `DiffCodec` text/binary round-trip law — exercises scalars and both collection triples
     /// (`removed`/`modified`/`added`) simultaneously via a real `between()` result.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn diff_codec_text_binary_roundtrip_law() {
         let a = base_snapshot();
         let mut b = base_snapshot();
@@ -841,7 +841,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn snapshot_bracket_codec_round_trips() {
         let s = base_snapshot();
         let encoded = enc_snapshot(&s);

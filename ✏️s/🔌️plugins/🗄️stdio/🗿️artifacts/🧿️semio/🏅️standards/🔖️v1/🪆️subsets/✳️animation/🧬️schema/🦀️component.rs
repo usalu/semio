@@ -19,7 +19,7 @@ pub struct SemioAnimationArtifact {
 }
 
 impl Default for SemioAnimationArtifact {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self::from_snapshot(SemioAnimationSnapshot::default())
     }
 }

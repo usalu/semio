@@ -178,7 +178,7 @@ pub async fn diff_set_snapshot(snapshot: &Process3dSnapshot) -> Process3dDiff {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn a_whole_artifact_diff_wins_over_every_field_diff() {
         let base = crate::artifacts::process3d::empty_process3d_snapshot();
         let replacement = Process3dSnapshot { stock_label: "Beam".into(), ..crate::artifacts::process3d::empty_process3d_snapshot() };
@@ -190,7 +190,7 @@ mod tests {
         assert_eq!(diff.apply(&base).expect("valid mutation diff"), replacement);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn stock_solid_handle_swap_applies() {
         let base = crate::artifacts::process3d::empty_process3d_snapshot();
         let new_content = crate::artifacts::process3d::brep_snapshot_for_working_solid(&crate::artifacts::process3d::WorkingSolid::Sphere { radius: 0.5 });

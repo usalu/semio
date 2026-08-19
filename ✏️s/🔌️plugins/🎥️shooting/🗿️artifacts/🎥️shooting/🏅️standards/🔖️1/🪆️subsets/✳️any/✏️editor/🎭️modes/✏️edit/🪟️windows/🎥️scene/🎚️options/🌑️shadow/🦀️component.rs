@@ -18,7 +18,7 @@ mod tests {
     use crate::editor::shooting::config::ShootingConfig;
     use crate::editor::shooting::terminology::shooting_play_labels;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn shadow_measure_starts_pressed_by_default() {
         let snapshot = crate::artifacts::shooting::schema::default_snapshot();
         let labels = shooting_play_labels(&ShootingConfig::default());

@@ -88,7 +88,7 @@ mod tests {
     use crate::editor::writer::{WriterCommand, WRITER_PLAY_WINDOW_KIND};
     use semio_framework_plugin::{PluginApp, WindowMeasure};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn engagement_submit_parses_font_size() {
         let mut app = new_app();
         let result = app.dispatch_typed(WriterCommand::EngagementSubmit(EngagementSubmit { value: Some("font 16".into()) }), &semio_framework_plugin::testkit::meta("local")).expect("submit");
@@ -99,7 +99,7 @@ mod tests {
         assert!(main.iter().any(|m| matches!(m, WindowMeasure::Slider { id, value, .. } if id == "writer-font-size-measure" && *value == 16.0)));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn engagement_submit_parses_normalized_shell_drafts() {
         // The React shell PascalCases and strips separators from every draft before submitting it
         // (`normalizeEngagementActionText`), so "font 16" arrives as "Font16", "tab 4" as "Tab4",

@@ -131,7 +131,7 @@ mod tests {
     use super::*;
     use protocol::OpText;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_text_roundtrip_law() {
         for mutation in demo_mutation_cases() {
             let printed = mutation.print_op();

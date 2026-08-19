@@ -46,7 +46,7 @@ pub async fn derive(payload: &GltfChangeMaterialDoubleSidedPayload, base: &GltfS
 #[cfg(test)]
 mod tests {
     use super::*;
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn direct_diff_applies_and_rejects_stale_state() {
         let mut snapshot = GltfSnapshot::default();
         snapshot.document.materials.push(Default::default());

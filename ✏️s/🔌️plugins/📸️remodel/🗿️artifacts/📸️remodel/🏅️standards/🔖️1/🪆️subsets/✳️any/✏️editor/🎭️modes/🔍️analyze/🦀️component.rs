@@ -30,7 +30,7 @@ pub async fn layout() -> NamedLayout {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn the_analyze_layout_pairs_the_model_window_with_the_report() {
         let json = serde_json::to_string(&layout()).expect("layout json");
         assert!(json.contains(REMODEL_PLAY_LAYOUT_ANALYZE));

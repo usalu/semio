@@ -105,7 +105,7 @@ semio_framework_plugin::extension_exports!(bundle);
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn bundle_contributes_structure_manifest() {
         let manifest = bundle().manifest;
         let topic_contribution = &manifest.topic_contributions[0];

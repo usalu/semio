@@ -74,7 +74,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn folds_pieces_and_connections_across_every_design() {
         let entries = compute_semio_kit_entries(&populated());
         assert_eq!(entries.type_count, 2);
@@ -87,13 +87,13 @@ mod tests {
         assert_eq!(entries.representation_count, 0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = populated();
         assert_eq!(compute_semio_kit_entries(&snapshot), compute_semio_kit_entries(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(compute_semio_kit_entries(&SemioKitSnapshot::default()), SemioKitEntries::default());
     }

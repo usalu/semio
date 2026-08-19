@@ -62,7 +62,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn censuses_declared_column_kinds_and_dimensions() {
         let shape = compute_semio_table_shape(&populated());
         assert_eq!(shape.column_count, 3);
@@ -75,13 +75,13 @@ mod tests {
         assert_eq!(shape.bytes_column_count, 0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = populated();
         assert_eq!(compute_semio_table_shape(&snapshot), compute_semio_table_shape(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(compute_semio_table_shape(&SemioTableSnapshot::default()), SemioTableShape::default());
     }

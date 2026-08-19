@@ -129,14 +129,14 @@ mod tests {
     use super::*;
     use crate::wfc_engine::bitset::PatternSet;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn rejects_negative_and_nonfinite() {
         assert!(WeightTable::new(&[1.0, -1.0]).is_err());
         assert!(WeightTable::new(&[1.0, f64::NAN]).is_err());
         assert!(WeightTable::new(&[1.0, f64::INFINITY]).is_err());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn precomputes_terms() {
         let t = WeightTable::new(&[1.0, core::f64::consts::E]).unwrap();
         assert_eq!(t.w(PatternId(0)), 1.0);
@@ -144,14 +144,14 @@ mod tests {
         assert!((t.w_ln_w(PatternId(1)) - core::f64::consts::E).abs() < 1e-9);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn zero_weight_terms_are_zero_not_nan() {
         let t = WeightTable::new(&[0.0, 2.0]).unwrap();
         assert_eq!(t.ln_w(PatternId(0)), 0.0);
         assert_eq!(t.w_ln_w(PatternId(0)), 0.0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn integer_detection() {
         let t = WeightTable::new(&[1.0, 3.0, 5.0]).unwrap();
         assert!(t.has_integer_weights());
@@ -161,7 +161,7 @@ mod tests {
         assert!(!f.has_integer_weights());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn sum_over_matches_manual() {
         let t = WeightTable::new(&[1.0, 2.0, 4.0]).unwrap();
         let mut set = PatternSet::new_empty(3);

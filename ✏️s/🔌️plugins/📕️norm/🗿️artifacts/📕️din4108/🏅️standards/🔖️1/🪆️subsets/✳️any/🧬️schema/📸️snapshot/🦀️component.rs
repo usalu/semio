@@ -61,7 +61,7 @@ crate::impl_norm_artifact_record!(Din4108Snapshot, extension = "din4108", envelo
 //#endregion 🔖️HandcraftedArtifactCodecs
 
 impl Default for Din4108Snapshot {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self {
             category: "residential".into(),
             layers: vec![LayerDocument { thickness_m: 0.24, lambda_w_mk: 0.81 }, LayerDocument { thickness_m: 0.14, lambda_w_mk: 0.035 }],

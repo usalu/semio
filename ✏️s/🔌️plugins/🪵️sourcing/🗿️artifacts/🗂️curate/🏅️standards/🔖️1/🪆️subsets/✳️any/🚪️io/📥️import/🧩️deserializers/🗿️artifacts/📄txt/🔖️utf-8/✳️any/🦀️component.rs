@@ -26,7 +26,7 @@ pub struct TxtIntoCurate;
 impl Deserializer<CurateSnapshot> for TxtIntoCurate {
     const FROM: Dialect = TXT_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    async fn deserialize(payload: &IoPayload) -> IoResult<CurateSnapshot> {
+    fn deserialize(payload: &IoPayload) -> IoResult<CurateSnapshot> {
         let IoPayload::Text(text) = payload else {
             return Err(IoError { message: "TxtIntoCurate: expected a text txt payload".to_string(), diagnostics: Vec::new() });
         };

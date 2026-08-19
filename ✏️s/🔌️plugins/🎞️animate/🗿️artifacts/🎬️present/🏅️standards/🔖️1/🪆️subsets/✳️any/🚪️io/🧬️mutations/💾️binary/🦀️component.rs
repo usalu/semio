@@ -61,7 +61,7 @@ mod tests {
     use crate::artifacts::present::schema::mutations::{create_tile, replace_tiles};
     use store::{os_store::test_support, ArtifactCommand};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_binary_round_trips_and_agrees_with_text() {
         let operation = PresentMutation::ReplaceTiles(replace_tiles::mutation::ReplaceTiles { new_tiles: Vec::new() });
         test_support::assert_op_text_binary_equivalence(&operation);
@@ -69,7 +69,7 @@ mod tests {
         assert_eq!(decode_op(&bytes).expect("decode"), operation);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn envelope_helpers_round_trip() {
         let envelope = create_present_envelope("deck-1");
         let json = serde_json::to_string(&envelope).expect("serialize");
@@ -78,7 +78,7 @@ mod tests {
         assert!(crate::artifacts::present::present_working_scene(&deck).1.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn present_deck_materializes() {
         let mut store = PresentStore::new(create_document_envelope(PRESENT_DOCUMENT_SCHEMA, "animate-present", empty_present_snapshot(), None)).expect("valid artifact store fixture");
         store
@@ -91,7 +91,7 @@ mod tests {
     }
 
     //#region 🔖️DocumentTextTests
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn document_text_round_trip_with_operation_applied() {
         let mut store = PresentStore::new(create_document_envelope(PRESENT_DOCUMENT_SCHEMA, "animate-present", crate::artifacts::present::default_present_snapshot(), None)).expect("valid artifact store fixture");
         store

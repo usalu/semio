@@ -21,7 +21,7 @@ pub struct NoteIntoPdf;
 impl Serializer<NoteSnapshot> for NoteIntoPdf {
     const INTO: Dialect = PDF_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    async fn serialize(from: &NoteSnapshot) -> IoResult<IoPayload> {
+    fn serialize(from: &NoteSnapshot) -> IoResult<IoPayload> {
         let (w, h) = note_document_bounds(from);
         let mut text = String::new();
         if let Some(title) = &from.title {

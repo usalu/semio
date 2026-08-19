@@ -59,7 +59,7 @@ mod tests {
     use crate::editor::forms::testkit::{forms_app, render as render_body};
     use crate::editor::forms::FORMS_PLAY_BODY_CATALOGUE as BODY_CATALOGUE;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn catalogue_lists_question_kinds() {
         let mut app = forms_app();
         let json = render_body(&mut app, BODY_CATALOGUE);
@@ -67,7 +67,7 @@ mod tests {
         assert!(json.contains("forms-play-catalogue.add-step"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn catalogue_items_export_the_question_kind_drag_mime() {
         let mut app = forms_app();
         let json = render_body(&mut app, BODY_CATALOGUE);

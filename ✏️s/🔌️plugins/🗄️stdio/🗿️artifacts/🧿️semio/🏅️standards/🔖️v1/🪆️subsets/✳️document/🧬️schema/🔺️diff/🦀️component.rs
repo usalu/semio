@@ -193,7 +193,7 @@ pub enum DocBlockDiff {
 /// (only satisfies the trait bound); `Replace{block: DocBlock::default()}` is the least-surprising
 /// technically-valid value (a no-op replace onto the default `PageBreak`).
 impl Default for DocBlockDiff {
-    async fn default() -> Self {
+    fn default() -> Self {
         DocBlockDiff::Replace { block: DocBlock::default() }
     }
 }
@@ -1673,7 +1673,7 @@ mod tests {
     /// 🧪️ `DiffCodec` round-trip laws — exercises the recursive enum tree (`DocBlockDiff`'s
     /// Paragraph/Table variants, incl. a nested table-cell block list), tri-states, and every
     /// removed/modified/added flavor via a real `between()` result in both directions.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn diff_codec_text_binary_roundtrip_law() {
         let a = snapshot_a();
         let b = snapshot_b();

@@ -114,7 +114,7 @@ mod tests {
         snapshot
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn plan_chains_each_pose_to_its_immediate_predecessor() {
         let snapshot = two_pose_snapshot();
         let steps = RemodelRelativeCameraPose::plan(&snapshot);
@@ -123,14 +123,14 @@ mod tests {
         assert_eq!(steps[1].parents, vec!["c0".to_string()]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn first_pose_has_zero_delta() {
         let snapshot = two_pose_snapshot();
         let values = store::infer_field::<RemodelSnapshot, RemodelRelativeCameraPose>(&snapshot, None);
         assert_eq!(values["c0"], RemodelPoseDelta::default());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn a_pure_translation_step_reports_no_rotation_and_the_exact_offset() {
         let snapshot = two_pose_snapshot();
         let values = store::infer_field::<RemodelSnapshot, RemodelRelativeCameraPose>(&snapshot, None);
@@ -141,7 +141,7 @@ mod tests {
         assert_eq!(delta.translation_delta[2], 0.0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn a_90_degree_yaw_step_reports_the_exact_angle() {
         let mut snapshot = two_pose_snapshot();
         // 🌀 90° rotation about +Z: quaternion (w, x, y, z) = (cos45°, 0, 0, sin45°).
@@ -151,7 +151,7 @@ mod tests {
         assert!((values["c1"].rotation_angle_rad - std::f64::consts::FRAC_PI_2).abs() < 1e-6);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn identical_snapshots_produce_byte_identical_deltas() {
         let snapshot = two_pose_snapshot();
         let first = store::infer_field::<RemodelSnapshot, RemodelRelativeCameraPose>(&snapshot, None);
@@ -159,7 +159,7 @@ mod tests {
         assert_eq!(first, second);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn changing_an_earlier_pose_changes_the_dep_input_of_a_later_key_indirectly_through_its_own_chain() {
         // 🔗 dep_input for "c1" only covers c1's own bytes by design (see the fn's own docstring) —
         // the earlier pose's change reaches c1 through DepHash::chain folding c0's hash, which is

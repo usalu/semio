@@ -511,7 +511,7 @@ mod tests {
     }
 
     //#region mutation_diff_law
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mutation_diff_law_matches_apply_pdf_mutation() {
         let base = base_snapshot();
         let cases = vec![
@@ -541,7 +541,7 @@ mod tests {
     //#endregion mutation_diff_law
 
     //#region inverse_law
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mutation_apply_inverse_round_trips_every_variant() {
         let base = base_snapshot();
         round_trips(&base, PdfMutation::NoMutation);
@@ -566,7 +566,7 @@ mod tests {
         round_trips(&base, PdfMutation::RemoveTrailerEntry { key: "Size".into() });
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_dict_entry_nested_path_round_trips() {
         let mut base = base_snapshot();
         base.objects.push(PdfIndirectObject { id: oref(4, 0), value: PdfObject::Dict(vec![PdfDictEntry { key: "Kids".into(), value: PdfObject::Array(vec![PdfObject::Dict(vec![PdfDictEntry { key: "Rotate".into(), value: PdfObject::Int(0) }])]) }]) });
@@ -575,7 +575,7 @@ mod tests {
         round_trips(&base, PdfMutation::RemoveDictEntry { id: oref(4, 0), path, key: "Rotate".into() });
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn remove_page_out_of_range_is_noop_not_panic() {
         let base = base_snapshot();
         let mut snap = base.clone();
@@ -583,7 +583,7 @@ mod tests {
         assert_eq!(snap, base);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_dict_entry_unresolvable_path_is_noop_not_panic() {
         let base = base_snapshot();
         let mut snap = base.clone();
@@ -594,7 +594,7 @@ mod tests {
     //#endregion inverse_law
 
     //#region field_sweep (see 🔺️diff module's own field_sweep tests for the full snapshot-level sweep)
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn field_sweep_mutation_vocabulary_covers_every_snapshot_field() {
         // 📏 One mutation exists (or composes via SetSnapshot) per top-level PdfSnapshot field:
         // declaredVersion (via SetSnapshot), info (SetInfo), pages (Insert/Remove/SetMediaBox/
@@ -621,7 +621,7 @@ mod tests {
     /// exercises every variant, incl. `SetSnapshot`'s full object-graph payload (`PdfObject::
     /// Array`/`Dict`/`Stream`/`Ref` recursion), `SetPageCropBox`'s tri-state-like `Option<[f64;4]>`
     /// arg, and `SetDictEntry`/`RemoveDictEntry`'s `path: Vec<PdfPathSegment>` (both segment kinds).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_text_binary_roundtrip_law() {
         let base = base_snapshot();
         let mutations = vec![

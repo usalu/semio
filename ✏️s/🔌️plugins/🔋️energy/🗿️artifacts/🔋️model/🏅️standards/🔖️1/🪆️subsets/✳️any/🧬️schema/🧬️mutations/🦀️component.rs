@@ -69,7 +69,7 @@ mod tests {
         forward
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn every_variant_registers_an_approved_semantic_descriptor() {
         for mutation in every_mutation() {
             let descriptor = protocol::SemanticMutation::semantics(&mutation);
@@ -78,7 +78,7 @@ mod tests {
         assert_eq!(<EnergyModelMutation as protocol::SemanticMutation<EnergyModelSnapshot>>::kinds().len(), every_mutation().len(), "kinds() must register exactly one descriptor per dispatch variant");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn every_variant_round_trips_via_inverse() {
         let base = EnergyModelSnapshot::default();
         for mutation in every_mutation() {
@@ -87,7 +87,7 @@ mod tests {
     }
 
     //#region 🧪️MutationLaws
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn replace_model_satisfies_the_inverse_and_absorb_laws() {
         let base = EnergyModelSnapshot::default();
         let mutation = EnergyModelMutation::ReplaceModel(replace_model::mutation::ReplaceModel { new_model_json: demo_model_json("a") });

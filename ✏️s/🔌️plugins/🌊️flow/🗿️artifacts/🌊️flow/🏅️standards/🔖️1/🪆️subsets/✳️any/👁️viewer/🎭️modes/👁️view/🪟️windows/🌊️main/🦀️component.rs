@@ -113,14 +113,14 @@ pub async fn render(document: &FlowSnapshot) -> UiNode {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn definition_declares_the_node_graph_surface_and_body_key() {
         let definition = definition();
         assert_eq!(definition.body_key, BODY_KEY);
         assert!(matches!(definition.surface_kind, SurfaceKind::NodeGraph));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn renders_node_graph_scene_for_the_default_document() {
         let document = FlowSnapshot::default();
         let json = serde_json::to_string(&render(&document)).expect("render json");

@@ -317,7 +317,7 @@ mod tests {
 
     /// 🧪️ `mutation_diff_law`: every variant's `diff()` matches what `apply_semio_audio_mutation`
     /// returns.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mutation_diff_law() {
         let base = base_snapshot();
         for mutation in all_variants(&base) {
@@ -330,7 +330,7 @@ mod tests {
     }
 
     /// 🧪️ `inverse_law` (mutation-level): every variant round-trips.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mutation_apply_inverse_round_trips_every_variant() {
         let base = base_snapshot();
         for mutation in all_variants(&base) {
@@ -338,7 +338,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn remove_channel_out_of_range_is_noop_not_panic() {
         let base = base_snapshot();
         let mut snap = base.clone();
@@ -348,7 +348,7 @@ mod tests {
 
     /// 🧪️ `op_text_binary_roundtrip_law`: hand-rolled `OpText`/`OpBinary` round-trip over the
     /// full variant vocabulary.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_text_binary_roundtrip_law() {
         let base = base_snapshot();
         for mutation in all_variants(&base) {

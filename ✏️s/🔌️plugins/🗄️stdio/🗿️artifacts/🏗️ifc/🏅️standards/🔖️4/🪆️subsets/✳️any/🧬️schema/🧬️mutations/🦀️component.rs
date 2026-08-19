@@ -427,7 +427,7 @@ mod tests {
     use protocol::command::DiffAlgebra;
     use protocol::MutationDiff;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn missing_entity_target_is_rejected_before_mutation() {
         let base = IfcSnapshot::default();
         let diff = IfcDiff { entities: Some(IfcEntitiesDiff { removed: vec![1], ..Default::default() }), ..Default::default() };
@@ -464,7 +464,7 @@ mod tests {
         assert_eq!(expected_diff.diff().apply(base).expect("valid mutation diff"), applied_snapshot, "diff.diff().apply(base) must equal the imperative mutation result for {mutation:?}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mutation_diff_law() {
         let base = base_snapshot();
         assert_mutation_diff_law(&base, IfcMutation::NoMutation);
@@ -484,7 +484,7 @@ mod tests {
     //#endregion 🔖️mutation_diff_law
 
     //#region 🔖️inverse_law
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inverse_law() {
         let base = base_snapshot();
         let variants = vec![
@@ -525,7 +525,7 @@ mod tests {
         assert_eq!(merged.apply(base).expect("valid absorbed diff"), sequential, "absorb(d1,d2).apply(base) must equal sequential application for {m1:?} + {m2:?}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_law() {
         let base = base_snapshot();
 
@@ -552,7 +552,7 @@ mod tests {
         assert_absorb_law(&base, IfcMutation::SetFileDescription { values: vec![IfcValue::String("first".into())] }, IfcMutation::SetFileDescription { values: vec![IfcValue::String("second".into())] });
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_law_associativity() {
         let base = base_snapshot();
         let d1 = IfcMutation::SetFileDescription { values: vec![IfcValue::String("one".into())] }.diff(&base);
@@ -576,7 +576,7 @@ mod tests {
     //#endregion 🔖️absorb_law
 
     //#region 🔖️between_roundtrip_law
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn between_roundtrip_law() {
         let a = base_snapshot();
         let mut b = base_snapshot();
@@ -594,7 +594,7 @@ mod tests {
     //#endregion 🔖️between_roundtrip_law
 
     //#region 🔖️codec_retention_law
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn codec_retention_law() {
         let text = std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🗿️artifacts/🏗️ifc/📚️examples/🎬️demo/🖼️assets/🏗️example.ifc"));
         let text = match text {
@@ -650,7 +650,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn field_sweep_covers_every_mutable_field() {
         let a = sweep_a();
         let b = sweep_b();
@@ -686,7 +686,7 @@ mod tests {
     }
     //#endregion 🔖️field_sweep
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn out_of_range_entity_mutation_is_rejected_without_mutating() {
         let base = base_snapshot();
         let mut snap = base.clone();
@@ -702,7 +702,7 @@ mod tests {
     /// 🧪️ F6: `OpText`/`OpBinary` round-trip laws for the hand-rolled `IfcMutation` grammar —
     /// exercises every variant incl. `SetSnapshot`'s whole-snapshot payload and every `IfcValue`
     /// tag (`Unset`/`Derived`/`Integer`/`Real`/`String`/`Enum`/`Reference`/`Aggregate`/`TypedValue`).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_text_binary_roundtrip_law() {
         let base = base_snapshot();
         let mutations = vec![

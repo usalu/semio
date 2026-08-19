@@ -364,13 +364,13 @@ mod tests {
     use semio_framework_os_kernel::os_store::test_support;
     use store::{ArtifactDsl};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dsl_round_trip_empty_projection() {
         test_support::assert_dsl_round_trip(&Procedural3dSnapshot::default());
         test_support::assert_dsl_pack_equivalence(&Procedural3dSnapshot::default());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dsl_round_trip_every_bundled_example() {
         for text in [
             PROCEDURAL3D_EXAMPLE_HEX_COLUMN_TEXT,
@@ -388,7 +388,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn command_envelope_round_trip_holds_for_an_applied_operation() {
         use crate::artifacts::procedural3d::op::Procedural3dMutation;
         use protocol::{ArtifactId, Edit, SchemaId};

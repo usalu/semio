@@ -905,7 +905,7 @@ mod tests {
     /// ⚖️ Every row round trips through BOTH projections, and its printed line starts with the row's own
     /// wire keyword — the guard that catches a missing `#[dsl(keyword = ..)]` on a payload struct, which
     /// no round-trip law alone would notice.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn every_command_variant_roundtrips_and_prints_its_wire_keyword() {
         let keywords: Vec<&str> = vec![
             "run-reconstruction",
@@ -962,7 +962,7 @@ mod tests {
     /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM deleted the `setSelection` row ahead of it) —
     /// a legitimate wire break on this greenfield repo, not a bug. A reordered row or a changed field
     /// order breaks these immediately.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn optional_field_rows_keep_their_pre_migration_bytes() {
         let hex = |command: &RemodelCommand| command.encode_op().expect("encode").iter().map(|byte| format!("{byte:02x}")).collect::<String>();
         assert_eq!(hex(&RemodelCommand::RunReconstruction(run_reconstruction::RunReconstruction {})), "01000000", "fieldless row 0");
@@ -979,7 +979,7 @@ mod tests {
     /// 🏷️ Every manifest action id and every wire keyword is distinct — the cross-cutting invariant
     /// `app_commands!` exists to keep true (the fixture lists `setFrameCursor` twice on purpose, so the
     /// row count, not the fixture length, is what must dedupe cleanly).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn command_ids_and_wire_keywords_are_unique_per_row() {
         let mut ids: Vec<&str> = every_command().iter().map(RemodelCommand::command_id).collect();
         ids.sort_unstable();
@@ -993,7 +993,7 @@ mod tests {
     }
     /// 🌉️ The action bridge covers every action the manifest declares (framework-injected ones aside)
     /// and rejects anything else — the gap this migration closed (see `command_from_action`'s doc).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn command_from_action_covers_every_declared_action_and_rejects_unknown_ones() {
         testkit::assert_declared_actions_bridge_to_commands::<EditorApp<RemodelPlayApp>>(remodel_app_manifest_for_testkit);
         assert!(RemodelPlayApp::command_from_action("nonsense", None).is_err());
@@ -1001,7 +1001,7 @@ mod tests {
 
     /// 🌉️ Select-typed args arrive as strings; numeric-option selects (`textureSize`) must still land in
     /// a `u32` field, and a `setCamera` payload is accepted both flat and `{camera:{…}}`-nested.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn the_action_bridge_coerces_select_strings_and_both_camera_arg_shapes() {
         let mesh = RemodelPlayApp::command_from_action("setMeshParams", Some(&serde_json::json!({ "textureSize": "4096" }))).expect("bridge");
         let RemodelCommand::SetMeshParams(payload) = mesh else { panic!("expected SetMeshParams") };
@@ -1015,7 +1015,7 @@ mod tests {
     //#endregion 🔖️CommandSurface
 
     /// 🖼️ Render smoke test: every window/panel body key this app declares must render without panicking.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn render_does_not_panic_for_known_body_keys() {
         let mut app = app();
         for body_key in [
@@ -1034,14 +1034,14 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn render_unknown_body_key_reports_it_by_name() {
         let mut app = app();
         assert!(render(&mut app, "remodel.play.nope").contains("Unknown body: remodel.play.nope"));
     }
 
     //#region 🔖️ManifestSanity
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn the_manifest_declares_three_modes_three_windows_and_this_apps_panel_tabs() {
         let definition = create_remodel_app().definition;
         assert_eq!(definition.modes.len(), 3);
@@ -1051,7 +1051,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn remodel_io_declares_photos_in_and_mesh_out_on_the_manifest() {
         let app = create_remodel_app();
         assert!(app.definition.media_inputs.iter().any(|port| port.id == "photos:in"));
@@ -1060,7 +1060,7 @@ mod tests {
 
     /// 🧰️ The registry-backed app enforces View/Shell kind discipline — a view row must not slip
     /// through as an operation.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn view_rows_dispatch_cleanly_against_the_real_registry() {
         let mut app = app_with_registry();
         let result = testkit::meta("local");
@@ -1072,7 +1072,7 @@ mod tests {
     /// field edits (A tunes feature params, B adds a ground control point), and exchanging operations
     /// over a `MemoryBackbone` converges both sides to contain BOTH edits — impossible under a
     /// whole-document `setDocument` snapshot, where one side's write would clobber the other's.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn two_instances_converge_disjoint_edits_via_backbone() {
         testkit::assert_two_instances_converge::<EditorApp<RemodelPlayApp>, _>(
             "mem://remodel-convergence",
@@ -1088,7 +1088,7 @@ mod tests {
     //#region 🔖️MediaPortTests
     /// 🔌️ `photos:in` inserts an incoming photo as one new frame on the well-known workflow-photos
     /// stream, creating it on the first import and appending on subsequent ones.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn import_media_photos_in_creates_and_appends_to_the_workflow_stream() {
         let app = app();
         let projection = app.snapshot().expect("projection");
@@ -1124,7 +1124,7 @@ mod tests {
     }
 
     /// 🔌️ `mesh:out` exports the current reconstructed mesh as a GLB-encoded `3d.mesh` `Media`.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn export_media_mesh_out_exports_a_structured_3d_mesh() {
         let app = app();
         let projection = app.snapshot().expect("projection");
@@ -1146,7 +1146,7 @@ mod tests {
     //#region 🔖️IoTests
     /// 🧪️ Relocated from the artifact's `⚙️engine/🦀️component.rs` (#2553): `remodel_io()` returns
     /// `AppIo` and lives app-side now, so its own declaration test travels with it.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn remodel_io_declares_photos_in_and_mesh_out() {
         let io = remodel_io();
         assert_eq!(io.document_schema, "remodel.scene");

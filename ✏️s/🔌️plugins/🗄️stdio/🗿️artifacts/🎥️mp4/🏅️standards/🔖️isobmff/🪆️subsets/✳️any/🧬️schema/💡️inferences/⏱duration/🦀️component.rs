@@ -51,7 +51,7 @@ mod tests {
         Mp4Track { timescale, samples: sample_durations.iter().map(|&d| Mp4Sample { duration: d, ..Mp4Sample::default() }).collect(), ..Mp4Track::default() }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn container_duration_is_bounded_by_the_slowest_ending_track() {
         let snapshot = Mp4Snapshot {
             tracks: vec![
@@ -66,7 +66,7 @@ mod tests {
         assert!((duration.duration_seconds - 0.132).abs() < 1e-9, "got {duration:?}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn zero_timescale_track_contributes_zero_not_a_panic() {
         let snapshot = Mp4Snapshot { tracks: vec![track(0, &[10, 10])], ..Mp4Snapshot::default() };
         let duration = compute_mp4_duration(&snapshot);
@@ -74,13 +74,13 @@ mod tests {
         assert_eq!(duration.sample_count, 2);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = Mp4Snapshot { tracks: vec![track(600, &[600])], ..Mp4Snapshot::default() };
         assert_eq!(compute_mp4_duration(&snapshot), compute_mp4_duration(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(compute_mp4_duration(&Mp4Snapshot::default()), Mp4Duration::default());
     }

@@ -60,13 +60,13 @@ mod tests {
     use super::*;
     use crate::editor::imperative::testkit::{imperative_app, render as render_body};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn document_lists_steps() {
         let mut app = imperative_app();
         assert!(render_body(&mut app, IMPERATIVE_PLAY_BODY_DOCUMENT).contains("imperative-play-document.steps"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn definition_binds_the_framework_document_tab_to_this_body_key() {
         let definition = definition();
         assert_eq!(definition.id(), FRAMEWORK_PANEL_TAB_ARTIFACT_ID);

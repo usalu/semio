@@ -534,7 +534,7 @@ pub mod univariate {
             PolyU::from_coeffs(coeffs.into_iter().map(|c| r(c, 1)).collect())
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn ring_axioms_on_small_polynomials() {
             let a = poly(vec![1, 2, 3]);
             let b = poly(vec![0, 1]);
@@ -544,7 +544,7 @@ pub mod univariate {
             assert_eq!(prod.coeffs(), &[r(0, 1), r(1, 1), r(2, 1), r(3, 1)]);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn div_rem_identity_holds() {
             let a = poly(vec![-1, 0, 1]); // x^2 - 1
             let b = poly(vec![-1, 1]); // x - 1
@@ -553,19 +553,19 @@ pub mod univariate {
             assert_eq!(q, poly(vec![1, 1])); // x + 1
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn derivative_power_rule() {
             let f = poly(vec![0, 0, 0, 1]); // x^3
             assert_eq!(f.derivative(), poly(vec![0, 0, 3])); // 3x^2
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn eval_horner_matches_direct_computation() {
             let f = poly(vec![1, 2, 3]); // 1 + 2x + 3x^2
             assert_eq!(f.eval(&r(2, 1)), r(1 + 4 + 12, 1));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn gcd_hand_case() {
             // (x^2 - 1)(x + 2) and (x^2 - 1)(x - 5) share gcd (x^2 - 1) up to a unit.
             let common = poly(vec![-1, 0, 1]);
@@ -576,7 +576,7 @@ pub mod univariate {
             assert_eq!(g, g_monic_common);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn resultant_of_coprime_linear_factors_is_nonzero() {
             let a = poly(vec![-1, 1]); // x - 1
             let b = poly(vec![-2, 1]); // x - 2
@@ -584,7 +584,7 @@ pub mod univariate {
             assert_ne!(res, r(0, 1));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn resultant_of_shared_root_is_zero() {
             let a = poly(vec![-1, 0, 1]); // x^2 - 1, roots +-1
             let b = poly(vec![-1, 1]); // x - 1, root 1 (shared)
@@ -592,7 +592,7 @@ pub mod univariate {
             assert_eq!(res, r(0, 1));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn factor_x2_minus_1_via_squarefree_and_roots() {
             let f = poly(vec![-1, 0, 1]);
             let decomposition = f.squarefree_decomposition();
@@ -600,7 +600,7 @@ pub mod univariate {
             assert_eq!(decomposition[0].1, 1);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn squarefree_decomposition_of_repeated_factor() {
             let base = poly(vec![-1, 1]); // (x - 1)
             let f = base.mul(&base).mul(&base); // (x-1)^3
@@ -608,14 +608,14 @@ pub mod univariate {
             assert!(decomposition.iter().any(|(factor, mult)| *factor == base.make_monic() && *mult == 3));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn interpolate_reconstructs_quadratic() {
             let points = vec![(r(0, 1), r(1, 1)), (r(1, 1), r(6, 1)), (r(2, 1), r(15, 1))]; // f(x) = 2x^2+3x+1
             let f = PolyU::interpolate(&points).unwrap();
             assert_eq!(f, poly(vec![1, 3, 2]));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn rational_root_via_eval_hand_case() {
             // 6x^2 - 5x + 1 = 0 has roots 1/2, 1/3
             let f = PolyU::from_coeffs(vec![r(1, 1), r(-5, 1), r(6, 1)]);
@@ -730,7 +730,7 @@ pub mod multivariate {
     }
 
     impl<C: Ring> PartialEq for PolyM<C> {
-        async fn eq(&self, other: &Self) -> bool {
+        fn eq(&self, other: &Self) -> bool {
             // Compare canonically regardless of stored order: both term lists are already order-sorted,
             // but two PolyM values with different `order` fields can still represent the same polynomial,
             // so compare as sets via a Lex-sorted clone.
@@ -1003,21 +1003,21 @@ pub mod multivariate {
             Monomial::new(exps)
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn monomial_ordering_lex() {
             let a = mono(vec![2, 0]);
             let b = mono(vec![1, 5]);
             assert_eq!(a.cmp_by(&b, MonomialOrder::Lex), std::cmp::Ordering::Greater);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn monomial_ordering_grlex_uses_total_degree_first() {
             let a = mono(vec![1, 0]); // degree 1
             let b = mono(vec![0, 2]); // degree 2
             assert_eq!(a.cmp_by(&b, MonomialOrder::GrLex), std::cmp::Ordering::Less);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn try_div_and_lcm() {
             let a = mono(vec![2, 3]);
             let b = mono(vec![1, 1]);
@@ -1026,7 +1026,7 @@ pub mod multivariate {
             assert_eq!(a.lcm(&b), mono(vec![2, 3]));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn ring_ops_hand_case() {
             // f = x + y, g = x - y ; f*g = x^2 - y^2
             let x = PolyM::<Rational>::var(0, 2, MonomialOrder::Lex);
@@ -1038,7 +1038,7 @@ pub mod multivariate {
             assert_eq!(prod, expected);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn eval_hand_case() {
             let x = PolyM::<Rational>::var(0, 2, MonomialOrder::Lex);
             let y = PolyM::<Rational>::var(1, 2, MonomialOrder::Lex);
@@ -1046,7 +1046,7 @@ pub mod multivariate {
             assert_eq!(f.eval(&[r(3), r(2)]), r(11));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn groebner_basis_of_line_intersection() {
             // {x^2 + y^2 - 1, x - y} over Q: eliminating gives a univariate relation in y.
             let x = PolyM::<Rational>::var(0, 2, MonomialOrder::Lex);
@@ -1063,7 +1063,7 @@ pub mod multivariate {
             }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn partial_derivative_hand_case() {
             let x = PolyM::<Rational>::var(0, 2, MonomialOrder::Lex);
             let y = PolyM::<Rational>::var(1, 2, MonomialOrder::Lex);
@@ -1262,7 +1262,7 @@ pub mod finite {
             PolyU::from_coeffs(coeffs.into_iter().map(|c| m(c, p)).collect())
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn poly_mod_pow_matches_repeated_squaring() {
             let p = 7;
             let base = poly(vec![1, 1], p); // x + 1
@@ -1275,7 +1275,7 @@ pub mod finite {
             assert_eq!(via_fast, via_slow);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn is_irreducible_hand_cases() {
             let p = 5;
             // x^2 + 1 is irreducible mod 5? -1 is not a QR mod 5 (5 % 4 == 1, so -1 IS a QR actually).
@@ -1286,7 +1286,7 @@ pub mod finite {
             assert!(!is_irreducible(&g));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn distinct_degree_factor_separates_degrees() {
             let p = 5;
             let deg1 = poly(vec![-1, 1], p); // x - 1
@@ -1297,7 +1297,7 @@ pub mod finite {
             assert!(groups.iter().any(|(_, d)| *d == 2));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn equal_degree_factor_splits_product_of_two_linears() {
             let p = 7;
             let a = poly(vec![-1, 1], p); // x - 1
@@ -1310,7 +1310,7 @@ pub mod finite {
             assert_eq!(product, f);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn factor_mod_p_reconstructs_via_multiplication() {
             let p = 11;
             let a = poly(vec![-1, 1], p); // x - 1
@@ -1709,7 +1709,7 @@ pub mod factor {
             PolyU::from_coeffs(coeffs.into_iter().map(Integer::from_i64).collect())
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn factor_x2_minus_1() {
             let f = ipoly(vec![-1, 0, 1]); // x^2 - 1 = (x-1)(x+1)
             let (content, factors) = factor_integer_poly(&f);
@@ -1722,7 +1722,7 @@ pub mod factor {
             assert_eq!(factors.len(), 2);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn factor_x4_minus_1() {
             let f = ipoly(vec![-1, 0, 0, 0, 1]); // x^4 - 1 = (x-1)(x+1)(x^2+1)
             let (_, factors) = factor_integer_poly(&f);
@@ -1734,7 +1734,7 @@ pub mod factor {
             assert!(factors.len() >= 2);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn factor_repeated_linear_factor() {
             let base = ipoly(vec![-1, 1]); // x - 1
             let f = base.mul(&base).mul(&base); // (x-1)^3
@@ -1747,7 +1747,7 @@ pub mod factor {
             assert!(factors.iter().any(|(factor, mult)| *factor == base && *mult == 3));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn factor_irreducible_quadratic_stays_whole() {
             let f = ipoly(vec![1, 0, 1]); // x^2 + 1, irreducible over Q
             let (_, factors) = factor_integer_poly(&f);
@@ -1755,7 +1755,7 @@ pub mod factor {
             assert_eq!(factors[0].1, 1);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn factor_nonmonic_quadratic() {
             let f = ipoly(vec![-3, -1, 2]); // 2x^2 - x - 3 = (2x - 3)(x + 1)
             let (content, factors) = factor_integer_poly(&f);
@@ -1766,7 +1766,7 @@ pub mod factor {
             assert_eq!(product, f);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn rational_roots_of_quadratic() {
             let f = PolyU::from_coeffs(vec![Rational::from_i64(1, 1).unwrap(), Rational::from_i64(-5, 1).unwrap(), Rational::from_i64(6, 1).unwrap()]); // 6x^2 - 5x + 1
             let roots = rational_roots(&f);
@@ -1776,7 +1776,7 @@ pub mod factor {
             }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn rational_roots_with_zero_root() {
             let f = PolyU::from_coeffs(vec![Rational::zero(), Rational::from_i64(-1, 1).unwrap(), Rational::from_i64(1, 1).unwrap()]); // x^2 - x = x(x-1)
             let roots = rational_roots(&f);
@@ -1928,7 +1928,7 @@ pub mod roots {
             PolyU::from_coeffs(coeffs.into_iter().map(Integer::from_i64).collect())
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn isolate_roots_of_simple_quadratic() {
             let f = ipoly(vec![-2, 0, 1]); // x^2 - 2, roots +-sqrt(2)
             let intervals = isolate_real_roots(&f);
@@ -1939,7 +1939,7 @@ pub mod roots {
             }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn isolate_roots_matches_known_integer_roots() {
             // (x-1)(x-3)(x+2)
             let f = ipoly(vec![6, -1, -4, 1]);
@@ -1947,7 +1947,7 @@ pub mod roots {
             assert_eq!(intervals.len(), 3);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn refine_root_converges_to_sqrt2() {
             let f = ipoly(vec![-2, 0, 1]);
             let intervals = isolate_real_roots(&f);
@@ -1958,14 +1958,14 @@ pub mod roots {
             assert!((approx - std::f64::consts::SQRT_2).abs() < 1e-5);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn cauchy_bound_contains_all_roots() {
             let f = ipoly(vec![6, -1, -4, 1]); // roots -2, 1, 3
             let bound = cauchy_root_bound(&f);
             assert!(bound >= Rational::from_i64(3, 1).unwrap());
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn wilkinson_like_small_case_root_count() {
             // (x-1)(x-2)(x-3)(x-4)
             let f = ipoly(vec![-1, 1]).mul(&ipoly(vec![-2, 1])).mul(&ipoly(vec![-3, 1])).mul(&ipoly(vec![-4, 1]));
@@ -1973,7 +1973,7 @@ pub mod roots {
             assert_eq!(intervals.len(), 4);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn zero_polynomial_and_constant_have_no_roots() {
             assert!(isolate_real_roots(&ipoly(vec![])).is_empty());
             assert!(isolate_real_roots(&ipoly(vec![5])).is_empty());
@@ -2315,7 +2315,7 @@ pub mod algebraic {
             PolyU::from_coeffs(coeffs.into_iter().map(Integer::from_i64).collect())
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn sqrt2_plus_sqrt3_has_minimal_poly_degree_4() {
             let sqrt2 = AlgebraicReal::nth_root(&Rational::from_i64(2, 1).unwrap(), 2).unwrap();
             let sqrt3 = AlgebraicReal::nth_root(&Rational::from_i64(3, 1).unwrap(), 2).unwrap();
@@ -2327,7 +2327,7 @@ pub mod algebraic {
             assert!(sum.degree() <= 4);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn cbrt2_times_cbrt4_equals_2() {
             let cbrt2 = AlgebraicReal::nth_root(&Rational::from_i64(2, 1).unwrap(), 3).unwrap();
             let cbrt4 = AlgebraicReal::nth_root(&Rational::from_i64(4, 1).unwrap(), 3).unwrap();
@@ -2335,7 +2335,7 @@ pub mod algebraic {
             assert!((product.to_f64() - 2.0).abs() < 1e-6);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn from_rational_is_exact() {
             let r = Rational::from_i64(3, 4).unwrap();
             let a = AlgebraicReal::from_rational(&r);
@@ -2343,7 +2343,7 @@ pub mod algebraic {
             assert_eq!(a.to_f64(), r.to_f64());
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn neg_and_inv_hand_cases() {
             let sqrt2 = AlgebraicReal::nth_root(&Rational::from_i64(2, 1).unwrap(), 2).unwrap();
             let negated = sqrt2.neg();
@@ -2352,7 +2352,7 @@ pub mod algebraic {
             assert!((inv.to_f64() - 1.0 / 2f64.sqrt()).abs() < 1e-6);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn root_of_selects_correct_irreducible_factor() {
             // (x-1)(x^2-2): roots are 1, -sqrt2, sqrt2 in ascending order.
             let f = ipoly(vec![-1, 1]).mul(&ipoly(vec![-2, 0, 1]));

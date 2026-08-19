@@ -41,7 +41,7 @@ pub struct GisTerrainSnapshot {
 }
 
 impl Default for GisTerrainSnapshot {
-    async fn default() -> Self {
+    fn default() -> Self {
         let mesh = Some(gis_terrain_mesh_child_handle(&gis_terrain_mesh_content_key(0.0, "")));
         Self { exaggeration: 0.0, imported_features_json: String::new(), mesh }
     }

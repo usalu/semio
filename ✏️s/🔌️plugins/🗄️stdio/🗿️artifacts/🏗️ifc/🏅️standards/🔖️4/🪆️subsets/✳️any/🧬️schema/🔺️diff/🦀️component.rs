@@ -1327,7 +1327,7 @@ mod handcrafted_diff_codec_tests {
     /// 🧪️ F6: `DiffCodec` round-trip laws over the hand-rolled `IfcDiff` grammar — exercises every
     /// `IfcValue` variant (incl. `Aggregate`/`TypedValue` recursion), the `entities` collection
     /// triple, and the nested per-entity `args` collection triple + `complex` weak-list replace.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn diff_codec_text_binary_roundtrip_law() {
         let a = base();
         let mut b = base();

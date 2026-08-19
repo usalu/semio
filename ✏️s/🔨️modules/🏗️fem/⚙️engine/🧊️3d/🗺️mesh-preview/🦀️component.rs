@@ -88,7 +88,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fem3d_mesh_preview_returns_solid_tets_and_boundary() {
         let doc = solid_slab_doc();
         let previews = fem3d_mesh_preview(&doc).expect("mesh preview succeeds");
@@ -102,7 +102,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fem3d_nodal_von_mises_returns_finite_values_for_solid() {
         let mut doc = solid_slab_doc();
         doc.load_cases = vec![FemLoadCase { id: "pressure".into(), name: "Pressure".into(), loads: vec![crate::artifacts::fem3d::FemLoad::Area { id: "a1".into(), solid_id: "sol1".into(), pressure: 8000.0 }], self_weight: false }];

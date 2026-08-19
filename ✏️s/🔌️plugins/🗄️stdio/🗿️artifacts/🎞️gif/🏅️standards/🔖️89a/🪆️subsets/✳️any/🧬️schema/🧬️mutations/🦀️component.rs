@@ -405,7 +405,7 @@ mod tests {
     }
 
     /// 🧪️ `mutation_diff_law`: every variant's `diff()` matches what `apply_gif_mutation` returns.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mutation_diff_law() {
         let base = base_snapshot();
         for mutation in [
@@ -440,7 +440,7 @@ mod tests {
     }
 
     /// 🧪️ `inverse_law` (mutation-level): every variant round-trips.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mutation_apply_inverse_round_trips_every_variant() {
         let base = base_snapshot();
         round_trips(&base, GifMutation::NoMutation);
@@ -467,7 +467,7 @@ mod tests {
         round_trips(&base, GifMutation::RemoveAppExtension { index: 0 });
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn remove_frame_out_of_range_is_noop_not_panic() {
         let base = base_snapshot();
         let mut snap = base.clone();
@@ -477,7 +477,7 @@ mod tests {
 
     /// 🧪️ F6-PILOT: `OpText`/`OpBinary` round-trip laws over the full ~20-variant vocabulary
     /// (handcrafted impls over the `dsl::DslOps`-derived `DslVariants`).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_text_binary_roundtrip_law() {
         let base = base_snapshot();
         for mutation in [

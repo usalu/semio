@@ -36,7 +36,7 @@ mod tests {
     use super::*;
     use crate::editor::remodel::testkit::{app, render as render_body};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn an_empty_track_list_renders_the_documented_gap_message() {
         let mut app = app();
         assert!(render_body(&mut app, REMODEL_PLAY_BODY_TRACKS).contains("No motion tracks"));

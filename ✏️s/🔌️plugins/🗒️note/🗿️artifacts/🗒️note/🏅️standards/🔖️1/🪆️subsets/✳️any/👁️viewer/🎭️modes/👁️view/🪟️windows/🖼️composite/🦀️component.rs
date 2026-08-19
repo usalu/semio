@@ -60,14 +60,14 @@ pub async fn render(document: &NoteSnapshot) -> UiNode {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn definition_declares_an_ink_canvas_window() {
         let def = definition();
         assert_eq!(def.id, WINDOW_KIND_ID);
         assert_eq!(def.surface_kind, SurfaceKind::InkCanvas);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn render_produces_a_read_only_ink_canvas_scene_for_the_empty_document() {
         let document = crate::artifacts::note::schema::empty_note_snapshot();
         let node = render(&document);

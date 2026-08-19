@@ -213,7 +213,7 @@ mod tests {
         dsl::to_dsl_value(&json!({ "id": id, "nodeKind": "identity", "shape": "circle", "x": 0.0, "y": 0.0, "radius": 24.0, "text": text, "handles": [] })).unwrap()
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn apply_adds_node_via_board_fixture_delta() {
         let snapshot = empty_wires_snapshot();
         let diff = diff_board_fixture(board_after_add_node(&snapshot, &node("node-1", "Alpha")));
@@ -221,7 +221,7 @@ mod tests {
         assert_eq!(crate::artifacts::wires::wires_working_board(&after).get("nodes").and_then(|value| value.as_array()).map(|items| items.len()), Some(1));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_replace_wins() {
         let mut diff = diff_board_fixture(board_after_add_node(&empty_wires_snapshot(), &node("node-1", "Alpha")));
         let replacement = empty_wires_snapshot();

@@ -35,7 +35,7 @@ pub struct EnergyModelSnapshot {
 }
 
 impl Default for EnergyModelSnapshot {
-    async fn default() -> Self {
+    fn default() -> Self {
         energy_snapshot_with_state(ENERGY_MODEL_DOCUMENT_SCHEMA, crate::model::Model::default(), None)
     }
 }
@@ -269,7 +269,7 @@ mod round_trip_tests {
     /// slot — must survive both hand-rolled codecs (text and binary), independently. Codec
     /// completeness is not caught by `cargo check`; this is the real round-trip proof the migration
     /// recipe requires.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn structure_zones_and_referenced_model_round_trip_through_text_and_binary() {
         let snapshot = sample_with_composition();
         let text = store::ArtifactDsl::print_dsl(&snapshot);
@@ -281,7 +281,7 @@ mod round_trip_tests {
         assert_eq!(from_binary, snapshot);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absent_link_slot_round_trips_as_none() {
         let mut snapshot = sample_with_composition();
         snapshot.referenced_model = None;
@@ -294,7 +294,7 @@ mod round_trip_tests {
     /// 🧪️ `energy_structure_from_model`/`energy_model_from_structure` round-trip the whole `Model`
     /// losslessly through the generic JSON<->`SemioValue` bridge — the real codec-completeness proof
     /// for the artifact root's `🔖️Converters` region.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn model_round_trips_through_the_structure_child_content() {
         let model = crate::model::Model {
             name: "Demo".into(),

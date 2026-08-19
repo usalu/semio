@@ -129,7 +129,7 @@ pub struct PlySnapshot {
 }
 
 impl Default for PlySnapshot {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { schema: STDIO_PLY_DOCUMENT_SCHEMA.into(), format: PlyFormat::default(), comments: Vec::new(), elements: Vec::new() }
     }
 }

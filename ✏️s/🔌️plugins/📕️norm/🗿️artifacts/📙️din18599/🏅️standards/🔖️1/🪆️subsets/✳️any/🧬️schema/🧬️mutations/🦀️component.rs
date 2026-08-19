@@ -130,7 +130,7 @@ mod tests {
         forward
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn every_variant_registers_an_approved_semantic_descriptor() {
         for mutation in every_mutation() {
             let descriptor = protocol::SemanticMutation::semantics(&mutation);
@@ -139,7 +139,7 @@ mod tests {
         assert_eq!(<Din18599Mutation as protocol::SemanticMutation<Din18599Snapshot>>::kinds().len(), every_mutation().len(), "kinds() must register exactly one descriptor per dispatch variant");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn every_variant_round_trips_via_inverse() {
         let base = Din18599Snapshot::default();
         for mutation in every_mutation() {
@@ -147,7 +147,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn from_snapshot_round_trips_via_full_document_replacement() {
         let base = Din18599Snapshot::default();
         let target = Din18599Snapshot::default();
@@ -165,7 +165,7 @@ mod tests {
     /// (reachable here as `protocol::os_spr::testkit`), exercised against three structurally distinct
     /// variants: the nested-facet `update-climate`, an enum scalar (`change-use-class`), and a plain
     /// `f64` scalar (`change-heated-area-m2`).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn update_climate_satisfies_the_inverse_and_absorb_laws() {
         let base = Din18599Snapshot::default();
         let mutation = Din18599Mutation::UpdateClimate(update_climate::mutation::UpdateClimate {
@@ -176,7 +176,7 @@ mod tests {
         let d2 = Din18599Mutation::ChangeUseClass(change_use_class::mutation::ChangeUseClass { new_use_class: crate::artifacts::din18599::UseClass::Office }).diff(&base).diff().clone();
         protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn change_use_class_satisfies_the_inverse_and_absorb_laws() {
         let base = Din18599Snapshot::default();
         let mutation = Din18599Mutation::ChangeUseClass(change_use_class::mutation::ChangeUseClass { new_use_class: crate::artifacts::din18599::UseClass::Office });
@@ -185,7 +185,7 @@ mod tests {
         let d2 = Din18599Mutation::ChangeHeatedAreaM2(change_heated_area_m2::mutation::ChangeHeatedAreaM2 { new_heated_area_m2: 120.0 }).diff(&base).diff().clone();
         protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn change_heated_area_m2_satisfies_the_inverse_and_absorb_laws() {
         let base = Din18599Snapshot::default();
         let mutation = Din18599Mutation::ChangeHeatedAreaM2(change_heated_area_m2::mutation::ChangeHeatedAreaM2 { new_heated_area_m2: 120.0 });

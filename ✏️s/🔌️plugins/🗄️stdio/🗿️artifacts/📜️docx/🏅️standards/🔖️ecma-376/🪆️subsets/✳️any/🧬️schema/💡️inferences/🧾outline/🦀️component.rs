@@ -58,7 +58,7 @@ mod tests {
     use super::*;
     use crate::artifacts::docx::schema::snapshot::{DocxDocument, DocxTable, DocxTableCell, DocxTableRow};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn counts_paragraphs_tables_and_words_including_nested_cells() {
         let snapshot = DocxSnapshot {
             schema: "stdio.docx".into(),
@@ -80,7 +80,7 @@ mod tests {
         assert_eq!(outline.word_count, 5); // "hello world" (2) + "nested cell text" (3)
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn outline_is_deterministic() {
         let snapshot = DocxSnapshot::default();
         assert_eq!(DocxOutline::compute(&snapshot), DocxOutline::compute(&snapshot));

@@ -115,3 +115,6 @@ path = "../../🔨️modules/📡️spr/⌨️cli/📦️main.rs"
 [[bin]]
 name = "semio"
 path = "../../🔨️modules/🧬️semio/📦️bin.rs"
+
+[dev-dependencies]
+semio-framework-async-macros = { path = "../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }

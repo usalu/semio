@@ -48,7 +48,7 @@ mod tests {
         crate::artifacts::forms::schema::flatten_questions(&app.snapshot().expect("projection")).into_iter().map(|(_, question)| question).find(|question| question.kind == "single").expect("single question").id
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_and_remove_question_option_round_trip() {
         let mut app = forms_app();
         let question_id = single_or_multi_question_id(&mut app);

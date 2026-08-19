@@ -56,7 +56,7 @@ semio_framework_plugin::extension_exports!(bundle);
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn bundle_contributes_spatial_shape_for_cad_play() {
         let manifest = bundle().manifest;
         assert_eq!(manifest.extends, "cad");

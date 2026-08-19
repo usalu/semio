@@ -36,7 +36,7 @@ impl protocol::Inference<SemioVideoSnapshot> for SemioVideoInference {
 /// `infer` keeps the law correct even if that default ever stops being all-empty (the same
 /// defensive pattern raster's `RasterInference` documents).
 impl Default for SemioVideoInference {
-    async fn default() -> Self {
+    fn default() -> Self {
         <Self as protocol::Inference<SemioVideoSnapshot>>::infer(&SemioVideoSnapshot::default())
     }
 }
@@ -87,13 +87,13 @@ mod tests {
     use super::*;
     use protocol::Inference;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = SemioVideoSnapshot::default();
         assert_eq!(SemioVideoInference::infer(&snapshot), SemioVideoInference::infer(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(SemioVideoInference::infer(&SemioVideoSnapshot::default()), SemioVideoInference::default());
     }

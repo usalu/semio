@@ -50,7 +50,7 @@ pub struct FormsArtifact {
 
 //#region 🔖️Conversions
 impl Default for FormsArtifact {
-    async fn default() -> Self {
+    fn default() -> Self {
         let empty = forms_snapshot_with_state(FORMS_DOCUMENT_SCHEMA.into(), "forms".into(), "1".into(), None, Vec::new());
         Self {
             schema: empty.schema,
@@ -307,7 +307,7 @@ mod tests {
     use super::*;
     use serde_json::json;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn locate_question_finds_a_question_anywhere_in_the_document() {
         let spec = building_component_spec();
         let steps = forms_steps(&spec);
@@ -316,13 +316,13 @@ mod tests {
         assert_eq!(location.step_id, steps[0].id);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn update_block_operation_returns_none_for_a_missing_question() {
         let spec = empty_forms_snapshot();
         assert!(update_block_operation(&spec, "missing", |question| question.label = "x".into()).is_none());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn update_block_operation_patches_the_located_question() {
         let mut spec = building_component_spec();
         let question_id = forms_steps(&spec)[0].blocks[0].id.clone();
@@ -336,17 +336,17 @@ mod tests {
             .expect("valid mutation diff")
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_form_id_is_unique_per_call() {
         assert_ne!(create_form_id("q"), create_form_id("q"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn forms_play_step_tree_id_prefixes_with_step() {
         assert_eq!(forms_play_step_tree_id("s1"), "step:s1");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dsl_value_conversions_round_trip_through_json() {
         // 🩹️ A whole-number float (e.g. `6.0`) round-trips through `dsl::DslValue` as the integer-typed
         // `serde_json::Number` (`6`), which does not `==` the float-typed literal despite being numerically
@@ -358,13 +358,13 @@ mod tests {
         assert_eq!(dsl_f64_value(&value_to_dsl(&json!(42.5))), 42.5);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn flatten_questions_lists_every_block_across_steps() {
         let spec = onboarding_example_spec();
         assert!(!flatten_questions(&spec).is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn json_value_helpers_stringify_primitives() {
         assert_eq!(json_string_value(&json!("a")), "a");
         assert_eq!(json_string_value(&json!(true)), "true");
@@ -373,7 +373,7 @@ mod tests {
         assert_eq!(json_f64_value(&Value::Null), 0.0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn default_and_onboarding_examples_parse_and_serialize() {
         assert!(!default_example_json().is_empty());
         assert!(!onboarding_example_json().is_empty());

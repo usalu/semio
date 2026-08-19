@@ -106,13 +106,13 @@ mod tests {
         process_working_scene_to_snapshot(&scene, Workshop { machines: vec![circular_saw_machine()] }, Some(2))
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn process3d_dsl_round_trips() {
         store::os_store::test_support::assert_dsl_round_trip(&sample_document());
         store::os_store::test_support::assert_dsl_round_trip(&empty_process3d_snapshot());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn process3d_dsl_round_trips_imported_solid_shapes() {
         let scene = ProcessWorkingScene {
             stock: imported_mesh_stock(),
@@ -127,20 +127,20 @@ mod tests {
         store::os_store::test_support::assert_dsl_round_trip(&document);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn process3d_dsl_round_trips_with_no_resolved_cursor() {
         let mut document = sample_document();
         document.resolved_up_to = None;
         store::os_store::test_support::assert_dsl_round_trip(&document);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn timber_example_fixture_parses_and_round_trips() {
         let document = parse_dsl(PROCESS_3D_TIMBER_EXAMPLE_TEXT).expect("parse timber example");
         store::os_store::test_support::assert_dsl_round_trip(&document);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn drilled_plate_example_fixture_parses_and_round_trips() {
         let document = parse_dsl(PROCESS_3D_PLATE_EXAMPLE_TEXT).expect("parse drilled plate example");
         assert_eq!(document.resolved_up_to, Some(2));

@@ -23,7 +23,7 @@ mod tests {
     use crate::editor::procedural3d::testkit::{app, dispatch};
     use crate::editor::procedural3d::Procedural3dCommand;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_locale_updates_config_locale() {
         let _serial = crate::editor::procedural3d::test_support::lock();
         let mut app = app();

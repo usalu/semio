@@ -102,7 +102,7 @@ pub struct SemioKitSnapshot {
 }
 
 impl Default for SemioKitSnapshot {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { schema: STDIO_SEMIOKIT_DOCUMENT_SCHEMA.into(), types: Vec::new(), designs: Vec::new(), objects: Vec::new(), models: Vec::new(), properties: None, representations: Vec::new() }
     }
 }
@@ -594,7 +594,7 @@ pub(crate) async fn demo_kit_snapshot() -> SemioKitSnapshot {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn json_pack_round_trips() {
         let snap = SemioKitSnapshot::default();
         let bytes = <SemioKitSnapshot as store::ArtifactPack>::encode_pack(&snap);
@@ -602,7 +602,7 @@ mod tests {
         assert_eq!(snap, back);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dsl_text_round_trips() {
         let snap = SemioKitSnapshot::default();
         let text = <SemioKitSnapshot as store::ArtifactDsl>::print_dsl(&snap);
@@ -610,7 +610,7 @@ mod tests {
         assert_eq!(snap, back);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn codec_retention_law() {
         let snap = demo_kit_snapshot();
         let bytes = <SemioKitSnapshot as store::ArtifactPack>::encode_pack(&snap);
@@ -623,7 +623,7 @@ mod tests {
 
     /// 🧪️ A parent snapshot NEVER embeds owned-child content — only handles. Links are references
     /// by design (never owned), so this proves both composition primitives stay handle-only.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn parent_snapshot_stores_only_handles_never_child_content() {
         let snap = demo_kit_snapshot();
         let text = <SemioKitSnapshot as store::ArtifactDsl>::print_dsl(&snap);

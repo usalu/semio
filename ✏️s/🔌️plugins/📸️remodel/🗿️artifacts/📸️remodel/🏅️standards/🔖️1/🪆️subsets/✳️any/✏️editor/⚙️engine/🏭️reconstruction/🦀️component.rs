@@ -29,7 +29,7 @@ pub struct IngestParams {
 }
 
 impl Default for IngestParams {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { stride: 1, max_frames: 0, min_sharpness: 0.3, rolling_window: 15 }
     }
 }
@@ -64,7 +64,7 @@ pub enum EngineError {
 }
 
 impl std::fmt::Display for EngineError {
-    async fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Video(e) => write!(f, "video ingest error: {e}"),
         }
@@ -74,7 +74,7 @@ impl std::fmt::Display for EngineError {
 impl std::error::Error for EngineError {}
 
 impl From<remodel_video::VideoError> for EngineError {
-    async fn from(e: remodel_video::VideoError) -> Self {
+    fn from(e: remodel_video::VideoError) -> Self {
         Self::Video(e)
     }
 }
@@ -239,7 +239,7 @@ pub struct EngineParams {
 }
 
 impl Default for EngineParams {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self {
             ingest: IngestParams::default(),
             assumed_focal_ratio: 1.0,
@@ -1015,7 +1015,7 @@ mod tests {
     // #endregion 🔖️TestFixtures
 
     // #region 🔖️InputTests
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn push_frame_blur_gate_rejects_planted_blurred_frame() {
         let mut source = FrameSource::new(IngestParams::default());
         let mut outcomes = Vec::new();
@@ -1032,7 +1032,7 @@ mod tests {
         assert_eq!(source.accepted_count(), 9);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn push_frame_stride_and_max_frames_sample() {
         let mut source = FrameSource::new(IngestParams { stride: 2, max_frames: 3, min_sharpness: 0.0, rolling_window: 15 });
         let mut accepted = 0;
@@ -1045,7 +1045,7 @@ mod tests {
         assert_eq!(source.accepted_count(), 3);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn push_video_blur_gate_reports_counts() {
         let frames: Vec<Vec<u8>> = (0..9u32)
             .map(|i| {
@@ -1277,7 +1277,7 @@ mod tests {
         engine.take_mesh().expect("Done status must yield a mesh")
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn chunking_does_not_change_the_final_mesh() {
         // 🎯️ This test's contract is narrower than `mod long`'s: it proves `advance`'s step-budget
         // chunking never changes the *outcome* (same triangle/vertex counts, same positions, byte-for-
@@ -1311,7 +1311,7 @@ mod tests {
     // #endregion 🔖️ChunkingInvariance
 
     // #region 🔖️ParamsAndPreviewTests
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn orbit_sfm_registers_enough_cameras_for_gauge() {
         const N_FRAMES: usize = 16;
         const SIZE: u32 = 96;
@@ -1340,7 +1340,7 @@ mod tests {
         assert!(cams >= 3, "need >= 3 registered cameras for Sim3 gauge alignment, got {cams}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn orbit_sfm_survives_jpeg_video_ingest() {
         const N_FRAMES: usize = 16;
         const SIZE: u32 = 128;
@@ -1375,7 +1375,7 @@ mod tests {
         assert!(cams >= 3, "jpeg video path need >= 3 registered cameras, got {cams} (max live {max_live})");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn sparse_preview_is_empty_before_any_advance() {
         let engine = ReconstructionEngine::new(&EngineParams::default());
         let preview = engine.sparse_preview();
@@ -1383,7 +1383,7 @@ mod tests {
         assert!(preview.packed_points.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn advance_fails_with_fewer_than_two_frames() {
         let mut engine = ReconstructionEngine::new(&EngineParams::default());
         engine.push_frame(0, checker_frame(16, 16, 4), 0.0);
@@ -1409,7 +1409,7 @@ mod tests {
         /// contract — the mesh pipeline's own watertight report, captured at `Stage::Validate2` right
         /// before `Unwrap`/texturing legitimately duplicates vertices at UV chart seams, reports
         /// `is_watertight == true`.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn video_in_yields_watertight_mesh_out() {
             const N_FRAMES: usize = 24;
             const SIZE: u32 = 128;

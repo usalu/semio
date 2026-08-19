@@ -32,7 +32,7 @@ impl protocol::Inference<ObjSnapshot> for ObjInference {
 /// 🌱 Defined in terms of `infer` (not derived) — keeps the law correct regardless of whether
 /// `ObjSnapshot::default()`'s `vertices`/`faces`/`groups` ever stop being empty.
 impl Default for ObjInference {
-    async fn default() -> Self {
+    fn default() -> Self {
         <Self as protocol::Inference<ObjSnapshot>>::infer(&ObjSnapshot::default())
     }
 }
@@ -84,13 +84,13 @@ mod tests {
     use super::*;
     use protocol::Inference;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = ObjSnapshot::default();
         assert_eq!(ObjInference::infer(&snapshot), ObjInference::infer(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(ObjInference::infer(&ObjSnapshot::default()), ObjInference::default());
     }

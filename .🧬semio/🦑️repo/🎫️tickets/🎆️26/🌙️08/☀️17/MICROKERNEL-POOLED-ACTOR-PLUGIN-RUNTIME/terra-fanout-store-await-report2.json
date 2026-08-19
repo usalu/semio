@@ -1,0 +1,41 @@
+{
+  "crate": "semio-framework-os-kernel",
+  "history": [
+    {
+      "pass": 1,
+      "errors": 97,
+      "edits": 0,
+      "ambiguous": 0,
+      "other": 5
+    }
+  ],
+  "residual_errors": 97,
+  "ambiguous": [],
+  "other": [
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:629",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🧬️schema/🦀️component.rs:97",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5128",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5181",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:8143",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    }
+  ]
+}

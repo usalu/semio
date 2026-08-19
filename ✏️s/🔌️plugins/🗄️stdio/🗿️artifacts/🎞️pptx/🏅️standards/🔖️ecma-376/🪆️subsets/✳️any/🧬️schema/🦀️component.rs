@@ -28,7 +28,7 @@ pub struct PptxArtifact {
 
 //#region Conversions
 impl Default for PptxArtifact {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self::from_snapshot(PptxSnapshot::default())
     }
 }
@@ -364,7 +364,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn builder_produces_minimal_valid_package_that_decodes_back() {
         let snap = build_minimal_pptx(sample_presentation());
         let bytes = encode_pptx(&snap).expect("encode minimal package");
@@ -378,7 +378,7 @@ mod tests {
         assert!(decoded.xml_parts.iter().any(|part| part.path == THEME_PART));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn decode_resolves_real_hand_built_package_with_shape_boundaries_and_position() {
         // Hand-built OOXML: a slide with TWO real shapes -- a positioned placeholder title and a
         // positioned picture -- exercising real shape-BOUNDARY recovery (not flattened text) and
@@ -432,7 +432,7 @@ mod tests {
         assert_eq!(*position, PptxTransform { x: 5, y: 6, cx: 7, cy: 8 });
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn decode_preserves_unmodeled_shape_kinds_as_logical_other() {
         // A `p:graphicFrame` (chart/table/SmartArt) direct child -- not typed by this layer --
         // must survive decode->encode->decode as a logical `PptxShape::Other` XML node.
@@ -477,7 +477,7 @@ mod tests {
         assert_eq!(re_decoded.presentation, decoded.presentation);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn decode_resolves_strict_office_document_relationship_too() {
         // 🏅️ A genuine ISO/IEC 29500-1 Strict package's root relationship carries
         // `REL_TYPE_OFFICE_DOCUMENT_STRICT`, never the Transitional type this engine's own writer
@@ -504,7 +504,7 @@ mod tests {
         assert_eq!(decoded.presentation.slides.len(), 0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn decode_rejects_missing_presentation_relationship() {
         let mut opc = OpcPackage::empty();
         opc.content_types.set_default("rels", RELS_CONTENT_TYPE);
@@ -513,7 +513,7 @@ mod tests {
         assert_eq!(err, PptxError::MissingPresentationRelationship);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn unmodeled_slide_master_survives_decode_encode_logically() {
         let snap = build_minimal_pptx(sample_presentation());
         // Replace the synthesized slide master with a distinguishable "real" one before encoding.
@@ -529,7 +529,7 @@ mod tests {
         assert_eq!(re_decoded.presentation, sample_presentation());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn analyzer_builder_round_trip() {
         let original = build_minimal_pptx(sample_presentation());
         let bytes = encode_pptx(&original).expect("encode");
@@ -540,7 +540,7 @@ mod tests {
         assert_eq!(reanalyzed.presentation, analyzed.presentation);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn shrinking_slide_count_drops_stale_slide_parts_and_relationships() {
         let mut wide = sample_presentation();
         let snap_wide = build_minimal_pptx(wide.clone());
@@ -553,7 +553,7 @@ mod tests {
         assert_eq!(decoded.presentation.slides.len(), 1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn repeated_materialization_is_deterministic() {
         let snap = build_minimal_pptx(sample_presentation());
         let once = encode_pptx(&snap).expect("first materialization");
@@ -682,7 +682,7 @@ mod tests {
         panic!("exact fixture has no positioned shape");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fixture_survives_logical_io_persistence_diff_and_mutation_pipelines() {
         use crate::artifacts::pptx::{PptxDiff, PptxMutation};
         use protocol::{DiffAlgebra, DiffCodec, Mutation, MutationDiff, OpBinary, OpText};
@@ -815,7 +815,7 @@ mod tests {
         /// parse under the real dialect -- independent of, and cheaper than, the two
         /// `recognize`/`walk_protocol` laws below (a parse failure here fails fast with a clearer
         /// message).
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn committed_facet_files_parse() {
             for (label, text) in [("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO)] {
                 let grammar = dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
@@ -836,7 +836,7 @@ mod tests {
         /// same real codec `opc::decode_opc` itself delegates to) and recognizes EACH real
         /// modeled part's own text against the grammar -- direct proof the grammar matches this
         /// artifact's own real per-part XML bytes, not an invented approximation.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn grammar_conformance_law() {
             let grammar = dsl::parse_grammar(snapshot::text::COMPONENT_GRAMMAR_SEMIO).expect("parse snapshot grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
@@ -861,7 +861,7 @@ mod tests {
 
         /// ✅️ `ops_grammar_conformance_law`: the mutations grammar recognizes real `print_op`
         /// output for every `PptxMutation` variant (`mutations::demo_mutation_cases()`).
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn ops_grammar_conformance_law() {
             let grammar = dsl::parse_grammar(mutations::text::COMPONENT_GRAMMAR_SEMIO).expect("parse mutations grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
@@ -873,7 +873,7 @@ mod tests {
 
         /// ✅️ `diff_grammar_conformance_law`: the diff grammar recognizes real `print_diff` output
         /// for every representative `PptxDiff` (`diff::demo_diff_cases()`).
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn diff_grammar_conformance_law() {
             let grammar = dsl::parse_grammar(diff::text::COMPONENT_GRAMMAR_SEMIO).expect("parse diff grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
@@ -892,7 +892,7 @@ mod tests {
         /// exception, `📖️grammar-recipe.md` §2.3) -- assert a sane in-range `consumed` there
         /// instead, same as zip's/docx's own `protocol_walk_law` does; the op/diff protocols have
         /// no such exception and must consume every byte.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn protocol_walk_law() {
             let pack_spec = dsl::parse_protocol(snapshot::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
             let demo = demo_pptx_snapshot();
@@ -921,7 +921,7 @@ mod tests {
         /// demo()`, `print_dsl(demo()) == fixture` (byte-for-byte), and the pack twin -- so the
         /// fixtures can never silently drift back to a fake `"68656c6c6f"`-style placeholder again
         /// (see this ticket's own recon note on the pre-FG-wave state of these two files).
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn fixture_honesty_law() {
             const FIXTURE_DSL: &str = include_str!("../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
             const FIXTURE_PACK: &[u8] = include_bytes!("../📚️examples/🎬️demo/🖼️assets/🎒️example.pack.semio");

@@ -38,7 +38,7 @@ mod tests {
     use crate::artifacts::sequence::{default_snapshot, SequenceSnapshot, SequenceStep, StepParams};
     use neural_engine::{Atom, Value};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_binary_round_trips_and_agrees_with_text() {
         let mutation = move_step_for_test();
         store::os_store::test_support::assert_op_text_binary_equivalence(&mutation);
@@ -52,7 +52,7 @@ mod tests {
 
     /// 🧪️ Whole-store round trip: applies a mutation through a real `SequenceStore`, then proves
     /// the resulting envelope survives both the text and binary document-level protocols.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn sequence_document_text_round_trips_store_with_applied_mutation() {
         let envelope = store::create_document_envelope::<SequenceSnapshot, SequenceMutation>(crate::artifacts::sequence::SEQUENCE_DOCUMENT_SCHEMA, "sequence-text-test", default_snapshot(), None);
         let mut doc_store = store::ArtifactStore::new(envelope).expect("valid artifact store fixture");
@@ -67,7 +67,7 @@ mod tests {
     }
 
     //#region 🔖️OpTextTests
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_text_round_trips_create_step() {
         store::os_store::test_support::assert_op_line_round_trip(&create_step(SequenceStep {
             id: "step-99".into(),
@@ -80,17 +80,17 @@ mod tests {
         }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_text_round_trips_delete_step() {
         store::os_store::test_support::assert_op_line_round_trip(&delete_step("step-99".into()));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_text_round_trips_move_step() {
         store::os_store::test_support::assert_op_line_round_trip(&move_step_for_test());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_text_round_trips_connect_steps() {
         store::os_store::test_support::assert_op_line_round_trip(&connect_steps("edge-2".into(), "step-2".into(), "step-3".into()));
     }

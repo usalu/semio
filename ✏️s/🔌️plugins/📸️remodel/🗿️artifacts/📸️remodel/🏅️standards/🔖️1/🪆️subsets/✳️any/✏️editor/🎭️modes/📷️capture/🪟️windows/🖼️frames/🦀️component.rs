@@ -80,12 +80,12 @@ mod tests {
     use crate::editor::remodel::testkit::{app, render as render_body};
     use crate::artifacts::remodel::default_remodel_scene;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn an_unset_frame_cursor_renders_no_layers() {
         assert_eq!(frames_layers_json(&default_remodel_scene(), &RemodelFrameCursor::default()), "[]");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn renders_a_canvas_2d_surface() {
         let mut app = app();
         assert!(render_body(&mut app, REMODEL_PLAY_BODY_FRAMES).contains(REMODEL_PLAY_SURFACE_FRAMES));

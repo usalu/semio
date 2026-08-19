@@ -164,14 +164,14 @@ mod tests {
     }
 
     //#region 🔖️Behavior
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn rename_and_change_part_kind_round_trip() {
         let base = empty_block5d_snapshot();
         let renamed = round_trip(&base, &rename_part_kind("Renamed".into()));
         assert_eq!(renamed.part_kind.name, "Renamed");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn update_part_2d_and_part_3d_round_trip() {
         let base = empty_block5d_snapshot();
         let after2d = round_trip(&base, &update_part_2d(Some("circle".into()), Some(0.4), None, None, Some("#fff".into()), None));
@@ -180,7 +180,7 @@ mod tests {
         assert_eq!(after3d.part_3d.orientation, Some([0.0, 0.0, 0.0, 1.0]));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_rename_tag_attribute_delete_representation_round_trip() {
         let base = empty_block5d_snapshot();
         let representation = BlockRepresentation { id: "r0".into(), name: "r0".into(), mesh_url: None, tags: Vec::new(), lod: None, description: String::new(), attributes: Vec::new() };
@@ -194,7 +194,7 @@ mod tests {
         assert!(deleted.representations.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_rename_delete_grip_kind_round_trip() {
         let base = empty_block5d_snapshot();
         let grip_kind = Block5dGripKind { id: "gk0".into(), name: "gk0".into(), label: "GK0".into(), color: "#888".into(), default_rope_kind: "rope.link".into() };
@@ -206,7 +206,7 @@ mod tests {
         assert!(deleted.grip_kinds.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_move_resize_delete_grip_round_trip() {
         let base = seeded_snapshot();
         let grip = Block5dGripTemplate { id: "g1".into(), grip_kind: "gk0".into(), angle: 0.0, radius_2d: 0.2, position: [0.0, 0.0, 0.0], direction: [0.0, 1.0, 0.0], radius_3d: 0.2 };
@@ -222,7 +222,7 @@ mod tests {
         assert!(!deleted.grips.iter().any(|g| g.id == "g1"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_remove_compatibility_rule_round_trip() {
         let base = empty_block5d_snapshot();
         let rule = BlockCompatibilityRule { id: "c0".into(), source: "a".into(), target: "b".into(), bidirectional: true };
@@ -232,7 +232,7 @@ mod tests {
         assert!(removed.compatibility.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_remove_attribute_round_trip() {
         let base = empty_block5d_snapshot();
         let attribute = BlockAttribute { key: "material".into(), value: "concrete".into(), definition: None };
@@ -242,7 +242,7 @@ mod tests {
         assert!(removed.attributes.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_remove_author_round_trip() {
         let base = empty_block5d_snapshot();
         let author = BlockAuthor { id: "a0".into(), name: "Ada".into(), email: None };
@@ -252,7 +252,7 @@ mod tests {
         assert!(removed.authors.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn move_and_scale_both_cameras_round_trip() {
         let base = empty_block5d_snapshot();
         let moved2d = round_trip(&base, &move_camera2d(10.0, -4.0));
@@ -265,7 +265,7 @@ mod tests {
         assert_eq!(scaled3d.camera3d.zoom, 1.5);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn change_meta_description_round_trips() {
         let base = empty_block5d_snapshot();
         let after = round_trip(&base, &change_meta_description("session notes".into()));
@@ -274,7 +274,7 @@ mod tests {
     //#endregion 🔖️Behavior
 
     //#region 🔖️MutationLaws
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn every_mutation_kind_satisfies_the_inverse_law() {
         let base = seeded_snapshot();
 
@@ -321,7 +321,7 @@ mod tests {
         assert_mutation_inverse_law(&base, &change_meta_description("notes".into()));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn change_part_kind_label_diff_absorb_law() {
         let base = empty_block5d_snapshot();
         let d1 = change_part_kind_label("first".into()).diff(&base).into_parts().0;
@@ -330,7 +330,7 @@ mod tests {
         assert_mutation_diff_absorb_law(&base, d1, d2);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn move_grip_2d_diff_absorb_law() {
         let base = seeded_snapshot();
         let d1 = move_grip_2d("g0".into(), 0.5, 0.3).diff(&base).into_parts().0;
@@ -339,7 +339,7 @@ mod tests {
         assert_mutation_diff_absorb_law(&base, d1, d2);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dispatch_registers_semantic_descriptors_with_approved_verbs() {
         register_block5d_mutation_descriptors();
         for kind in Block5dMutation::kinds() {
@@ -354,7 +354,7 @@ mod tests {
     // `📓️w3-f-block-puzzle-report.md` for the `assert_outcome_policy_matrix` pending-helper note.
     use protocol::testkit::{assert_fatal_never_applies, assert_missing_target_is_error};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn missing_target_is_error_per_verb_family() {
         let base = empty_block5d_snapshot();
         assert_missing_target_is_error(&base, &delete_grip_kind("missing".into())); // delete
@@ -363,7 +363,7 @@ mod tests {
         assert_missing_target_is_error(&base, &move_grip_2d("missing".into(), 1.0, 1.0)); // move/drag/rotate/scale/resize
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_duplicate_id_is_fatal_and_never_applies() {
         let mut base = empty_block5d_snapshot();
         let grip_kind = Block5dGripKind { id: "gk0".into(), name: "gk0".into(), label: "GK0".into(), color: "#888".into(), default_rope_kind: "rope.standard".into() };

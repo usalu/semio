@@ -125,14 +125,14 @@ pub mod derived_construction {
     mod tests {
         use super::*;
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn new_requires_output_intent_and_builds_clean() {
             let snapshot = PdfABuilderConstruction::new("sRGB IEC61966-2.1").add_page(PdfPage::new(200.0, 200.0)).set_info(PdfInfo { title: Some("A Test".into()), ..PdfInfo::default() }).build().expect("conforming construction must build");
             assert_eq!(snapshot.pages.len(), 1);
             assert_eq!(snapshot.info.title.as_deref(), Some("A Test"));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn hard_violation_injected_via_raw_mutate_still_fails_build() {
             let violating = PdfIndirectObject { id: ObjRef { num: 99, gen: 0 }, value: PdfObject::Dict(vec![PdfDictEntry { key: "S".into(), value: PdfObject::Name("Launch".into()) }]) };
             let mut snapshot = PdfABuilderConstruction::new("sRGB IEC61966-2.1").add_page(PdfPage::new(100.0, 100.0)).build().unwrap();
@@ -445,7 +445,7 @@ pub mod derived_analysis {
             ]
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn conforming_snapshot_with_output_intent_reports_only_level_info() {
             let snapshot = PdfSnapshot { objects: output_intent_objects("sRGB IEC61966-2.1"), ..PdfSnapshot::default() };
             let diagnostics = check_pdf_a_conformance(&snapshot);
@@ -454,7 +454,7 @@ pub mod derived_analysis {
             assert_eq!(diagnostics[0].severity, Severity::Info);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn missing_output_intent_is_soft_and_reports_no_level() {
             let snapshot = PdfSnapshot::default();
             let diagnostics = check_pdf_a_conformance(&snapshot);
@@ -464,7 +464,7 @@ pub mod derived_analysis {
             assert!(detect_pdfa_level(&snapshot).is_none());
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn encryption_dict_shape_is_hard() {
             let mut objects = output_intent_objects("sRGB IEC61966-2.1");
             objects.push(PdfIndirectObject {
@@ -482,7 +482,7 @@ pub mod derived_analysis {
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_ENCRYPT && d.severity == Severity::Error), "got {diagnostics:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn javascript_action_is_hard() {
             let mut objects = output_intent_objects("sRGB IEC61966-2.1");
             objects.push(PdfIndirectObject {
@@ -495,7 +495,7 @@ pub mod derived_analysis {
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_JAVASCRIPT && d.severity == Severity::Error));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn launch_action_is_hard() {
             let mut objects = output_intent_objects("sRGB IEC61966-2.1");
             objects.push(PdfIndirectObject {
@@ -507,7 +507,7 @@ pub mod derived_analysis {
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_LAUNCH && d.severity == Severity::Error), "got {diagnostics:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn non_embedded_font_is_soft() {
             let mut objects = output_intent_objects("sRGB IEC61966-2.1");
             objects.push(PdfIndirectObject {
@@ -523,7 +523,7 @@ pub mod derived_analysis {
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_FONT_NOT_EMBEDDED && d.severity == Severity::Warning), "got {diagnostics:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn embedded_font_via_descriptor_has_no_diagnostic() {
             let mut objects = output_intent_objects("sRGB IEC61966-2.1");
             objects.push(PdfIndirectObject {
@@ -543,7 +543,7 @@ pub mod derived_analysis {
             assert!(diagnostics.iter().all(|d| d.code.0 != CODE_FONT_NOT_EMBEDDED), "got {diagnostics:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn embedded_file_missing_afrelationship_is_hard() {
             let mut objects = output_intent_objects("sRGB IEC61966-2.1");
             objects.push(PdfIndirectObject {
@@ -558,7 +558,7 @@ pub mod derived_analysis {
             assert_eq!(detect_pdfa_level(&snapshot), Some(PdfALevel::L2b));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn embedded_file_with_afrelationship_detects_level_3b_and_is_clean() {
             let mut objects = output_intent_objects("sRGB IEC61966-2.1");
             objects.push(PdfIndirectObject {

@@ -18,7 +18,7 @@ pub struct DwgStructure {
 }
 
 impl Default for DwgStructure {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { layer_count: 0, entity_count: 0, geometry_value_count: 0, geometry_index_count: 0, text_character_count: 0, codepage: 0, version: String::new() }
     }
 }
@@ -44,7 +44,7 @@ mod tests {
     use super::*;
     use crate::artifacts::dwg::standards::v_ac1024::subsets::any::schema::snapshot::{DwgEntityBody, DwgEntityCommon, DwgLineEntity, DwgLogicalDrawing, DwgLogicalLayer, DwgLogicalObject, DwgLogicalObjectBody, DwgObjectCategory};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn structure_matches_hand_built_logical_drawing() {
         let snapshot = DwgSnapshot {
             schema: "s.stdio.dwg".into(),
@@ -81,13 +81,13 @@ mod tests {
         assert_eq!(structure.version, "AC1024");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = DwgSnapshot { schema: "s.stdio.dwg".into(), version: "AC1024".into(), codepage: 30, ..Default::default() };
         assert_eq!(compute_dwg_structure(&snapshot), compute_dwg_structure(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(compute_dwg_structure(&DwgSnapshot::default()), DwgStructure::default());
     }

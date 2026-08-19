@@ -47,7 +47,7 @@ mod tests {
     use crate::editor::lowpoly::testkit::{app, dispatch};
     use crate::editor::lowpoly::LowpolyCommand;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn patch_object_name_emits_operation() {
         let mut a = app();
         let object_id = a.snapshot().expect("projection").objects[0].id.clone();

@@ -17,7 +17,7 @@ pub async fn source() -> ExampleSource { ExampleSource::new(ID, label(), PRIMARY
 #[cfg(test)]
 mod tests {
     use super::*;
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn deck_source_nonempty() {
         assert!(!PRIMARY_TEXT.is_empty());
         let _ = source();

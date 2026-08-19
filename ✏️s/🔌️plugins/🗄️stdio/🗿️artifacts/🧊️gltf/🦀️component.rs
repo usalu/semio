@@ -557,7 +557,7 @@ mod tests {
     use super::*;
     use semio_framework_plugin::{ArtifactInferenceExecutionRequest, ArtifactInferenceServiceRegistry, WireArtifactInferenceBudget, WireArtifactInferenceCacheMode};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn all_canonical_leaf_services_are_independently_registered() {
         let services = gltf_inference_services();
         let ids = services.iter().map(|service| service.metadata().inference_schema).collect::<std::collections::BTreeSet<_>>();
@@ -570,7 +570,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn one_leaf_service_returns_its_id_bound_generic_envelope() {
         let snapshot_pack = <GltfSnapshot as store::ArtifactPack>::encode_pack(&GltfSnapshot::default());
         let budgets = WireArtifactInferenceBudget { allocation_bytes: 1_000_000, work_units: 1, recursion_depth: 1 };

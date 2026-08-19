@@ -162,26 +162,26 @@ pub async fn render(scene: &RemodelSnapshot) -> UiNode {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn definition_declares_a_world3d_model_window() {
         let def = definition();
         assert_eq!(def.id, WINDOW_KIND_ID);
         assert_eq!(def.surface_kind, SurfaceKind::World3d);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn render_produces_a_scene_node_for_the_default_document() {
         let scene = crate::artifacts::remodel::default_remodel_scene();
         let _node = render(&scene);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn world_meshes_json_renders_the_real_placeholder_mesh_when_the_cache_is_warm() {
         let scene = crate::artifacts::remodel::default_remodel_scene();
         assert!(world_meshes_json(&scene).contains(REMODEL_VIEW_MESH_ID));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn world_instances_json_is_never_gated_on_a_layer_toggle() {
         assert!(world_instances_json().contains(REMODEL_VIEW_MESH_ID));
     }

@@ -57,7 +57,7 @@ mod tests {
         BcfViewpoint { guid: guid.into(), camera: None, components: None, snapshot: None }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn counts_topics_comments_viewpoints_and_distinct_authors() {
         let snapshot = BcfSnapshot {
             schema: STDIO_BCF_DOCUMENT_SCHEMA.into(),
@@ -98,13 +98,13 @@ mod tests {
         assert_eq!(stats.author_count, 3);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = BcfSnapshot::default();
         assert_eq!(compute_bcf_topic_stats(&snapshot), compute_bcf_topic_stats(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(compute_bcf_topic_stats(&BcfSnapshot::default()), BcfTopicStats::default());
     }

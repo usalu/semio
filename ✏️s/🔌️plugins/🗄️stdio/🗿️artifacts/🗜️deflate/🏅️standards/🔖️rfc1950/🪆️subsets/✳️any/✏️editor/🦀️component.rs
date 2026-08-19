@@ -178,25 +178,25 @@ pub async fn create_deflate_editor() -> semio_framework_plugin::AppDefinition {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_deflate_editor_builds_a_definition_for_the_editor_role() {
         let def = create_deflate_editor();
         assert_eq!(def.role, semio_framework_plugin::AppRole::Editor);
         assert_eq!(def.dialect, DEFLATE_EDITOR_DIALECT.into());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn editor_dialect_matches_the_artifact_coordinate() {
         assert_eq!(<DeflateEditor as ArtifactEditor>::DIALECT, DEFLATE_EDITOR_DIALECT);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn editor_declares_the_main_window() {
         let def = create_deflate_editor();
         assert!(def.window_kinds.iter().any(|window| window.id == main::WINDOW_KIND_ID));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn parse_header_summary_round_trips_a_rendered_snapshot() {
         let document = DeflateSnapshot { compression_method: 8, window_bits: 9, compression_level_hint: crate::artifacts::deflate::schema::snapshot::DeflateLevelHint::Maximum, dict_id: Some(7), payload: vec![9, 9], ..DeflateSnapshot::default() };
         let UiNode::ComponentScene(node) = main::render(&document) else { panic!("expected ComponentScene") };
@@ -208,7 +208,7 @@ mod tests {
         assert_eq!(dict_id, Some(7));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn parse_header_summary_rejects_a_missing_required_field() {
         assert!(parse_header_summary("method=8\nwindowBits=7").is_none());
     }

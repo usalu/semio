@@ -95,13 +95,13 @@ pub async fn flow_extension_action_title_label(action_id: &str, title: &'static 
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn labels_resolve_native_english_and_german_from_the_config_locale() {
         assert_eq!(flow_play_labels(&FlowConfig::default()).synapses.as_str(), "Synapses");
         assert_eq!(flow_play_labels(&FlowConfig { locale: "de-DE".into(), ..FlowConfig::default() }).synapses.as_str(), "Synapsen");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn unknown_extension_ids_fall_back_to_runtime_data_labels() {
         let labels = flow_play_labels(&FlowConfig::default());
         assert_eq!(flow_extension_label("auto-layout", "Auto Layout", labels), labels.extension_auto_layout.into());

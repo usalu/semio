@@ -102,7 +102,7 @@ mod tests {
     use super::*;
     use crate::artifacts::imperative::schema::default_snapshot;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn imperative_diff_absorb_whole_artifact_wins() {
         let mut diff = ImperativeDiff {
             flow: Some(crate::artifacts::imperative::imperative_flow_child_handle_and_cache(&crate::artifacts::imperative::Path::new())),
@@ -121,7 +121,7 @@ mod tests {
     /// `ImperativePathDelta` deltas no longer exist, since composed children are opaque and a diff
     /// only ever whole-handle-replaces `flow` — with the equivalent real-behavior law: a `flow`
     /// handle minted from an edited working scene applies as a clean whole-handle replace.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn flow_handle_replace_round_trips_via_apply() {
         let base = default_snapshot();
         let mut path = crate::artifacts::imperative::imperative_working_scene(&base).path;

@@ -25,7 +25,7 @@ mod tests {
 
     /// 🗣️ B1: locale is now `cfg.locale`, set via the typed `SetLocale` config command — no more
     /// `ViewModel.locale` threaded through `render` (the trait dropped `ViewModel` entirely).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn wires_labels_resolve_native_in_german() {
         let mut app = metabolism_app();
         dispatch(&mut app, WiresCommand::SetLocale(SetLocale { value: "de-DE".into() }));

@@ -118,7 +118,7 @@ mod tests {
     use super::*;
     use crate::wfc_engine::weights::WeightTable;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn undo_to_restores_removed_patterns() {
         let w = WeightTable::new(&[1.0, 2.0, 3.0]).unwrap();
         let mut domains = DomainStore::new_full(1, &w);
@@ -134,7 +134,7 @@ mod tests {
         domains.get(NodeId(0)).debug_assert_consistent(&w);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn undo_to_partial_mark_restores_only_later_entries() {
         let w = WeightTable::new(&[1.0, 1.0, 1.0]).unwrap();
         let mut domains = DomainStore::new_full(1, &w);
@@ -151,7 +151,7 @@ mod tests {
         assert!(domains.get(NodeId(0)).bits().get(PatternId(1)));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn decision_frames_push_and_pop() {
         let mut trail = Trail::new();
         trail.push_frame(DecisionId(0), NodeId(1), PatternId(2), [1, 2, 3, 4]);
@@ -163,7 +163,7 @@ mod tests {
         assert!(trail.pop_frame().is_none());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn active_decisions_lists_every_frame_in_order() {
         let mut trail = Trail::new();
         assert!(trail.active_decisions().is_empty());

@@ -28,7 +28,7 @@ pub struct DxfBounds {
 /// `compute` returns for zero entities (the fold's identity value), keeping the inference-default
 /// law correct.
 impl Default for DxfBounds {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { min: [0.0, 0.0, 0.0], max: [0.0, 0.0, 0.0], entity_count: 0 }
     }
 }
@@ -102,7 +102,7 @@ mod tests {
     use super::*;
     use crate::artifacts::dxf::schema::snapshot::DxfBlock;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn bounds_matches_hand_built_entity_extent() {
         let snapshot = DxfSnapshot {
             schema: "s.stdio.dxf".into(),
@@ -118,7 +118,7 @@ mod tests {
         assert_eq!(bounds.entity_count, 3);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = DxfSnapshot {
             schema: "s.stdio.dxf".into(),
@@ -131,7 +131,7 @@ mod tests {
         assert_eq!(compute_dxf_bounds(&snapshot), compute_dxf_bounds(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(compute_dxf_bounds(&DxfSnapshot::default()), DxfBounds::default());
     }

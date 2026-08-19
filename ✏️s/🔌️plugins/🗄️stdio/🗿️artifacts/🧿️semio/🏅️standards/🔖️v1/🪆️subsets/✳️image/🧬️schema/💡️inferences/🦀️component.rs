@@ -34,7 +34,7 @@ impl protocol::Inference<SemioImageSnapshot> for SemioImageInference {
 /// today, but tying `Default` to `infer` keeps the law correct even if that default ever stops
 /// being all-zero (the same defensive pattern raster's `RasterInference` documents).
 impl Default for SemioImageInference {
-    async fn default() -> Self {
+    fn default() -> Self {
         <Self as protocol::Inference<SemioImageSnapshot>>::infer(&SemioImageSnapshot::default())
     }
 }
@@ -85,13 +85,13 @@ mod tests {
     use super::*;
     use protocol::Inference;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = SemioImageSnapshot::default();
         assert_eq!(SemioImageInference::infer(&snapshot), SemioImageInference::infer(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(SemioImageInference::infer(&SemioImageSnapshot::default()), SemioImageInference::default());
     }

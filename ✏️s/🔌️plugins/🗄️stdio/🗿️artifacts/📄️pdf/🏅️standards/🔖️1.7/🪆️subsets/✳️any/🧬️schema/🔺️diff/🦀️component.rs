@@ -2579,7 +2579,7 @@ mod handcrafted_diff_codec_tests {
     /// recursive `PdfValueDiff` tree (`Replace`/`Array`/`Dict`/`Stream` variants, incl. `Stream`'s
     /// own typed filter pipeline), the index-keyed `pages` triple (incl. `PdfPageDiff`'s tri-state
     /// `crop_box`), the id-keyed `objects` triple, and the name-keyed `trailer` triple.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn diff_codec_text_binary_roundtrip_law() {
         let a = a_snapshot();
         let b = b_snapshot();
@@ -2595,7 +2595,7 @@ mod handcrafted_diff_codec_tests {
             assert_eq!(decoded, d, "encode_diff/decode_diff round-trip mismatch");
         }
     }
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn rejects_missing_page_target_without_mutating_base() {
         let base = PdfSnapshot::default();
         let diff = PdfDiff { pages: Some(PdfPagesDiff { modified: vec![PdfPageModified { index: 0, diff: PdfPageDiff::default() }], ..Default::default() }), ..Default::default() };
@@ -2641,7 +2641,7 @@ mod tests {
     }
 
     //#region between_roundtrip_law
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn between_roundtrip_law_value_scalars_and_kind_change() {
         let cases = [
             (PdfObject::Null, PdfObject::Bool(true)),
@@ -2661,7 +2661,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn between_roundtrip_law_nested_array_and_dict() {
         let a = dict(vec![("Kids", PdfObject::Array(vec![PdfObject::Int(1), PdfObject::Int(2)])), ("N", PdfObject::Int(1))]);
         let b = dict(vec![("Kids", PdfObject::Array(vec![PdfObject::Int(1), PdfObject::Int(20), PdfObject::Int(30)])), ("N", PdfObject::Int(2)), ("Extra", PdfObject::Bool(true))]);
@@ -2671,14 +2671,14 @@ mod tests {
         assert_eq!(apply_value_diff(&d_ba, &b), a);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn between_roundtrip_law_snapshot_level() {
         let (a, b) = (base_snapshot(), sweep_b());
         assert_eq!(PdfDiff::between(&a, &b).apply(&a).unwrap(), b);
         assert_eq!(PdfDiff::between(&b, &a).apply(&b).unwrap(), a);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn between_self_is_empty() {
         let a = base_snapshot();
         assert!(PdfDiff::between(&a, &a).is_empty());
@@ -2686,7 +2686,7 @@ mod tests {
     //#endregion between_roundtrip_law
 
     //#region inverse_law
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inverse_law_diff_level() {
         let (a, b) = (base_snapshot(), sweep_b());
         let d = PdfDiff::between(&a, &b);
@@ -2702,7 +2702,7 @@ mod tests {
         PdfDiff { pages: Some(d), ..Default::default() }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_law_pages_insert_then_remove_before() {
         // base=[a,b,c]; d1=Insert(2,f) -> mid=[a,b,f,c]; d2=Remove(0) -> after=[b,f,c].
         let base = PdfSnapshot { pages: vec![page([0.0; 4], None, 0, "a"), page([0.0; 4], None, 0, "b"), page([0.0; 4], None, 0, "c")], ..base_snapshot() };
@@ -2722,7 +2722,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_law_pages_insert_insert_same_index_both_survive() {
         let base = PdfSnapshot { pages: vec![page([0.0; 4], None, 0, "a"), page([0.0; 4], None, 0, "b")], ..base_snapshot() };
         let d1 = pages_diff(PdfPagesDiff { added: vec![PdfPageAdded { index: 2, page: page([0.0; 4], None, 0, "f") }], ..Default::default() });
@@ -2737,7 +2737,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_law_pages_add_then_setfield_patches_added_payload() {
         let base = PdfSnapshot { pages: vec![], ..base_snapshot() };
         let d1 = pages_diff(PdfPagesDiff { added: vec![PdfPageAdded { index: 0, page: page([0.0; 4], None, 0, "x") }], ..Default::default() });
@@ -2755,7 +2755,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_law_pages_modify_then_remove_drops_pending_patch() {
         let base = PdfSnapshot { pages: vec![page([0.0; 4], None, 0, "a"), page([0.0; 4], None, 0, "b")], ..base_snapshot() };
         let d1 = pages_diff(PdfPagesDiff { modified: vec![PdfPageModified { index: 0, diff: PdfPageDiff { rotate: Some(180), ..Default::default() } }], ..Default::default() });
@@ -2773,7 +2773,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_law_pages_associativity() {
         let s0 = PdfSnapshot { pages: vec![page([0.0; 4], None, 0, "1"), page([0.0; 4], None, 0, "2"), page([0.0; 4], None, 0, "3")], ..base_snapshot() };
         let s1 = PdfSnapshot { pages: vec![page([0.0; 4], None, 0, "1"), page([0.0; 4], None, 0, "9"), page([0.0; 4], None, 0, "3")], ..base_snapshot() };
@@ -2800,7 +2800,7 @@ mod tests {
         PdfDiff { objects: Some(d), ..Default::default() }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_law_objects_add_then_setfield_patches_added_payload() {
         let base = PdfSnapshot { objects: vec![], ..base_snapshot() };
         let d1 = objects_diff(PdfObjectsDiff { added: vec![PdfObjectAdded { index: 0, id: oref(5, 0), value: dict(vec![("X", PdfObject::Int(1))]) }], ..Default::default() });
@@ -2821,7 +2821,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_law_objects_modify_then_remove_drops_pending_patch() {
         let base = PdfSnapshot { objects: vec![PdfIndirectObject { id: oref(1, 0), value: PdfObject::Int(1) }, PdfIndirectObject { id: oref(2, 0), value: PdfObject::Int(2) }], ..base_snapshot() };
         let d1 = objects_diff(PdfObjectsDiff { modified: vec![PdfObjectModified { id: oref(1, 0), diff: PdfValueDiff::Int { value: 9 } }], ..Default::default() });
@@ -2839,7 +2839,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_law_objects_two_independent_inserts_both_survive() {
         let base = PdfSnapshot { objects: vec![], ..base_snapshot() };
         let d1 = objects_diff(PdfObjectsDiff { added: vec![PdfObjectAdded { index: 0, id: oref(5, 0), value: PdfObject::Int(1) }], ..Default::default() });
@@ -2854,7 +2854,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_law_objects_associativity() {
         let s0 = PdfSnapshot { objects: vec![PdfIndirectObject { id: oref(1, 0), value: PdfObject::Int(1) }], ..base_snapshot() };
         let s1 = PdfSnapshot { objects: vec![PdfIndirectObject { id: oref(1, 0), value: PdfObject::Int(1) }, PdfIndirectObject { id: oref(2, 0), value: PdfObject::Int(2) }], ..base_snapshot() };
@@ -2877,7 +2877,7 @@ mod tests {
     //#endregion absorb_law (objects / id-keyed)
 
     //#region absorb_law (trailer / name-keyed)
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_law_trailer_add_then_setfield_patches_added_payload() {
         let base = PdfSnapshot { trailer: vec![], ..base_snapshot() };
         let d1 = PdfDiff { trailer: Some(PdfDictDiff { added: vec![PdfDictAdded { index: 0, key: "Config".into(), item: dict(vec![]) }], ..Default::default() }), ..Default::default() };
@@ -2901,7 +2901,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_law_trailer_modify_then_remove_drops_pending_patch() {
         let base = PdfSnapshot { trailer: vec![entry("A", PdfObject::Int(1)), entry("B", PdfObject::Int(2))], ..base_snapshot() };
         let d1 = PdfDiff { trailer: Some(PdfDictDiff { modified: vec![PdfDictModified { key: "A".into(), diff: PdfValueDiff::Int { value: 9 } }], ..Default::default() }), ..Default::default() };
@@ -2946,7 +2946,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn field_sweep_between_roundtrips_both_directions() {
         let (a, b) = (sweep_a(), sweep_b());
         assert_eq!(PdfDiff::between(&a, &b).apply(&a).unwrap(), b);
@@ -2954,7 +2954,7 @@ mod tests {
         assert!(PdfDiff::between(&a, &a).is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn field_sweep_every_field_present_in_diff() {
         let (a, b) = (sweep_a(), sweep_b());
         let ab = PdfDiff::between(&a, &b);

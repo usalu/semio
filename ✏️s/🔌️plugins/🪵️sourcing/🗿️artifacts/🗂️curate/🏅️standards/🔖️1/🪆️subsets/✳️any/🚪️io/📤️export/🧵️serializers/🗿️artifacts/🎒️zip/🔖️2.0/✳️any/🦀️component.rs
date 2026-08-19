@@ -25,7 +25,7 @@ pub struct CurateIntoZip;
 impl Serializer<CurateSnapshot> for CurateIntoZip {
     const INTO: Dialect = ZIP_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    async fn serialize(from: &CurateSnapshot) -> IoResult<IoPayload> {
+    fn serialize(from: &CurateSnapshot) -> IoResult<IoPayload> {
         serialize_bytes(from).map(|bytes| IoOutcome::clean(IoPayload::Binary(bytes))).map_err(|error| IoError { message: format!("CurateIntoZip: {error}"), diagnostics: Vec::new() })
     }
 }

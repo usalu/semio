@@ -274,7 +274,7 @@ mod tests {
         (a - b * 2.0 + c) * (1.0 / (h * h))
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn line_eval_and_derivatives() {
         let l = Curve3::Line { origin: Pnt3::new(1.0, 2.0, 3.0), dir: Vec3::new(2.0, 0.0, 0.0) };
         assert_eq!(l.eval(0.5), Pnt3::new(2.0, 2.0, 3.0));
@@ -283,7 +283,7 @@ mod tests {
         assert_eq!(l.curvature(0.5), 0.0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn circle_eval_stays_on_circle_and_derivatives_match_finite_differences() {
         let frame = Frame3::from_normal(Pnt3::new(0.0, 0.0, 0.0), Vec3::Z).unwrap();
         let c = Curve3::Circle { frame, radius: 3.0 };
@@ -296,7 +296,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn circle_curvature_equals_reciprocal_radius() {
         let frame = Frame3::from_normal(Pnt3::new(1.0, 1.0, 1.0), Vec3::X).unwrap();
         let c = Curve3::Circle { frame, radius: 2.5 };
@@ -305,7 +305,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn ellipse_derivatives_match_finite_differences() {
         let frame = Frame3::WORLD;
         let e = Curve3::Ellipse { frame, major_radius: 4.0, minor_radius: 2.0 };
@@ -315,7 +315,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn line_to_nurbs_matches_line_eval() {
         let l = Curve3::Line { origin: Pnt3::new(0.0, 0.0, 0.0), dir: Vec3::new(1.0, 2.0, 3.0) };
         let nurbs = l.to_nurbs((0.0, 2.0));
@@ -340,7 +340,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn circle_to_nurbs_traces_the_circle_exactly_for_small_arc() {
         let frame = Frame3::from_normal(Pnt3::new(0.0, 0.0, 0.0), Vec3::Z).unwrap();
         let c = Curve3::Circle { frame, radius: 5.0 };
@@ -351,7 +351,7 @@ mod tests {
         assert!(nurbs.controls.last().unwrap().distance(c.eval(domain.1)) < 1e-9);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn circle_to_nurbs_traces_the_circle_exactly_for_full_circle_multi_span() {
         let frame = Frame3::from_normal(Pnt3::new(2.0, -1.0, 0.5), Vec3::new(0.3, 0.2, 1.0)).unwrap();
         let c = Curve3::Circle { frame, radius: 1.7 };
@@ -363,7 +363,7 @@ mod tests {
         assert!(nurbs.controls.last().unwrap().distance(c.eval(domain.1)) < 1e-8);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn ellipse_to_nurbs_traces_the_ellipse_exactly() {
         let frame = Frame3::WORLD;
         let major = 3.0;
@@ -382,7 +382,7 @@ mod tests {
         assert!(nurbs.controls.last().unwrap().distance(e.eval(domain.1)) < 1e-9);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn curve2_line_and_circle_eval() {
         let l = Curve2::Line { origin: Pnt2::new(0.0, 0.0), dir: Vec2::new(1.0, 1.0) };
         assert_eq!(l.eval(2.0), Pnt2::new(2.0, 2.0));
@@ -394,7 +394,7 @@ mod tests {
     mod quick {
         use super::*;
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn circle_to_nurbs_traces_the_circle_exactly_for_random_arcs() {
             let mut rng = semio_framework_geometry::random::Rng::from_seed(53);
             for _ in 0..100 {

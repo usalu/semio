@@ -102,7 +102,7 @@ mod tests {
     }
 
     //#region ✏️🖨️🧾document-scalars
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn document_scalar_mutations_round_trip() {
         let doc = sample_doc();
         let renamed = round_trip(&doc, &LayoutMutation::RenameLayout(rename_layout::mutation::RenameLayout { new_name: "Renamed".into() }));
@@ -121,7 +121,7 @@ mod tests {
     //#endregion ✏️🖨️🧾document-scalars
 
     //#region 📄pages
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn pages_create_rename_resize_delete_round_trip() {
         let doc = sample_doc();
         let mut page_2 = doc.pages[0].clone();
@@ -155,7 +155,7 @@ mod tests {
         assert_eq!(deleted.pages.len(), 1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn reorder_pages_round_trips() {
         let mut doc = sample_doc();
         let mut page_2 = doc.pages[0].clone();
@@ -168,7 +168,7 @@ mod tests {
         assert_eq!(reordered.pages.iter().map(|page| page.id.clone()).collect::<Vec<_>>(), vec!["page-2", "page-3", "page-1"]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn delete_page_of_a_missing_id_has_an_empty_inverse() {
         let doc = sample_doc();
         let delete = LayoutMutation::DeletePage(delete_page::mutation::DeletePage { id: "no-page".into() });
@@ -177,7 +177,7 @@ mod tests {
     //#endregion 📄pages
 
     //#region 📖stories / 🔗links
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn stories_create_edit_delete_round_trip() {
         let doc = sample_doc();
         let create = LayoutMutation::CreateStory(create_story::mutation::CreateStory { story: TextStory { id: "story-2".into(), content: "New".into(), style_runs: Vec::new() }, index: Some(1) });
@@ -193,7 +193,7 @@ mod tests {
         assert_eq!(deleted.stories.len(), 1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn links_create_change_path_delete_round_trip() {
         let doc = sample_doc();
         let create = LayoutMutation::CreateLink(create_link::mutation::CreateLink {
@@ -214,7 +214,7 @@ mod tests {
     //#endregion 📖stories / 🔗links
 
     //#region ➕➖🕹️📏🎨🖊️🔤🔢frames
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn frame_create_move_resize_style_delete_round_trip() {
         let doc = sample_doc();
         let create = LayoutMutation::CreateFrame(create_frame::mutation::CreateFrame { page_id: "page-1".into(), frame: new_rect("frame-2"), index: Some(1), layer_id: Some("layer-1".into()) });
@@ -247,7 +247,7 @@ mod tests {
         assert_eq!(deleted.pages[0].frames.len(), 1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn text_frame_wrap_mode_and_columns_round_trip_and_ignore_rect_fields() {
         let doc = sample_doc();
         let add = LayoutMutation::CreateFrame(create_frame::mutation::CreateFrame { page_id: "page-1".into(), frame: new_text("frame-text"), index: Some(0), layer_id: None });
@@ -271,7 +271,7 @@ mod tests {
         assert!(fill_on_text.inverse(&columned).is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn frame_mutations_are_no_ops_when_target_missing() {
         let doc = sample_doc();
         let apply = |operation: &LayoutMutation| operation.diff(&doc).diff().apply(&doc).expect("valid mutation diff");
@@ -308,7 +308,7 @@ mod tests {
     /// collection create/delete pair (with cascade capture), a nested-collection field patch, a
     /// document-root scalar setter, index-addressed reorder, an atomic ≥2-field `update` facet, and
     /// the remaining two id-keyed collections' representative verbs.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_page_obeys_the_inverse_and_absorb_laws() {
         let base = sample_doc();
         let mut page_2 = base.pages[0].clone();
@@ -321,14 +321,14 @@ mod tests {
         protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn move_frame_obeys_the_inverse_law() {
         let base = sample_doc();
         let mv = LayoutMutation::MoveFrame(move_frame::mutation::MoveFrame { page_id: "page-1".into(), frame_id: "frame-1".into(), new_x: 42.0, new_y: 43.0 });
         protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mv);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn rename_layout_obeys_the_inverse_law() {
         let base = sample_doc();
         let rename = LayoutMutation::RenameLayout(rename_layout::mutation::RenameLayout { new_name: "Renamed".into() });
@@ -337,7 +337,7 @@ mod tests {
 
     /// ⚖️ `delete-page` — the cascade-capturing counterpart of `create-page`'s law test above; its
     /// inverse must recreate the FULL removed `Page` (frames/layers/margins/columns included).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn delete_page_obeys_the_inverse_law() {
         let mut base = sample_doc();
         let mut page_2 = base.pages[0].clone();
@@ -349,7 +349,7 @@ mod tests {
 
     /// ⚖️ `reorder-pages` — index-addressed-by-id law coverage (`reorder`'s inverse is
     /// `reorder{from: min(to, len-1), to: from}` per `📓️taxonomy.md`'s addressing convention).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn reorder_pages_obeys_the_inverse_law() {
         let mut base = sample_doc();
         let mut page_2 = base.pages[0].clone();
@@ -362,7 +362,7 @@ mod tests {
     }
 
     /// ⚖️ `update-page-margins` — the atomic ≥2-field-facet `update` verb's law coverage.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn update_page_margins_obeys_the_inverse_law() {
         let base = sample_doc();
         let margins = LayoutMutation::UpdatePageMargins(update_page_margins::mutation::UpdatePageMargins { id: "page-1".into(), top: 5.0, right: 6.0, bottom: 7.0, left: 8.0 });
@@ -371,7 +371,7 @@ mod tests {
 
     /// ⚖️ `change-frame-fill` — a nested-collection variant-specific field patch (Rect-only, no-op
     /// on Text/Image frames).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn change_frame_fill_obeys_the_inverse_law() {
         let base = sample_doc();
         let fill = LayoutMutation::ChangeFrameFill(change_frame_fill::mutation::ChangeFrameFill { page_id: "page-1".into(), frame_id: "frame-1".into(), new_fill: Some([0.9, 0.1, 0.1, 1.0]) });
@@ -380,7 +380,7 @@ mod tests {
 
     /// ⚖️ `edit-story` / `create-link` — the remaining two id-keyed collections' representative
     /// verbs (content-body replace, cross-collection create).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn edit_story_and_create_link_obey_the_inverse_law() {
         let base = sample_doc();
         let edit = LayoutMutation::EditStory(edit_story::mutation::EditStory { id: "story-1".into(), new_content: "Edited.".into() });
@@ -393,7 +393,7 @@ mod tests {
     }
     //#endregion ⚖️SemanticLaws
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn semantic_kinds_cover_every_variant() {
         assert_eq!(LayoutMutation::kinds().len(), 25);
         let mutation = LayoutMutation::RenameLayout(rename_layout::mutation::RenameLayout { new_name: "x".into() });
@@ -408,49 +408,49 @@ mod tests {
     /// case. `reorder-pages`' payload is a single `{id, to_index}` move (no explicit order list), so
     /// unlike `🕸️dag`'s `reorder_nodes` it can never produce a non-permutation — its Fatal-never-applies
     /// coverage is carried by `create-page`'s duplicate-id case instead (see `🧪️w3-layout-log.txt`).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_frame_missing_target_is_error() {
         let base = sample_doc();
         protocol::os_spr::testkit::assert_missing_target_is_error(&base, &LayoutMutation::CreateFrame(create_frame::mutation::CreateFrame { page_id: "no-page".into(), frame: new_rect("frame-x"), index: None, layer_id: None }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn delete_frame_missing_target_is_error() {
         let base = sample_doc();
         protocol::os_spr::testkit::assert_missing_target_is_error(&base, &LayoutMutation::DeleteFrame(delete_frame::mutation::DeleteFrame { page_id: "page-1".into(), frame_id: "ghost".into() }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn move_frame_missing_target_is_error() {
         let base = sample_doc();
         protocol::os_spr::testkit::assert_missing_target_is_error(&base, &LayoutMutation::MoveFrame(move_frame::mutation::MoveFrame { page_id: "page-1".into(), frame_id: "ghost".into(), new_x: 1.0, new_y: 1.0 }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn reorder_pages_missing_target_is_error() {
         let base = sample_doc();
         protocol::os_spr::testkit::assert_missing_target_is_error(&base, &LayoutMutation::ReorderPages(reorder_pages::mutation::ReorderPages { id: "ghost".into(), to_index: 0 }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn rename_page_missing_target_is_error() {
         let base = sample_doc();
         protocol::os_spr::testkit::assert_missing_target_is_error(&base, &LayoutMutation::RenamePage(rename_page::mutation::RenamePage { id: "ghost".into(), new_name: "x".into() }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn change_page_height_missing_target_is_error() {
         let base = sample_doc();
         protocol::os_spr::testkit::assert_missing_target_is_error(&base, &LayoutMutation::ChangePageHeight(change_page_height::mutation::ChangePageHeight { id: "ghost".into(), new_height: 1.0 }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn edit_story_missing_target_is_error() {
         let base = sample_doc();
         protocol::os_spr::testkit::assert_missing_target_is_error(&base, &LayoutMutation::EditStory(edit_story::mutation::EditStory { id: "ghost".into(), new_content: "x".into() }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_page_duplicate_id_is_fatal() {
         let base = sample_doc();
         let duplicate = base.pages[0].clone();

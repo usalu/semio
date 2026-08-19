@@ -24,3 +24,6 @@ serde_json.workspace = true
 semio-framework-os-kernel = { path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 semio-framework = { path = "../../../../../🧰️framework/📦️packages/🦀️rust", package = "semio-framework" }
 imperative_extension_sdk = { path = "../../🧩️extension_sdk/📦️packages/🦀️rust", package = "semio-s-imperative-extension-sdk" }
+
+[dev-dependencies]
+semio-framework-async-macros = { path = "../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }

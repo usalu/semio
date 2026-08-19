@@ -58,7 +58,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn deserialize_expands_face_normals_and_flattens_triangle_soup() {
         let semio = semio_framework_plugin::resolve_ready(SemioMeshFromStl::deserialize(&sample_stl())).expect("deserialize");
         assert_eq!(semio.meshes.len(), 1);
@@ -73,7 +73,7 @@ mod tests {
         assert!(prim.uvs.is_empty() && prim.colors.is_empty() && prim.material_id.is_none());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn empty_solid_name_falls_back_to_a_generated_mesh_id() {
         let mut stl = sample_stl();
         stl.solid_name.clear();

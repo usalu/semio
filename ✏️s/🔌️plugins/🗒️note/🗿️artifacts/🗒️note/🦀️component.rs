@@ -132,7 +132,7 @@ pub struct NoteCamera {
 }
 
 impl Default for NoteCamera {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { x: 0.0, y: 0.0, zoom: 1.0 }
     }
 }
@@ -433,7 +433,7 @@ mod tests {
     /// 🗂️ The manifest-facing `ArtifactKindSpec.schema` and `NOTE_DOCUMENT_SCHEMA` are deliberately the
     /// same string here (note has no separate "fixture" store schema, unlike shooting) — pinned so a
     /// future edit can't silently diverge them without noticing.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn artifact_kind_schema_matches_the_store_schema() {
         assert_eq!(artifact_kind().schema, NOTE_DOCUMENT_SCHEMA);
     }
@@ -441,7 +441,7 @@ mod tests {
     //#region 🔖️TextBridgeTests
     /// 🧪️ Real round trip for the paragraph <-> `SemioTextSnapshot` converter: multiple paragraphs,
     /// multiple runs, every mark (bold/italic/link) the converter maps.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn text_bridge_round_trips_paragraphs_through_semio_text_snapshot() {
         let paragraphs = vec![
             NoteTextParagraph { runs: vec![NoteTextRun { text: "plain ".into(), bold: None, italic: None, underline: None, link: None }, NoteTextRun { text: "bold".into(), bold: Some(true), italic: None, underline: None, link: None }] },
@@ -457,7 +457,7 @@ mod tests {
     /// with zero runs both flatten to zero runs, and [`paragraphs_from_text_snapshot`] always emits a
     /// trailing paragraph for whatever ran since the last separator (even if that's none) — so both
     /// restore as the SAME single empty paragraph, never as an empty paragraph list.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn text_bridge_collapses_empty_paragraph_shapes() {
         let one_empty_paragraph = vec![NoteTextParagraph { runs: Vec::new() }];
         assert_eq!(paragraphs_from_text_snapshot(&text_snapshot_from_paragraphs(&[])), one_empty_paragraph);
@@ -466,7 +466,7 @@ mod tests {
 
     /// 🧪️ `underline` has no equivalent mark in stdio's text subset and is honestly dropped, never
     /// fabricated back on the way out.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn text_bridge_drops_underline_honestly() {
         let paragraphs = vec![NoteTextParagraph { runs: vec![NoteTextRun { text: "u".into(), bold: None, italic: None, underline: Some(true), link: None }] }];
         let restored = paragraphs_from_text_snapshot(&text_snapshot_from_paragraphs(&paragraphs));
@@ -475,7 +475,7 @@ mod tests {
 
     /// 🧪️ Working-scene cache: minting a handle seeds it, `note_block_text` reads it back, and two
     /// distinct block ids never collide even with identical paragraph content.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn working_scene_caches_by_child_id_and_block_id_never_collides() {
         let paragraphs = vec![NoteTextParagraph { runs: vec![NoteTextRun { text: "hi".into(), bold: None, italic: None, underline: None, link: None }] }];
         let a = note_text_child_handle_and_cache("block-a", &paragraphs);
@@ -486,14 +486,14 @@ mod tests {
     }
 
     /// 🧪️ An uncached handle fails soft (empty `Vec`), never panics — the documented staleness gap.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn note_block_text_fails_soft_on_a_cache_miss() {
         let handle = note_text_child_handle("never-cached", &[]);
         assert_eq!(note_block_text(&handle), Vec::<NoteTextParagraph>::new());
     }
     //#endregion 🔖️TextBridgeTests
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn note_document_round_trips_assets_and_grid_settings() {
         let mut document = NoteSnapshot {
             schema: NOTE_DOCUMENT_SCHEMA.into(),

@@ -785,7 +785,7 @@ mod tests {
     use protocol::command::DiffAlgebra;
     use protocol::MutationDiff;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn insert_then_remove_block_apply_and_inverse() {
         let base = fixture();
         let insert = DocxMutation::InsertBlock { path: DocxBlockPath { segments: vec![], index: 1 }, block: DocxBlock::paragraph("inserted") };
@@ -802,7 +802,7 @@ mod tests {
         assert_eq!(restored, base);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn remove_block_inverse_restores_removed_block() {
         let base = fixture();
         let remove = DocxMutation::RemoveBlock { path: DocxBlockPath { segments: vec![], index: 0 } };
@@ -815,7 +815,7 @@ mod tests {
         assert_eq!(after, base);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_run_text_and_formatting_apply_and_inverse() {
         let base = fixture();
         let mutation = DocxMutation::SetRunText { path: DocxBlockPath { segments: vec![], index: 0 }, run_index: 0, text: "changed".into() };
@@ -839,7 +839,7 @@ mod tests {
         assert_eq!(after2, base);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn table_path_addressing_sets_nested_cell_content() {
         let mut base = fixture();
         base.document.body.push(DocxBlock::Table(DocxTable { rows: vec![DocxTableRow { cells: vec![DocxTableCell { blocks: vec![DocxBlock::paragraph("cell")], ..Default::default() }], ..Default::default() }], ..Default::default() }));
@@ -856,7 +856,7 @@ mod tests {
         let _ = &mut base; // silence unused-mut if the push above is later removed
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn style_mutations_apply_and_inverse() {
         let base = fixture();
         let insert = DocxMutation::InsertStyle { style: DocxStyle { id: "Heading1".into(), name: "heading 1".into(), based_on: Some("Normal".into()) } };
@@ -887,7 +887,7 @@ mod tests {
         assert_eq!(after3, base);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn opc_part_mutations_apply_and_inverse() {
         let base = fixture();
         let set = DocxMutation::SetPart { path: "word/numbering.xml".into(), content_type: "application/xml".into(), bytes: b"<w:numbering/>".to_vec() };
@@ -912,7 +912,7 @@ mod tests {
     }
 
     //#region 🔖️MutationDiffLaw
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mutation_diff_law() {
         for mutation in demo_mutation_cases() {
             let base = fixture();
@@ -929,7 +929,7 @@ mod tests {
     //#endregion 🔖️MutationDiffLaw
 
     //#region 🔖️InverseLaw
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inverse_law() {
         for mutation in demo_mutation_cases() {
             let base = fixture();
@@ -963,7 +963,7 @@ mod tests {
         diff.document.as_ref().expect("document diff present").body.as_ref().expect("body diff present")
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_law() {
         // Canonical: Insert(2)+Remove(0) -> {removed:[0], added:[(1,f)]}.
         {
@@ -1043,7 +1043,7 @@ mod tests {
     //#endregion 🔖️AbsorbLaw
 
     //#region 🔖️BetweenRoundtripLaw
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn between_roundtrip_law() {
         let a = sweep_a();
         let b = sweep_b();
@@ -1067,7 +1067,7 @@ mod tests {
     //#endregion 🔖️BetweenRoundtripLaw
 
     //#region 🔖️CodecRetentionLaw
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn codec_retention_law() {
         let snap = crate::artifacts::docx::engine::build_minimal_docx(DocxDocument {
             body: vec![DocxBlock::Paragraph(DocxParagraph {
@@ -1089,7 +1089,7 @@ mod tests {
     /// -- removed/modified/added -- is exercised, and this ticket's "known structural trap" note
     /// for why the two snapshots use different-length body lists rather than a single same-length
     /// pairwise collection).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn field_sweep() {
         let a = sweep_a();
         let b = sweep_b();
@@ -1161,7 +1161,7 @@ mod tests {
     /// (a `Table` carrying nested rows/cells/blocks), `SetSnapshot`'s whole `DocxSnapshot` (OPC
     /// parts/content-types/relationships-by-owner plus the typed document/styles), and the
     /// `Option<String>` tri-state on `SetStyleBasedOn`.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_text_binary_roundtrip_law() {
         let table_block = DocxBlock::Table(DocxTable { rows: vec![DocxTableRow { cells: vec![DocxTableCell { blocks: vec![DocxBlock::paragraph("cell")], ..Default::default() }], ..Default::default() }], ..Default::default() });
         let mutations = vec![

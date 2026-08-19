@@ -117,7 +117,7 @@ pub mod derived_composition {
             hex_encode(&bytes)
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn conforming_transitional_package_composes_and_stamps_transitional() {
             let hex = transitional_package_hex();
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Text(&hex) }];
@@ -125,7 +125,7 @@ pub mod derived_composition {
             assert!(composed.diagnostics.iter().all(|d| d.severity != Severity::Error), "no hard diagnostics expected: {:?}", composed.diagnostics);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn strict_document_fails_compose_with_real_diagnostic() {
             let mut opc = OpcPackage::empty();
             opc.content_types.set_default("rels", RELS_CONTENT_TYPE);
@@ -147,7 +147,7 @@ pub mod derived_composition {
             assert!(err.diagnostics.iter().any(|d| d.severity == Severity::Error), "got {:?}", err.diagnostics);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn subset_validator_recheck_flags_clean_document_as_clean() {
             let hex = transitional_package_hex();
             let diagnostics = PptxTransitionalValidator::validate(&IoPayload::Text(hex));

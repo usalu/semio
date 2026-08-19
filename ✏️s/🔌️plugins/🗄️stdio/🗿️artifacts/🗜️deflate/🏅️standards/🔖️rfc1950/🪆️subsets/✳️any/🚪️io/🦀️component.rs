@@ -1021,7 +1021,7 @@ mod codec_tests {
             .unwrap_or(tokens.len())
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn exact_pptx_token_divergence_matrix() {
         let archive = std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../temp/domai-specific-programmaning-language-for-architects.pptx")).expect("fixture");
         for path in ["[Content_Types].xml", "ppt/presentation.xml", "ppt/slides/slide1.xml", "ppt/slides/slide39.xml"] {
@@ -1059,7 +1059,7 @@ mod codec_tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn exact_pptx_zlib_tune_matrix() {
         let archive = std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../temp/domai-specific-programmaning-language-for-architects.pptx")).expect("fixture");
         let members: Vec<_> = ["[Content_Types].xml", "ppt/presentation.xml", "ppt/slides/slide1.xml", "ppt/slides/slide39.xml"]
@@ -1101,7 +1101,7 @@ mod codec_tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn exact_pptx_emf_tune_matrix() {
         let archive = std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../temp/domai-specific-programmaning-language-for-architects.pptx")).expect("fixture");
         let members: Vec<_> = ["ppt/media/image9.emf", "ppt/media/image10.emf", "ppt/media/image11.emf"]
@@ -1140,7 +1140,7 @@ mod codec_tests {
         eprintln!("[DEBUG] emf_tune paths={:?} exact={exact:?} best={best:?}", members.iter().map(|member| member.0).collect::<Vec<_>>());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn exact_pptx_bin_tune_matrix() {
         let archive = std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../temp/domai-specific-programmaning-language-for-architects.pptx")).expect("fixture");
         let expected = raw_zip_member(&archive, "ppt/embeddings/oleObject1.bin").expect("fixture OLE");
@@ -1173,7 +1173,7 @@ mod codec_tests {
         eprintln!("[DEBUG] bin_tune input={} expected={} expected_tokens={} exact={exact:?} best_tokens={best:?} closest_size={closest:?}", input.len(), expected.len(), expected_tokens.len());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn exact_pptx_bin_token_lineage() {
         let archive = std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../temp/domai-specific-programmaning-language-for-architects.pptx")).expect("fixture");
         let expected = raw_zip_member(&archive, "ppt/embeddings/oleObject1.bin").expect("fixture OLE");
@@ -1215,7 +1215,7 @@ mod codec_tests {
         eprintln!("[DEBUG] bin_memory_sync bytes={} prefix={prefix} exact={}", candidate.len(), candidate == expected);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn exact_pptx_bin_policy() {
         let archive = std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../temp/domai-specific-programmaning-language-for-architects.pptx")).expect("fixture");
         for path in ["ppt/embeddings/oleObject1.bin", "ppt/embeddings/oleObject2.bin", "ppt/embeddings/oleObject3.bin"] {
@@ -1226,7 +1226,7 @@ mod codec_tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn exact_pptx_first_member_backend_matrix() {
         let archive = std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../temp/domai-specific-programmaning-language-for-architects.pptx")).expect("fixture");
         let name_len = u16::from_le_bytes([archive[26], archive[27]]) as usize;
@@ -1304,12 +1304,12 @@ mod codec_tests {
         eprintln!("[DEBUG] backend=miniz_oxide probe_matrix exact={exact:?} best={best:?} same_length_count={} same_length_best={:?}", same_length.len(), same_length.iter().max_by_key(|candidate| candidate.3));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn adler32_empty_is_one() {
         assert_eq!(adler32(b""), 1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn zlib_round_trip() {
         let payloads: &[&[u8]] = &[b"", b"a", b"hello zlib", &[0u8; 64], b"abracadabra abracadabra"];
         for p in payloads {
@@ -1319,7 +1319,7 @@ mod codec_tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn illustrator_partial_flush_materialization_matches_fixture_stream() {
         let fixture = std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../temp/📄️bachelor-thesis.pdf")).expect("fixture");
         let marker = b"/Length 3362\n/Filter /FlateDecode\n>>\nstream\n";
@@ -1330,7 +1330,7 @@ mod codec_tests {
         assert_eq!(actual, expected);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn raw_deflate_round_trip() {
         let p = b"stdio-deflate-conformance";
         let enc = deflate_raw(p);
@@ -1343,7 +1343,7 @@ mod codec_tests {
     /// Huffman literal (~9 bits/byte average), so compressing ALWAYS expanded the input by ~12.5%.
     /// This is the regression test for that: real, repetitive text must come out smaller, not
     /// bigger, and must still round-trip exactly.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn raw_deflate_compresses_repetitive_text() {
         let text = "the quick brown fox jumps over the lazy dog. ".repeat(200);
         let p = text.as_bytes();
@@ -1353,7 +1353,7 @@ mod codec_tests {
         assert_eq!(dec, p);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn raw_deflate_round_trips_binary_with_long_range_matches() {
         // A repeating 4-byte pattern well past MIN_MATCH, exercising the hash-chain match finder
         // across many window-fulls (data.len() > WINDOW) so distances near the 32KB boundary are
@@ -1368,7 +1368,7 @@ mod codec_tests {
         assert_eq!(dec, p);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn raw_deflate_round_trips_random_incompressible_data() {
         // Match search finding nothing (or only sub-MIN_MATCH runs) must still round-trip --
         // pure-literal fallback path.
@@ -1385,7 +1385,7 @@ mod codec_tests {
         assert_eq!(dec, p);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn codec_round_trip() {
         let payload = b"pack-envelope-payload".to_vec();
         let snap = DeflateSnapshot { schema: STDIO_DEFLATE_DOCUMENT_SCHEMA.into(), compression_method: 8, window_bits: 7, compression_level_hint: DeflateLevelHint::Default, dict_id: None, payload: payload.clone() };
@@ -1397,7 +1397,7 @@ mod codec_tests {
 
     /// 🧪️ `encode_deflate_snapshot`/`decode_deflate_snapshot` round-trip every typed header field,
     /// including a preset-dictionary id.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn snapshot_codec_round_trip_with_preset_dictionary() {
         let snap =
             DeflateSnapshot { schema: STDIO_DEFLATE_DOCUMENT_SCHEMA.into(), compression_method: 8, window_bits: 5, compression_level_hint: DeflateLevelHint::Maximum, dict_id: Some(0x1234_5678), payload: b"preset-dictionary-id-round-trip".to_vec() };
@@ -1410,7 +1410,7 @@ mod codec_tests {
 
     /// 🧪️ Ticket 26/08/10/…: `decode_deflate_snapshot` rejects a CMF/FLG check failure --
     /// FCHECK is derived, not fabricated, so a corrupted header must not silently decode.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn snapshot_codec_rejects_bad_check_bits() {
         let mut bytes =
             encode_deflate_snapshot(&DeflateSnapshot { schema: STDIO_DEFLATE_DOCUMENT_SCHEMA.into(), compression_method: 8, window_bits: 7, compression_level_hint: DeflateLevelHint::Default, dict_id: None, payload: b"corrupt-me".to_vec() });

@@ -1133,7 +1133,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn between_apply_and_inverse_round_trip() {
         let a = snapshot_a();
         let b = snapshot_b();
@@ -1144,7 +1144,7 @@ mod tests {
         assert!(<SemioMeshDiff as DiffAlgebra<SemioMeshSnapshot>>::between(&a, &a).is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_composes_two_sequential_diffs() {
         let a = snapshot_a();
         let mid = snapshot_b();
@@ -1161,7 +1161,7 @@ mod tests {
     /// 🧪️ diff_codec_text_binary_roundtrip_law: hand-rolled `DiffCodec` round-trips through both
     /// `print_diff`/`parse_diff` and `encode_diff`/`decode_diff`, over a real `between()` result
     /// exercising the nested mesh -> primitive triple plus materials/textures.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn diff_codec_text_binary_roundtrip_law() {
         let a = snapshot_a();
         let b = snapshot_b();

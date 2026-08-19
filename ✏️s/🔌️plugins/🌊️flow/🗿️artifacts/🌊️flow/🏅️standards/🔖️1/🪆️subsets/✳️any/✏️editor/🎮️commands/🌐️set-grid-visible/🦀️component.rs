@@ -48,7 +48,7 @@ mod tests {
     }
 
     /// 🔁️ `pressed: None` must flip the live config value, not force it to a constant.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn a_bare_toggle_flips_the_current_value() {
         let mut app = flow_app();
         assert!(grid_visible(&mut app), "grid starts visible");
@@ -58,7 +58,7 @@ mod tests {
         assert!(grid_visible(&mut app), "and back on");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn grid_factor_clamps_to_the_slider_range() {
         let mut app = flow_app();
         dispatch(&mut app, FlowCommand::SetGridFactor(crate::editor::flow::commands::set_grid_factor::SetGridFactor { value: 1000.0 }));

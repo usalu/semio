@@ -314,7 +314,7 @@ mod tests {
     use super::*;
     use protocol::Mutation;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_data_fields_diff_applies_onto_the_base_snapshot() {
         let base = LayoutSnapshot {
             schema: crate::artifacts::layout::LAYOUT_DOCUMENT_SCHEMA.into(),
@@ -340,7 +340,7 @@ mod tests {
         assert_eq!(applied.data_fields_json.as_deref(), Some("{}"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_replaces_with_whole_artifact_diff() {
         let mut diff = LayoutDiff::default();
         let snap = LayoutSnapshot {

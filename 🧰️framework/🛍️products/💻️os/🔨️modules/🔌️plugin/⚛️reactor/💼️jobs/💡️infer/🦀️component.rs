@@ -97,7 +97,7 @@ mod tests {
     /// 💡️ Registers a real native inference service (not mocked away) and drives `semio.infer`
     /// through two real `step_job` slices to `Done`, proving `job_infer` really reaches
     /// `crate::app::wire_artifact_infer` and not just `job.unknown-kind`.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn a_two_slice_infer_job_decodes_then_dispatches_to_the_registered_service() {
         let _ = crate::app::register_artifact_inference_service(ArtifactInferenceService::new(TEST_METADATA, echo_infer));
         start_job(200, JOB_KIND_INFER, &request_bytes());
@@ -132,7 +132,7 @@ mod tests {
     /// and confirms the resumed run reaches the SAME `Done` output as an uninterrupted run — the
     /// mission's checkpoint/restore round-trip requirement, exercised against the real dispatch, not
     /// a synthetic counter.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn infer_job_checkpoint_restore_matches_an_uninterrupted_run() {
         let _ = crate::app::register_artifact_inference_service(ArtifactInferenceService::new(TEST_METADATA, echo_infer));
         let input = request_bytes();
@@ -164,7 +164,7 @@ mod tests {
         assert_eq!(restored_final, baseline, "checkpoint/restore must produce the identical final output");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn infer_job_reports_a_named_decode_fault_on_garbage_input() {
         start_job(203, JOB_KIND_INFER, b"not json");
         match step_job(203, JobBudget::default()) {

@@ -889,7 +889,7 @@ mod tests {
 
     const TAU: f64 = 2.0 * PI;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn unit_box_volume_and_area() {
         let mut body = Body::new();
         let solid = make_box_solid(&mut body, Pnt3::new(0.0, 0.0, 0.0), 1.0, 1.0, 1.0);
@@ -899,7 +899,7 @@ mod tests {
         assert!((area - 6.0).abs() < 1e-9, "area {area}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn box_mass_properties_and_bbox() {
         let mut body = Body::new();
         let solid = make_box_solid(&mut body, Pnt3::new(0.0, 0.0, 0.0), 2.0, 3.0, 4.0);
@@ -915,7 +915,7 @@ mod tests {
         assert!((bb.max.z - 4.0).abs() < 1e-9);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn edge_length_on_unit_box() {
         let mut body = Body::new();
         let solid = make_box_solid(&mut body, Pnt3::new(0.0, 0.0, 0.0), 1.0, 1.0, 1.0);
@@ -926,7 +926,7 @@ mod tests {
         assert!((len - 1.0).abs() < 1e-9);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn sphere_volume_coarse_tessellation() {
         let mut body = Body::new();
         let r = 2.0;
@@ -936,7 +936,7 @@ mod tests {
         assert!((vol - expected).abs() < 0.02 * expected, "vol {vol} expected {expected}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn distance_and_closest_point_between_boxes() {
         let mut body = Body::new();
         let a = make_box_solid(&mut body, Pnt3::new(0.0, 0.0, 0.0), 1.0, 1.0, 1.0);
@@ -948,7 +948,7 @@ mod tests {
         assert!(cp.x > 2.5);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn classify_point_ray_parity_on_unit_box() {
         let mut body = Body::new();
         let solid = make_box_solid(&mut body, Pnt3::new(0.0, 0.0, 0.0), 1.0, 1.0, 1.0);
@@ -956,7 +956,7 @@ mod tests {
         assert_eq!(classify_point_on_solid(&body, solid, Pnt3::new(2.0, 2.0, 2.0)).unwrap(), PointSolidClassification::Outside);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn face_area_unit_square() {
         let mut body = Body::new();
         let frame = Frame3::WORLD;
@@ -1190,7 +1190,7 @@ pub mod oracle {
     mod tests {
         use super::*;
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn box_sdf_is_negative_inside_and_positive_outside() {
             let b = Sdf::Box { half_extents: Pnt3::new(1.0, 1.0, 1.0), placement: Trsf::IDENTITY };
             assert!(b.eval(Pnt3::new(0.0, 0.0, 0.0)) < 0.0);
@@ -1198,21 +1198,21 @@ pub mod oracle {
             assert!((b.eval(Pnt3::new(1.0, 0.0, 0.0))).abs() < 1e-9);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn sphere_sdf_matches_analytic_distance() {
             let s = Sdf::Sphere { radius: 2.0, placement: Trsf::IDENTITY };
             assert!((s.eval(Pnt3::new(5.0, 0.0, 0.0)) - 3.0).abs() < 1e-9);
             assert!((s.eval(Pnt3::new(0.0, 0.0, 0.0)) - (-2.0)).abs() < 1e-9);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn cylinder_sdf_is_correct_on_axis_and_cap() {
             let c = Sdf::Cylinder { radius: 1.0, half_height: 2.0, placement: Trsf::IDENTITY };
             assert!((c.eval(Pnt3::new(0.0, 0.0, 0.0)) - (-1.0)).abs() < 1e-9);
             assert!((c.eval(Pnt3::new(0.0, 0.0, 5.0)) - 3.0).abs() < 1e-9);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn torus_sdf_is_negative_on_major_circle_and_positive_outside_tube() {
             let t = Sdf::Torus { major_radius: 2.0, minor_radius: 0.5, placement: Trsf::IDENTITY };
             assert!(t.eval(Pnt3::new(2.0, 0.0, 0.0)) < 0.0);
@@ -1220,7 +1220,7 @@ pub mod oracle {
             assert!(t.eval(Pnt3::new(0.0, 0.0, 0.0)) > 0.0);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn cone_sdf_is_negative_inside_taper_and_positive_outside() {
             let c = Sdf::Cone { radius: 1.0, half_height: 1.0, placement: Trsf::IDENTITY };
             assert!(c.eval(Pnt3::new(0.0, 0.0, -0.5)) < 0.0);
@@ -1228,7 +1228,7 @@ pub mod oracle {
             assert!(c.eval(Pnt3::new(2.0, 0.0, 0.0)) > 0.0);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn union_is_the_min_and_matches_containment_of_either_operand() {
             let a = Sdf::Sphere { radius: 1.0, placement: Trsf::translation(crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::Vec3::new(-1.0, 0.0, 0.0)) };
             let b = Sdf::Sphere { radius: 1.0, placement: Trsf::translation(crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::Vec3::new(1.0, 0.0, 0.0)) };
@@ -1238,7 +1238,7 @@ pub mod oracle {
             assert!(!u.contains(Pnt3::new(5.0, 0.0, 0.0), 1e-9));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn difference_removes_the_second_operand() {
             let big = Sdf::Sphere { radius: 2.0, placement: Trsf::IDENTITY };
             let small = Sdf::Sphere { radius: 1.0, placement: Trsf::IDENTITY };
@@ -1247,7 +1247,7 @@ pub mod oracle {
             assert!(d.contains(Pnt3::new(1.5, 0.0, 0.0), 1e-9));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn placed_box_sdf_respects_transform() {
             let placement = Trsf::translation(crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::Vec3::new(10.0, 0.0, 0.0));
             let b = Sdf::Box { half_extents: Pnt3::new(1.0, 1.0, 1.0), placement };
@@ -1255,7 +1255,7 @@ pub mod oracle {
             assert!(b.eval(Pnt3::new(0.0, 0.0, 0.0)) > 0.0);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn closed_form_mass_matches_textbook_box_sphere_cylinder() {
             let half = Pnt3::new(1.0, 2.0, 3.0);
             assert!((ClosedFormMass::box_volume(half) - 48.0).abs() < 1e-12);
@@ -1266,7 +1266,7 @@ pub mod oracle {
             assert!((ClosedFormMass::cylinder_surface_area(2.0, 3.0) - 32.0 * std::f64::consts::PI).abs() < 1e-9);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn watertightness_stub_classifies_boundary_edge_count() {
             let tight = watertightness_from_boundary_edge_count(0);
             assert_eq!(tight.verdict, WatertightnessVerdict::Watertight);
@@ -1276,7 +1276,7 @@ pub mod oracle {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn watertightness_of_box_is_watertight() {
         use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primitives::make_box;
         use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;

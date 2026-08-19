@@ -20,7 +20,7 @@ pub struct SemioGraphArtifact {
 }
 
 impl Default for SemioGraphArtifact {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self::from_snapshot(SemioGraphSnapshot::default())
     }
 }
@@ -141,7 +141,7 @@ pub mod derived_construction {
     mod tests {
         use super::*;
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn typed_constructors_build_a_populated_snapshot() {
             let snapshot = SemioGraphBuilderConstruction::new()
                 .add_node("n1", "source", "Source", SemioPoint2 { x: 0.0, y: 0.0 }, vec![], vec![])

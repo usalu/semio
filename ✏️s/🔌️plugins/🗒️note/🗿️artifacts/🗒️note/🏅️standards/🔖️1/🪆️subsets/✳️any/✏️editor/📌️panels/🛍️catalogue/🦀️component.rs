@@ -32,7 +32,7 @@ mod tests {
     use crate::editor::note::testkit::{note_app, render as render_body};
     use crate::editor::note::NOTE_PLAY_BODY_CATALOGUE as BODY_CATALOGUE;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn catalogue_lists_every_block_kind() {
         let mut app = note_app();
         let json = render_body(&mut app, BODY_CATALOGUE);
@@ -40,7 +40,7 @@ mod tests {
         assert!(json.contains("text — rich text block"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn catalogue_resolves_german_locale() {
         use crate::editor::note::commands::set_locale::SetLocale;
         use crate::editor::note::testkit::dispatch;

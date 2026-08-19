@@ -24,7 +24,7 @@ pub struct SvgIntoDag;
 impl Deserializer<DagSnapshot> for SvgIntoDag {
     const FROM: Dialect = SVG_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    async fn deserialize(payload: &IoPayload) -> IoResult<DagSnapshot> {
+    fn deserialize(payload: &IoPayload) -> IoResult<DagSnapshot> {
         let IoPayload::Binary(bytes) = payload else {
             return Err(IoError { message: "SvgIntoDag: expected a binary svg payload".to_string(), diagnostics: Vec::new() });
         };

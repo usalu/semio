@@ -344,7 +344,7 @@ mod tests {
         v.iter().map(|s| s.to_string()).collect()
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn insert_then_remove_before_matches_canonical_shape() {
         // Insert("f") at 2, then Remove(0) — canonical case: {removed:[0], added:[(1,f)]}.
         let d1 = TxtDiff { lines: Some(TxtLinesDiff { removed: vec![], modified: vec![], added: vec![TxtLineAdded { index: 2, text: "f".into() }] }), ..Default::default() };
@@ -364,7 +364,7 @@ mod tests {
         assert_eq!(merged.apply(&base).unwrap(), sequential);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn insert_insert_same_index_both_survive() {
         let d1 = TxtDiff { lines: Some(TxtLinesDiff { removed: vec![], modified: vec![], added: vec![TxtLineAdded { index: 2, text: "f".into() }] }), ..Default::default() };
         let d2 = TxtDiff { lines: Some(TxtLinesDiff { removed: vec![], modified: vec![], added: vec![TxtLineAdded { index: 2, text: "g".into() }] }), ..Default::default() };
@@ -379,7 +379,7 @@ mod tests {
         assert!(sequential.lines.contains(&"f".to_string()) && sequential.lines.contains(&"g".to_string()));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_then_set_field_patches_into_added() {
         let d1 = TxtDiff { lines: Some(TxtLinesDiff { removed: vec![], modified: vec![], added: vec![TxtLineAdded { index: 1, text: "f".into() }] }), ..Default::default() };
         let d2 = TxtDiff { lines: Some(TxtLinesDiff { removed: vec![], modified: vec![TxtLineModified { index: 1, text: "v".into() }], added: vec![] }), ..Default::default() };
@@ -397,7 +397,7 @@ mod tests {
         assert_eq!(merged.apply(&base).unwrap(), sequential);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn modify_then_remove_drops_the_modify() {
         let d1 = TxtDiff { lines: Some(TxtLinesDiff { removed: vec![], modified: vec![TxtLineModified { index: 0, text: "m".into() }], added: vec![] }), ..Default::default() };
         let d2 = TxtDiff { lines: Some(TxtLinesDiff { removed: vec![0], modified: vec![], added: vec![] }), ..Default::default() };
@@ -415,7 +415,7 @@ mod tests {
         assert_eq!(merged.apply(&base).unwrap(), sequential);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_associative_over_a_triple() {
         let base = TxtSnapshot { lines: lines(&["a", "b", "c"]), ..Default::default() };
         let d1 = TxtDiff { lines: Some(TxtLinesDiff { removed: vec![1], modified: vec![], added: vec![] }), ..Default::default() };
@@ -440,7 +440,7 @@ mod tests {
         assert_eq!(left.apply(&base).unwrap(), sequential);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn between_roundtrip_synthetic() {
         let a = TxtSnapshot { lines: lines(&["a", "b", "c"]), trailing_newline: true, line_ending: LineEnding::Lf, ..Default::default() };
         let b = TxtSnapshot { lines: lines(&["a", "x", "c", "d"]), trailing_newline: false, line_ending: LineEnding::CrLf, ..Default::default() };
@@ -449,7 +449,7 @@ mod tests {
         assert!(TxtDiff::between(&a, &a).is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inverse_diff_level_roundtrip() {
         let base = TxtSnapshot { lines: lines(&["a", "b"]), trailing_newline: false, line_ending: LineEnding::Lf, ..Default::default() };
         let d = TxtDiff { lines: Some(TxtLinesDiff { removed: vec![0], modified: vec![], added: vec![TxtLineAdded { index: 0, text: "z".into() }] }), trailing_newline: Some(true), line_ending: Some(LineEnding::CrLf) };
@@ -464,7 +464,7 @@ mod tests {
     /// `modified`+`removed` OR `modified`+`added`, per `TxtLinesDiff::between`'s own base-tail/
     /// other-tail algorithm above -- so this test also directly constructs one diff exercising
     /// all three sections at once, plus a genuine `between()` result for good measure).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn diff_codec_text_binary_roundtrip_law() {
         use protocol::DiffCodec;
         let a = TxtSnapshot { lines: lines(&["a", "b", "c"]), trailing_newline: true, line_ending: LineEnding::Lf, ..Default::default() };
@@ -504,7 +504,7 @@ mod tests {
     /// constructs one diff exercising all three sections simultaneously, plus a genuine
     /// `between()` result for good measure -- same case list `diff_codec_text_binary_roundtrip_law`
     /// already uses).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn diff_grammar_conformance_law() {
         use protocol::DiffCodec;
         let grammar_text = crate::artifacts::txt::schema::diff::text::COMPONENT_GRAMMAR_SEMIO;

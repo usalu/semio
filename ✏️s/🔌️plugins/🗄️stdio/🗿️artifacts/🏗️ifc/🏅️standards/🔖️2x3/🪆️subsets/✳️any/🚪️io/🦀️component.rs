@@ -35,7 +35,7 @@ pub async fn decode_ifc2x3(bytes: &[u8]) -> Result<Ifc2x3Snapshot, String> {
 pub async fn encode_ifc2x3(snapshot: &Ifc2x3Snapshot) -> Result<Vec<u8>, String> {
     crate::artifacts::ifc::standards::v2x3::subsets::any::schema::snapshot::validate_ifc2x3_snapshot(snapshot)?;
     let options = Part21WriteOptions { line_ending: "\r\n", blank_after_header: snapshot.edm_preamble.is_some(), blank_before_data: true, blank_before_terminator: true, space_after_instance_equals: true };
-    Ok(write_part21_with(&snapshot.document, options, snapshot.edm_preamble.as_ref().map(|preamble| preamble as &dyn Part21Preamble)).into_bytes())
+    Ok(write_part21_with(&snapshot.document, options, snapshot.edm_preamble.as_ref()).into_bytes())
 }
 //#endregion 🔖️Codec
 
@@ -159,7 +159,7 @@ mod tests {
         assert!(actual == expected, "{label}: expected {} bytes, got {}; first differing byte: {first_difference:?}", expected.len(), actual.len(),);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn decode_rejects_non_ifc2x3_schema() {
         let step_ap214 = "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION((''),'2;1');\nFILE_NAME('','',(''),(''),'','','');\nFILE_SCHEMA(('AUTOMOTIVE_DESIGN'));\nENDSEC;\nDATA;\nENDSEC;\nEND-ISO-10303-21;\n";
         assert!(decode_ifc2x3(step_ap214.as_bytes()).is_err(), "must reject a non-IFC2X3 FILE_SCHEMA");
@@ -169,7 +169,7 @@ mod tests {
 
     /// 🧪️ THE genuine decode→encode→decode round-trip law this ticket's own policy requires
     /// (`POLICY_ROUND_TRIP_TEST_ALLOWLIST` is shrink-only for new standards).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn decode_encode_decode_round_trip_is_lossless() {
         let once = decode_ifc2x3(IFC2X3_FIXTURE.as_bytes()).expect("decode fixture");
         // 🩹 8 distinct instance ids in IFC2X3_FIXTURE: #1, #20, #21, #30, #31, #32, #40, #41.
@@ -180,13 +180,13 @@ mod tests {
         assert_eq!(once, twice, "decode -> encode -> decode must be lossless at the snapshot level");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn empty_snapshot_matches_schema() {
         let snapshot = empty_ifc2x3_snapshot();
         assert_eq!(snapshot.schema, STDIO_IFC2X3_DOCUMENT_SCHEMA);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn codec_round_trip_through_store_traits() {
         let snap = decode_ifc2x3(IFC2X3_FIXTURE.as_bytes()).expect("decode");
         let text = store::ArtifactDsl::print_dsl(&snap);
@@ -198,7 +198,7 @@ mod tests {
     }
 
     //#region 🔖️LosslessNativeRouting
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn exact_native_engine_raw_serializers_analyzer_and_composer_roundtrip() {
         use crate::artifacts::binary::{BinarySnapshot, STDIO_BINARY_DOCUMENT_SCHEMA};
         use crate::artifacts::ifc::standards::v2x3::subsets::any::io::export::serializers::artifacts::{binary::v_raw::any as binary_export, txt::v_utf_8::any as text_export};
@@ -241,7 +241,7 @@ mod tests {
         assert_exact("pack composer export", &encode_ifc2x3(&pack_composition.snapshot).expect("pack composer export"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn snapshot_and_facets_forbid_native_shadow_state() {
         let value = serde_json::to_value(demo_ifc2x3_snapshot()).expect("serialize logical snapshot");
         let object = value.as_object().expect("snapshot object");
@@ -276,7 +276,7 @@ mod tests {
 
         /// ✅️ "committed files parse": all 6 handcrafted `.grammar.semio`/`.protocol.semio` files
         /// parse under the real dialect.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn committed_facet_files_parse() {
             for (label, text) in [("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO)] {
                 let grammar = dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
@@ -290,7 +290,7 @@ mod tests {
         /// ✅️ `grammar_conformance_law`: the snapshot grammar recognizes real `print_dsl` output for
         /// the demo snapshot AND the empty-instances case, preamble-stripped-and-reconstructed the
         /// same way `m5_handcrafted_grammar_conformance` itself does.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn grammar_conformance_law() {
             let grammar = dsl::parse_grammar(snapshot::text::COMPONENT_GRAMMAR_SEMIO).expect("parse snapshot grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
@@ -309,7 +309,7 @@ mod tests {
 
         /// ✅️ `ops_grammar_conformance_law`: the mutations grammar recognizes real `print_op` output
         /// for every `Ifc2x3Mutation` demo case.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn ops_grammar_conformance_law() {
             let grammar = dsl::parse_grammar(mutations::text::COMPONENT_GRAMMAR_SEMIO).expect("parse mutations grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
@@ -321,7 +321,7 @@ mod tests {
 
         /// ✅️ `diff_grammar_conformance_law`: the diff grammar recognizes real `print_diff` output
         /// for every representative `Ifc2x3Diff` demo case.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn diff_grammar_conformance_law() {
             let grammar = dsl::parse_grammar(diff::text::COMPONENT_GRAMMAR_SEMIO).expect("parse diff grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
@@ -334,7 +334,7 @@ mod tests {
         /// ✅️ `protocol_walk_law`: `walk_protocol` against REAL bytes for all three facets —
         /// snapshot pack (envelope-unwrapped first), every demo mutation's `encode_op`, every demo
         /// diff's `encode_diff` — asserting `consumed == bytes.len()`.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn protocol_walk_law() {
             let pack_spec = dsl::parse_protocol(snapshot::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
             let packed = store::ArtifactPack::encode_pack(&demo_ifc2x3_snapshot());
@@ -359,7 +359,7 @@ mod tests {
 
         /// ✅️ `fixture_honesty_law`: the shipped `.dsl.semio`/`.pack.semio` fixtures are GENUINE
         /// `print_dsl`/`encode_pack` output of `demo_ifc2x3_snapshot()`.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn fixture_honesty_law() {
             const FIXTURE_DSL: &str = include_str!("../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
             const FIXTURE_PACK: &[u8] = include_bytes!("../📚️examples/🎬️demo/🖼️assets/🎒️example.pack.semio");

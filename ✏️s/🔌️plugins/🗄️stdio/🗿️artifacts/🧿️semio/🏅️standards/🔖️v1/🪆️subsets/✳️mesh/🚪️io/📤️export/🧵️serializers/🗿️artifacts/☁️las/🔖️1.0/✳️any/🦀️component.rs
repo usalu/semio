@@ -106,7 +106,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn serialize_then_deserialize_round_trips_positions_and_colors_within_las_quantization() {
         let original = sample_semio_mesh();
         let las = semio_framework_plugin::resolve_ready(SemioMeshToLas::serialize(&original)).expect("serialize");
@@ -125,7 +125,7 @@ mod tests {
         assert_eq!(orig_prim.colors, rt_prim.colors, "0.0/1.0 channel extremes must survive the u16 round trip exactly");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn triangle_primitive_flattens_to_a_point_cloud_no_error() {
         let mut semio = sample_semio_mesh();
         semio.meshes[0].primitives[0].topology = SemioTopology::Triangles;

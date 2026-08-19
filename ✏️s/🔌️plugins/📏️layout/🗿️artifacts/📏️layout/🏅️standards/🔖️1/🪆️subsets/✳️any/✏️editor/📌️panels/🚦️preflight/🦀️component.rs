@@ -215,7 +215,7 @@ mod tests {
     use crate::editor::layout::testkit::{layout_app, render as render_body};
     use semio_framework_plugin::AppLabels;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn preflight_finds_missing_asset() {
         let issues = run_layout_preflight(&crate::artifacts::layout::schema::default_document(), LayoutLabels::labels(semio_framework_plugin::Locale::En, semio_framework_plugin::Terminology::Native));
         assert!(issues.iter().any(|issue| issue.code == "asset.missing"));
@@ -224,7 +224,7 @@ mod tests {
         assert!(json.contains("asset.missing") || json.contains("Linked asset missing"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn preflight_reports_all_expected_issue_codes() {
         let json = r#"{
             "schema": "layout.layout",
@@ -278,7 +278,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn definition_binds_the_preflight_tab_to_this_body_key() {
         let definition = definition();
         assert_eq!(definition.id(), LAYOUT_PLAY_PREFLIGHT_TAB_ID);

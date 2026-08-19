@@ -27,7 +27,7 @@ mod tests {
     use super::*;
     use crate::artifacts::home::mutations::change_catalog_generation;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_binary_round_trips_and_agrees_with_text() {
         let operation = change_catalog_generation(7);
         store::os_store::test_support::assert_op_text_binary_equivalence(&operation);
@@ -35,7 +35,7 @@ mod tests {
         assert_eq!(decode_op(&bytes).expect("decode"), operation);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn home_document_text_round_trips_through_the_store() {
         use crate::artifacts::home::SHomeSnapshot;
         let projection = SHomeSnapshot { schema: "s.home".into(), catalog_generation: 0 };

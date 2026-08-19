@@ -179,20 +179,20 @@ mod tests {
         app
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn renders_fem3d_results_scene() {
         let mut app = app_with_example();
         let json = render_body(&mut app, FEM3D_BODY_RESULTS);
         assert!(json.contains("world-3d"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn results_window_surfaces_solver_error_without_panicking_3d() {
         let mut app = fem3d_app();
         let _ = render_body(&mut app, FEM3D_BODY_RESULTS);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn results_window_renders_modal_mode_shape_3d() {
         let mut app = app_with_example();
         dispatch(&mut app, Fem3dCommand::SetResultDisplay(crate::editor::fem3d::commands::set_result_display::SetResultDisplay { source_id: None, mode: "modal".into(), mode_index: 0 }));
@@ -201,7 +201,7 @@ mod tests {
         assert!(!json.contains("Modal analysis error"), "unexpected modal error: {json}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn results_window_renders_buckling_mode_shape_3d() {
         let mut app = app_with_example();
         dispatch(&mut app, Fem3dCommand::SetResultDisplay(crate::editor::fem3d::commands::set_result_display::SetResultDisplay { source_id: Some("dead".into()), mode: "buckling".into(), mode_index: 0 }));
@@ -210,7 +210,7 @@ mod tests {
         assert!(!json.contains("Buckling analysis error"), "unexpected buckling error: {json}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn results_scene_includes_solid_vertex_colors_3d() {
         let mut app = app_with_example();
         dispatch(&mut app, Fem3dCommand::SetResultDisplay(crate::editor::fem3d::commands::set_result_display::SetResultDisplay { source_id: Some("dead".into()), mode: "static".into(), mode_index: 0 }));
@@ -220,7 +220,7 @@ mod tests {
         assert!(json.contains("Case: dead"), "expected a case-id caption: {json}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn results_scene_captions_name_mode_and_factor_3d() {
         let mut app = app_with_example();
         dispatch(&mut app, Fem3dCommand::SetResultDisplay(crate::editor::fem3d::commands::set_result_display::SetResultDisplay { source_id: None, mode: "modal".into(), mode_index: 0 }));
@@ -232,7 +232,7 @@ mod tests {
         assert!(json_buckling.contains("factor"), "expected a load-factor caption: {json_buckling}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fem3d_model_extent_degenerate_model_returns_one() {
         assert_eq!(fem3d_model_extent(&Fem3dSnapshot::default()), 1.0);
     }

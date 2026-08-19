@@ -72,13 +72,13 @@ mod tests {
     use super::*;
     use protocol::Inference;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = Iso16757Snapshot::default();
         assert_eq!(Iso16757Inference::infer(&snapshot), Iso16757Inference::infer(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(Iso16757Inference::infer(&Iso16757Snapshot::default()), Iso16757Inference::default());
     }
@@ -214,7 +214,7 @@ mod compliance_report_tests {
     use super::*;
     use crate::document::CheckStatus;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn evaluate_exercises_all_parts_with_numeric_checks() {
         let report = evaluate(&Iso16757Snapshot::default());
         assert!(!report.checks.is_empty());

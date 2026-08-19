@@ -607,7 +607,7 @@ mod handcrafted_diff_codec_tests {
         TsvSnapshot { records, trailing_newline, ..TsvSnapshot::default() }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn diff_codec_text_binary_roundtrip_law() {
         let a = snapshot(vec![row(&["id", "name"]), row(&["1", "Oak"]), row(&["2", "Steel"])], true);
         let mut b = snapshot(vec![row(&["id", "name"]), row(&["1", "Oak, tricky [value]"]), row(&["2", "Steel"])], false);

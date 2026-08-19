@@ -322,26 +322,26 @@ impl Topology for Grid2dTopology {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn von_neumann_offsets_are_symmetric() {
         Stencil2d::VonNeumann.validate().unwrap();
         Stencil2d::Moore.validate().unwrap();
         Stencil2d::Hex.validate().unwrap();
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn custom_stencil_rejects_unpaired_offset() {
         let s = Stencil2d::Custom(vec![(1, 0)]);
         assert!(s.validate().is_err());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn custom_stencil_rejects_duplicate_and_self_offset() {
         assert!(Stencil2d::Custom(vec![(1, 0), (1, 0), (-1, 0)]).validate().is_err());
         assert!(Stencil2d::Custom(vec![(0, 0)]).validate().is_err());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn node_at_and_coords_roundtrip() {
         let mut b = ModelBuilder::new();
         b.add_pattern(1.0);
@@ -352,7 +352,7 @@ mod tests {
         assert_eq!(topo.node_at(4, 0), None);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn open_boundary_drops_out_of_range_arcs() {
         let mut b = ModelBuilder::new();
         b.add_pattern(1.0);
@@ -364,7 +364,7 @@ mod tests {
         assert_eq!(out.len(), 2); // only east and south exist from the top-left corner
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn wrap_boundary_connects_opposite_edges() {
         let mut b = ModelBuilder::new();
         b.add_pattern(1.0);
@@ -378,7 +378,7 @@ mod tests {
         assert!(out.contains(&topo.node_at(0, 2).unwrap())); // north wraps to y=2
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn size_one_axis_wrap_self_loops() {
         let mut b = ModelBuilder::new();
         b.add_pattern(1.0);
@@ -391,7 +391,7 @@ mod tests {
         assert_eq!(out.len(), 4);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mirror_boundary_reflects_at_edges() {
         let mut b = ModelBuilder::new();
         b.add_pattern(1.0);
@@ -405,7 +405,7 @@ mod tests {
         assert!(out.contains(&topo.node_at(0, 1).unwrap())); // north mirrors back to y=1
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mask_excludes_inactive_cells_from_arcs() {
         let mut b = ModelBuilder::new();
         b.add_pattern(1.0);
@@ -420,7 +420,7 @@ mod tests {
         assert_eq!(topo.inactive_cells(), vec![NodeId(4)]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fixed_outside_restrictions_only_on_boundary_facing_axis() {
         let mut b = ModelBuilder::new();
         let solid = b.add_pattern(1.0);
@@ -432,7 +432,7 @@ mod tests {
         assert!(restrictions.iter().all(|&(_, _, p)| p == solid));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn in_arc_matches_out_arc_on_open_boundary() {
         let mut b = ModelBuilder::new();
         b.add_pattern(1.0);

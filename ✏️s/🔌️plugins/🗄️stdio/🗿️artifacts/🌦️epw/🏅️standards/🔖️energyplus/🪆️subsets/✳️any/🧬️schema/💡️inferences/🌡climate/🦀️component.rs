@@ -28,7 +28,7 @@ pub struct EpwClimateSummary {
 /// explicitly rather than assumed to fall out of `#[derive(Default)]` — the divide-by-zero guard
 /// logic lives in `compute_epw_climate_summary`, not in a derive.
 impl Default for EpwClimateSummary {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { record_count: 0, parsed_temp_count: 0, min_dry_bulb_c: 0.0, max_dry_bulb_c: 0.0, avg_dry_bulb_c: 0.0 }
     }
 }
@@ -66,7 +66,7 @@ mod tests {
         EpwRecord { dry_bulb_temp: dry_bulb_temp.into(), ..Default::default() }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn folds_parseable_temps_and_skips_malformed_ones() {
         let snapshot = EpwSnapshot { schema: STDIO_EPW_DOCUMENT_SCHEMA.into(), records: vec![record("10.0"), record("not-a-number"), record("30.0"), record("20.0")], ..Default::default() };
         let climate = compute_epw_climate_summary(&snapshot);
@@ -77,13 +77,13 @@ mod tests {
         assert_eq!(climate.avg_dry_bulb_c, 20.0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = EpwSnapshot::default();
         assert_eq!(compute_epw_climate_summary(&snapshot), compute_epw_climate_summary(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(compute_epw_climate_summary(&EpwSnapshot::default()), EpwClimateSummary::default());
     }

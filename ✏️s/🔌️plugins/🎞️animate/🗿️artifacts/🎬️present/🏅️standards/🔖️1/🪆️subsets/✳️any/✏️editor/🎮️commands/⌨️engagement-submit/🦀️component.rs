@@ -61,7 +61,7 @@ mod tests {
     use crate::editor::animate::PresentCommand;
     use semio_framework_plugin::Effect;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn engagement_input_stores_draft_and_submit_parses_grid_pattern() {
         let mut app = present_app();
         dispatch(&mut app, PresentCommand::EngagementInput(engagement_input::EngagementInput { value: "2x3".into() }));
@@ -69,7 +69,7 @@ mod tests {
         assert_eq!(crate::artifacts::present::present_working_scene(&app.snapshot().expect("projection")).1.len(), 6, "2x3 grid pattern seeds 6 tiles");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn engagement_submit_add_clear_and_copy_keywords() {
         use semio_framework_plugin::testkit::meta;
         let mut app = present_app();
@@ -84,7 +84,7 @@ mod tests {
         assert!(matches!(copy_result.requested_effects.as_slice(), [Effect::DownloadMediaExport { .. }]));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn engagement_submit_unrecognized_input_is_a_no_op() {
         use semio_framework_plugin::testkit::meta;
         let mut app = present_app();

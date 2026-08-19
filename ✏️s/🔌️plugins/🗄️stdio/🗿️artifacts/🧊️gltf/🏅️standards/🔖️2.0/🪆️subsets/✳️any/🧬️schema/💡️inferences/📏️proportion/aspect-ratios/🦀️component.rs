@@ -53,13 +53,13 @@ mod tests {
         vectors: Vec<Vector>,
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn descriptor_is_versioned_and_cacheable() {
         assert_eq!(descriptor().id, "s.stdio.gltf.inference.aspect-ratios.v1");
         assert_eq!(descriptor().algorithm_version, 1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn shared_vectors_execute_the_rust_leaf() {
         let contract: Contract = serde_json::from_str(include_str!("🧪️contract/🔣️component.json")).unwrap();
         for vector in contract.vectors {

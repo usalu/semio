@@ -36,7 +36,7 @@ mod tests {
     use crate::editor::gis2d::testkit::{app, dispatch};
     use crate::editor::gis2d::Gis2dCommand;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn open_source_on_an_unknown_feature_emits_no_effect() {
         let mut app = app();
         let result = dispatch(&mut app, Gis2dCommand::OpenSource(open_source::OpenSource { feature_id: "nope".into() }));
@@ -46,7 +46,7 @@ mod tests {
 
     /// 🌐️ A Shell action never emits document operations — the registry's kind-discipline guard
     /// rejects one that does.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn open_source_is_a_shell_action_that_emits_no_operations() {
         let definition = crate::editor::gis2d::create_gis2d_app().definition;
         let action = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|action| action.id == "openSource").expect("openSource declared");

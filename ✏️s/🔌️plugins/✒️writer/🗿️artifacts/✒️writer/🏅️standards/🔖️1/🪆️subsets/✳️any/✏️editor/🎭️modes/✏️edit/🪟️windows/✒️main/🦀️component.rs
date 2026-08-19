@@ -135,13 +135,13 @@ mod tests {
     use crate::editor::writer::testkit::{main_window_measures, new_app, render as render_body};
     use semio_framework_plugin::PluginApp;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn renders_text_editor_scene() {
         let mut app = new_app();
         assert!(render_body(&mut app, WRITER_PLAY_BODY_MAIN).contains("text-editor"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn scene_emits_placeholders_selectable_spans_and_newline_gates_for_jack() {
         let mut app = new_app();
         let node = app.render(WRITER_PLAY_BODY_MAIN, Some(&crate::artifacts::writer::dsl::jack_example_json()), &semio_framework_plugin::ViewModel::default()).expect("render");
@@ -151,7 +151,7 @@ mod tests {
         assert!(json.contains("newlineGatesJson"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn window_measures_expose_font_line_height_tab_and_toggle() {
         let mut app = new_app();
         let measures = main_window_measures(&mut app);
@@ -159,7 +159,7 @@ mod tests {
         assert!(measures.iter().any(|m| matches!(m, WindowMeasure::Toggle { id, .. } if id == "writer-line-numbers-measure")));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn definition_declares_the_text_editor_surface_and_body_key() {
         let definition = definition();
         assert_eq!(definition.body_key, WRITER_PLAY_BODY_MAIN);

@@ -78,13 +78,13 @@ mod tests {
     use super::*;
     use crate::editor::wires::testkit::{new_app, render as render_body};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn renders_canvas_scene() {
         let mut app = new_app();
         assert!(render_body(&mut app, WIRES_PLAY_BODY_COMPOSITE).contains("canvas-2d"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn definition_declares_the_canvas_2d_surface_and_body_key() {
         let definition = definition();
         assert_eq!(definition.body_key, WIRES_PLAY_BODY_COMPOSITE);

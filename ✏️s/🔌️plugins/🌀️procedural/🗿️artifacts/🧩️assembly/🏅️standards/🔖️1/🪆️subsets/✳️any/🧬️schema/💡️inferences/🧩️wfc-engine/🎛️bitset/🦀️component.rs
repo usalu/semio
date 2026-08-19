@@ -202,7 +202,7 @@ mod tests {
         s
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn empty_and_full() {
         let e = PatternSet::new_empty(10);
         assert!(e.is_all_zero());
@@ -214,14 +214,14 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn full_respects_boundary_bits() {
         // 70 patterns spans two words; the second word must not have stray set bits above 70.
         let f = PatternSet::new_full(70);
         assert_eq!(f.count_ones(), 70);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_get_roundtrip() {
         let mut s = PatternSet::new_empty(5);
         s.set(PatternId::from_index(2), true);
@@ -231,7 +231,7 @@ mod tests {
         assert!(!s.get(PatternId::from_index(2)));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn and_or_and_not() {
         let a = from_indices(8, &[0, 1, 2, 3]);
         let b = from_indices(8, &[2, 3, 4, 5]);
@@ -249,14 +249,14 @@ mod tests {
         assert_eq!(sub.iter_ones().map(|p| p.index()).collect::<Vec<_>>(), vec![0, 1]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn first_set_and_iter_ones_skip_zero_words() {
         let s = from_indices(200, &[130, 199]);
         assert_eq!(s.first_set().unwrap().index(), 130);
         assert_eq!(s.iter_ones().map(|p| p.index()).collect::<Vec<_>>(), vec![130, 199]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn subset_and_intersects() {
         let a = from_indices(8, &[0, 1]);
         let b = from_indices(8, &[0, 1, 2]);
@@ -267,7 +267,7 @@ mod tests {
         assert!(!a.intersects(&c));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn restrict_returning_removed_matches_naive() {
         let mut s = from_indices(10, &[0, 1, 2, 3, 4]);
         let allowed = from_indices(10, &[2, 3, 5]);
@@ -278,7 +278,7 @@ mod tests {
         assert_eq!(removed.iter_ones().map(|p| p.index()).collect::<Vec<_>>(), vec![0, 1, 4]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn restrict_no_change_returns_zero() {
         let mut s = from_indices(6, &[1, 2]);
         let allowed = PatternSet::new_full(6);
@@ -288,7 +288,7 @@ mod tests {
         assert!(removed.is_all_zero());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn freshly_built_sets_are_well_formed() {
         assert!(PatternSet::new_empty(0).is_well_formed());
         assert!(PatternSet::new_empty(70).is_well_formed());
@@ -296,21 +296,21 @@ mod tests {
         assert!(from_indices(200, &[130, 199]).is_well_formed());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn wrong_word_count_is_not_well_formed() {
         let mut s = from_indices(70, &[10]);
         s.words.push(0); // one extra word beyond what 70 patterns needs
         assert!(!s.is_well_formed());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn stray_bits_past_len_in_final_word_are_not_well_formed() {
         let mut s = from_indices(10, &[2]);
         s.words[0] |= 1 << 20; // bit 20 is past `len = 10`, still within the single backing word
         assert!(!s.is_well_formed());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn serde_round_trip_preserves_bits_and_len() {
         let s = from_indices(70, &[3, 64, 69]);
         let json = serde_json::to_string(&s).unwrap();
@@ -322,7 +322,7 @@ mod tests {
     mod quick {
         use super::*;
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn random_and_or_matches_vec_bool_model() {
             let mut rng = geometry::random::Rng::from_seed(12345);
             for _ in 0..200 {

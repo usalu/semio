@@ -1,0 +1,226 @@
+/** @generated semio shard worker (H2 — bounded pool, actorId-multiplexed) */
+// 🩺️ SHARED-PRESENCE-SESSION-COLORS-AND-UNIVERSAL-ARTIFACT-CREATION (1-B): raise the captured-frame
+// cap BEFORE anything else runs so a deep guest recursion's real stack survives `error.stack`
+// instead of being truncated to V8's 10-frame default — this worker's stack is otherwise destroyed
+// before `ShardClient` ever sees it (the main thread only ever saw one frame: `at worker.onmessage`).
+Error.stackTraceLimit = 200;
+
+// 🧪️ terra-web-bridges: explicit JSPI capability gate — see this file's own header doc ("what must
+// change" #1 in 📓️terra-jco-spike-report.md). Every plugin component this worker will ever `import()`
+// is fully async-lifted, and jco's glue for that unconditionally needs `WebAssembly.Suspending`/
+// `WebAssembly.promising`; without them the FIRST `import()` throws `TypeError: WebAssembly.Suspending
+// is not a constructor` at module top-level, before any plugin call — an opaque failure the spike
+// reproduced verbatim under plain Node 24. Posting a `"trap"` BEFORE throwing gives `ShardClient`'s
+// `onActorTrap` its best chance at a readable message even where a cross-context Worker `onerror`
+// gets redacted to `"undefined undefined undefined"` (also reproduced by the spike) — `actorId: "*"`
+// is a worker-wide sentinel, not a real actor, since no actor has activated yet at this point.
+if (typeof WebAssembly === "undefined" || typeof WebAssembly.Suspending !== "function" || typeof WebAssembly.promising !== "function") {
+  const message = "semio shard worker: this browser/engine lacks JavaScript Promise Integration (JSPI) — WebAssembly.Suspending/WebAssembly.promising are required to run semio's async-lifted plugin components and there is no fallback. Chrome/Edge/Chromium-based browsers ship JSPI on by default; Firefox needs the javascript.options.wasm_js_promise_integration flag in about:config; Node.js needs --experimental-wasm-jspi.";
+  self.postMessage({ kind: "trap", actorId: "*", message });
+  throw new Error(message);
+}
+
+const actors = new Map(); // actorId -> { api, moduleUrl }
+const inFlightTurnActors = new Set();
+let turnSeq = 0;
+let heartbeatSabView = null;
+let heartbeatShardIndex = -1;
+
+// 📨️ terra-web-shardframe: ShardFrame::Grant/Envelope support — see this file's own header doc.
+const MAINTENANCE_LANE_DEFAULT_BUDGET = { fuel: 80000000, wallMs: 200, memoryBytes: 256 * 1024 * 1024, uiNodes: 4000, mailboxLen: 1024, maxEffects: 512, maxPatchBytes: 2097152 };
+const SHARD_FRAME_LANE_ORDER = ["Interactive", "UserVisible", "Background", "Maintenance"];
+const grantedBudgets = new Map(); // actorId -> last ShardFrame::Grant budget, mirrors ShardLoop::granted_budgets
+
+function orderEnvelopesByLane(envelopes) {
+  return envelopes
+    .map((envelope, index) => ({ envelope, index }))
+    .sort((left, right) => {
+      const rank = SHARD_FRAME_LANE_ORDER.indexOf(left.envelope.lane) - SHARD_FRAME_LANE_ORDER.indexOf(right.envelope.lane);
+      return rank !== 0 ? rank : left.index - right.index;
+    })
+    .map((entry) => entry.envelope);
+}
+
+// 🧠️ Mirrors 🧵️shard-client.ts's interpretShardFrame — see that function's own doc for the semantics.
+function interpretFrame(frame, actorId) {
+  switch (frame.kind) {
+    case "Register":
+      return { action: "register" };
+    case "Unregister":
+      return { action: "unregister" };
+    case "Grant":
+      grantedBudgets.set(frame.actor, frame.budget);
+      return { action: "runEnvelopes", budget: frame.budget, envelopes: orderEnvelopesByLane(frame.envelopes) };
+    case "Envelope":
+      return { action: "runEnvelopes", budget: grantedBudgets.has(actorId) ? grantedBudgets.get(actorId) : MAINTENANCE_LANE_DEFAULT_BUDGET, envelopes: [frame.envelope] };
+    default:
+      return { action: "unknown" };
+  }
+}
+
+function heartbeat() {
+  turnSeq += 1;
+  self.postMessage({ kind: "heartbeat", turnSeq });
+  if (heartbeatSabView) Atomics.store(heartbeatSabView, heartbeatShardIndex, turnSeq);
+}
+
+function reply(requestId, value) {
+  self.postMessage({ kind: "result", requestId, ok: true, value });
+}
+
+// 🩺️ `frames` is the request's own bulk payload (the `turn` message's `events` array — the largest,
+// most recursion-prone field a request carries) — sized WITHOUT ever JSON.stringify-ing it first
+// unless it isn't already a binary buffer, so a huge/cyclic payload can't itself blow the stack while
+// we're trying to report a stack overflow.
+function replyError(requestId, error, frames) {
+  const payload = error && typeof error === "object" && "payload" in error ? error.payload : undefined;
+  const detail = payload !== undefined ? ` payload=${(() => { try { return JSON.stringify(payload); } catch { return String(payload); } })()}` : "";
+  let stack;
+  try { stack = error && error.stack ? String(error.stack) : undefined; } catch { stack = undefined; }
+  let type;
+  try { type = (error && error.constructor && error.constructor.name) || typeof error; } catch { type = typeof error; }
+  let framesBytes;
+  try {
+    framesBytes = frames instanceof Uint8Array || frames instanceof ArrayBuffer ? frames.byteLength : frames !== undefined ? JSON.stringify(frames).length : undefined;
+  } catch { framesBytes = undefined; }
+  self.postMessage({ kind: "result", requestId, ok: false, error: (error instanceof Error ? error.message : String(error)) + detail, stack, type, framesBytes });
+}
+
+async function loadActor(actorId, moduleUrl) {
+  const existing = actors.get(actorId);
+  if (existing && existing.moduleUrl === moduleUrl) return existing;
+  const bridge = await import(/* @vite-ignore */ moduleUrl);
+  // 🧪️ terra-web-bridges: `actorId` now threads into `createActorApi` so `🟨️host-shim.js` can bind
+  // its `host-async` effect-request envelopes to the right actor — see `pluginComponentBridgeSource`'s
+  // own doc for why this is safe (one moduleUrl per actor ⇒ one shim module instance per actor).
+  const api = await bridge.createActorApi(actorId);
+  const entry = { api, moduleUrl, pendingAssets: [] };
+  actors.set(actorId, entry);
+  return entry;
+}
+
+// 🧪️ terra-web-bridges: settles a `🟨️host-shim.js` `effectRequest` Promise from an `effect-complete`/
+// `effect-error` envelope — see `hostShimSource`'s own doc for the wire shape this expects
+// (`envelope.payload.payload.requestId`, `.value` on complete / `.message` on error). A missing actor
+// (already disposed, or the envelope arrived before `activate`) is silently dropped rather than
+// thrown, matching `cancelJob`'s own `actor?.` defensiveness above.
+function deliverEffectResult(actorId, envelope) {
+  const actor = actors.get(actorId);
+  if (!actor) return;
+  const { kind, payload } = envelope.payload;
+  if (kind === "effect-complete") actor.api.resolveEffect(payload.requestId, payload.value);
+  else if (kind === "effect-error") actor.api.rejectEffect(payload.requestId, payload.message);
+}
+
+// 🪶️ GUESTSLIM (design-runtime.md §3): world `actor` exports NO `activate` function — activation is
+// pure bookkeeping (load the module, cache the named asset packs the main thread fetched) until the
+// KERNEL's own first `turn` for this actor carries a real `instance-open` event (it alone knows
+// `app-id`/`config`/`quotas`). This worker's only job is splicing the cached asset bytes into that
+// event's `assets` field right before the first `poll` — they must be resident before the guest's
+// first `surface-visible`, not fetched lazily on read.
+function spliceInstanceOpenAssets(entry, events) {
+  if (entry.pendingAssets.length === 0) return events;
+  const pending = entry.pendingAssets;
+  entry.pendingAssets = [];
+  return events.map((event) => {
+    if (event.kind !== "instance-open") return event;
+    return { kind: event.kind, payload: { ...event.payload, assets: [...(event.payload.assets ?? []), ...pending] } };
+  });
+}
+
+self.addEventListener("message", async (event) => {
+  const msg = event.data ?? {};
+  const { kind } = msg;
+  if (kind === "attachHeartbeatSab") {
+    heartbeatShardIndex = msg.shardIndex;
+    heartbeatSabView = new Int32Array(msg.sab);
+    return;
+  }
+  if (kind === "cancelJob") {
+    const actor = actors.get(msg.actorId);
+    actor?.api.cancelJob(msg.job);
+    return;
+  }
+  if (kind === "dispose") {
+    actors.delete(msg.actorId);
+    inFlightTurnActors.delete(msg.actorId);
+    grantedBudgets.delete(msg.actorId);
+    return;
+  }
+  // 🧪️ terra-web-bridges: an effect-complete/effect-error `"frame"` is a REPLY to something THIS
+  // worker sent (`🟨️host-shim.js`'s `effectRequest`), never a request expecting a `reply()` of its
+  // own — settled directly, before the generic requestId/actorId-gated dispatch below (which always
+  // posts a `"result"` back, wrong for a message that is itself already an answer).
+  if (kind === "frame" && msg.frame && msg.frame.kind === "Envelope" && msg.frame.envelope && msg.frame.envelope.payload && (msg.frame.envelope.payload.kind === "effect-complete" || msg.frame.envelope.payload.kind === "effect-error")) {
+    deliverEffectResult(msg.actorId, msg.frame.envelope);
+    return;
+  }
+  const { requestId, actorId } = msg;
+  if (!requestId || !actorId) return;
+  heartbeat();
+  try {
+    if (kind === "activate") {
+      const entry = await loadActor(actorId, msg.moduleUrl);
+      entry.pendingAssets = msg.assets ?? [];
+      reply(requestId, undefined);
+      return;
+    }
+    const actor = actors.get(actorId);
+    if (!actor) throw new Error(`shard worker: actor ${actorId} not activated`);
+    switch (kind) {
+      case "turn": {
+        if (inFlightTurnActors.has(actorId)) throw new Error(`shard worker: actor ${actorId} already has a turn in flight`);
+        inFlightTurnActors.add(actorId);
+        try {
+          reply(requestId, await actor.api.poll(spliceInstanceOpenAssets(actor, msg.events), msg.budget));
+        } finally {
+          inFlightTurnActors.delete(actorId);
+        }
+        break;
+      }
+      case "startJob":
+        await actor.api.startJob(msg.job, msg.jobKind, msg.input);
+        reply(requestId, undefined);
+        break;
+      case "stepJob":
+        reply(requestId, await actor.api.stepJob(msg.job, msg.budget));
+        break;
+      case "checkpoint":
+        reply(requestId, await actor.api.checkpoint());
+        break;
+      case "restore":
+        await actor.api.restore(msg.state);
+        reply(requestId, undefined);
+        break;
+      case "frame": {
+        const result = interpretFrame(msg.frame, actorId);
+        if (result.action === "register") {
+          reply(requestId, undefined);
+          break;
+        }
+        if (result.action === "unregister") {
+          grantedBudgets.delete(actorId);
+          reply(requestId, undefined);
+          break;
+        }
+        if (result.action === "unknown") {
+          reply(requestId, { ignored: true });
+          break;
+        }
+        if (inFlightTurnActors.has(actorId)) throw new Error(`shard worker: actor ${actorId} already has a turn in flight`);
+        inFlightTurnActors.add(actorId);
+        try {
+          const events = spliceInstanceOpenAssets(actor, result.envelopes.map((envelope) => envelope.payload));
+          reply(requestId, await actor.api.poll(events, result.budget));
+        } finally {
+          inFlightTurnActors.delete(actorId);
+        }
+        break;
+      }
+      default:
+        throw new Error(`unknown shard worker message kind: ${kind}`);
+    }
+  } catch (error) {
+    replyError(requestId, error, msg.events);
+  }
+});

@@ -145,7 +145,7 @@ pub struct DocxSnapshot {
 }
 
 impl Default for DocxSnapshot {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { schema: STDIO_DOCX_DOCUMENT_SCHEMA.into(), opc: OpcPackage::default(), document: DocxDocument::default() }
     }
 }

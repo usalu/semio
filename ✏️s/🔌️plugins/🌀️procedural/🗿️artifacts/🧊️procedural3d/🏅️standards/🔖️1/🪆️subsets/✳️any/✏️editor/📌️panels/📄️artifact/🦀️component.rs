@@ -39,7 +39,7 @@ mod tests {
     use crate::editor::procedural3d::testkit::{app, render as render_body};
     use semio_framework_plugin::PluginApp;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn document_lists_widgets() {
         let _serial = crate::editor::procedural3d::test_support::lock();
         let mut app = app();

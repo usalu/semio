@@ -34,7 +34,7 @@ mod tests {
     use super::*;
     use crate::artifacts::xlsx::schema::snapshot::{XlsxCell, XlsxCellValue, XlsxSheet};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn counts_sheets_and_cells() {
         let snapshot = XlsxSnapshot {
             schema: "stdio.xlsx".into(),
@@ -50,7 +50,7 @@ mod tests {
         assert_eq!(outline.cell_count, 1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn outline_is_deterministic() {
         let snapshot = XlsxSnapshot::default();
         assert_eq!(XlsxOutline::compute(&snapshot), XlsxOutline::compute(&snapshot));

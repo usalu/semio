@@ -16,7 +16,7 @@ pub struct WiresIntoMd;
 impl Serializer<WiresSnapshot> for WiresIntoMd {
     const INTO: Dialect = MD_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Canonical;
-    async fn serialize(from: &WiresSnapshot) -> IoResult<IoPayload> {
+    fn serialize(from: &WiresSnapshot) -> IoResult<IoPayload> {
         let md = MdSnapshot::from_text(&<WiresSnapshot as store::ArtifactDsl>::print_dsl(from));
         Ok(IoOutcome::clean(IoPayload::Binary(<MdSnapshot as store::ArtifactPack>::encode_pack(&md))))
     }

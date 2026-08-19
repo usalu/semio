@@ -292,7 +292,7 @@ mod tests {
     }
 
     //#region 🧪️InverseRoundTripLaw
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inverse_round_trip_law_covers_every_variant() {
         let base = fixture();
         for m in demo_mutation_cases() {
@@ -300,7 +300,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_delete_vertex_round_trips_explicitly() {
         let base = fixture();
         let create = SemioBrepMutation::CreateVertex(create_vertex::mutation::CreateVertex { id: "v3".into(), point: crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint3 { x: 2.0, y: 2.0, z: 2.0 } });
@@ -315,7 +315,7 @@ mod tests {
         assert!(!after_delete.vertices.iter().any(|v| v.id == "v2"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn delete_vertex_cascades_to_dependent_edges_and_inverse_restores_both() {
         let base = fixture();
         let delete = SemioBrepMutation::DeleteVertex(delete_vertex::mutation::DeleteVertex { id: "v1".into() });
@@ -333,14 +333,14 @@ mod tests {
         assert_eq!(sorted_by_id(restored), sorted_by_id(base), "cascade delete-vertex must be exactly undoable (as a SET)");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn delete_of_an_absent_id_has_an_empty_inverse_and_is_a_diff_level_no_op() {
         let base = fixture();
         let delete = SemioBrepMutation::DeleteFace(delete_face::mutation::DeleteFace { id: "f-missing".into() });
         assert!(delete.inverse(&base).is_empty(), "deleting an absent id has nothing to undo");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn replace_and_move_of_an_absent_target_have_empty_inverse_and_are_no_ops() {
         let base = fixture();
         let replace = SemioBrepMutation::ReplaceCurve(replace_curve::mutation::ReplaceCurve {
@@ -366,7 +366,7 @@ mod tests {
     /// generic before/after comparison would independently derive. This is the check that would
     /// have caught an apply-then-capture bug (the `mutual recursion` trap this module's original
     /// doc comment already warned about) or a cascade that silently touched the wrong fields.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn diff_consistency_law_matches_independent_between() {
         use protocol::command::DiffAlgebra;
         let base = fixture();
@@ -380,7 +380,7 @@ mod tests {
     //#endregion 🧪️DiffConsistencyLaw
 
     //#region 🧪️DeterminismLaw
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn determinism_law_diff_and_inverse_are_pure_functions_of_payload_and_base() {
         let base = fixture();
         for m in demo_mutation_cases() {
@@ -391,7 +391,7 @@ mod tests {
     //#endregion 🧪️DeterminismLaw
 
     //#region 🧪️OpCodecRoundTripLaw
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_text_binary_roundtrip_law() {
         for m in demo_mutation_cases() {
             let printed = m.print_op();
@@ -407,7 +407,7 @@ mod tests {
     //#endregion 🧪️OpCodecRoundTripLaw
 
     //#region 🧪️SemanticKinds
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn semantic_kinds_cover_every_variant() {
         assert_eq!(SemioBrepMutation::kinds().len(), 13);
         let mutation = SemioBrepMutation::DeleteVertex(delete_vertex::mutation::DeleteVertex { id: "v1".into() });

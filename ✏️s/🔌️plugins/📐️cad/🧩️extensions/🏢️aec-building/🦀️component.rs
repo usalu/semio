@@ -214,7 +214,7 @@ mod tests {
     use protocol::{Mutation, MutationDiff, SemanticMutation};
     use semio_framework_plugin::{WireArtifactInferenceBudget, WireArtifactInferenceCacheMode};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn bundle_contributes_building_import_profile() {
         let manifest = bundle().manifest;
         let topic_contribution = &manifest.topic_contributions[0];
@@ -228,7 +228,7 @@ mod tests {
     /// ✅️ Task requirement: "the contribution registers successfully against the declared
     /// dependency" — `bundle()` calling `.contributes(...)` without panicking already proves the
     /// registration gate accepted it; this test additionally pins the exact ids landed.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn bundle_declares_the_cad_dependency_and_registers_the_building_storey_contribution() {
         let manifest = bundle().manifest;
         assert_eq!(manifest.extends, "cad");
@@ -259,7 +259,7 @@ mod tests {
     /// (same infallible-builder idiom `.extends`/`.depends_on` already use), so a missing
     /// `.depends_on("cad", …)` must be caught here via `catch_unwind`, mirroring the framework's own
     /// `extension_bundle_dependency_tests`.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn contribution_onto_cad_requires_a_declared_dependency() {
         let result = std::panic::catch_unwind(|| {
             ExtensionBundle::new("cad-extension-aec-building-test-missing-dep", "Test Missing Dep", "0.1.0")
@@ -273,7 +273,7 @@ mod tests {
     /// ✅️ Task requirement: "the contributed mutation id does not collide with any cad owner kind" —
     /// structural proof (contract freeze §3's `:` segment) plus an explicit sweep of cad's own
     /// `CadMutation::kinds()` roster.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn contributed_mutation_id_structurally_cannot_collide_with_any_cad_owner_kind() {
         let mutation_id = bundle().manifest.contributions[0].mutations[0].mutation_id.clone();
         let hash_at = mutation_id.rfind('#').expect("contributed id has a #");
@@ -289,7 +289,7 @@ mod tests {
     /// ✅️ Task requirement: "the plan folds to the same snapshot as applying cad's leaf mutations by
     /// hand" — `protocol::fold_plan_diff` over `CreateBuildingStorey::plan` must equal sequentially
     /// applying `create-node` then `change-active-model-definition` directly.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn plan_folds_to_the_same_snapshot_as_applying_cads_leaf_mutations_by_hand() {
         let base = semio_s_plugin_cad::artifacts::cad::empty_cad_snapshot();
         let kind = CreateBuildingStorey { storey_id: "storey-1".into(), level_index: 2, storey_name: "Level Two".into() };
@@ -309,7 +309,7 @@ mod tests {
         assert!(after_switch.nodes.iter().any(|node| node.id == "storey-1" && node.kind == "building-storey"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn contributed_inference_computes_a_real_building_summary() {
         let mut base = semio_s_plugin_cad::artifacts::cad::empty_cad_snapshot();
         base.nodes.push(CadNode { id: "storey-1".into(), label: "Level One".into(), kind: "building-storey".into() });

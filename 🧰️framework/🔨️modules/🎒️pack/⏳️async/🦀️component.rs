@@ -19,7 +19,10 @@ use crate::{ByteRange, PackError};
 /// 📥️ A random-access read source reachable only through `async`, e.g. a network range-fetcher
 /// (see `pack_http`) or a browser `fetch`/worker bridge. Deliberately runtime-neutral: nothing
 /// here requires `tokio`, so wasm/browser callers and native callers share one trait.
-#[async_trait::async_trait]
+// 🚪️ R8: plain AFIT, no `#[async_trait]` — the trait mixes one E1-sync fn (`len`) with one
+// genuinely-`async fn` (`read_at`); native `async fn` in trait already supports that mix, and
+// there is zero `dyn AsyncPackSource` anywhere in the repo (verified: `🎒️pack/**` plus
+// `🧰️framework`, `🛍️products`, `✏️s` repo-wide), so no dyn-erasure/O1 concern applies here.
 pub trait AsyncPackSource: Send + Sync {
     // 🚫️async: no suspension point — every implementor answers from an already-known length
     // (see `pack_http::SharedState::len`'s doc comment); deliberately synchronous by contract.
@@ -482,7 +485,6 @@ mod tests {
         }
     }
 
-    #[async_trait::async_trait]
     impl AsyncPackSource for RecordingSource {
         fn len(&self) -> u64 {
             self.data.len() as u64
@@ -503,7 +505,6 @@ mod tests {
     /// actually short-circuits an in-flight read rather than waiting for it to finish.
     struct HangingSource;
 
-    #[async_trait::async_trait]
     impl AsyncPackSource for HangingSource {
         fn len(&self) -> u64 {
             0

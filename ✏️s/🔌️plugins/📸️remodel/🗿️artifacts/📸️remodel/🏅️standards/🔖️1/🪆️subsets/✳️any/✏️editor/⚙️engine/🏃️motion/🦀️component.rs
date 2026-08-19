@@ -1047,7 +1047,7 @@ mod tests {
     // #endregion 🔖️Fixtures
 
     // #region 🔖️Track2dTests
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn tracker2d_maintains_tracks_and_redetects_lost_coverage() {
         let base = grid_texture(80);
         let mut pyrs = vec![build_pyramid(&base, 3)];
@@ -1068,7 +1068,7 @@ mod tests {
     // #endregion 🔖️Track2dTests
 
     // #region 🔖️MotTests
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn multi_object_tracker_associates_spawns_and_prunes() {
         let mut tracker = MultiObjectTracker::new();
         let det_a = |t: f32| Detection { x: 10.0 + t, y: 10.0, id_hint: None };
@@ -1106,7 +1106,7 @@ mod tests {
     // #endregion 🔖️MotTests
 
     // #region 🔖️Trajectory3dTests
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn triangulate_tracks_recovers_a_slow_moving_point_from_a_single_orbiting_camera() {
         let intr = pinhole(700.0, 700.0, 320.0, 240.0);
         let n_frames = 24u32;
@@ -1140,7 +1140,7 @@ mod tests {
     // #endregion 🔖️Trajectory3dTests
 
     // #region 🔖️KinematicsTests
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn velocity_and_acceleration_recover_planted_constant_motion() {
         let p0 = [1.0, -2.0, 0.5];
         let v = [0.3, -0.1, 0.2];
@@ -1165,7 +1165,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn neighborhood_affine_strain_distinguishes_rotation_from_stretch() {
         let mut state = 42u64;
         let cloud_t0: Vec<[f64; 3]> = (0..40).map(|_| [lcg_next(&mut state) * 4.0 - 2.0, lcg_next(&mut state) * 4.0 - 2.0, lcg_next(&mut state) * 4.0 - 2.0]).collect();
@@ -1191,7 +1191,7 @@ mod tests {
     // #endregion 🔖️KinematicsTests
 
     // #region 🔖️ModalTests
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn modal_analysis_recovers_a_planted_frequency() {
         let fps = 50.0;
         let n = 2048usize;
@@ -1217,7 +1217,7 @@ mod tests {
     // #endregion 🔖️ModalTests
 
     // #region 🔖️SyncTests
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn estimate_offset_and_refine_subframe_recover_a_fractional_shift() {
         let f = |t: f64| (2.0 * std::f64::consts::PI * t / 37.0).sin() + 0.5 * (2.0 * std::f64::consts::PI * t / 11.0).sin();
         let n = 220usize;
@@ -1233,7 +1233,7 @@ mod tests {
     // #endregion 🔖️SyncTests
 
     // #region 🔖️RollingShutterCompTests
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn rolling_shutter_velocity_and_rectify_maps_are_sane() {
         let mut tracks = Vec::new();
         for (idx, &row) in [10.0f32, 30.0, 50.0, 70.0].iter().enumerate() {
@@ -1268,7 +1268,7 @@ mod tests {
     // #endregion 🔖️RollingShutterCompTests
 
     // #region 🔖️StabilizeTests
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn smooth_camera_path_reduces_planted_jitter() {
         let true_xi = [0.02, 0.0, 0.0, 0.0, 0.0, 0.03];
         let n = 81;
@@ -1292,7 +1292,7 @@ mod tests {
         assert!(smooth_err < orig_err * 0.85, "smoothing should reduce total pose error: orig {orig_err} smoothed {smooth_err}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn stabilization_warps_are_near_identity_for_matching_poses() {
         let intr = pinhole(500.0, 500.0, 160.0, 120.0);
         let pose = Se3::exp([0.0, 0.0, 0.0, 0.1, 0.0, 0.0]);
@@ -1308,7 +1308,7 @@ mod tests {
     // #endregion 🔖️StabilizeTests
 
     // #region 🔖️DeblurTests
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn wiener_deconvolve_measurably_sharpens_a_blurred_image() {
         let size = 48u32;
         let mut sharp = ImageGray::new(size, size);
@@ -1353,7 +1353,7 @@ mod tests {
     // #endregion 🔖️DeblurTests
 
     // #region 🔖️NonRigidTests
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn build_and_fit_deformation_graph_recovers_a_planted_bend_for_held_out_points() {
         let radius = 3.0;
         let mut seed_points = Vec::new();
@@ -1398,7 +1398,7 @@ mod tests {
     // #endregion 🔖️NonRigidTests
 
     // #region 🔖️Pose6dTests
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn track_rigid_body_recovers_a_known_rotating_translating_cube_with_partial_visibility() {
         let intr = pinhole(700.0, 700.0, 320.0, 240.0);
         let model_points: Vec<[f64; 3]> = (0..8).map(|i| [if i & 1 == 0 { -0.3 } else { 0.3 }, if i & 2 == 0 { -0.3 } else { 0.3 }, if i & 4 == 0 { -0.3 } else { 0.3 }]).collect();

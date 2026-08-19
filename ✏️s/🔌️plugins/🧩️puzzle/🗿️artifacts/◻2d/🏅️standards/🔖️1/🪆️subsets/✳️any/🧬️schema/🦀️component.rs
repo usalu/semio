@@ -42,7 +42,7 @@ pub struct Puzzle2dArtifact {
 
 //#region 🔖️Conversions
 impl Default for Puzzle2dArtifact {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self::from_snapshot(Puzzle2dSnapshot::default())
     }
 }

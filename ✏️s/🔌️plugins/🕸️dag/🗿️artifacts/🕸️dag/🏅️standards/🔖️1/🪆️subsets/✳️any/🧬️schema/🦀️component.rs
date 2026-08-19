@@ -32,7 +32,7 @@ pub struct DagArtifact {
 
 //#region 🔖️Conversions
 impl Default for DagArtifact {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self::from_snapshot(crate::artifacts::dag::default_snapshot())
     }
 }
@@ -290,13 +290,13 @@ pub async fn remove_nodes_operations(document: &DagSnapshot, node_ids: &[String]
 mod document_helpers_tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn split_endpoint_defaults_to_out_when_no_port_is_given() {
         assert_eq!(split_endpoint("n1"), ("n1".to_string(), "out".to_string()));
         assert_eq!(split_endpoint("n1@a"), ("n1".to_string(), "a".to_string()));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn next_node_id_continues_after_the_highest_existing_suffix() {
         let document = crate::artifacts::dag::default_snapshot();
         let mut nodes = document.nodes();
@@ -307,7 +307,7 @@ mod document_helpers_tests {
         assert_eq!(next_node_id(&document), "n100");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn default_node_for_kind_fits_the_widget_size_for_every_kind() {
         for kind in ["slider", "select", "screen", "note", "preview", "computation"] {
             let node = default_node_for_kind(kind, "n1", 10.0, 20.0);
@@ -315,7 +315,7 @@ mod document_helpers_tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn connect_edge_rejects_a_connection_that_would_create_a_cycle() {
         let document = crate::artifacts::dag::default_snapshot();
         let nodes = document.nodes();
@@ -328,14 +328,14 @@ mod document_helpers_tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn node_patch_for_field_updates_slider_value_and_refits_size() {
         let node = default_node_for_kind("slider", "n1", 0.0, 0.0);
         let patch = node_patch_for_field(&node, "value", Some("5")).expect("slider value patch");
         assert!(matches!(patch.kind, Some(DagNodeKind::Slider { value, .. }) if value == 5.0));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn node_patch_for_field_returns_none_for_an_unknown_field() {
         let node = default_node_for_kind("note", "n1", 0.0, 0.0);
         assert!(node_patch_for_field(&node, "nonsense", Some("x")).is_none());
@@ -348,7 +348,7 @@ mod document_helpers_tests {
     /// node PLUS one per severed edge" — `delete-node`'s own diff/inverse already captures the edge
     /// cascade internally). `remove_nodes_operations` returns exactly one `delete-node` mutation per
     /// targeted node id, regardless of how many edges touch it.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn remove_nodes_operations_returns_one_delete_node_mutation_per_targeted_node() {
         let document = crate::artifacts::dag::default_snapshot();
         let nodes = document.nodes();
@@ -362,7 +362,7 @@ mod document_helpers_tests {
         assert!(remaining.iter().all(|node| node.id != node_id));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn remove_nodes_operations_is_empty_for_an_unknown_node_id() {
         let document = crate::artifacts::dag::default_snapshot();
         assert!(remove_nodes_operations(&document, &["nonexistent".to_string()]).is_empty());

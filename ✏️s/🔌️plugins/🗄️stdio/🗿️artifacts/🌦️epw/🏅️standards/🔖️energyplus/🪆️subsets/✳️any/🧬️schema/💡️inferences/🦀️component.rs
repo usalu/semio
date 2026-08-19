@@ -33,7 +33,7 @@ impl protocol::Inference<EpwSnapshot> for EpwInference {
 /// 🌱 Defined in terms of `infer` (not derived) — keeps the law correct regardless of whether
 /// `EpwSnapshot::default()`'s `records` ever stops being empty.
 impl Default for EpwInference {
-    async fn default() -> Self {
+    fn default() -> Self {
         <Self as protocol::Inference<EpwSnapshot>>::infer(&EpwSnapshot::default())
     }
 }
@@ -85,13 +85,13 @@ mod tests {
     use super::*;
     use protocol::Inference;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = EpwSnapshot::default();
         assert_eq!(EpwInference::infer(&snapshot), EpwInference::infer(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(EpwInference::infer(&EpwSnapshot::default()), EpwInference::default());
     }

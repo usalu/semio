@@ -89,7 +89,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn semio_example_dsl_round_trips() {
         let fixture = crate::artifacts::raster::schema::semio_fixture_snapshot();
         store::os_store::test_support::assert_dsl_round_trip(&fixture);
@@ -98,7 +98,7 @@ mod tests {
         assert_eq!(reparsed.id, fixture.id);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn raster_dsl_round_trips_representative_document() {
         store::os_store::test_support::assert_dsl_round_trip(&representative_raster_document());
     }

@@ -23,7 +23,7 @@ mod tests {
     use crate::editor::note::testkit::{dispatch, note_app};
     use crate::editor::note::NoteCommand;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn save_download_and_load_request_effects() {
         let mut app = note_app();
         let save = dispatch(&mut app, NoteCommand::SaveDownload(SaveDownload {}));

@@ -67,7 +67,7 @@ pub enum SemioImageMutation {
 }
 
 impl Default for SemioImageMutation {
-    async fn default() -> Self {
+    fn default() -> Self {
         SemioImageMutation::NoMutation
     }
 }
@@ -404,7 +404,7 @@ mod tests {
     }
 
     //#region 🔖️MutationDiffLaw
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mutation_diff_law() {
         for mutation in sample_mutations() {
             let base = fixture();
@@ -421,7 +421,7 @@ mod tests {
     //#endregion 🔖️MutationDiffLaw
 
     //#region 🔖️InverseLaw
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inverse_law() {
         for mutation in sample_mutations() {
             let base = fixture();
@@ -445,7 +445,7 @@ mod tests {
     //#region 🔖️CodecRetentionLaw
     /// 🧪️ codec_retention_law: `ArtifactPack` decode(encode(snapshot)) on a real (mutation-built,
     /// not just default) snapshot.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn codec_retention_law() {
         let mut snap = fixture();
         apply_semio_image_mutation(&mut snap, &SemioImageMutation::SetMetadataEntry { key: "Author".into(), value: "x".into() });
@@ -456,7 +456,7 @@ mod tests {
     //#endregion 🔖️CodecRetentionLaw
 
     //#region 🔖️OpTextBinaryRoundtripLaw
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_text_binary_roundtrip_law() {
         for m in sample_mutations() {
             let printed = m.print_op();

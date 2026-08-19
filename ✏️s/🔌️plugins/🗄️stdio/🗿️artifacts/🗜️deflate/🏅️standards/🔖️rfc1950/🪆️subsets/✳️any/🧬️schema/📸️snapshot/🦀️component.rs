@@ -90,7 +90,7 @@ pub struct DeflateSnapshot {
 }
 
 impl Default for DeflateSnapshot {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { schema: STDIO_DEFLATE_DOCUMENT_SCHEMA.into(), compression_method: 8, window_bits: 7, compression_level_hint: DeflateLevelHint::default(), dict_id: None, payload: Vec::new() }
     }
 }

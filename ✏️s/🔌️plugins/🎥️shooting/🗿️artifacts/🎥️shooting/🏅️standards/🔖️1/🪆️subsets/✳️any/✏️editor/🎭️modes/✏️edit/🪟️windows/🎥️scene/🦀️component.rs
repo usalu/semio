@@ -224,7 +224,7 @@ mod tests {
     use crate::editor::shooting::SHOOTING_PLAY_BODY_SCENE as BODY_SCENE;
     use semio_framework_plugin::{PluginApp, ViewModel};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn renders_world_model_scene() {
         let mut app = shooting_app();
         let node = app.render(BODY_SCENE, None, &ViewModel::default()).expect("render");
@@ -244,7 +244,7 @@ mod tests {
         assert_eq!(camera["projection"], json!("perspective"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn model_scene_uses_asset_mesh_urls() {
         let mut app = shooting_app();
         let node = app.render(BODY_SCENE, None, &ViewModel::default()).expect("render");
@@ -253,14 +253,14 @@ mod tests {
         assert!(json.contains("/mesh/🧊️base.glb"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn window_measures_surface_eight_scene_measures() {
         let mut app = shooting_app();
         let measures = scene_window_measures(&mut app);
         assert_eq!(measures.len(), 8);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn definition_declares_the_world_3d_surface_and_body_key() {
         let definition = definition();
         assert_eq!(definition.body_key, SHOOTING_PLAY_BODY_SCENE);

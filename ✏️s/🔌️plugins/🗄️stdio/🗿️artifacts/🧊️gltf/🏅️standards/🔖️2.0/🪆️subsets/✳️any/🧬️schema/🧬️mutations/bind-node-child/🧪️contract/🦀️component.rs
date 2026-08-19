@@ -37,7 +37,7 @@ mod tests {
         vectors: Vec<Vector>,
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn canonical_vector_enforces_forward_inverse_reference_stale_and_wire_laws() {
         let contract: Contract = serde_json::from_str(include_str!("🔣️component.json")).unwrap();
         let vector = &contract.vectors[0];

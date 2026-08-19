@@ -207,7 +207,7 @@ mod exporters_tests {
     use crate::artifacts::remodel::default_remodel_scene;
     use semio_framework_plugin::mesh_from_kind;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mesh_to_ply_bytes_writes_a_well_formed_ascii_file_via_stdio() {
         let mesh = mesh_from_kind("box");
         let bytes = mesh_to_ply_bytes(&mesh).expect("ply export");
@@ -218,7 +218,7 @@ mod exporters_tests {
         assert!(text.contains("end_header\n"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mesh_to_las_bytes_writes_a_227_byte_header_plus_20_bytes_per_point_via_stdio() {
         // 🧪️ `mesh_from_kind("box")` carries no vertex colors, so `SemioMeshToLas` + stdio's
         // `choose_point_format` land on point-data format 0 (no RGB/GPS) — 20 bytes/point, same
@@ -239,7 +239,7 @@ mod exporters_tests {
     /// colors/indices exactly (the shape `SemioMeshSnapshot`'s one gltf-style primitive can represent);
     /// `face_ids`/`vertex_ids`/`edge_*`/`paint_texture_base64` are honestly NOT recovered (empty/`None`
     /// — documented on the function itself) since that shape has no slot for them.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn semio_mesh_to_mesh_data_recovers_the_representable_buffers() {
         let mesh = mesh_from_kind("box");
         let semio = mesh_data_to_semio_mesh(&mesh);
@@ -256,7 +256,7 @@ mod exporters_tests {
         assert!(empty.positions.is_empty(), "no primitive at all yields a default MeshData, not a panic");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn png_export_round_trips_a_stored_texture_asset() {
         // 🧪️ `remodel_png_export` now reads real composed `s.stdio.semio/v1/image` content back
         // through `remodel_asset`'s working-scene cache (ticket

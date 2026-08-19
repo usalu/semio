@@ -47,7 +47,7 @@ mod tests {
     use super::*;
     use crate::artifacts::gif::standards::v89a::subsets::any::schema::snapshot::{GifColorTable, GifFrame, GifRgb};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn derives_bit_depth_from_global_color_table_size() {
         let gct = GifColorTable { sorted: false, colors: vec![GifRgb::default(); 4] };
         let snapshot = GifSnapshot { width: 3, height: 2, gct: Some(gct), ..GifSnapshot::default() };
@@ -56,7 +56,7 @@ mod tests {
         assert!(!dims.has_alpha);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn has_alpha_when_any_frame_declares_a_transparent_index() {
         let frame = GifFrame { transparent_index: Some(0), ..GifFrame::default() };
         let snapshot = GifSnapshot { frames: vec![frame], ..GifSnapshot::default() };

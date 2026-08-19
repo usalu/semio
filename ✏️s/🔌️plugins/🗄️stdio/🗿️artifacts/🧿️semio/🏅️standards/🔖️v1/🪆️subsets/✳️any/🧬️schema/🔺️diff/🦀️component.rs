@@ -579,7 +579,7 @@ mod tests {
     /// 🧪️ between_roundtrip_law + field_sweep, real same-kind field change (audio's
     /// `sample_rate`, a genuinely mutable field — not the `schema` identity field every subset's
     /// own diff module explicitly excludes from diffing).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn between_roundtrip_law_same_kind_real_field_change() {
         let a = audio_snapshot(44_100);
         let b = audio_snapshot(48_000);
@@ -593,7 +593,7 @@ mod tests {
     /// 🧪️ field_sweep, second real same-kind field change (flow's id-keyed `nodes`
     /// collection) — sweeps a DIFFERENT subset and a DIFFERENT field shape (collection insert,
     /// not a scalar) than the audio case above.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn between_roundtrip_law_flow_node_insert() {
         let a = flow_snapshot(&["n1"]);
         let b = flow_snapshot(&["n1", "n2"]);
@@ -606,7 +606,7 @@ mod tests {
 
     /// 🧪️ between_roundtrip_law, cross-kind change: no sparse representation exists, must fall
     /// back to `Replace` — and still satisfy the law.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn between_roundtrip_law_cross_kind_replaces() {
         let a = audio_snapshot(44_100);
         let b = flow_snapshot(&["n1"]);
@@ -616,7 +616,7 @@ mod tests {
     }
 
     /// 🧪️ inverse_law across all 3 shapes: same-kind nested, cross-kind Replace, and NoChange.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inverse_law_covers_nested_replace_and_no_change() {
         for (a, b) in [(audio_snapshot(44_100), audio_snapshot(96_000)), (audio_snapshot(44_100), flow_snapshot(&["n1", "n2"])), (audio_snapshot(44_100), audio_snapshot(44_100))] {
             let d = <SemioDiff as DiffAlgebra<SemioSnapshot>>::between(&a, &b);
@@ -628,7 +628,7 @@ mod tests {
 
     /// 🧪️ absorb_law: same-kind sequential coalesce delegates to the nested subset's own
     /// (already-proven) `absorb`.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_law_same_kind_delegates_to_nested() {
         let a = audio_snapshot(44_100);
         let mid = audio_snapshot(48_000);
@@ -642,7 +642,7 @@ mod tests {
     }
 
     /// 🧪️ absorb_law: a later `Replace` always wins outright, whatever preceded it.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_law_later_replace_wins() {
         let a = audio_snapshot(44_100);
         let mid = audio_snapshot(48_000);
@@ -656,7 +656,7 @@ mod tests {
 
     /// 🧪️ absorb_law: an earlier `Replace` absorbing a later same-kind diff folds it into the
     /// replacement snapshot rather than dropping it.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_law_replace_then_nested_folds_in() {
         let a = flow_snapshot(&["n1"]);
         let replaced = audio_snapshot(44_100);
@@ -669,7 +669,7 @@ mod tests {
 
     /// 🧪️ diff_codec_text_binary_roundtrip_law across `NoChange`, a same-kind nested diff (one
     /// per subset kind, proving the dispatch table's all 13 tags), and `Replace`.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn diff_codec_text_binary_roundtrip_law() {
         let a = audio_snapshot(44_100);
         let b = audio_snapshot(48_000);
@@ -691,7 +691,7 @@ mod tests {
     /// `print_diff`/`parse_diff` for the trivial `NoChange`-shaped nested diff (proves the print/
     /// parse match is wired correctly for every subset, without re-deriving each subset's own deep
     /// field grammar here).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn all_eighteen_subset_tags_round_trip_empty_nested_diff() {
         let subsets: Vec<SemioSubsetSnapshot> = vec![
             SemioSubsetSnapshot::Brep(Default::default()),
@@ -723,7 +723,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn malformed_cross_kind_diff_is_rejected_and_absorb_preserves_rejection() {
         let base = audio_snapshot(44_100);
         let error = SemioDiff::Flow(Default::default()).apply(&base).unwrap_err();

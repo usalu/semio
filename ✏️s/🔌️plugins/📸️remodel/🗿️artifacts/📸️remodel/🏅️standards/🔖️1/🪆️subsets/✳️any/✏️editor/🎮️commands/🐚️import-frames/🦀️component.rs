@@ -38,7 +38,7 @@ mod tests {
     use crate::editor::remodel::testkit::{app, dispatch};
     use crate::editor::remodel::RemodelCommand;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn import_pickers_emit_a_host_effect_and_no_operations() {
         let mut app = app();
         for command in [RemodelCommand::ImportFrames(ImportFrames {}), RemodelCommand::ImportVideo(import_video::ImportVideo {})] {
@@ -49,7 +49,7 @@ mod tests {
     }
 
     /// 📤️ Exporting a report the document does not have yet is a no-op, not an error.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn export_qc_report_is_a_no_op_without_a_report() {
         let mut app = app();
         let result = dispatch(&mut app, RemodelCommand::ExportQcReport(export_qc_report::ExportQcReport {}));

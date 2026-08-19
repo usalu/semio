@@ -120,20 +120,20 @@ pub async fn result_display_action_args() -> Vec<ActionArgDef> {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn next_id_retries_past_collisions() {
         let existing = vec!["n0".to_string(), "n2".to_string()];
         assert_eq!(next_id(existing.into_iter(), "n"), "n3");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn hex_to_rgb01_parses_pure_colors() {
         assert_eq!(hex_to_rgb01("#ffffff"), (1.0, 1.0, 1.0));
         assert_eq!(hex_to_rgb01("#000000"), (0.0, 0.0, 0.0));
         assert_eq!(hex_to_rgb01("#ff0000"), (1.0, 0.0, 0.0));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn von_mises_color_maps_extremes_midpoint_and_clamps() {
         assert_eq!(von_mises_color(0.0, 0.0, 100.0), VON_MISES_BANDS[0]);
         assert_eq!(von_mises_color(100.0, 0.0, 100.0), VON_MISES_BANDS[VON_MISES_BANDS.len() - 1]);
@@ -142,12 +142,12 @@ mod tests {
         assert_eq!(von_mises_color(200.0, 0.0, 100.0), VON_MISES_BANDS[VON_MISES_BANDS.len() - 1]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn parse_result_display_unknown_mode_falls_back_to_static() {
         assert_eq!(parse_result_display(Some(&serde_json::json!({ "mode": "bogus" }))).mode, DisplayMode::Static);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn parse_result_display_missing_args_defaults_to_static_with_no_source() {
         let display = parse_result_display(None);
         assert_eq!(display.mode, DisplayMode::Static);

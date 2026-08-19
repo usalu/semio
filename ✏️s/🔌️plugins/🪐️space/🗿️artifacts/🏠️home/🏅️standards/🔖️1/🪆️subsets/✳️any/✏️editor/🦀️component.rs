@@ -302,34 +302,37 @@ mod tests {
     use std::sync::Arc;
     use semio_framework_os::{
         create_backbone_document, empty_space_snapshot, load_os_space_document, seed_os_space_catalog_if_empty,
-        LocalStorageBackbonePort, OsBackbonePort, OsSpaceDocument, SpaceKind, SpaceVisibility, S_SPACE_SCHEMA,
+        LocalStorageBackbonePort, OsSpaceDocument, SpaceKind, SpaceVisibility, S_SPACE_SCHEMA,
     };
 
     async fn empty_history() -> semio_framework_plugin::HistoryView {
         semio_framework_plugin::HistoryView::empty()
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn home_manifest_derives_the_canonical_surface_id() {
         let definition = create_home_app();
         assert_eq!(definition.id, semio_framework::surface_app_id(&HomeApp::DIALECT.into(), semio_framework::AppRole::Editor));
         assert_eq!(definition.controller_id, "s-home");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn home_declares_create_space_action() {
         let definition = create_home_app();
         let main = definition.window_kinds.iter().find(|window| window.id == crate::editor::home::modes::explore::windows::main::S_HOME_WINDOW).expect("home main window");
         assert!(main.actions.iter().any(|action| action.id == "createStudio"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn space_document_persists_through_backbone_port() {
         // 🕳️ `parse_demo_space_document()` yields a `workflow::WorkflowSnapshot` (the demo fixture's own
         // artifact content), not a `space::SpaceSnapshot`-backed catalog entry
         // `seed_os_space_catalog_if_empty` expects. This test exercises the space-manifest persistence
         // path specifically, so it mints its own manifest instead.
-        let port: Arc<dyn OsBackbonePort> = Arc::new(LocalStorageBackbonePort::new());
+        // 🧬️ O1 — the concrete `store::BackbonePorts` enum, not `dyn OsBackbonePort`: `seed_os_space_
+        // catalog_if_empty`/`load_os_space_document` both take `Arc<dyn OsBackbonePort>` BY VALUE, so
+        // `Arc<BackbonePorts>` unsizes at each call site with no trait-object variable needed here.
+        let port: Arc<store::BackbonePorts> = Arc::new(store::BackbonePorts::LocalStorage(LocalStorageBackbonePort::default()));
         let projection = empty_space_snapshot("Persist Test", SpaceKind::Atelier, SpaceVisibility::Private);
         let demo: OsSpaceDocument = create_backbone_document(S_SPACE_SCHEMA, "persist-test", "Persist Test", projection);
         let _ = seed_os_space_catalog_if_empty(demo, port.clone()).expect("seed");
@@ -357,7 +360,7 @@ mod tests {
         protocol::Mutation::diff(&crate::editor::home::config::HomeConfigMutation::FoldDirectoryEvent { event_json }, &base).diff().clone()
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn home_labels_resolve_native_english_by_default() {
         let history = empty_history();
         let home_doc = SHomeSnapshot { schema: "s.home".into(), catalog_generation: 0 };
@@ -370,7 +373,7 @@ mod tests {
         assert!(json.contains("Fixture"), "the folded space's name must render: {json}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn home_labels_resolve_native_german_locale() {
         let history = empty_history();
         let home_doc = SHomeSnapshot { schema: "s.home".into(), catalog_generation: 0 };

@@ -17,11 +17,15 @@ struct InternerState {
 
 static INTERNER: OnceLock<Mutex<InternerState>> = OnceLock::new();
 
+// 🚫️async: E1 pure accessor — plain `OnceLock`/`Mutex` interner, no suspension point, and
+// overwhelmingly consumed sync across the tokenizer/lexer/parser (112 sync call sites vs. 8 that
+// had been wrongly `.await`ed by the blind codemod) — see R9.
 fn interner() -> &'static Mutex<InternerState> {
     INTERNER.get_or_init(|| Mutex::new(InternerState { strings: Vec::new(), lookup: HashMap::new() }))
 }
 
 impl Symbol {
+    // 🚫️async: E1 pure accessor — see `interner` above.
     pub fn intern(text: &str) -> Self {
         let mut state = interner().lock().unwrap_or_else(|poison| poison.into_inner());
         if let Some(id) = state.lookup.get(text) {
@@ -34,6 +38,7 @@ impl Symbol {
         Symbol(id)
     }
 
+    // 🚫️async: E1 pure accessor — see `interner` above.
     pub fn as_str(&self) -> Arc<str> {
         let state = interner().lock().unwrap_or_else(|poison| poison.into_inner());
         state.strings[self.0 as usize].clone()
@@ -103,6 +108,7 @@ pub enum TokenKind {
 }
 
 impl TokenKind {
+    // 🚫️async: E1 pure classifier consumed by `Iterator::filter` sync closures across the dsl module — see R9
     pub fn is_trivia(&self) -> bool {
         matches!(self, TokenKind::Whitespace | TokenKind::Newline | TokenKind::Comment)
     }
@@ -138,6 +144,7 @@ pub struct SpannedToken {
 /// `\u{XXXX}` for any other control character. Nesting-sound because quoting is a token
 /// boundary — re-escaping an already-printed line is exactly invertible, no percent-encoding
 /// or per-technology scheme needed. Strict superset of every hand-rolled scheme it replaces.
+// 🚫️async: E1 pure, inlined directly into `format!` args at every call site (Display, not Future) — see R9
 pub fn escape_text(value: &str) -> String {
     let mut out = String::with_capacity(value.len());
     for ch in value.chars() {
@@ -156,7 +163,7 @@ pub fn escape_text(value: &str) -> String {
 
 /// @emoji 🔓️ Inverse of [`escape_text`]. Unknown escapes in strict mode are an error; `forgiving`
 /// keeps the backslash and following character literal instead (editor/recovery mode).
-pub fn unescape_text(value: &str, forgiving: bool) -> Result<String, String> {
+pub async fn unescape_text(value: &str, forgiving: bool) -> Result<String, String> {
     let mut out = String::with_capacity(value.len());
     let mut chars = value.chars().peekable();
     while let Some(ch) = chars.next() {
@@ -208,6 +215,8 @@ pub fn unescape_text(value: &str, forgiving: bool) -> Result<String, String> {
 //#region 🔖️Numbers
 /// @emoji 🔢️ Canonical float printing: Rust's `Display` (shortest round-trip repr), with
 /// explicit `nan`/`inf`/`-inf` idents so the grammar never emits ambiguous bit patterns.
+// 🚫️async: E1 pure Display formatting consumed by `dsl_schema::print_expr_prec`, itself forced sync by an
+// `Iterator::map(...).join(...)` sync-closure consumer (`Call` arm) — see R9
 pub fn format_f64(value: f64) -> String {
     if value.is_nan() {
         "nan".to_string()
@@ -222,7 +231,7 @@ pub fn format_f64(value: f64) -> String {
     }
 }
 
-pub fn format_f32(value: f32) -> String {
+pub async fn format_f32(value: f32) -> String {
     if value.is_nan() {
         "nan".to_string()
     } else if value.is_infinite() {
@@ -236,7 +245,7 @@ pub fn format_f32(value: f32) -> String {
     }
 }
 
-pub fn parse_f64(text: &str) -> Result<f64, String> {
+pub async fn parse_f64(text: &str) -> Result<f64, String> {
     match text {
         "nan" => Ok(f64::NAN),
         "inf" => Ok(f64::INFINITY),
@@ -245,7 +254,7 @@ pub fn parse_f64(text: &str) -> Result<f64, String> {
     }
 }
 
-pub fn parse_f32(text: &str) -> Result<f32, String> {
+pub async fn parse_f32(text: &str) -> Result<f32, String> {
     match text {
         "nan" => Ok(f32::NAN),
         "inf" => Ok(f32::INFINITY),
@@ -346,14 +355,14 @@ const UNITS: &[UnitSpec] = &[
 ];
 
 /// @emoji 🔍️ Looks up a unit by its exact printed symbol (e.g. `"GPa"`).
-pub fn unit_by_symbol(symbol: &str) -> Option<&'static UnitSpec> {
+pub async fn unit_by_symbol(symbol: &str) -> Option<&'static UnitSpec> {
     UNITS.iter().find(|u| u.symbol == symbol)
 }
 
 /// @emoji 🔁️ Converts `value` (expressed in `from`) into the equivalent value expressed in `to`.
 /// `None` if the two units don't share a dimension — never silently reinterprets across
 /// incompatible units (e.g. a length suffix on an angle field).
-pub fn convert(value: f64, from: &UnitSpec, to: &UnitSpec) -> Option<f64> {
+pub async fn convert(value: f64, from: &UnitSpec, to: &UnitSpec) -> Option<f64> {
     if from.dimension != to.dimension {
         return None;
     }

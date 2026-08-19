@@ -212,7 +212,7 @@ mod tests {
     use crate::artifacts::cad::CadPaneId;
     use semio_framework_plugin::{ArtifactView, PluginApp, UiNode, ViewModel};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn document_lists_nodes() {
         // ⚠️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 3: pane object sections
         // render empty at this boundary now (documented gap, see `build_document_tree`'s own doc
@@ -225,7 +225,7 @@ mod tests {
         assert!(json.contains("cad-node:"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn object_tree_item_shows_name_with_kind_as_secondary_label() {
         let mut object = make_object_for_typology("building.building.beam", 0, CadPaneId::Shape);
         object.label = "U2".into();
@@ -240,7 +240,7 @@ mod tests {
         assert_eq!(de_item.description.as_deref(), Some("Träger"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn object_tree_item_includes_primitive_children() {
         let mut object = make_object_for_typology("spatial.shape.primitive.box", 0, CadPaneId::Shape);
         object.primitives = vec![CadPrimitiveSlot { slot: "solid".into(), primitive_id: "solid-1".into(), kind: "solid".into() }];
@@ -250,7 +250,7 @@ mod tests {
         assert!(json.contains("cad-primitive:"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn document_tree_selected_and_highlighted_ids_are_none_without_a_reference_selection() {
         // 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): mesh object selection/hover is
         // framework-owned now, unreachable at this render boundary — only reference-overlay
@@ -261,7 +261,7 @@ mod tests {
         assert_eq!(document_tree_highlighted_ids(&scene, &runtime), None);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn document_tree_selected_ids_resolves_reference_selection() {
         let scene = forest_play_scene();
         let runtime = CadPlayRuntime { selected_reference_model_definition_id: Some(CAD_MODEL_DEFINITION_SHAPE.into()), selected_reference_id: Some("ref-concrete-forest".into()), ..CadPlayRuntime::default() };
@@ -269,7 +269,7 @@ mod tests {
         assert!(selected.iter().any(|id| id == "cad-reference:spatial.shape:ref-concrete-forest"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn cad_labels_translate_document_tree_panes_in_german() {
         let app = CadPlayApp::default();
         let scene = default_document();

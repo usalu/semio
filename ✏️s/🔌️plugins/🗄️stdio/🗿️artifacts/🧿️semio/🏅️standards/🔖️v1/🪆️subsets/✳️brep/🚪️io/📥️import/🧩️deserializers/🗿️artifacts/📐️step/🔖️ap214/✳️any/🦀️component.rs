@@ -412,7 +412,7 @@ mod tests {
         StepSnapshot::from_part21_document(doc)
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn deserializes_real_step_fixture_into_topologically_faithful_brep() {
         let step = fixture_step_snapshot();
         let brep = semio_framework_plugin::resolve_ready(SemioBrepFromStep::deserialize(&step)).expect("deserialize real fixture");
@@ -442,7 +442,7 @@ mod tests {
         assert!(!brep.solids[0].shells[0].is_void);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dangling_curve_reference_errors_rather_than_fabricating() {
         // A LINE whose `dir` points at a nonexistent VECTOR must fail loudly, not silently
         // produce a zero direction.
@@ -453,7 +453,7 @@ mod tests {
         assert!(result.is_err(), "dangling VECTOR reference must surface as an error, not a fabricated direction");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn unsupported_surface_kind_errors_rather_than_fabricating() {
         // Swap PLANE for a surface kind outside this leaf's supported vocabulary.
         let bad = FIXTURE.replace("#16=PLANE('',#40);", "#16=SURFACE_OF_REVOLUTION('',#20,#40);");

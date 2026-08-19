@@ -36,7 +36,7 @@ impl protocol::Inference<BinarySnapshot> for BinaryInference {
 /// 🌱 Defined in terms of `infer` (not derived) — keeps the law correct regardless of whether
 /// `BinarySnapshot::default()`'s `bytes` ever stop being empty.
 impl Default for BinaryInference {
-    async fn default() -> Self {
+    fn default() -> Self {
         <Self as protocol::Inference<BinarySnapshot>>::infer(&BinarySnapshot::default())
     }
 }
@@ -90,13 +90,13 @@ mod tests {
     use crate::artifacts::binary::STDIO_BINARY_DOCUMENT_SCHEMA;
     use protocol::Inference;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = BinarySnapshot::default();
         assert_eq!(BinaryInference::infer(&snapshot), BinaryInference::infer(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(BinaryInference::infer(&BinarySnapshot::default()), BinaryInference::default());
     }
@@ -105,13 +105,13 @@ mod tests {
     /// 🦑 Moved out of the former `⚙️engine`'s own test module (ticket 26/08/12/ENGINELESS-
     /// ARTIFACTS-AND-APP-STATE-MACHINES) — conformance laws, field sweeps, and pure
     /// snapshot-round-trip tests, kept together per that ticket's own destination rule.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn empty_snapshot_matches_schema() {
         let snapshot = empty_binary_snapshot();
         assert_eq!(snapshot.schema, STDIO_BINARY_DOCUMENT_SCHEMA);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn codec_round_trip() {
         let snap = empty_binary_snapshot();
         let text = store::ArtifactDsl::print_dsl(&snap);
@@ -125,7 +125,7 @@ mod tests {
     /// 🧪️ `codec_retention_law`: decode→encode is byte-preserving on real fixtures, incl. bytes
     /// that are themselves invalid UTF-8 (the hex DSL layer never interprets payload bytes as
     /// text, so this is a real test of the hex codec, not just the binary-pack envelope).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn codec_retention_law() {
         for bytes in [vec![], vec![0x00, 0x01, 0xFF, 0xFE], (0u8..=255).collect::<Vec<u8>>()] {
             let snap = BinarySnapshot { bytes: bytes.clone(), ..Default::default() };
@@ -155,7 +155,7 @@ mod tests {
     /// 🧪️ `field_sweep`: THE acceptance criterion. `between` round-trips both directions, the
     /// splice list is non-empty (the only "field" a splice-list diff has), and `between(a,a)`
     /// is empty.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn field_sweep_covers_every_byte_level_change() {
         use crate::artifacts::binary::standards::v_raw::subsets::any::schema::diff::BinaryDiff;
         use protocol::os_spr::command::DiffAlgebra;
@@ -183,7 +183,7 @@ mod tests {
     }
     //#endregion 🔖️FieldSweep
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn demo_snapshot_round_trip() {
         let snap = demo_binary_snapshot();
         let text = store::ArtifactDsl::print_dsl(&snap);
@@ -207,7 +207,7 @@ mod tests {
         /// ✅️ "committed files parse": all 6 handcrafted `.grammar.semio`/`.protocol.semio` files
         /// parse under the real dialect — independent of, and cheaper than, the two `recognize`/
         /// `walk_protocol` laws below (a parse failure here fails fast with a clearer message).
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn committed_facet_files_parse() {
             for (label, text) in [("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO)] {
                 let grammar = dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
@@ -223,7 +223,7 @@ mod tests {
         /// `m5_handcrafted_grammar_conformance`'s own `dsl_body_from_fixture` uses, so this is a
         /// direct proof this artifact will pass that harness once graduated, not merely an
         /// analogue.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn grammar_conformance_law() {
             let grammar = dsl::parse_grammar(snapshot::text::COMPONENT_GRAMMAR_SEMIO).expect("parse snapshot grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
@@ -242,7 +242,7 @@ mod tests {
 
         /// ✅️ `ops_grammar_conformance_law`: the mutations grammar recognizes real `print_op`
         /// output for every `BinaryMutation` variant (`mutations::demo_mutation_cases()`).
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn ops_grammar_conformance_law() {
             let grammar = dsl::parse_grammar(mutations::text::COMPONENT_GRAMMAR_SEMIO).expect("parse mutations grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
@@ -255,7 +255,7 @@ mod tests {
         /// ✅️ `diff_grammar_conformance_law`: the diff grammar recognizes real `print_diff`
         /// output for every representative `BinaryDiff` (`diff::demo_diff_cases()`), incl. the
         /// empty (no-splices) diff and a multi-splice diff with a zero-length no-op splice.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn diff_grammar_conformance_law() {
             let grammar = dsl::parse_grammar(diff::text::COMPONENT_GRAMMAR_SEMIO).expect("parse diff grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
@@ -270,7 +270,7 @@ mod tests {
         /// `m5_handcrafted_protocol_conformance` itself feeds `walk_protocol`), every demo
         /// mutation's `encode_op`, and every demo diff's `encode_diff` — asserting `consumed ==
         /// bytes.len()`.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn protocol_walk_law() {
             // 🧬️ CARRIER LAW: `encode_pack` is now the raw `bytes` payload directly (no SEMIO
             // envelope to unwrap first) — `walk_protocol` already expects "bytes that start at
@@ -300,7 +300,7 @@ mod tests {
         /// `print_dsl`/`encode_pack` output of `demo_binary_snapshot()` — `parse_dsl(fixture) ==
         /// demo()`, `print_dsl(demo()) == fixture` (byte-for-byte), and the pack twin — so the
         /// fixtures can never silently drift back to a fake again.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn fixture_honesty_law() {
             const FIXTURE_DSL: &str = include_str!("../../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
             const FIXTURE_PACK: &[u8] = include_bytes!("../../📚️examples/🎬️demo/🖼️assets/🎒️example.pack.semio");

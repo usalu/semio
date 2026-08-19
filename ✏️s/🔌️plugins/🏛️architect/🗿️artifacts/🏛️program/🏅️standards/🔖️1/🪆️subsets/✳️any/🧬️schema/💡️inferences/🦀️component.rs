@@ -57,7 +57,7 @@ impl Inference<ProgramSnapshot> for ProgramInference {
 /// exists only so `ProgramInference` itself has a `Default` without requiring `ProgramTopology` to
 /// derive one, and to make the "default == infer(default snapshot)" law explicit at this level too.
 impl Default for ProgramInference {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self::infer(&ProgramSnapshot::default())
     }
 }
@@ -227,7 +227,7 @@ mod tests_adjacency {
     use super::*;
     use crate::artifacts::program::sample_plugin;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn sample_plugin_matrix_has_one_cell() {
         let program = sample_plugin();
         let matrix = adjacency_matrix(&program);
@@ -236,7 +236,7 @@ mod tests_adjacency {
         assert_eq!(populated, 1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn detects_distance_min_max_violation() {
         let mut program = sample_plugin();
         program.adjacencies[0].distance_min_m = Some(10.0);
@@ -673,19 +673,19 @@ mod tests_validate {
     use crate::artifacts::program::registers::Requirement;
     use crate::artifacts::program::{empty_plugin, sample_plugin};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn sample_plugin_passes_validation() {
         let diagnostics = validate_plugin(&sample_plugin());
         assert!(diagnostics.iter().all(|d| d.severity != DiagnosticSeverity::Error));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn empty_plugin_warns_on_title() {
         let diagnostics = validate_plugin(&empty_plugin());
         assert!(diagnostics.iter().any(|d| d.code == "meta.empty_title"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn detects_orphan_requirement() {
         let mut program = sample_plugin();
         program.requirements.push(Requirement {
@@ -715,7 +715,7 @@ mod tests_validate {
         assert!(diagnostics.iter().any(|d| d.code == "requirement.orphan"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn detects_broken_relationship_target() {
         let mut program = sample_plugin();
         program.relationships.push(crate::artifacts::program::registers::Relationship {
@@ -940,13 +940,13 @@ mod tests_outputs {
     use super::*;
     use crate::artifacts::program::sample_plugin;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn requirement_lists_output_nonempty_for_sample() {
         let output = build_output(&sample_plugin(), OutputKind::RequirementLists);
         assert_eq!(output.kind, OutputKind::RequirementLists);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn adjacency_matrices_output_uses_matrix_cells() {
         let output = build_output(&sample_plugin(), OutputKind::AdjacencyMatrices);
         assert!(!output.lines.is_empty());
@@ -1287,14 +1287,14 @@ mod tests_report {
     use super::*;
     use crate::artifacts::program::sample_plugin;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn executive_summary_includes_counts() {
         let report = build_report(&sample_plugin(), ReportKind::ExecutiveSummary);
         assert_eq!(report.kind, ReportKind::ExecutiveSummary);
         assert!(!report.sections.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn requirements_matrix_has_grid_rows() {
         let report = build_report(&sample_plugin(), ReportKind::RequirementsMatrix);
         assert!(!report.sections[0].bullets.is_empty());
@@ -1464,7 +1464,7 @@ mod tests_status_summary {
     use super::*;
     use crate::artifacts::program::sample_plugin;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn sample_plugin_status_summary_counts_elements() {
         let summary = status_summary(&sample_plugin());
         assert!(summary.total_entities >= 2);
@@ -1472,7 +1472,7 @@ mod tests_status_summary {
         assert_eq!(elements.count, 2);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn status_summary_includes_all_major_registers() {
         let summary = status_summary(&sample_plugin());
         for register in ["elements", "stakeholders", "adjacencies", "status_records"] {
@@ -1671,13 +1671,13 @@ mod tests_search {
     use super::*;
     use crate::artifacts::program::sample_plugin;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn search_finds_reception_element() {
         let hits = search_plugin(&sample_plugin(), &SearchQuery { keywords: vec!["Reception".into()], ..Default::default() }, None, None);
         assert!(hits.iter().any(|h| h.name == "Reception"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn search_history_records_query() {
         let mut history = Vec::new();
         search_plugin(&sample_plugin(), &SearchQuery { keywords: vec!["Waiting".into()], ..Default::default() }, None, Some(&mut history));
@@ -1685,7 +1685,7 @@ mod tests_search {
         assert_eq!(history[0].keywords, vec!["Waiting".to_string()]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn entity_kind_filter_limits_registers() {
         let hits = search_plugin(&sample_plugin(), &SearchQuery { entity_kinds: vec!["elements".into()], ..Default::default() }, None, None);
         assert!(hits.iter().all(|h| h.register == "elements"));
@@ -2105,21 +2105,21 @@ mod tests_analyze {
     use super::*;
     use crate::artifacts::program::sample_plugin;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn gap_analysis_on_sample_plugin() {
         let result = run_analysis(&sample_plugin(), AnalysisKind::Gap);
         assert_eq!(result.kind, AnalysisKind::Gap);
         assert!(!result.findings.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn capacity_analysis_sums_area() {
         let result = run_analysis(&sample_plugin(), AnalysisKind::Capacity);
         assert!(result.metrics.iter().any(|m| m.name == "total_target_area"));
         assert!(result.metrics.iter().any(|m| m.value > 0.0));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn requirement_clustering_produces_clusters() {
         let result = run_analysis(&sample_plugin(), AnalysisKind::RequirementClustering);
         assert_eq!(result.kind, AnalysisKind::RequirementClustering);
@@ -2296,7 +2296,7 @@ mod tests_exchange {
     use super::*;
     use crate::artifacts::program::sample_plugin;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn json_round_trip() {
         let program = sample_plugin();
         let json = export_json(&program).expect("export");
@@ -2305,7 +2305,7 @@ mod tests_exchange {
         assert_eq!(imported.adjacencies.len(), program.adjacencies.len());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn relationships_csv_round_trips_via_stdio_codec() {
         let program = sample_plugin();
         let csv = export_relationships_csv(&program).expect("relationships csv export");
@@ -2354,7 +2354,7 @@ mod tests_trace {
     use super::*;
     use crate::artifacts::program::sample_plugin;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn audit_trail_sorted_newest_first() {
         let mut program = sample_plugin();
         program.audit_events.push(AuditEvent {
@@ -2411,13 +2411,13 @@ mod tests {
     use super::*;
 
     //#region 🧪️InferenceLaws
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = ProgramSnapshot::default();
         assert_eq!(ProgramInference::infer(&snapshot), ProgramInference::infer(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(ProgramInference::infer(&ProgramSnapshot::default()), ProgramInference::default());
     }

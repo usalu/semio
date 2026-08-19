@@ -36,7 +36,7 @@ mod tests {
     use super::*;
     use crate::artifacts::playbook::op::change_title_operation;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_binary_round_trips_and_agrees_with_text() {
         let operation = change_title_operation(Some("Renamed".into()));
         store::os_store::test_support::assert_op_text_binary_equivalence(&operation);

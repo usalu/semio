@@ -31,7 +31,7 @@ pub struct StlIntoCurate;
 impl Deserializer<CurateSnapshot> for StlIntoCurate {
     const FROM: Dialect = STL_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    async fn deserialize(payload: &IoPayload) -> IoResult<CurateSnapshot> {
+    fn deserialize(payload: &IoPayload) -> IoResult<CurateSnapshot> {
         let IoPayload::Binary(bytes) = payload else {
             return Err(IoError { message: "StlIntoCurate: expected a binary stl payload".to_string(), diagnostics: Vec::new() });
         };

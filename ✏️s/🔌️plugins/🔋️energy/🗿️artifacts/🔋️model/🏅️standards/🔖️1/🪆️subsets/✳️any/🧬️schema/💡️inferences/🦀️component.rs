@@ -41,7 +41,7 @@ impl protocol::Inference<EnergyModelSnapshot> for EnergyModelInference {
 /// the real default, don't derive structurally" trick `AddInference` uses in
 /// `📡️spr/🎮️command/🦀️component.rs`.
 impl Default for EnergyModelInference {
-    async fn default() -> Self {
+    fn default() -> Self {
         <Self as protocol::Inference<EnergyModelSnapshot>>::infer(&EnergyModelSnapshot::default())
     }
 }
@@ -97,18 +97,18 @@ mod tests {
         )
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = populated_snapshot();
         assert_eq!(EnergyModelInference::infer(&snapshot), EnergyModelInference::infer(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(EnergyModelInference::infer(&EnergyModelSnapshot::default()), EnergyModelInference::default());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn entries_counts_top_level_model_fields_and_bytes() {
         let snapshot = populated_snapshot();
         let inferred = EnergyModelInference::infer(&snapshot);

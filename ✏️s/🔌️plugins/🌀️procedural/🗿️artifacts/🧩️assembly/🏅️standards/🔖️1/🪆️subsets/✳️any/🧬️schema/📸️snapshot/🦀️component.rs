@@ -101,7 +101,7 @@ pub struct AssemblySnapshot {
 }
 
 impl Default for AssemblySnapshot {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self {
             schema: ASSEMBLY_DOCUMENT_SCHEMA.into(),
             seed: 0,
@@ -135,7 +135,7 @@ pub async fn weight_index(snapshot: &AssemblySnapshot, module_id: &str) -> Optio
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn default_snapshot_is_empty_and_zero_seeded() {
         let snapshot = AssemblySnapshot::default();
         assert_eq!(snapshot.schema, ASSEMBLY_DOCUMENT_SCHEMA);
@@ -143,7 +143,7 @@ mod tests {
         assert!(snapshot.slots.is_empty() && snapshot.edges.is_empty() && snapshot.modules.is_empty() && snapshot.weights.is_empty() && snapshot.rules.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn json_round_trips() {
         let mut snapshot = AssemblySnapshot::default();
         snapshot.slots.push(AssemblySlot { id: "s1".into(), x: 1.0, y: 2.0, z: 0.0, pinned_module_id: None });
@@ -155,7 +155,7 @@ mod tests {
         assert_eq!(snapshot, back);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn addressing_finds_existing_and_misses_unknown() {
         let mut snapshot = AssemblySnapshot::default();
         snapshot.slots.push(AssemblySlot { id: "s1".into(), ..Default::default() });

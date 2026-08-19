@@ -17,7 +17,7 @@ impl Serializer<WriterSnapshot> for WriterIntoDocx {
     const INTO: Dialect = DOCX_DIALECT;
     /// 🪧️ Lossy — see the sibling deserializer's doc comment.
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    async fn serialize(from: &WriterSnapshot) -> IoResult<IoPayload> {
+    fn serialize(from: &WriterSnapshot) -> IoResult<IoPayload> {
         let body: Vec<DocxBlock> = writer_text(from).split('\n').map(DocxBlock::paragraph).collect();
         let document = semio_s_plugin_stdio::artifacts::docx::schema::snapshot::DocxDocument { body, styles: Vec::new() };
         let docx = semio_s_plugin_stdio::artifacts::docx::engine::build_minimal_docx(document);
@@ -30,7 +30,7 @@ impl Serializer<WriterSnapshot> for WriterIntoDocx {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn writer_into_docx_round_trips_through_docx_into_writer() {
         let snapshot = crate::artifacts::writer::writer_snapshot_with_text("writer.document", "id", "plain", "writer://id", "hello");
         let outcome = WriterIntoDocx::serialize(&snapshot).expect("serialize");

@@ -39,7 +39,7 @@ pub mod derived_construction {
     }
 
     impl Default for PdfHBuilderConstruction {
-        async fn default() -> Self {
+        fn default() -> Self {
             Self::new()
         }
     }
@@ -93,13 +93,13 @@ pub mod derived_construction {
     mod tests {
         use super::*;
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn build_always_succeeds() {
             let snapshot = PdfHBuilderConstruction::new().add_page(PdfPage::new(200.0, 200.0)).build().expect("PDF/H build() never fails");
             assert_eq!(snapshot.pages.len(), 1);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn set_info_clears_title_author_advisory() {
             let snapshot = PdfHBuilderConstruction::new().set_info(PdfInfo { title: Some("A Chart".into()), author: Some("Dr. X".into()), ..PdfInfo::default() }).build().unwrap();
             let diagnostics = check_h_conformance(&snapshot);
@@ -259,7 +259,7 @@ pub mod derived_analysis {
         use super::*;
         use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::PdfInfo;
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn empty_snapshot_reports_only_soft_findings() {
             let snapshot = PdfSnapshot::default();
             let diagnostics = check_h_conformance(&snapshot);
@@ -268,14 +268,14 @@ pub mod derived_analysis {
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_SIGNATURE_FIELD));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn title_and_author_present_clears_that_finding() {
             let snapshot = PdfSnapshot { info: PdfInfo { title: Some("A Chart".into()), author: Some("Dr. X".into()), ..PdfInfo::default() }, ..PdfSnapshot::default() };
             let diagnostics = check_h_conformance(&snapshot);
             assert!(diagnostics.iter().all(|d| d.code.0 != CODE_INFO_TITLE_OR_AUTHOR), "got {diagnostics:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn javascript_action_is_soft_never_hard() {
             let objects = vec![PdfIndirectObject { id: ObjRef { num: 1, gen: 0 }, value: PdfObject::Dict(vec![PdfDictEntry { key: "S".into(), value: PdfObject::Name("JavaScript".into()) }]) }];
             let snapshot = PdfSnapshot { objects, ..PdfSnapshot::default() };
@@ -283,7 +283,7 @@ pub mod derived_analysis {
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_JAVASCRIPT && d.severity == Severity::Warning), "got {diagnostics:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn signature_field_present_clears_that_finding() {
             let objects = vec![
                 PdfIndirectObject {

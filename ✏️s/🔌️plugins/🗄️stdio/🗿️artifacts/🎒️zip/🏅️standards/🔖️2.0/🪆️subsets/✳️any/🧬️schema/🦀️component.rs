@@ -24,7 +24,7 @@ pub struct ZipArtifact {
 
 //#region Conversions
 impl Default for ZipArtifact {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self::from_snapshot(ZipSnapshot::default())
     }
 }

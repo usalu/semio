@@ -96,7 +96,7 @@ mod tests {
     use super::*;
     use crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::{DocListItem, DocTableCell, DocTableRow, STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn collects_headings_and_counts_words_and_blocks() {
         let snapshot = SemioDocumentSnapshot {
             schema: STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA.into(),
@@ -117,13 +117,13 @@ mod tests {
         assert_eq!(outline.word_count, 10); // Hello World + one two three + Nested + cell text + item text
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = SemioDocumentSnapshot::default();
         assert_eq!(compute_semio_document_outline(&snapshot), compute_semio_document_outline(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(compute_semio_document_outline(&SemioDocumentSnapshot::default()), SemioDocumentOutline::default());
     }

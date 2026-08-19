@@ -16,7 +16,7 @@ pub struct DrawIntoJson;
 impl Serializer<DrawSnapshot> for DrawIntoJson {
     const INTO: Dialect = JSON_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Exact;
-    async fn serialize(from: &DrawSnapshot) -> IoResult<IoPayload> {
+    fn serialize(from: &DrawSnapshot) -> IoResult<IoPayload> {
         let value = serde_json::to_value(from).map_err(|error| IoError { message: format!("DrawIntoJson: {error}"), diagnostics: Vec::new() })?;
         let json = JsonSnapshot::from_value(value);
         Ok(IoOutcome::clean(IoPayload::Text(write_json_pretty(&json.value))))

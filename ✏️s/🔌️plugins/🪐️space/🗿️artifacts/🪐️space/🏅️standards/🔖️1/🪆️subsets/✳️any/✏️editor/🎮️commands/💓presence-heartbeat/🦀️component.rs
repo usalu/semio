@@ -37,7 +37,7 @@ mod tests {
         (SSpaceSnapshot::default(), semio_framework_plugin::HistoryView::empty())
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn heartbeat_sets_presence_for_a_new_artifact() {
         let (snapshot, history) = empty_doc();
         let doc = ArtifactView::new(&snapshot, &history);
@@ -49,7 +49,7 @@ mod tests {
         assert_eq!(config.presence_for("artifact-1"), vec!["user:1", "user:2"]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn heartbeat_replaces_an_existing_artifacts_presence() {
         let (snapshot, history) = empty_doc();
         let doc = ArtifactView::new(&snapshot, &history);

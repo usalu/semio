@@ -382,7 +382,7 @@ mod tests {
     }
 
     //#region 🧪️InverseRoundTripLaw
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inverse_round_trip_law_covers_every_variant() {
         let base = fixture();
         for m in demo_mutation_cases() {
@@ -390,7 +390,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_delete_mesh_round_trips_explicitly() {
         let base = fixture();
         let create = SemioMeshMutation::CreateMesh(create_mesh::mutation::CreateMesh { mesh: SemioMesh { id: "mesh-c".into(), primitives: vec![] } });
@@ -405,7 +405,7 @@ mod tests {
         assert!(!after_delete.meshes.iter().any(|m| m.id == "mesh-a"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn delete_of_an_absent_id_has_an_empty_inverse_and_is_a_diff_level_no_op() {
         let base = fixture();
         let delete = SemioMeshMutation::DeleteMaterial(delete_material::mutation::DeleteMaterial { id: "mat-missing".into() });
@@ -413,7 +413,7 @@ mod tests {
         assert!(delete.diff(&base).diff().is_empty(), "deleting an absent id must diff empty, not merely be harmless to apply");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_change_replace_move_of_an_absent_target_have_empty_inverse_and_are_no_ops() {
         let base = fixture();
 
@@ -448,7 +448,7 @@ mod tests {
     /// `(payload, base)`, never apply-then-capture) matches `SemioMeshDiff::between(base,
     /// diff.diff().apply(base))` — the sparse diff this facet hand-constructs is exactly the diff a
     /// generic before/after comparison would independently derive.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn diff_consistency_law_matches_independent_between() {
         use protocol::command::DiffAlgebra;
         let base = fixture();
@@ -462,7 +462,7 @@ mod tests {
     //#endregion 🧪️DiffConsistencyLaw
 
     //#region 🧪️DeterminismLaw
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn determinism_law_diff_and_inverse_are_pure_functions_of_payload_and_base() {
         let base = fixture();
         for m in demo_mutation_cases() {
@@ -473,7 +473,7 @@ mod tests {
     //#endregion 🧪️DeterminismLaw
 
     //#region 🧪️OpCodecRoundTripLaw
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_text_binary_roundtrip_law() {
         for m in demo_mutation_cases() {
             let printed = m.print_op();
@@ -489,7 +489,7 @@ mod tests {
     //#endregion 🧪️OpCodecRoundTripLaw
 
     //#region 🧪️SemanticKinds
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn semantic_kinds_cover_every_variant() {
         assert_eq!(SemioMeshMutation::kinds().len(), 17);
         let mutation = SemioMeshMutation::DeleteMesh(delete_mesh::mutation::DeleteMesh { id: "mesh-a".into() });

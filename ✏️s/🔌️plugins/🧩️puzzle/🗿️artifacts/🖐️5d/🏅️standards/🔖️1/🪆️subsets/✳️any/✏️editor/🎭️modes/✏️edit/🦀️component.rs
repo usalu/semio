@@ -77,7 +77,7 @@ mod tests {
     use crate::editor::puzzle5d::create_puzzle5d_app;
     use semio_framework_plugin::WindowLayoutRoot;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn default_layout_is_world_three_fifths_and_board_two_fifths() {
         let app = create_puzzle5d_app();
         let layout = app.definition.default_layout.as_ref().expect("default layout");

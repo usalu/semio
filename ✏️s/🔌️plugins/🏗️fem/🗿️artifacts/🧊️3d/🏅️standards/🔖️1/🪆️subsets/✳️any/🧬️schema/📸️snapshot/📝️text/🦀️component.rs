@@ -88,13 +88,13 @@ mod tests {
     }
     // #endregion 🔖️Fixtures
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fem3d_dsl_round_trips_bundled_default_example() {
         let document = parse_dsl(FEM3D_EXAMPLE_TEXT).expect("parse default example");
         semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&document);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fem3d_dsl_round_trips_fixture_documents() {
         semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&Fem3dSnapshot::default());
         semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&cantilever_fixture());
@@ -111,7 +111,7 @@ mod tests {
 mod semio_grammar_conformance {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn component_grammar_semio_is_grammar_dialect() {
         let g = ::dsl::parse_grammar(COMPONENT_GRAMMAR_SEMIO).expect("parse grammar.semio");
         assert_eq!(g.dialect, ::dsl::SemioDialect::Grammar);

@@ -33,7 +33,7 @@ mod tests {
     use crate::editor::flow::testkit::{dispatch, flow_app};
     use crate::editor::flow::FlowCommand;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn reorganize_keeps_every_widget() {
         let mut app = flow_app();
         let before = app.snapshot().expect("snapshot").to_fixture().widgets.len();

@@ -122,7 +122,7 @@ mod tests {
         (model, topo, SearchConfig::default())
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn solves_macro_then_every_child() {
         let (model, topo) = checkerboard(4);
         let config = SearchConfig::default();
@@ -139,7 +139,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn reports_macro_unsatisfiable_without_attempting_children() {
         // K5 with only 4 colors: unsatisfiable regardless of any child model.
         let mut b = ModelBuilder::new();
@@ -181,7 +181,7 @@ mod tests {
         (model, tb.build().unwrap(), SearchConfig::default())
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn reports_which_node_child_failed_at() {
         let (model, topo) = checkerboard(3);
         let config = SearchConfig::default();
@@ -197,7 +197,7 @@ mod tests {
         assert!(matches!(outcome, HierarchyOutcome::ChildFailed { node: NodeId(1) }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn child_seeds_differ_by_node_and_reproduce_deterministically() {
         assert_eq!(child_seed(1, NodeId(0)), child_seed(1, NodeId(0)));
         assert_ne!(child_seed(1, NodeId(0)), child_seed(1, NodeId(1)));

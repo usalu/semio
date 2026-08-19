@@ -454,7 +454,7 @@ pub enum AlgebraError {
 }
 
 impl std::fmt::Display for AlgebraError {
-    async fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::NotPositiveDefinite => write!(f, "matrix is not positive definite"),
             Self::Singular => write!(f, "matrix is singular"),
@@ -1269,24 +1269,24 @@ pub async fn poly_roots_companion(coeffs: &[f64]) -> Result<Vec<(f64, f64)>, Alg
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mat2_identity_apply_is_noop() {
         assert_eq!(Mat2::IDENTITY.apply((3.0, -4.0)), (3.0, -4.0));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mat2_apply_matches_matrix_vector_multiply() {
         let m = Mat2::new(2.0, 0.0, 0.0, 3.0);
         assert_eq!(m.apply((1.0, 1.0)), (2.0, 3.0));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mat2_det_of_scale_matrix() {
         let m = Mat2::new(2.0, 0.0, 0.0, 3.0);
         assert!((m.det() - 6.0).abs() < 1e-9);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mat2_inverse_round_trips() {
         let m = Mat2::new(2.0, 1.0, 1.0, 3.0);
         let inv = m.inverse().expect("invertible");
@@ -1297,13 +1297,13 @@ mod tests {
         assert!(round.cols[0][1].abs() < 1e-9);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mat2_singular_matrix_has_no_inverse() {
         let m = Mat2::new(1.0, 2.0, 2.0, 4.0);
         assert!(m.inverse().is_none());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mat2_transpose_swaps_off_diagonal() {
         let m = Mat2::new(1.0, 2.0, 3.0, 4.0);
         let t = m.transpose();
@@ -1311,7 +1311,7 @@ mod tests {
         assert_eq!(t.apply((0.0, 1.0)), (3.0, 4.0));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mat2_eigenvalues_of_diagonal_matrix_are_the_diagonal() {
         let m = Mat2::new(2.0, 0.0, 0.0, 5.0);
         let (l1, l2) = m.eigenvalues().expect("real eigenvalues");
@@ -1321,13 +1321,13 @@ mod tests {
         assert!((vals[1] - 5.0).abs() < 1e-9);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mat2_rotation_like_matrix_has_complex_eigenvalues() {
         let m = Mat2::new(0.0, -1.0, 1.0, 0.0);
         assert!(m.eigenvalues().is_none());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn vecd_dot_and_norm() {
         let a = VecD::from_vec(vec![3.0, 4.0]);
         let b = VecD::from_vec(vec![1.0, 0.0]);
@@ -1336,7 +1336,7 @@ mod tests {
         assert!((a.norm_inf() - 4.0).abs() < 1e-12);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn vecd_add_sub_scale_round_trip() {
         let a = VecD::from_vec(vec![1.0, 2.0, 3.0]);
         let b = VecD::from_vec(vec![0.5, 0.5, 0.5]);
@@ -1348,7 +1348,7 @@ mod tests {
         assert!((a.scale(2.0).get(1) - 4.0).abs() < 1e-12);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn matd_matmul_identity_is_noop() {
         let mut m = MatD::zeros(2, 2);
         m.set(0, 0, 1.0);
@@ -1360,7 +1360,7 @@ mod tests {
         assert_eq!(out, m);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn matd_transpose_round_trips() {
         let mut m = MatD::zeros(2, 3);
         for row in 0..2 {
@@ -1371,7 +1371,7 @@ mod tests {
         assert_eq!(m.transpose().transpose(), m);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn matd_mul_vec_matches_matrix_vector_multiply() {
         let mut m = MatD::zeros(2, 2);
         m.set(0, 0, 2.0);
@@ -1384,7 +1384,7 @@ mod tests {
         assert!((y.get(1) - 3.0).abs() < 1e-12);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn matd_lu_solve_matches_hand_solved_system() {
         // 2x + y = 5, x + 3y = 10  =>  x = 1, y = 3
         let mut a = MatD::zeros(2, 2);
@@ -1398,7 +1398,7 @@ mod tests {
         assert!((x.get(1) - 3.0).abs() < 1e-9);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn matd_lu_solve_detects_singular_matrix() {
         let mut a = MatD::zeros(2, 2);
         a.set(0, 0, 1.0);
@@ -1409,7 +1409,7 @@ mod tests {
         assert!(a.lu_solve(&b).is_none());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn matd_add_triple_product_matches_btdb() {
         let mut b = MatD::zeros(1, 2);
         b.set(0, 0, 1.0);
@@ -1424,13 +1424,13 @@ mod tests {
         assert!((ke.get(1, 1) - 12.0).abs() < 1e-12);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mat3d_identity_axes_is_identity() {
         let m = Mat3d::from_axes([1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]);
         assert_eq!(m, Mat3d::IDENTITY);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mat3d_transpose_is_inverse_for_orthonormal_basis() {
         let x = vec3d_normalize([1.0, 1.0, 0.0]);
         let z = [0.0, 0.0, 1.0];
@@ -1445,7 +1445,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mat3d_mul_vec3_transforms_basis_vector() {
         let m = Mat3d::from_axes([0.0, 1.0, 0.0], [-1.0, 0.0, 0.0], [0.0, 0.0, 1.0]);
         let out = m.mul_vec3([1.0, 0.0, 0.0]);
@@ -1454,7 +1454,7 @@ mod tests {
         assert!((out[2] - 0.0).abs() < 1e-12);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn vec3d_cross_is_perpendicular_to_inputs() {
         let a = [1.0, 0.0, 0.0];
         let b = [0.0, 1.0, 0.0];
@@ -1462,7 +1462,7 @@ mod tests {
         assert!((c[2] - 1.0).abs() < 1e-12);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn csr_from_triplets_dedupes_and_sorts() {
         let triplets = [(0, 1, 2.0), (0, 1, 3.0), (0, 0, 1.0), (1, 0, 4.0)];
         let m = CsrMatrix::from_triplets(2, 2, &triplets);
@@ -1471,7 +1471,7 @@ mod tests {
         assert_eq!(row0, vec![(0, 1.0), (1, 5.0)]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn csr_spmv_matches_dense_mul_vec() {
         let triplets = [(0, 0, 2.0), (0, 1, 1.0), (1, 1, 3.0)];
         let m = CsrMatrix::from_triplets(2, 2, &triplets);
@@ -1481,7 +1481,7 @@ mod tests {
         assert_eq!(sparse_result, dense_result);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn csr_transpose_swaps_rows_and_cols() {
         let triplets = [(0, 1, 5.0)];
         let m = CsrMatrix::from_triplets(2, 3, &triplets);
@@ -1491,13 +1491,13 @@ mod tests {
         assert_eq!(t.row(1).collect::<Vec<_>>(), vec![(0, 5.0)]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn algebra_error_display_is_human_readable() {
         assert_eq!(AlgebraError::Singular.to_string(), "matrix is singular");
         assert_eq!(AlgebraError::NotSymmetric.to_string(), "matrix is not symmetric");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn cholesky_matches_hand_solved_spd_system() {
         let mut a = MatD::zeros(2, 2);
         a.set(0, 0, 4.0);
@@ -1519,7 +1519,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn cholesky_rejects_non_positive_definite() {
         let mut a = MatD::zeros(2, 2);
         a.set(0, 0, 1.0);
@@ -1529,7 +1529,7 @@ mod tests {
         assert_eq!(cholesky(&a), Err(AlgebraError::NotPositiveDefinite));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn qr_householder_reconstructs_and_is_orthogonal() {
         let mut a = MatD::zeros(3, 2);
         a.set(0, 0, 1.0);
@@ -1557,7 +1557,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn jacobi_eigen_diagonal_matrix_returns_sorted_diagonal() {
         let mut a = MatD::zeros(3, 3);
         a.set(0, 0, 5.0);
@@ -1576,7 +1576,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn jacobi_eigen_matches_characteristic_polynomial_roots() {
         let mut a = MatD::zeros(2, 2);
         a.set(0, 0, 2.0);
@@ -1588,7 +1588,7 @@ mod tests {
         assert!((vals[1] - 3.0).abs() < 1e-9);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn jacobi_eigen_rejects_asymmetric_matrix() {
         let mut a = MatD::zeros(2, 2);
         a.set(0, 0, 1.0);
@@ -1598,7 +1598,7 @@ mod tests {
         assert_eq!(jacobi_eigen_symmetric(&a, 100), Err(AlgebraError::NotSymmetric));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn jacobi_eigen_reports_non_convergence_with_zero_sweeps() {
         let mut a = MatD::zeros(2, 2);
         a.set(0, 0, 2.0);
@@ -1608,7 +1608,7 @@ mod tests {
         assert_eq!(jacobi_eigen_symmetric(&a, 0), Err(AlgebraError::PowerIterationFailedConvergence { iterations: 0 }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn power_iteration_finds_dominant_eigenpair() {
         let triplets = [(0, 0, 1.0), (1, 1, 5.0), (2, 2, 2.0)];
         let a = CsrMatrix::from_triplets(3, 3, &triplets);
@@ -1617,13 +1617,13 @@ mod tests {
         assert!(v.get(1).abs() > 0.99);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn power_iteration_rejects_non_square() {
         let a = CsrMatrix::from_triplets(2, 3, &[]);
         assert!(matches!(power_iteration(&a, 10, 1e-6, 1), Err(AlgebraError::DimensionMismatch { .. })));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn conjugate_gradient_matches_hand_solved_system() {
         let triplets = [(0, 0, 2.0), (0, 1, 1.0), (1, 0, 1.0), (1, 1, 3.0)];
         let a = CsrMatrix::from_triplets(2, 2, &triplets);
@@ -1633,7 +1633,7 @@ mod tests {
         assert!((x.get(1) - 3.0).abs() < 1e-6);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn conjugate_gradient_reports_non_convergence_with_zero_iterations() {
         let triplets = [(0, 0, 2.0), (1, 1, 2.0)];
         let a = CsrMatrix::from_triplets(2, 2, &triplets);
@@ -1641,7 +1641,7 @@ mod tests {
         assert_eq!(conjugate_gradient(&a, &b, 1e-12, 0), Err(AlgebraError::PowerIterationFailedConvergence { iterations: 0 }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn lanczos_extreme_eigen_finds_largest_on_diagonal_matrix() {
         let triplets = [(0, 0, 1.0), (1, 1, 4.0), (2, 2, 2.0), (3, 3, 3.0)];
         let a = CsrMatrix::from_triplets(4, 4, &triplets);
@@ -1652,7 +1652,7 @@ mod tests {
         assert!((sorted[1] - 3.0).abs() < 1e-6);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn lanczos_extreme_eigen_finds_smallest_on_diagonal_matrix() {
         let triplets = [(0, 0, 1.0), (1, 1, 4.0), (2, 2, 2.0), (3, 3, 3.0)];
         let a = CsrMatrix::from_triplets(4, 4, &triplets);
@@ -1663,20 +1663,20 @@ mod tests {
         assert!((sorted[1] - 2.0).abs() < 1e-6);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn lanczos_extreme_eigen_rejects_non_square() {
         let a = CsrMatrix::from_triplets(2, 3, &[]);
         assert!(matches!(lanczos_extreme_eigen(&a, 1, true, 5, 1), Err(AlgebraError::DimensionMismatch { .. })));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn expm_pade_of_zero_matrix_is_identity() {
         let z = MatD::zeros(3, 3);
         let e = expm_pade(&z);
         assert_eq!(e, MatD::identity(3));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn expm_pade_of_diagonal_matrix_is_elementwise_exp() {
         let mut a = MatD::zeros(2, 2);
         a.set(0, 0, 1.0);
@@ -1734,7 +1734,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn svd_reconstructs_tall_random_matrix() {
         let a = seeded_mat(8, 5, 20_260_719);
         let (u, sigma, v) = svd(&a).expect("converges");
@@ -1748,7 +1748,7 @@ mod tests {
         assert_orthonormal_columns(&v);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn svd_reconstructs_wide_random_matrix() {
         let a = seeded_mat(5, 8, 31);
         let (u, sigma, v) = svd(&a).expect("converges");
@@ -1761,7 +1761,7 @@ mod tests {
         assert_orthonormal_columns(&v);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn svd_nullvector_finds_planted_kernel() {
         let a = planted_rank_deficient();
         let v = svd_nullvector(&a).expect("converges");
@@ -1769,7 +1769,7 @@ mod tests {
         assert!(a.mul_vec(&v).norm2() < 1e-9);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn solve_llsq_matches_normal_equations() {
         let a = seeded_mat(9, 3, 5);
         let b = VecD::from_vec((0..9).map(|i| (i as f64) * 0.5 - 2.0).collect());
@@ -1781,7 +1781,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn pseudo_inverse_satisfies_penrose_identity() {
         let a = planted_rank_deficient();
         let pinv = pseudo_inverse(&a, 1e-10).expect("converges");
@@ -1793,7 +1793,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn weighted_normal_equations_match_hand_assembly() {
         let mut a = MatD::zeros(3, 2);
         a.set(0, 0, 1.0);
@@ -1822,7 +1822,7 @@ mod tests {
         q.matmul(&d).matmul(&q.transpose())
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn hessenberg_similarity_orthogonality_and_shape() {
         for (n, seed) in [(4, 101), (4, 202), (5, 303), (5, 404), (6, 505)] {
             let a = seeded_mat(n, n, seed);
@@ -1842,14 +1842,14 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     #[should_panic(expected = "hessenberg requires a square matrix")]
     async fn hessenberg_rejects_non_square() {
         let a = MatD::zeros(2, 3);
         hessenberg(&a);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn real_schur_recovers_planted_real_spectrum() {
         let planted = [1.0, -2.0, 3.5, 0.25, -7.0];
         let a = planted_diagonal_conjugated(&planted, 909);
@@ -1863,7 +1863,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn real_schur_recovers_planted_complex_conjugate_pairs() {
         let blocks = [(2.0, 3.0), (-1.0, 5.0)];
         let n = blocks.len() * 2;
@@ -1888,13 +1888,13 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn real_schur_rejects_non_square() {
         let a = MatD::zeros(2, 3);
         assert!(matches!(real_schur(&a), Err(AlgebraError::DimensionMismatch { .. })));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn poly_roots_companion_matches_known_real_quartic_roots() {
         let coeffs = [24.0, -50.0, 35.0, -10.0, 1.0];
         let mut roots = poly_roots_companion(&coeffs).expect("converges");
@@ -1906,7 +1906,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn poly_roots_companion_matches_known_complex_conjugate_pairs() {
         let coeffs = [4.0, 0.0, 5.0, 0.0, 1.0];
         let roots = poly_roots_companion(&coeffs).expect("converges");
@@ -1924,32 +1924,32 @@ mod tests {
         assert!((mags[3] - 2.0).abs() < 1e-6);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn poly_roots_companion_rejects_zero_leading_coefficient() {
         let coeffs = [1.0, 2.0, 0.0];
         assert_eq!(poly_roots_companion(&coeffs), Err(AlgebraError::Singular));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn poly_roots_companion_rejects_too_short_input() {
         assert_eq!(poly_roots_companion(&[5.0]), Err(AlgebraError::Singular));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn vec3d_sub_and_length_match_hand_computation() {
         let diff = vec3d_sub([3.0, 4.0, 0.0], [1.0, 1.0, 0.0]);
         assert_eq!(diff, [2.0, 3.0, 0.0]);
         assert!((vec3d_length([3.0, 4.0, 0.0]) - 5.0).abs() < 1e-12);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn algebra_error_display_covers_remaining_variants() {
         assert_eq!(AlgebraError::NotPositiveDefinite.to_string(), "matrix is not positive definite");
         assert_eq!(AlgebraError::DimensionMismatch { expected: (2, 2), got: (3, 3) }.to_string(), "dimension mismatch: expected (2, 2), got (3, 3)");
         assert_eq!(AlgebraError::PowerIterationFailedConvergence { iterations: 42 }.to_string(), "iterative solver failed to converge after 42 iterations");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn matd_matmul_skips_zero_entries_and_still_correct() {
         let mut m = MatD::zeros(2, 2);
         m.set(0, 0, 0.0);
@@ -1960,7 +1960,7 @@ mod tests {
         assert_eq!(out, m);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn weighted_normal_equations_skips_zero_entries_in_a() {
         let mut a = MatD::zeros(2, 2);
         a.set(0, 0, 0.0);
@@ -1976,7 +1976,7 @@ mod tests {
         assert!((atb.get(1) - 7.0).abs() < 1e-12);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn hessenberg_skips_already_zero_subdiagonal_column() {
         let mut a = MatD::zeros(4, 4);
         for i in 0..4 {
@@ -1987,7 +1987,7 @@ mod tests {
         assert_eq!(q, MatD::identity(4));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn qr_householder_skips_already_zero_column_segment() {
         let mut a = MatD::zeros(3, 3);
         a.set(0, 0, 1.0);
@@ -2004,13 +2004,13 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn svd_nullvector_rejects_matrix_with_zero_columns() {
         let a = MatD::zeros(2, 0);
         assert!(matches!(svd_nullvector(&a), Err(AlgebraError::DimensionMismatch { .. })));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn solve_llsq_detects_rank_deficient_system() {
         let a = planted_rank_deficient();
         let b = VecD::from_vec((0..6).map(|i| i as f64).collect());
@@ -2032,7 +2032,7 @@ mod tests {
     mod long {
         use super::*;
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn conjugate_gradient_converges_on_tridiagonal_system() {
             let n = 40;
             let a = tridiagonal_spd(n);
@@ -2044,7 +2044,7 @@ mod tests {
             }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn lanczos_matches_dense_jacobi_on_tridiagonal() {
             let n = 16;
             let a_sparse = tridiagonal_spd(n);
@@ -2076,7 +2076,7 @@ mod exact_tests {
         Rational::from_i64(n, d).unwrap()
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn lll_recovers_a_short_relation() {
         // Basis containing an obviously-reducible long vector alongside a short one; LLL should surface
         // vectors no longer than the original shortest, and preserve the lattice (verified via a

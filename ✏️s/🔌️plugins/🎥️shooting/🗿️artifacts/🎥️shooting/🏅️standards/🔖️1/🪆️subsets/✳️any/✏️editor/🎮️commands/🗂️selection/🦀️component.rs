@@ -112,7 +112,7 @@ mod tests {
     use crate::editor::shooting::testkit::{dispatch, shooting_app};
     use crate::editor::shooting::ShootingCommand;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_shot_selection_is_config_only_and_selects_the_shot_in_the_inspector() {
         use crate::editor::shooting::testkit::render;
         use crate::editor::shooting::SHOOTING_PLAY_BODY_INSPECTION;
@@ -124,14 +124,14 @@ mod tests {
         assert!(render(&mut app, SHOOTING_PLAY_BODY_INSPECTION).contains("shooting-play-inspector.shot"), "inspector renders the shot group for the selected shot");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_active_utility_emits_no_artifact_mutations() {
         let mut app = shooting_app();
         let result = dispatch(&mut app, ShootingCommand::SetActiveUtility(set_active_utility::SetActiveUtility { utility_id: "rotate".into() }));
         assert!(result.mutations.is_empty(), "utility switching never emits document operations");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn center_model_toggle_bumps_fit_revision_only_on_the_off_to_on_edge() {
         let mut app = shooting_app();
         dispatch(&mut app, ShootingCommand::SetCenterModel(set_center_model::SetCenterModel { pressed: Some(false) }));

@@ -43,12 +43,12 @@ mod surface_tests {
     //! Gap 2), used directly here rather than local stand-ins.
     use semio_framework_plugin::testkit::{assert_editor_and_viewer_share_dialect, assert_viewer_never_mutates};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn layout_viewer_never_mutates() {
         assert_viewer_never_mutates::<crate::viewer::layout::LayoutViewer>();
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn layout_editor_and_viewer_share_dialect() {
         assert_editor_and_viewer_share_dialect::<crate::editor::layout::LayoutPlayApp, crate::viewer::layout::LayoutViewer>();
     }

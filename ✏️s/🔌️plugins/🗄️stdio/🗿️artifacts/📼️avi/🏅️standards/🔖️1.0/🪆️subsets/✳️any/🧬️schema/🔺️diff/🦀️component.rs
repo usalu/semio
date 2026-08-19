@@ -458,7 +458,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn field_sweep_covers_every_mutable_field() {
         let a = snap(vec![stream(vec![chunk(1), chunk(2)]), stream(vec![chunk(3)])]);
         let mut b = a.clone();
@@ -480,7 +480,7 @@ mod tests {
         assert!(<AviDiff as DiffAlgebra<AviSnapshot>>::between(&a, &a).is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inverse_law_round_trips_through_apply() {
         let a = snap(vec![stream(vec![chunk(1), chunk(2)])]);
         let mut b = a.clone();
@@ -491,7 +491,7 @@ mod tests {
         assert_eq!(d.inverse(&a).apply(&after).unwrap(), a);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_insert_then_remove_before_matches_sequential() {
         let base: Vec<AviChunk> = vec![chunk(1), chunk(2)];
         let f = AviChunk { fourcc: "00dc".into(), data: vec![0xAA], keyframe: true };
@@ -504,7 +504,7 @@ mod tests {
         assert_eq!(apply_indexed(&base, &d1, apply_chunk_diff), sequential);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_insert_insert_same_index_both_survive() {
         let base: Vec<AviChunk> = vec![chunk(1)];
         let f = AviChunk { fourcc: "00dc".into(), data: vec![0xAA], keyframe: true };
@@ -520,7 +520,7 @@ mod tests {
         assert_eq!(combined.len(), 3);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_associativity_over_three_diffs() {
         let a = snap(vec![stream(vec![chunk(1), chunk(2)])]);
         let mut mid1 = a.clone();

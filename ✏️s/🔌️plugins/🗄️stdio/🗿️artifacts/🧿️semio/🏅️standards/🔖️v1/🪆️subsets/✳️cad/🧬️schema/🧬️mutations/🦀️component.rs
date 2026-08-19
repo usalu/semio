@@ -399,7 +399,7 @@ mod tests {
     //#region 🧪️Law1_MutationDiffLaw
     /// ⚖️ Law 1 — `mutation_diff_law`: for every variant, `apply_semio_cad_mutation`'s returned
     /// diff equals `m.diff(base)`, and applying it matches `diff.diff().apply(base)`.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mutation_diff_law() {
         let base = fixture();
         for m in demo_mutation_cases() {
@@ -415,7 +415,7 @@ mod tests {
     //#region 🧪️Law2_InverseLaw
     /// ⚖️ Law 2 — `inverse_law`: every mutation round-trips (mutation-level) and every diff
     /// round-trips (diff-level `d.diff().inverse(base).apply(&d.diff().apply(base)) == base`).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inverse_law() {
         use protocol::command::DiffAlgebra;
         let base = fixture();
@@ -440,7 +440,7 @@ mod tests {
     /// ⚖️ Law 7 — `op_text_binary_roundtrip_law`: `OpText`/`OpBinary` round-trip for the
     /// hand-rolled `SemioCadMutation` grammar, covering every variant (incl. `NoMutation`) via
     /// [`demo_mutation_cases`].
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_text_binary_roundtrip_law() {
         for m in demo_mutation_cases() {
             let printed = m.print_op();

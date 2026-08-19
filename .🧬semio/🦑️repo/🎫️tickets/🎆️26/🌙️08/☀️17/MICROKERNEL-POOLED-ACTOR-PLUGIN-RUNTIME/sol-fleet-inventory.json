@@ -1,0 +1,298 @@
+[
+ {
+  "plugin": "🎞️animate",
+  "files": 107,
+  "async": 1477,
+  "plain": 37,
+  "dyn": 155,
+  "top": {
+   "Sobject": 131,
+   "Animation": 22,
+   "TextRenderer": 2
+  }
+ },
+ {
+  "plugin": "📕️norm",
+  "files": 1680,
+  "async": 5774,
+  "plain": 62,
+  "dyn": 26,
+  "top": {
+   "NationalAnnex": 25,
+   "ScriptRuntime": 1
+  }
+ },
+ {
+  "plugin": "📐️cad",
+  "files": 142,
+  "async": 840,
+  "plain": 15,
+  "dyn": 24,
+  "top": {
+   "BrepKernel": 24
+  }
+ },
+ {
+  "plugin": "🖍️draw",
+  "files": 122,
+  "async": 751,
+  "plain": 35,
+  "dyn": 18,
+  "top": {
+   "CommandSink": 16,
+   "Migration": 2
+  }
+ },
+ {
+  "plugin": "🏭️process",
+  "files": 130,
+  "async": 729,
+  "plain": 11,
+  "dyn": 15,
+  "top": {
+   "MachineCatalog": 11,
+   "BrepKernel": 2,
+   "SolidExporter": 1
+  }
+ },
+ {
+  "plugin": "🌀️procedural",
+  "files": 342,
+  "async": 1903,
+  "plain": 21,
+  "dyn": 12,
+  "top": {
+   "Constraint": 10,
+   "SoftConstraint": 2
+  }
+ },
+ {
+  "plugin": "🪐️space",
+  "files": 162,
+  "async": 705,
+  "plain": 12,
+  "dyn": 11,
+  "top": {
+   "OsBackbonePort": 10,
+   "SpaceBackbonePort": 1
+  }
+ },
+ {
+  "plugin": "🗄️stdio",
+  "files": 2738,
+  "async": 22984,
+  "plain": 420,
+  "dyn": 7,
+  "top": {
+   "Part21Preamble": 2,
+   "SpaceMember": 2,
+   "CiTest": 2
+  }
+ },
+ {
+  "plugin": "🌊️flow",
+  "files": 138,
+  "async": 894,
+  "plain": 11,
+  "dyn": 6,
+  "top": {
+   "Operator": 6
+  }
+ },
+ {
+  "plugin": "📜️imperative",
+  "files": 81,
+  "async": 487,
+  "plain": 8,
+  "dyn": 4,
+  "top": {
+   "Operator": 4
+  }
+ },
+ {
+  "plugin": "🪵️sourcing",
+  "files": 80,
+  "async": 379,
+  "plain": 19,
+  "dyn": 4,
+  "top": {
+   "SourcingModule": 4
+  }
+ },
+ {
+  "plugin": "✒️writer",
+  "files": 85,
+  "async": 402,
+  "plain": 17,
+  "dyn": 0,
+  "top": {}
+ },
+ {
+  "plugin": "➗️mathematical",
+  "files": 98,
+  "async": 986,
+  "plain": 48,
+  "dyn": 0,
+  "top": {}
+ },
+ {
+  "plugin": "🌍️gis",
+  "files": 155,
+  "async": 750,
+  "plain": 9,
+  "dyn": 0,
+  "top": {}
+ },
+ {
+  "plugin": "🌿️vcs",
+  "files": 76,
+  "async": 229,
+  "plain": 15,
+  "dyn": 0,
+  "top": {}
+ },
+ {
+  "plugin": "🎥️shooting",
+  "files": 171,
+  "async": 651,
+  "plain": 11,
+  "dyn": 0,
+  "top": {}
+ },
+ {
+  "plugin": "🎪️demonstrator",
+  "files": 37,
+  "async": 149,
+  "plain": 6,
+  "dyn": 0,
+  "top": {}
+ },
+ {
+  "plugin": "🎬️sequence",
+  "files": 79,
+  "async": 498,
+  "plain": 17,
+  "dyn": 0,
+  "top": {}
+ },
+ {
+  "plugin": "🏗️fem",
+  "files": 274,
+  "async": 1039,
+  "plain": 34,
+  "dyn": 0,
+  "top": {}
+ },
+ {
+  "plugin": "🏛️architect",
+  "files": 864,
+  "async": 2192,
+  "plain": 12,
+  "dyn": 0,
+  "top": {}
+ },
+ {
+  "plugin": "💠️lowpoly",
+  "files": 130,
+  "async": 679,
+  "plain": 13,
+  "dyn": 0,
+  "top": {}
+ },
+ {
+  "plugin": "💡️reasoning",
+  "files": 90,
+  "async": 377,
+  "plain": 22,
+  "dyn": 0,
+  "top": {}
+ },
+ {
+  "plugin": "📋️forms",
+  "files": 104,
+  "async": 484,
+  "plain": 15,
+  "dyn": 0,
+  "top": {}
+ },
+ {
+  "plugin": "📏️layout",
+  "files": 149,
+  "async": 672,
+  "plain": 7,
+  "dyn": 0,
+  "top": {}
+ },
+ {
+  "plugin": "📖️playbook",
+  "files": 82,
+  "async": 424,
+  "plain": 5,
+  "dyn": 0,
+  "top": {}
+ },
+ {
+  "plugin": "📸️remodel",
+  "files": 221,
+  "async": 2074,
+  "plain": 56,
+  "dyn": 0,
+  "top": {}
+ },
+ {
+  "plugin": "🔋️energy",
+  "files": 91,
+  "async": 843,
+  "plain": 20,
+  "dyn": 0,
+  "top": {}
+ },
+ {
+  "plugin": "🔱️trinity",
+  "files": 186,
+  "async": 1060,
+  "plain": 24,
+  "dyn": 0,
+  "top": {}
+ },
+ {
+  "plugin": "🕸️dag",
+  "files": 106,
+  "async": 408,
+  "plain": 24,
+  "dyn": 0,
+  "top": {}
+ },
+ {
+  "plugin": "🖨️raster",
+  "files": 113,
+  "async": 521,
+  "plain": 13,
+  "dyn": 0,
+  "top": {}
+ },
+ {
+  "plugin": "🗒️note",
+  "files": 194,
+  "async": 597,
+  "plain": 23,
+  "dyn": 0,
+  "top": {}
+ },
+ {
+  "plugin": "🧩️puzzle",
+  "files": 607,
+  "async": 2678,
+  "plain": 56,
+  "dyn": 0,
+  "top": {}
+ },
+ {
+  "plugin": "🧱️block",
+  "files": 501,
+  "async": 1545,
+  "plain": 31,
+  "dyn": 0,
+  "top": {}
+ }
+]

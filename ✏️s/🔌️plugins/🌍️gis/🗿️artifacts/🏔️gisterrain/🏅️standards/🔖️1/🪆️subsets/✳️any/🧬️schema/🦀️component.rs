@@ -28,7 +28,7 @@ pub struct GisTerrainArtifact {
 
 //#region 🔖️Conversions
 impl Default for GisTerrainArtifact {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self {
             exaggeration: 0.0,
             imported_features_json: String::new(),
@@ -320,7 +320,7 @@ pub async fn build_terrain_scene_json(descriptor: &TerrainDescriptorJson) -> Str
 mod relocated_engine_tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn build_terrain_scene_json_roundtrips_descriptor_fields() {
         let descriptor = TerrainDescriptorJson {
             schema: "gis.terrain".to_string(),
@@ -335,7 +335,7 @@ mod relocated_engine_tests {
         assert_eq!(value["tileUrlTemplate"], GIS_3D_TERRAIN_TILE_URL_TEMPLATE);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn terrain_descriptor_json_defaults_exaggeration_and_positions_when_absent() {
         let json = r#"{"schema":"gis.terrain","projectOrigin":{"lon":1.0,"lat":2.0}}"#;
         let descriptor: TerrainDescriptorJson = serde_json::from_str(json).expect("valid descriptor json");
@@ -343,7 +343,7 @@ mod relocated_engine_tests {
         assert!(descriptor.positions.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn terrain_position_data_omits_none_fields_when_serialized() {
         let position = TerrainPositionData { id: "p2".to_string(), lon: 1.0, lat: 2.0, label: None, icon: Some("pin".to_string()) };
         let json = serde_json::to_string(&position).expect("serializes");
@@ -353,7 +353,7 @@ mod relocated_engine_tests {
 
     /// 🧭️ Relocated from the artifact's `⚙️engine` tests alongside `default_terrain_document`/
     /// `empty_gis_terrain_snapshot` (`DocumentHelpers` above).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn default_terrain_document_seeds_the_fixture_exaggeration() {
         assert_eq!(default_terrain_document().exaggeration, 1.5);
         assert_eq!(empty_gis_terrain_snapshot().exaggeration, 1.0);

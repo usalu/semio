@@ -973,14 +973,14 @@ mod tests {
         Graph::from_fixture(JackSnapshot::parse_dsl(dsl).unwrap()).unwrap()
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn nakagin_fixture_loads() {
         let g = nakagin_graph();
         assert_eq!(g.nodes.len(), 9);
         assert_eq!(g.edges.len(), 6);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn nakagin_flat_position_derived() {
         let g = nakagin_graph();
         let flat = crate::artifacts::jack::schema::inferences::flat_position::compute_flat_position(&g.to_fixture());
@@ -990,7 +990,7 @@ mod tests {
         assert!(capsule_uv.v > 0.0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn trinity_host_rebuilds_engine() {
         let host = TrinityBridge::from_graph(&nakagin_graph());
         assert_eq!(host.engine.nodes.len(), 9);
@@ -1000,7 +1000,7 @@ mod tests {
         assert!(host.board.nodes.values().all(|node| matches!(node.shape, infinite_board_port_directed::NodeShape::Circle)));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn trinity_host_reorganize_moves_nodes() {
         let mut host = TrinityBridge::from_graph(&nakagin_graph());
         let before: Vec<(f64, f64)> = host.graph.nodes.values().map(|n| (n.x, n.y)).collect();
@@ -1009,7 +1009,7 @@ mod tests {
         assert_ne!(before, after);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn trinity_host_tokenize_jack_json() {
         let host = TrinityBridge::from_graph(&nakagin_graph());
         let json = host.tokenize_jack_json("MATCH (a:Piece)").unwrap();
@@ -1017,7 +1017,7 @@ mod tests {
         assert!(tokens.iter().any(|row| row.start == 0));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn trinity_host_complete_jack_json() {
         let host = TrinityBridge::from_graph(&nakagin_graph());
         let json = host.complete_jack_json("MAT", 3).unwrap();
@@ -1025,7 +1025,7 @@ mod tests {
         assert!(items.iter().any(|row| row.label == "MATCH"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn trinity_host_jack_create_undo() {
         let mut host = TrinityBridge::from_graph(&nakagin_graph());
         let before = host.graph.nodes.len();
@@ -1035,7 +1035,7 @@ mod tests {
         assert_eq!(host.graph.nodes.len(), before);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn trinity_lod_scale_json_lists_all_six_lods() {
         let json = trinity_lod_scale_json();
         let rows: Vec<serde_json::Value> = serde_json::from_str(&json).unwrap();
@@ -1044,14 +1044,14 @@ mod tests {
         assert_eq!(rows[5]["id"], "micro");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn trinity_abbreviate_label_short_passthrough_and_long_truncated() {
         assert_eq!(trinity_abbreviate_label("abcd"), "abcd");
         assert_eq!(trinity_abbreviate_label("  abcd  "), "abcd");
         assert_eq!(trinity_abbreviate_label("abcdef"), "abc");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn trinity_draw_lod_from_id_and_visibility_flags() {
         assert_eq!(TrinityDrawLod::from_id("bogus"), None);
         assert_eq!(TrinityDrawLod::from_id("micro"), Some(TrinityDrawLod::Micro));
@@ -1065,7 +1065,7 @@ mod tests {
         assert_eq!(TrinityDrawLod::from_scale_index(0), TrinityDrawLod::Minimap);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn trinity_node_radius_uses_dimensions_or_default() {
         let mut node = Node { id: "n".into(), kind: "Piece".into(), name: "n".into(), x: 0.0, y: 0.0, width: 0.0, height: 0.0, properties: Default::default(), ports: vec![] };
         assert_eq!(trinity_node_radius(&node), 44.0);
@@ -1077,26 +1077,26 @@ mod tests {
         assert_eq!(trinity_node_radius(&node), 100.0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn trinity_circle_port_angle_left_right_spread() {
         assert!((trinity_circle_port_angle(0, 1, true) - std::f64::consts::PI).abs() < 1e-9);
         assert_eq!(trinity_circle_port_angle(0, 1, false), 0.0);
         assert!(trinity_circle_port_angle(0, 2, false) < trinity_circle_port_angle(1, 2, false));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn trinity_port_endpoint_parts_splits_on_at() {
         assert_eq!(trinity_port_endpoint_parts("node1@portA"), ("node1".to_string(), "portA".to_string()));
         assert_eq!(trinity_port_endpoint_parts("no-at"), ("no-at".to_string(), String::new()));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn trinity_port_handle_key_direction_prefix() {
         assert_eq!(trinity_port_handle_key("n", "p", true), "n:in:p");
         assert_eq!(trinity_port_handle_key("n", "p", false), "n:out:p");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn trinity_graph_to_board_fixture_includes_handles_and_edges() {
         let g = nakagin_graph();
         let fixture = trinity_graph_to_board_fixture(&g);
@@ -1107,7 +1107,7 @@ mod tests {
         assert!(!root_node["handles"].as_array().unwrap().is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn force_layout_reposition_operations_produces_repositions() {
         let fixture = nakagin_graph().to_fixture();
         let operations = force_layout_reposition_operations(&fixture).unwrap();
@@ -1115,7 +1115,7 @@ mod tests {
         assert!(operations.iter().all(|op| matches!(op, TrinityGraphMutation::MoveNode(_))));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn apply_force_layout_positions_errors_when_nodes_missing() {
         let mut g = nakagin_graph();
         let fixture = serde_json::json!({});
@@ -1123,7 +1123,7 @@ mod tests {
         assert!(matches!(err, TrinityRewriteError::ForceLayoutFixtureMissingNodes));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn trinity_host_apply_rewrite_json_end_to_end() {
         let mut host = TrinityBridge::from_graph(&nakagin_graph());
         let rule = Rule {
@@ -1139,7 +1139,7 @@ mod tests {
         assert_eq!(core.properties.get("label"), Some(&PropertyValue::String("nakagin-core".into())));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn trinity_host_run_jack_json_and_with_fixture() {
         let mut host = TrinityBridge::from_graph(&nakagin_graph());
         let json = host.run_jack_json("MATCH (a:Piece) WHERE a.name = 'b' RETURN a.name").unwrap();
@@ -1153,7 +1153,7 @@ mod tests {
         assert_eq!(host.graph.nodes.len(), before + 1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn trinity_host_selected_and_highlighted_node_ids() {
         let mut host = TrinityBridge::from_graph(&nakagin_graph());
         host.set_viewport(800, 600, 1.0);
@@ -1165,7 +1165,7 @@ mod tests {
         assert_eq!(host.node_overlays_json().unwrap(), "[]");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn trinity_host_viewport_camera_and_wheel() {
         let mut host = TrinityBridge::from_graph(&nakagin_graph());
         host.set_viewport(800, 600, 1.0);
@@ -1176,7 +1176,7 @@ mod tests {
         assert_eq!((host.graph.camera.x, host.graph.camera.y, host.graph.camera.zoom), (10.0, 20.0, 2.0));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn trinity_host_pointer_drag_commits_position() {
         let mut host = TrinityBridge::from_graph(&nakagin_graph());
         host.set_viewport(800, 600, 1.0);
@@ -1190,7 +1190,7 @@ mod tests {
         assert!((after.1 - 60.0).abs() < 1e-6);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn trinity_host_commit_checkpoint_and_redo_and_store_generation() {
         let mut host = TrinityBridge::from_graph(&nakagin_graph());
         let gen0 = host.store_generation();
@@ -1204,7 +1204,7 @@ mod tests {
         assert_eq!(host.graph.nodes.len(), count_after_create);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn trinity_host_forced_and_automatic_draw_lod_label() {
         let mut host = TrinityBridge::from_graph(&nakagin_graph());
         host.set_camera(0.0, 0.0, 0.05);

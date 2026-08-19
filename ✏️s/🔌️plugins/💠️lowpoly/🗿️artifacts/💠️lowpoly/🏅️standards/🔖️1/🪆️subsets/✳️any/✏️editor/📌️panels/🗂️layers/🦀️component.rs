@@ -39,7 +39,7 @@ pub async fn render(view: LowpolyView<'_>, labels: &LowpolyLabels) -> UiNode {
 mod tests {
     use crate::editor::lowpoly::testkit::{app, render};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn layers_panel_lists_the_base_layer() {
         let mut a = app();
         let json = render(&mut a, super::LOWPOLY_PLAY_BODY_LAYERS);

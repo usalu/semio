@@ -54,7 +54,7 @@ pub struct Puzzle3dArtifact {
 
 //#region 🔖️Conversions
 impl Default for Puzzle3dArtifact {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self::from_snapshot(Puzzle3dSnapshot::default())
     }
 }
@@ -313,7 +313,7 @@ async fn default_door_capsule_max_abs_y() -> f64 {
 }
 
 impl Default for BrushHostRules {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self {
             reject_capital_on_tambour: true,
             reject_last_single_storey_on_mid_tambour: true,
@@ -371,7 +371,7 @@ pub struct ObjectKindVortexTemplate {
 }
 
 impl Default for ObjectKindVortexTemplate {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self {
             id: String::new(),
             name: String::new(),
@@ -599,7 +599,7 @@ pub struct BrushPlacePayload {
 /// field `BrushPreviewState` carries that `BrushPlacePayload` doesn't (`mesh_url`, resolvable again
 /// from `object_kind_id` via the kind catalog) is simply dropped.
 impl From<BrushPreviewState> for BrushPlacePayload {
-    async fn from(preview: BrushPreviewState) -> Self {
+    fn from(preview: BrushPreviewState) -> Self {
         Self { target_vortex_full_id: preview.target_vortex_full_id, object_kind_id: preview.object_kind_id, source_vortex_index: preview.source_vortex_index, origin: preview.origin, orientation: preview.orientation, scale: preview.scale }
     }
 }
@@ -817,7 +817,7 @@ mod precompute_model_tests {
 
     /// 🔗️ Keeps the example fixture's scene-authored kind catalog in sync with the compile-time
     /// `puzzle3d-default` manifest.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn concrete_forest_kind_catalog_matches_puzzle3d_default_manifest() {
         let fixture = crate::artifacts::puzzle3d::dsl::parse_dsl(crate::artifacts::puzzle3d::dsl::PUZZLE3D_CONCRETE_FOREST_EXAMPLE_TEXT).expect("concrete-forest example parses as dsl");
         let catalogs: KindCatalogBundle = serde_json::from_value(serde_json::to_value(&fixture.meta.kind_catalogs).unwrap()).unwrap();
@@ -837,13 +837,13 @@ mod precompute_model_tests {
     }
 
     /// 🪪️ A vortex id that already carries its owner's prefix is passed through untouched.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn vortex_full_id_prefixes_only_bare_ids() {
         assert_eq!(puzzle3d_vortex_full_id("host", "v0"), "host:v0");
         assert_eq!(puzzle3d_vortex_full_id("host", "other:v0"), "other:v0");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn brush_preview_state_converts_into_a_placement_payload() {
         let preview = BrushPreviewState {
             target_vortex_full_id: "host:v0".into(),

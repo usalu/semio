@@ -27,7 +27,7 @@ pub const SPR_BYTES: &[u8] = include_bytes!("🖼️assets/📡️example.spr.se
 #[cfg(test)]
 mod tests {
     use super::*;
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn demo_source_nonempty() {
         assert!(!PRIMARY_TEXT.is_empty());
         let _ = source();

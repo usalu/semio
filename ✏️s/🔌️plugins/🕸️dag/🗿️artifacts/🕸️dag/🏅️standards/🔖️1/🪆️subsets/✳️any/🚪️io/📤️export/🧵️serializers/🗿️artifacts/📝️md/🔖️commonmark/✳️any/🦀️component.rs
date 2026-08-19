@@ -21,7 +21,7 @@ pub struct DagIntoMd;
 impl Serializer<DagSnapshot> for DagIntoMd {
     const INTO: Dialect = MD_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Canonical;
-    async fn serialize(from: &DagSnapshot) -> IoResult<IoPayload> {
+    fn serialize(from: &DagSnapshot) -> IoResult<IoPayload> {
         let md = serialize(from).map_err(|error| semio_framework::io_schema::IoError { message: format!("DagIntoMd: {error}"), diagnostics: Vec::new() })?;
         Ok(IoOutcome::clean(IoPayload::Binary(<MdSnapshot as store::ArtifactPack>::encode_pack(&md))))
     }

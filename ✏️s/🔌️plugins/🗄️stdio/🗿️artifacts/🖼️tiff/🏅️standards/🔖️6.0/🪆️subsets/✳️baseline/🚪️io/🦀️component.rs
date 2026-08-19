@@ -95,7 +95,7 @@ pub mod derived_composition {
             }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn compose_carries_no_findings_for_a_conformant_document() {
             let bytes = <TiffSnapshot as store::ArtifactPack>::encode_pack(&minimal_non_degenerate_snapshot());
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Binary(&bytes) }];
@@ -103,7 +103,7 @@ pub mod derived_composition {
             assert!(composed.diagnostics.is_empty(), "got {:?}", composed.diagnostics);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn subset_validator_carries_no_findings_for_a_conformant_document() {
             let bytes = <TiffSnapshot as store::ArtifactPack>::encode_pack(&minimal_non_degenerate_snapshot());
             let diagnostics = TiffBaselineValidator::validate(&IoPayload::Binary(bytes));
@@ -117,7 +117,7 @@ pub mod derived_composition {
         /// success). The real per-field check for that path is covered directly in `🧐️analyzer`'s
         /// own `no_ifd_is_flagged_soft` test; this composer/validator layer only needs the
         /// conformant-document path exercised above.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn no_ifd_diagnostic_is_reachable_via_direct_check_not_through_encode_pack() {
             let diagnostics = check_tiff_baseline_conformance(&TiffSnapshot::default());
             assert!(diagnostics.iter().any(|d| d.code.0 == crate::artifacts::tiff::standards::v6_0::subsets::baseline::schema::CODE_NO_IFD), "got {diagnostics:?}");

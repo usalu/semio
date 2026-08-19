@@ -54,7 +54,7 @@ pub struct MathematicalCamera {
 }
 
 impl Default for MathematicalCamera {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { x: 0.0, y: 0.0, zoom: 1.0 }
     }
 }
@@ -72,7 +72,7 @@ pub struct MathematicalGraph {
 }
 
 impl Default for MathematicalGraph {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self {
             directed: true,
             nodes: vec![
@@ -100,13 +100,13 @@ pub struct MathematicalPoint {
 }
 
 impl From<(f64, f64)> for MathematicalPoint {
-    async fn from((x, y): (f64, f64)) -> Self {
+    fn from((x, y): (f64, f64)) -> Self {
         Self { x, y }
     }
 }
 
 impl From<MathematicalPoint> for (f64, f64) {
-    async fn from(point: MathematicalPoint) -> Self {
+    fn from(point: MathematicalPoint) -> Self {
         (point.x, point.y)
     }
 }
@@ -119,7 +119,7 @@ pub struct MathematicalGeometry {
 }
 
 impl Default for MathematicalGeometry {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { points: vec![(40.0, 220.0), (260.0, 40.0), (360.0, 140.0), (300.0, 260.0), (140.0, 300.0), (180.0, 160.0)].into_iter().map(MathematicalPoint::from).collect() }
     }
 }
@@ -535,20 +535,20 @@ pub async fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDe
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn artifact_kind_keeps_the_media_schema_distinct_from_the_store_schema() {
         assert_eq!(artifact_kind().schema, "computation.mathematical");
         assert_eq!(MATH_DOCUMENT_SCHEMA, "semio.mathematical/v1");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn default_graph_has_nodes_and_edges() {
         let graph = MathematicalGraph::default();
         assert!(!graph.nodes.is_empty());
         assert!(!graph.edges.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn default_geometry_has_points() {
         assert!(!MathematicalGeometry::default().points.is_empty());
     }

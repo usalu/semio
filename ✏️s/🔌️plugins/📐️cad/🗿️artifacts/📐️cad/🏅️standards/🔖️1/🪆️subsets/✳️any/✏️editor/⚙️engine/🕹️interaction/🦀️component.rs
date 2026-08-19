@@ -8,7 +8,7 @@
 use crate::artifacts::cad::{evaluate_expr, CadPaneId, DisplayItemSpec, Effect, ExprEnv, ExprPathRoot, ExprPathSegment, ExprPathTarget, InteractionSpec};
 use crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::{CadObject, CadPrimitiveSlot};
 
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::BrepKernel;
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::{Brep, BrepKernel};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::collections::HashMap;
@@ -21,13 +21,13 @@ pub struct CadEngagementContext(pub HashMap<String, Value>);
 
 impl std::ops::Deref for CadEngagementContext {
     type Target = HashMap<String, Value>;
-    async fn deref(&self) -> &Self::Target {
+    fn deref(&self) -> &Self::Target {
         &self.0
     }
 }
 
 impl std::ops::DerefMut for CadEngagementContext {
-    async fn deref_mut(&mut self) -> &mut Self::Target {
+    fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.0
     }
 }
@@ -511,7 +511,7 @@ pub async fn parse_repl_line(line: &str, current_state: Option<&str>) -> Option<
 //#endregion 🔖️Statechart
 
 //#region 🔖️CommitRunner
-async fn commit_primitive_box(kernel: &mut dyn BrepKernel, params: &HashMap<String, Value>, label_count: usize, next_id: impl Fn(&str) -> String) -> Option<CadObject> {
+async fn commit_primitive_box(kernel: &mut Brep, params: &HashMap<String, Value>, label_count: usize, next_id: impl Fn(&str) -> String) -> Option<CadObject> {
     let corner_a = params.get("cornerA").and_then(parse_vec3)?;
     let corner_b = params.get("cornerB").and_then(parse_vec3)?;
     let height = params.get("height").and_then(|value| value.as_f64()).unwrap_or(1.0);
@@ -538,7 +538,7 @@ async fn commit_primitive_box(kernel: &mut dyn BrepKernel, params: &HashMap<Stri
 /// `aec.building.structure.classic`, and `aec.building.structure.fem.*` construction interaction
 /// (`commit.operation.action` ending in `From2PointsAndHeight`/`FromSurface`) — differentiated only
 /// by the `typology` commit param.
-async fn commit_from_2_points_and_height(kernel: &mut dyn BrepKernel, params: &HashMap<String, Value>, label: &str, label_count: usize, next_id: impl Fn(&str) -> String) -> Option<CadObject> {
+async fn commit_from_2_points_and_height(kernel: &mut Brep, params: &HashMap<String, Value>, label: &str, label_count: usize, next_id: impl Fn(&str) -> String) -> Option<CadObject> {
     let typology = params.get("typology").and_then(|value| value.as_str()).unwrap_or("").to_string();
     let lower = typology.to_lowercase();
     let point_a = params.get("pointA").and_then(parse_vec3)?;
@@ -597,7 +597,7 @@ async fn commit_from_2_points_and_height(kernel: &mut dyn BrepKernel, params: &H
 /// implemented so far; other result kinds (cylinder/circle/plane/curve/boolean/...) are a
 /// documented follow-up — this returns `None` for them, matching the pre-engine fallback behavior
 /// for any not-yet-implemented interaction.
-async fn commit_command_finish(kernel: &mut dyn BrepKernel, params: &HashMap<String, Value>, context: &HashMap<String, Value>, label_count: usize, next_id: impl Fn(&str) -> String) -> Option<CadObject> {
+async fn commit_command_finish(kernel: &mut Brep, params: &HashMap<String, Value>, context: &HashMap<String, Value>, label_count: usize, next_id: impl Fn(&str) -> String) -> Option<CadObject> {
     let result_kind = params.get("resultKind").and_then(|value| value.as_str())?;
     match result_kind {
         "sphere" => {
@@ -630,7 +630,7 @@ async fn commit_command_finish(kernel: &mut dyn BrepKernel, params: &HashMap<Str
     }
 }
 
-async fn legacy_commit_object(kernel: &mut dyn BrepKernel, session: &CadEngagementScratch, label_count: usize, next_id: impl Fn(&str) -> String) -> Option<CadObject> {
+async fn legacy_commit_object(kernel: &mut Brep, session: &CadEngagementScratch, label_count: usize, next_id: impl Fn(&str) -> String) -> Option<CadObject> {
     let entry = interaction_by_id(&session.interaction_id)?;
     if session.interaction_id == "building.building.constructColumn" {
         let base = context_point(session, "base")?;
@@ -690,7 +690,7 @@ async fn legacy_commit_object(kernel: &mut dyn BrepKernel, session: &CadEngageme
     })
 }
 
-pub(crate) async fn commit_object(kernel: &mut dyn BrepKernel, session: &CadEngagementScratch, label_count: usize, next_id: impl Fn(&str) -> String) -> Option<CadObject> {
+pub(crate) async fn commit_object(kernel: &mut Brep, session: &CadEngagementScratch, label_count: usize, next_id: impl Fn(&str) -> String) -> Option<CadObject> {
     if is_legacy_building_id(&session.interaction_id) {
         return legacy_commit_object(kernel, session, label_count, next_id);
     }
@@ -821,7 +821,7 @@ mod tests {
     use super::*;
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::Brep;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn catalog_includes_json_driven_and_legacy_building_entries() {
         assert!(interaction_by_id("primitive.box").is_some());
         assert!(interaction_by_id("solid.sphere").is_some());
@@ -831,7 +831,7 @@ mod tests {
         assert_eq!(list_interactions_for_model_definition("spatial.shape").len(), 37);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn box_interaction_commits_after_height() {
         let mut session = start_session("primitive.box", CadPaneId::Shape).expect("session");
         assert!(apply_event(&mut session, "start", None));
@@ -847,7 +847,7 @@ mod tests {
         assert_eq!(object.unwrap().typology, "spatial.shape.primitive.box");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn box_interaction_default_mode_is_point_and_requires_length_prompt() {
         // 🔣️box.json's default `boxMode` (set by the `start` transition) is "point", not "diagonal" —
         // a plain pointer.down after start does NOT reach diagonal_rubber.
@@ -857,7 +857,7 @@ mod tests {
         assert_eq!(session.state, "first_corner_other_or_length");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn sphere_interaction_commits_via_command_finish() {
         let mut session = start_session("solid.sphere", CadPaneId::Shape).expect("session");
         assert!(apply_event(&mut session, "start", None));
@@ -872,7 +872,7 @@ mod tests {
         assert_eq!(object.extent, Some([4.0, 4.0, 4.0]));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn external_wall_interaction_commits_via_generic_from_2_points_and_height() {
         let mut session = start_session("energy.energy.constructExternalWall", CadPaneId::Energy).expect("session");
         assert!(apply_event(&mut session, "mode.2points", None));
@@ -886,7 +886,7 @@ mod tests {
         assert_eq!(object.typology, "energy.energy.externalwall");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn reinforced_concrete_column_interaction_commits_as_cylinder() {
         let mut session = start_session("structure.structure.constructReinforcedConcreteColumn", CadPaneId::StructureClassic).expect("session");
         assert!(apply_event(&mut session, "mode.2points", None));
@@ -900,7 +900,7 @@ mod tests {
         assert_eq!(object.origin, [1.0, 1.0, 0.0]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn slab_interaction_commits() {
         let mut session = start_session("structure.structure.constructOneWayReinforcedConcreteSlab", CadPaneId::StructureClassic).expect("session");
         assert!(apply_event(&mut session, "mode.2points", None));
@@ -912,7 +912,7 @@ mod tests {
         assert!(object.is_some());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn slab_preview_shows_footprint_point() {
         let mut session = start_session("structure.structure.constructOneWayReinforcedConcreteSlab", CadPaneId::StructureClassic).expect("session");
         assert!(apply_event(&mut session, "mode.2points", None));
@@ -921,7 +921,7 @@ mod tests {
         assert!(items.iter().any(|item| item.get("kind").and_then(|value| value.as_str()) == Some("point")));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn legacy_column_preview_shows_base_point() {
         let mut session = start_session("building.building.constructColumn", CadPaneId::Building).expect("session");
         assert!(apply_event(&mut session, "start", None));
@@ -930,7 +930,7 @@ mod tests {
         assert!(items.iter().any(|item| item.get("kind").and_then(|value| value.as_str()) == Some("point")));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn legacy_wall_interaction_still_commits() {
         let mut session = start_session("building.building.constructWall", CadPaneId::Building).expect("session");
         assert!(apply_event(&mut session, "start", None));
@@ -944,13 +944,13 @@ mod tests {
         assert_eq!(object.unwrap().typology, "building.building.wall");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn parse_repl_line_accepts_legacy_raw_forms() {
         assert_eq!(parse_repl_line("set.height 2.5", None), Some(("set.height".into(), Some(json!(2.5)))));
         assert_eq!(parse_repl_line("dist 12", None), Some(("set.distance".into(), Some(json!(12.0)))));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn parse_repl_line_accepts_shell_normalized_forms() {
         // The React shell PascalCases every draft (framework/renderer/react `normalizeEngagementCommandText`),
         // so `set.height 3.5` arrives as `SetHeight3.5` with no separators.
@@ -959,7 +959,7 @@ mod tests {
         assert_eq!(parse_repl_line("Dist12.75", None), Some(("set.distance".into(), Some(json!(12.75)))));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn parse_repl_line_commits_bare_number_only_in_numeric_entry_state() {
         // Bare numeric entry (premigration `tryCommitNumericEntry`) only applies while a
         // numeric-entry state (e.g. box's first_corner_height) is active.
@@ -970,7 +970,7 @@ mod tests {
         assert_eq!(parse_repl_line("3.5", Some("idle")), Some(("3.5".into(), None)));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn box_interaction_commits_via_shell_normalized_repl_line() {
         let mut session = start_session("primitive.box", CadPaneId::Shape).expect("session");
         assert!(apply_event(&mut session, "start", None));

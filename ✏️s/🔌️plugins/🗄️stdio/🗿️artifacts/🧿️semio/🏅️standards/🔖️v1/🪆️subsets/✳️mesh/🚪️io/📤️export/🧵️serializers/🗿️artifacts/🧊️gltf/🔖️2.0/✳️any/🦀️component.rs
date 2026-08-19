@@ -212,7 +212,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn serialize_then_deserialize_round_trips_at_the_semio_level() {
         let original = sample_semio_mesh();
         let gltf = semio_framework_plugin::resolve_ready(SemioMeshToGltf::serialize(&original)).expect("serialize");
@@ -222,7 +222,7 @@ mod tests {
         assert_eq!(original, round_tripped, "semio mesh -> gltf -> semio mesh must be stable (documented lossy fields excepted, none apply here)");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn unknown_material_reference_is_a_hard_error() {
         let mut semio = sample_semio_mesh();
         semio.meshes[0].primitives[0].material_id = Some("does-not-exist".into());
@@ -230,7 +230,7 @@ mod tests {
         assert!(format!("{err:?}").contains("does-not-exist"), "got {err:?}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn empty_positions_is_a_hard_error_not_a_fabricated_accessor() {
         let mut semio = sample_semio_mesh();
         semio.meshes[0].primitives[0].positions.clear();

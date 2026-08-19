@@ -341,7 +341,7 @@ mod tests {
     /// 🧪️ Required proof: model -> ifc -> model round trip preserves everything `model` can
     /// represent (documented lossy fields excepted — none of which this fixture exercises: no
     /// element name, unit scale throughout).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn model_to_ifc_to_model_round_trips() {
         let s1 = rich_model();
         let ifc = ifc_from_model(&s1);
@@ -372,7 +372,7 @@ mod tests {
         assert!(s2.relations.iter().any(|r| r.kind == RelationKind::ContainedIn && r.from == "wall-1" && r.to == "storey-1"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn non_unit_rotation_round_trips_through_the_quaternion_matrix_conversion() {
         // 45 degree rotation about Z: (0, 0, sin(22.5deg), cos(22.5deg)).
         let half = std::f64::consts::FRAC_PI_8;

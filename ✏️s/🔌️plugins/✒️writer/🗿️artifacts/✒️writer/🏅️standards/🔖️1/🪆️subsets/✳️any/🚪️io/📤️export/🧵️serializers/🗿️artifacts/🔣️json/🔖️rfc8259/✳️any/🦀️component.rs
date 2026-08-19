@@ -16,7 +16,7 @@ impl Serializer<WriterSnapshot> for WriterIntoJson {
     const INTO: Dialect = JSON_DIALECT;
     /// 🪧️ Exact — see the sibling deserializer's doc comment.
     const FIDELITY: IoFidelity = IoFidelity::Exact;
-    async fn serialize(from: &WriterSnapshot) -> IoResult<IoPayload> {
+    fn serialize(from: &WriterSnapshot) -> IoResult<IoPayload> {
         let value = serde_json::to_value(from).map_err(|error| IoError { message: format!("WriterIntoJson: {error}"), diagnostics: Vec::new() })?;
         let json = JsonSnapshot::from_value(value);
         Ok(IoOutcome { value: IoPayload::Text(store::ArtifactDsl::print_dsl(&json)), diagnostics: Vec::new() })
@@ -29,7 +29,7 @@ mod tests {
     use super::*;
     use semio_framework::io::io_mechanism::Deserializer;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn writer_into_json_round_trips_through_json_into_writer() {
         let original = crate::artifacts::writer::writer_snapshot_with_text("writer.document", "id", "plain", "writer://id", "hello");
         let outcome = WriterIntoJson::serialize(&original).expect("serialize");

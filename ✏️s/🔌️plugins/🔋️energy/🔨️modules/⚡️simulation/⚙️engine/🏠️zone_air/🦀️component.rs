@@ -226,19 +226,19 @@ pub async fn ventilation_enthalpy_delta_j_per_kg(t_zone_c: f64, w_zone: f64, t_o
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn analytical_temp_rises_with_gain() {
         let t = analytical_steady_temp_c(1000.0, 20.0, 100.0);
         assert!((t - 30.0).abs() < 1e-9);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn bdf3_rate_constant_history() {
         let h = [22.0, 22.0, 22.0, 22.0];
         assert!(bdf3_rate(h, 3600.0).abs() < 1e-9);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn floating_zone_uses_steady_analytical() {
         let state = ZoneAirState::new(20.0, 0.008);
         let balance = ZoneAirBalance {
@@ -265,7 +265,7 @@ mod tests {
         assert!(result.temp_c > 20.0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn conditioned_bdf3_warms_zone() {
         let state = ZoneAirState::new(20.0, 0.008);
         let balance = ZoneAirBalance {
@@ -292,7 +292,7 @@ mod tests {
         assert!(result.temp_c > 20.0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn humidity_analytical_increases_with_latent_gain() {
         let w = analytical_steady_humidity_ratio(200.0, 0.1, 0.008, 22.0);
         assert!(w > 0.008);

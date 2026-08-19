@@ -112,7 +112,7 @@ mod tests {
     }
 
     //#region 🧪️Honesty
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn moments_of_a_populated_numeric_column_are_the_real_descriptive_stats() {
         let values = store::infer_field::<SemioTableSnapshot, ColumnMoments>(&two_numeric_column_snapshot(), None);
         let m = values.get("score").expect("score moments present");
@@ -122,13 +122,13 @@ mod tests {
         assert!((m.std_dev - 1.0).abs() < 1e-9);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn a_declared_str_column_is_absent_from_the_plan_not_a_faked_zero() {
         let values = store::infer_field::<SemioTableSnapshot, ColumnMoments>(&two_numeric_column_snapshot(), None);
         assert!(values.get("label").is_none(), "non-numeric columns must not appear in the plan at all");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn moments_of_an_all_empty_snapshot_yields_an_empty_plan() {
         let values = store::infer_field::<SemioTableSnapshot, ColumnMoments>(&SemioTableSnapshot::default(), None);
         assert!(values.is_empty());
@@ -136,7 +136,7 @@ mod tests {
     //#endregion 🧪️Honesty
 
     //#region 🧪️CacheTransparencyLaw
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn disabled_cache_matches_pure_recompute() {
         let snapshot = two_numeric_column_snapshot();
         let pure = store::infer_field::<SemioTableSnapshot, ColumnMoments>(&snapshot, None);
@@ -147,7 +147,7 @@ mod tests {
     //#endregion 🧪️CacheTransparencyLaw
 
     //#region 🧪️IncrementalityLaw
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn identical_snapshot_recompute_is_a_cache_hit() {
         let mut cache = InferenceCache::new(InferenceCacheConfig { enabled: true, record_stats: true, ..Default::default() });
         let base = two_numeric_column_snapshot();
@@ -159,7 +159,7 @@ mod tests {
         assert_eq!(after.hits - before.hits, 2, "both numeric columns must be cache hits");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn changing_one_columns_cells_misses_only_that_columns_cache_entry() {
         let mut cache = InferenceCache::new(InferenceCacheConfig { enabled: true, record_stats: true, ..Default::default() });
         let base = two_numeric_column_snapshot();
@@ -175,7 +175,7 @@ mod tests {
         assert_eq!(values.get("count").map(|m| m.count), Some(3), "count column's moments must be untouched");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn changing_an_unrelated_column_does_not_miss() {
         let mut cache = InferenceCache::new(InferenceCacheConfig { enabled: true, record_stats: true, ..Default::default() });
         let base = two_numeric_column_snapshot();

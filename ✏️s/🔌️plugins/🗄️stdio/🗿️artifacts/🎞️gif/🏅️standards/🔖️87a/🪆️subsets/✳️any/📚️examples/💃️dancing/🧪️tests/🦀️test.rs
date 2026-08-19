@@ -19,7 +19,7 @@ const DANCING_GIF_BYTES: &[u8] = include_bytes!("../🖼️assets/🖼️dancing
 /// never satisfy — frame count > 1 (it's animated), loop count matches the file's NETSCAPE2.0
 /// extension (confirmed via independent byte-level inspection: `Some(0)`, infinite loop), and at
 /// least one frame has a non-zero delay.
-#[test]
+#[semio_framework_async_macros::async_test]
 async fn decodes_real_fixture_with_nontrivial_invariants() {
     let snapshot = decode_gif(DANCING_GIF_BYTES).expect("dancing.gif must decode via the real 89a codec");
     assert!(snapshot.frames.len() > 1, "dancing.gif is animated, must decode to more than one frame");
@@ -35,7 +35,7 @@ async fn decodes_real_fixture_with_nontrivial_invariants() {
 
 /// 🧪️ (b) decode→encode→decode snapshot equality — the fixtures-section acceptance bar (model
 /// equality after a second round trip, not necessarily byte-identical GIF output).
-#[test]
+#[semio_framework_async_macros::async_test]
 async fn decode_encode_decode_round_trip_is_stable() {
     let once = decode_gif(DANCING_GIF_BYTES).expect("first decode");
     let reencoded = encode_gif(&once).expect("re-encode decoded snapshot");
@@ -47,7 +47,7 @@ async fn decode_encode_decode_round_trip_is_stable() {
 /// constructors (`GifBuilder::new`/`add_frame`/`set_loop_count`) to reconstruct an equivalent
 /// document -- never `from_snapshot`/`SetSnapshot` as a shortcut -- then the two REAL
 /// `GifAnalyzer::analyze` outputs (original fixture vs. rebuilt-then-re-encoded) must match.
-#[test]
+#[semio_framework_async_macros::async_test]
 async fn analyzer_builder_round_trip_matches() {
     let original = decode_gif(DANCING_GIF_BYTES).expect("decode real fixture");
     let packed_original = <GifSnapshot as store::ArtifactPack>::encode_pack(&original);
@@ -77,7 +77,7 @@ async fn analyzer_builder_round_trip_matches() {
 
 /// 🧪️ (d) `infer` on the real animated fixture is deterministic — two calls over the same
 /// decoded snapshot produce byte-equal results.
-#[test]
+#[semio_framework_async_macros::async_test]
 async fn inference_determinism_law() {
     let snapshot = decode_gif(DANCING_GIF_BYTES).expect("decode real fixture");
     assert_eq!(GifInference::infer(&snapshot), GifInference::infer(&snapshot));
@@ -85,7 +85,7 @@ async fn inference_determinism_law() {
 
 /// 🧪️ (e) `infer(&GifSnapshot::default())` matches `GifInference::default()` — the hand-written
 /// `Default` impl (`💡️inferences/🦀️component.rs`) must stay in lockstep with `infer` itself.
-#[test]
+#[semio_framework_async_macros::async_test]
 async fn inference_default_law() {
     assert_eq!(GifInference::infer(&GifSnapshot::default()), GifInference::default());
 }
@@ -93,7 +93,7 @@ async fn inference_default_law() {
 /// 🧪️ `dimensions` on the real animated fixture matches the independently-verified 800x800
 /// geometry `decodes_real_fixture_with_nontrivial_invariants` above already asserts, plus
 /// `hasAlpha` agreeing exactly with a direct scan of every frame's `transparent_index`.
-#[test]
+#[semio_framework_async_macros::async_test]
 async fn dimensions_matches_real_fixture_geometry() {
     let snapshot = decode_gif(DANCING_GIF_BYTES).expect("decode real fixture");
     let inferred = GifInference::infer(&snapshot);

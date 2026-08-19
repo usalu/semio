@@ -126,7 +126,7 @@ mod tests {
         ]
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn migrate_87a_to_89a_preserves_indices_in_a_single_frame() {
         let snapshot_87a = real_87a_snapshot();
         let snapshot_89a = migrate_87a_to_89a(&snapshot_87a);
@@ -151,7 +151,7 @@ mod tests {
         assert_eq!(frame.rgba(snapshot_89a.gct.as_ref()), image.rgba(snapshot_87a.gct.as_ref()), "derived RGBA must match too");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn migrate_87a_to_89a_round_trips_through_real_89a_codec() {
         // 🔁️ Not just the in-memory struct — the migrated snapshot must also be a real, valid 89a
         // document: encode it with the real 89a encoder and decode it back.
@@ -165,7 +165,7 @@ mod tests {
         assert_eq!(redecoded_89a.frames[0].indices, snapshot_87a.images[0].indices, "indices must still be identical after a real 89a encode/decode round trip");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn registered_migration_runs_end_to_end_through_the_store_registry() {
         register();
         let from = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.gif".into(), standard: "87a".into(), subset: "*".into() };

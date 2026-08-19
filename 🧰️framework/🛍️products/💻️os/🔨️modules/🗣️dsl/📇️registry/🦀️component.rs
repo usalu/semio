@@ -30,7 +30,7 @@ use std::sync::{Mutex, OnceLock};
 /// `crate::os_dsl`'s `LANGUAGE_REGISTRY`/`IDIOM_REGISTRY`.
 static SCHEMA_REGISTRY: OnceLock<Mutex<HashMap<&'static str, fn() -> crate::os_dsl::schema::RecordSpec>>> = OnceLock::new();
 
-fn schema_registry() -> &'static Mutex<HashMap<&'static str, fn() -> crate::os_dsl::schema::RecordSpec>> {
+async fn schema_registry() -> &'static Mutex<HashMap<&'static str, fn() -> crate::os_dsl::schema::RecordSpec>> {
     SCHEMA_REGISTRY.get_or_init(|| Mutex::new(HashMap::new()))
 }
 
@@ -39,8 +39,8 @@ fn schema_registry() -> &'static Mutex<HashMap<&'static str, fn() -> crate::os_d
 /// own schema id (`"stdio.gif"`) and its diff schema (`"stdio.gif#diff"`, B-R4). Overwrites on
 /// re-registration rather than erroring, matching `register_language`'s hot-reload-safe behavior —
 /// a re-run dev build never deadlocks or panics on re-registering the same id.
-pub fn register_schema_spec(id: &'static str, spec: fn() -> crate::os_dsl::schema::RecordSpec) {
-    let mut registry = schema_registry().lock().unwrap_or_else(|poison| poison.into_inner());
+pub async fn register_schema_spec(id: &'static str, spec: fn() -> crate::os_dsl::schema::RecordSpec) {
+    let mut registry = schema_registry().await.lock().unwrap_or_else(|poison| poison.into_inner());
     registry.insert(id, spec);
 }
 
@@ -55,17 +55,17 @@ pub struct FullResolver {
 impl FullResolver {
     /// @emoji 🧪️ Builds a resolver from an explicit table, bypassing the process-global registry
     /// entirely — for tests/test-doubles that want an isolated, narrower set.
-    pub fn from_map(schemas: HashMap<&'static str, fn() -> crate::os_dsl::schema::RecordSpec>) -> Self {
+    pub async fn from_map(schemas: HashMap<&'static str, fn() -> crate::os_dsl::schema::RecordSpec>) -> Self {
         Self { schemas }
     }
 }
 
 impl SchemaResolver for FullResolver {
-    fn resolve(&self, schema: &str) -> Option<crate::os_dsl::schema::RecordSpec> {
+    async fn resolve(&self, schema: &str) -> Option<crate::os_dsl::schema::RecordSpec> {
         self.schemas.get(schema).map(|spec_fn| spec_fn())
     }
 
-    fn names(&self) -> Vec<String> {
+    async fn names(&self) -> Vec<String> {
         let mut names: Vec<String> = self.schemas.keys().map(|s| s.to_string()).collect();
         names.sort_unstable();
         names
@@ -78,8 +78,8 @@ impl SchemaResolver for FullResolver {
 /// schema lattice's own convention (`"<doc-schema>"` for a document, `"<doc-schema>#diff"` for its
 /// diff, design ruling B-R4) so a future `dsl_registry`-driven `pack diff --schema
 /// writer.document#diff` (or similar) resolves the diff's own grammar, not the document's.
-pub fn full_resolver() -> FullResolver {
-    let registry = schema_registry().lock().unwrap_or_else(|poison| poison.into_inner());
+pub async fn full_resolver() -> FullResolver {
+    let registry = schema_registry().await.lock().unwrap_or_else(|poison| poison.into_inner());
     FullResolver { schemas: registry.clone() }
 }
 //#endregion 🔖️Registry
@@ -91,12 +91,12 @@ mod tests {
     use crate::os_dsl::schema::{FieldSpec, RecordLayout, RecordSpec, Shape};
 
     /// @emoji 🧬️ A real (not mocked) minimal `RecordSpec` — one `Int` field under `Inline` layout.
-    fn sample_spec() -> RecordSpec {
+    async fn sample_spec() -> RecordSpec {
         RecordSpec::new(Some("p2m3-sample"), RecordLayout::Inline, vec![FieldSpec::new(0, "value", Shape::Int)])
     }
 
-    #[test]
-    fn full_resolver_resolves_a_registered_schema_and_none_for_an_unregistered_one() {
+    #[semio_framework_async_macros::async_test]
+    async fn full_resolver_resolves_a_registered_schema_and_none_for_an_unregistered_one() {
         register_schema_spec("p2m3.registry-test.schema", sample_spec);
         let resolver = full_resolver();
         assert!(resolver.names().contains(&"p2m3.registry-test.schema".to_string()));
@@ -106,8 +106,8 @@ mod tests {
         assert!(resolver.resolve("p2m3.registry-test.never-registered").is_none());
     }
 
-    #[test]
-    fn full_resolver_resolves_the_diff_schema_id_separately_from_its_document_id() {
+    #[semio_framework_async_macros::async_test]
+    async fn full_resolver_resolves_the_diff_schema_id_separately_from_its_document_id() {
         register_schema_spec("p2m3.diff-test.doc", sample_spec);
         register_schema_spec("p2m3.diff-test.doc#diff", sample_spec);
         let resolver = full_resolver();
@@ -116,8 +116,8 @@ mod tests {
         assert!(resolver.resolve("p2m3.diff-test.doc#nonsense").is_none());
     }
 
-    #[test]
-    fn full_resolver_from_map_bypasses_the_global_registry() {
+    #[semio_framework_async_macros::async_test]
+    async fn full_resolver_from_map_bypasses_the_global_registry() {
         let mut schemas: HashMap<&'static str, fn() -> RecordSpec> = HashMap::new();
         schemas.insert("p2m3.isolated.schema", sample_spec as fn() -> RecordSpec);
         let resolver = FullResolver::from_map(schemas);

@@ -26,7 +26,7 @@ pub use protocol::mutation::*;
 /// states models them as data, not as a `Result`). `infer` is THE single semantics source: every
 /// cache path in `crate::os_inference` must be observationally identical to calling this directly.
 pub trait Inference<P>: Clone + Default + serde::Serialize + serde::de::DeserializeOwned {
-    fn infer(snapshot: &P) -> Self;
+    async fn infer(snapshot: &P) -> Self;
 }
 
 /// @emoji 🗺️ Region vocabulary shared by [`DiffRegions::touches`] and an [`InferenceFieldSpec`]'s
@@ -40,15 +40,18 @@ pub struct TouchedPaths {
 
 impl TouchedPaths {
     /// 🏗️ Builds a `TouchedPaths` from plain `&str` path segments.
+    // 🚫️async: E1 pure accessor consumed inside a sync std Iterator closure — see R9
     pub fn new(paths: impl IntoIterator<Item = impl Into<String>>) -> Self {
         Self { paths: paths.into_iter().map(Into::into).collect() }
     }
 
+    // 🚫️async: E1 pure accessor consumed inside a sync std Iterator closure — see R9
     fn segments(path: &str) -> Vec<&str> {
         path.split('/').filter(|segment| !segment.is_empty()).collect()
     }
 
     /// 🔀️ Whether any of `self.paths` shares an ancestor/descendant relationship with `prefix`.
+    // 🚫️async: E1 pure accessor consumed inside a sync std Iterator closure — see R9
     pub fn intersects_prefix(&self, prefix: &str) -> bool {
         let target = Self::segments(prefix);
         self.paths.iter().any(|path| {
@@ -59,6 +62,7 @@ impl TouchedPaths {
     }
 
     /// 🔀️ Whether any of `prefixes` intersects `self` (see [`intersects_prefix`](Self::intersects_prefix)).
+    // 🚫️async: E1 pure accessor consumed inside a sync std Iterator closure — see R9
     pub fn intersects_any(&self, prefixes: &[&str]) -> bool {
         prefixes.iter().any(|prefix| self.intersects_prefix(prefix))
     }
@@ -73,7 +77,7 @@ impl TouchedPaths {
 /// `self.apply(base)` is covered by some path in `touches()`. Over-approximation is legal (costs an
 /// extra recompute), under-approximation is a correctness bug — a stale cached inference value.
 pub trait DiffRegions {
-    fn touches(&self) -> TouchedPaths;
+    async fn touches(&self) -> TouchedPaths;
 }
 
 /// @emoji 🕸️ One named inferred field family and its declared snapshot read-set (the tier-1 gate
@@ -88,11 +92,11 @@ pub struct InferenceFieldSpec {
 /// `id`/`schema_version`/`reads` trio (`crate::os_db::projection`), but static: one impl per `XInference`
 /// type, declared next to its `Inference` impl.
 pub trait InferenceSpec<P>: Inference<P> {
-    fn inference_schema_id() -> &'static str;
+    async fn inference_schema_id() -> &'static str;
     /// 🔢️ Salts every cache key derived from this spec's fields — bump when the derivation
     /// algorithm changes so a warm cache never serves a value computed under the old algorithm.
-    fn schema_version() -> u32;
-    fn fields() -> &'static [InferenceFieldSpec];
+    async fn schema_version() -> u32;
+    async fn fields() -> &'static [InferenceFieldSpec];
 }
 //#endregion 🔖️Inference
 
@@ -201,22 +205,22 @@ where
 {
     const SEMANTICS: SemanticDescriptor;
 
-    fn diff(&self, base: &P) -> MutationOutcome<<Op as Mutation<P>>::Diff>;
+    async fn diff(&self, base: &P) -> MutationOutcome<<Op as Mutation<P>>::Diff>;
     /// Missing/already-absent target ⇒ `Vec::new()` (the semantic replacement for the old
     /// `NoMutation` sentinel variant — there is no "no-op mutation", only an inverse with nothing
     /// to undo).
-    fn inverse(&self, base: &P) -> Vec<Op>;
+    async fn inverse(&self, base: &P) -> Vec<Op>;
     /// @emoji 🏷️ Human undo/history label, e.g. `Rename piece "a" to "b"`.
-    fn label(&self) -> String;
+    async fn label(&self) -> String;
     /// @emoji 🎯️ Structured address of the target inside the artifact (outermost segment first);
     /// empty means whole-artifact scope.
-    fn target(&self) -> Vec<String> {
+    async fn target(&self) -> Vec<String> {
         Vec::new()
     }
     /// @emoji 🌐️ Foreign steps this kind additionally dispatches to OTHER artifacts. Defaults to
     /// `Vec::new()` so no existing handcrafted `impl MutationKind` breaks; `#[derive(Mutations)]`
     /// gains a per-variant delegating arm (see `🗣️dsl/✨️derive/🦀️component.rs` `🔖️Mutations`).
-    fn foreign_steps(&self, _base: &P) -> Vec<ForeignStep> {
+    async fn foreign_steps(&self, _base: &P) -> Vec<ForeignStep> {
         Vec::new()
     }
 }
@@ -228,10 +232,10 @@ where
 /// compile time — see `.claude/plans/the-mutations-are-extremely-compiled-pumpkin.md`.
 pub trait SemanticMutation<P>: Mutation<P> {
     /// This artifact's full kind table, one row per variant — registration/introspection source.
-    fn kinds() -> &'static [SemanticDescriptor];
-    fn semantics(&self) -> &'static SemanticDescriptor;
-    fn label(&self) -> String;
-    fn target(&self) -> Vec<String>;
+    async fn kinds() -> &'static [SemanticDescriptor];
+    async fn semantics(&self) -> &'static SemanticDescriptor;
+    async fn label(&self) -> String;
+    async fn target(&self) -> Vec<String>;
 }
 //#endregion 🔖️Semantics
 
@@ -270,7 +274,7 @@ impl<K, V, Patch> Default for NamedTripleDiff<K, V, Patch> {
 }
 
 impl<K, V, Patch> NamedTripleDiff<K, V, Patch> {
-    pub fn is_empty(&self) -> bool {
+    pub async fn is_empty(&self) -> bool {
         self.removed.is_empty() && self.modified.is_empty() && self.added.is_empty()
     }
 }
@@ -278,39 +282,44 @@ impl<K, V, Patch> NamedTripleDiff<K, V, Patch> {
 /// @emoji ▶️ Validates and applies a [`NamedTripleDiff`] to an id-keyed `Vec` in place:
 /// removals, then patches, then appends. Validation is completed before the first write, so a
 /// missing/duplicate/contradictory persisted target rejects the whole diff atomically.
-pub fn named_apply<K, V, Patch>(items: &mut Vec<V>, diff: &NamedTripleDiff<K, V, Patch>) -> Result<(), MutationApplyError>
+pub async fn named_apply<K, V, Patch>(items: &mut Vec<V>, diff: &NamedTripleDiff<K, V, Patch>) -> Result<(), MutationApplyError>
 where
     K: PartialEq,
     V: Clone + Identified<K> + Patchable<Patch>,
 {
     for (index, id) in diff.removed.iter().enumerate() {
         if !items.iter().any(|item| item.id() == id) {
-            return Err(MutationApplyError::new("mutation.apply.missing-target", "removed item does not exist").at(["removed".to_string(), index.to_string()]));
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "removed item does not exist").await.at(["removed".to_string(), index.to_string()]).await);
         }
         if diff.removed[..index].iter().any(|previous| previous == id) {
-            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "item is removed more than once").at(["removed".to_string(), index.to_string()]));
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "item is removed more than once").await.at(["removed".to_string(), index.to_string()]).await);
         }
     }
     for (index, item_patch) in diff.modified.iter().enumerate() {
         if !items.iter().any(|item| item.id() == &item_patch.id) {
-            return Err(MutationApplyError::new("mutation.apply.missing-target", "modified item does not exist").at(["modified".to_string(), index.to_string()]));
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "modified item does not exist").await.at(["modified".to_string(), index.to_string()]).await);
         }
         if diff.removed.iter().any(|id| id == &item_patch.id) {
-            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "item cannot be removed and modified by the same diff").at(["modified".to_string(), index.to_string()]));
+            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "item cannot be removed and modified by the same diff").await.at(["modified".to_string(), index.to_string()]).await);
         }
         if diff.modified[..index].iter().any(|previous| previous.id == item_patch.id) {
-            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "item is modified more than once").at(["modified".to_string(), index.to_string()]));
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "item is modified more than once").await.at(["modified".to_string(), index.to_string()]).await);
         }
     }
     for (index, added) in diff.added.iter().enumerate() {
         if items.iter().any(|item| item.id() == added.id()) || diff.added[..index].iter().any(|previous| previous.id() == added.id()) {
-            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "added item identity already exists").at(["added".to_string(), index.to_string()]));
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "added item identity already exists").await.at(["added".to_string(), index.to_string()]).await);
         }
     }
     let mut candidate = items.clone();
     candidate.retain(|item| !diff.removed.iter().any(|id| item.id() == id));
     for item_patch in &diff.modified {
-        let item = candidate.iter_mut().find(|item| item.id() == &item_patch.id).ok_or_else(|| MutationApplyError::new("mutation.apply.conflicting-target", "an earlier patch changed a later target's identity").at(["modified"]))?;
+        let item = match candidate.iter_mut().find(|item| item.id() == &item_patch.id) {
+            Some(item) => item,
+            None => {
+                return Err(MutationApplyError::new("mutation.apply.conflicting-target", "an earlier patch changed a later target's identity").await.at(["modified"]).await);
+            }
+        };
         item.apply_patch(&item_patch.patch);
     }
     candidate.extend(diff.added.iter().cloned());
@@ -338,7 +347,7 @@ impl<V, Patch> Default for IndexedTripleDiff<V, Patch> {
 }
 
 impl<V, Patch> IndexedTripleDiff<V, Patch> {
-    pub fn is_empty(&self) -> bool {
+    pub async fn is_empty(&self) -> bool {
         self.removed.is_empty() && self.modified.is_empty() && self.added.is_empty()
     }
 }
@@ -346,27 +355,27 @@ impl<V, Patch> IndexedTripleDiff<V, Patch> {
 /// @emoji ▶️ Validates and applies an [`IndexedTripleDiff`] in place: BASE-state `modified`
 /// patches first, BASE-state `removed` descending, then FINAL-state `added` ascending. Every
 /// index is exact; out-of-range and duplicate indices reject atomically instead of clamping.
-pub fn indexed_apply<V, Patch>(items: &mut Vec<V>, diff: &IndexedTripleDiff<V, Patch>) -> Result<(), MutationApplyError>
+pub async fn indexed_apply<V, Patch>(items: &mut Vec<V>, diff: &IndexedTripleDiff<V, Patch>) -> Result<(), MutationApplyError>
 where
     V: Clone + Patchable<Patch>,
 {
     for (position, (index, _)) in diff.modified.iter().enumerate() {
         if *index >= items.len() {
-            return Err(MutationApplyError::new("mutation.apply.invalid-index", format!("modified base index {index} is out of range for length {}", items.len())).at(["modified".to_string(), position.to_string()]));
+            return Err(MutationApplyError::new("mutation.apply.invalid-index", format!("modified base index {index} is out of range for length {}", items.len())).await.at(["modified".to_string(), position.to_string()]).await);
         }
         if diff.modified[..position].iter().any(|(previous, _)| previous == index) {
-            return Err(MutationApplyError::new("mutation.apply.duplicate-target", format!("base index {index} is modified more than once")).at(["modified".to_string(), position.to_string()]));
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", format!("base index {index} is modified more than once")).await.at(["modified".to_string(), position.to_string()]).await);
         }
         if diff.removed.contains(index) {
-            return Err(MutationApplyError::new("mutation.apply.conflicting-target", format!("base index {index} cannot be removed and modified by the same diff")).at(["modified".to_string(), position.to_string()]));
+            return Err(MutationApplyError::new("mutation.apply.conflicting-target", format!("base index {index} cannot be removed and modified by the same diff")).await.at(["modified".to_string(), position.to_string()]).await);
         }
     }
     for (position, index) in diff.removed.iter().enumerate() {
         if *index >= items.len() {
-            return Err(MutationApplyError::new("mutation.apply.invalid-index", format!("removed base index {index} is out of range for length {}", items.len())).at(["removed".to_string(), position.to_string()]));
+            return Err(MutationApplyError::new("mutation.apply.invalid-index", format!("removed base index {index} is out of range for length {}", items.len())).await.at(["removed".to_string(), position.to_string()]).await);
         }
         if diff.removed[..position].contains(index) {
-            return Err(MutationApplyError::new("mutation.apply.duplicate-target", format!("base index {index} is removed more than once")).at(["removed".to_string(), position.to_string()]));
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", format!("base index {index} is removed more than once")).await.at(["removed".to_string(), position.to_string()]).await);
         }
     }
     let mut added: Vec<(usize, &(usize, V))> = diff.added.iter().enumerate().collect();
@@ -374,10 +383,10 @@ where
     let mut next_len = items.len() - diff.removed.len();
     for (ordinal, (position, (index, _))) in added.iter().enumerate() {
         if ordinal > 0 && added[ordinal - 1].1.0 == *index {
-            return Err(MutationApplyError::new("mutation.apply.duplicate-target", format!("final index {index} is added more than once")).at(["added".to_string(), position.to_string()]));
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", format!("final index {index} is added more than once")).await.at(["added".to_string(), position.to_string()]).await);
         }
         if *index > next_len {
-            return Err(MutationApplyError::new("mutation.apply.invalid-index", format!("added final index {index} is out of range for length {next_len}")).at(["added".to_string(), position.to_string()]));
+            return Err(MutationApplyError::new("mutation.apply.invalid-index", format!("added final index {index} is out of range for length {next_len}")).await.at(["added".to_string(), position.to_string()]).await);
         }
         next_len += 1;
     }
@@ -430,14 +439,14 @@ impl MutationDescriptor {
     /// choice is a canonical-JSON encoding of `(id, schema_version, state_class)` hashed with
     /// blake3 — stable across process runs and platforms, pinned by a golden test below (re-baked
     /// when `conflict_rule` left this encoding, see the golden pin's own comment).
-    pub fn new(id: crate::os_spr::ids::SchemaId, schema_version: crate::os_spr::ids::SchemaVersion, state_class: crate::os_spr::StateClass) -> Self {
-        let fingerprint = descriptor_fingerprint(&id, schema_version, state_class);
+    pub async fn new(id: crate::os_spr::ids::SchemaId, schema_version: crate::os_spr::ids::SchemaVersion, state_class: crate::os_spr::StateClass) -> Self {
+        let fingerprint = descriptor_fingerprint(&id, schema_version, state_class).await;
         Self { id, schema_version, state_class, fingerprint, verb: None, entity: None, record: None, contributor: None, artifact_kind: None }
     }
 
     /// @emoji 🗣️ Attaches semantic identity (`SemanticDescriptor`'s fields) to an already-built
     /// descriptor — used by `#[derive(Mutations)]`'s generated `register_*_descriptors` calls.
-    pub fn with_semantics(mut self, semantics: &SemanticDescriptor) -> Self {
+    pub async fn with_semantics(mut self, semantics: &SemanticDescriptor) -> Self {
         self.verb = Some(semantics.verb);
         self.entity = Some(semantics.entity);
         self.record = Some(semantics.record);
@@ -447,20 +456,20 @@ impl MutationDescriptor {
     /// @emoji 🔌️ Attaches the contributing plugin's id — set when this descriptor was registered
     /// via a contribution (`contributor.list-artifact-mutations`/`list-artifact-inferences`) rather
     /// than by the artifact's own owner. Not part of `fingerprint` (see `with_semantics` above).
-    pub fn with_contributor(mut self, contributor: impl Into<String>) -> Self {
+    pub async fn with_contributor(mut self, contributor: impl Into<String>) -> Self {
         self.contributor = Some(contributor.into());
         self
     }
 
     /// @emoji 🎯️ Attaches the target artifact kind this contributed descriptor's mutation/inference
     /// applies to. Not part of `fingerprint`.
-    pub fn with_artifact_kind(mut self, artifact_kind: impl Into<String>) -> Self {
+    pub async fn with_artifact_kind(mut self, artifact_kind: impl Into<String>) -> Self {
         self.artifact_kind = Some(artifact_kind.into());
         self
     }
 }
 
-fn descriptor_fingerprint(id: &crate::os_spr::ids::SchemaId, schema_version: crate::os_spr::ids::SchemaVersion, state_class: crate::os_spr::StateClass) -> [u8; 32] {
+async fn descriptor_fingerprint(id: &crate::os_spr::ids::SchemaId, schema_version: crate::os_spr::ids::SchemaVersion, state_class: crate::os_spr::StateClass) -> [u8; 32] {
     #[derive(serde::Serialize)]
     struct Canonical<'a> {
         id: &'a str,
@@ -474,20 +483,20 @@ fn descriptor_fingerprint(id: &crate::os_spr::ids::SchemaId, schema_version: cra
 
 static MUTATION_DESCRIPTOR_REGISTRY: std::sync::OnceLock<std::sync::RwLock<std::collections::HashMap<String, MutationDescriptor>>> = std::sync::OnceLock::new();
 
-fn mutation_descriptor_registry() -> &'static std::sync::RwLock<std::collections::HashMap<String, MutationDescriptor>> {
+async fn mutation_descriptor_registry() -> &'static std::sync::RwLock<std::collections::HashMap<String, MutationDescriptor>> {
     MUTATION_DESCRIPTOR_REGISTRY.get_or_init(|| std::sync::RwLock::new(std::collections::HashMap::new()))
 }
 
 /// @emoji 📝️ Registers (or overwrites) a descriptor by `descriptor.id`. Mirrors
 /// `crate::os_store::CodecRegistry`'s `OnceLock<RwLock<HashMap>>` pattern; idempotent, safe to call repeatedly.
-pub fn register_mutation_descriptor(descriptor: MutationDescriptor) {
-    let mut registry = mutation_descriptor_registry().write().unwrap_or_else(|poisoned| poisoned.into_inner());
+pub async fn register_mutation_descriptor(descriptor: MutationDescriptor) {
+    let mut registry = mutation_descriptor_registry().await.write().unwrap_or_else(|poisoned| poisoned.into_inner());
     registry.insert(descriptor.id.0.clone(), descriptor);
 }
 
 /// @emoji 🔎️ Looks up the descriptor registered for `schema`, if any.
-pub fn mutation_descriptor(schema: &str) -> Option<MutationDescriptor> {
-    let registry = mutation_descriptor_registry().read().unwrap_or_else(|poisoned| poisoned.into_inner());
+pub async fn mutation_descriptor(schema: &str) -> Option<MutationDescriptor> {
+    let registry = mutation_descriptor_registry().await.read().unwrap_or_else(|poisoned| poisoned.into_inner());
     registry.get(schema).cloned()
 }
 //#endregion 🔖️Descriptor
@@ -496,7 +505,7 @@ pub fn mutation_descriptor(schema: &str) -> Option<MutationDescriptor> {
 /// @emoji ⬆️ Rewrites an operation authored at an older schema version into today's shape.
 /// LAW: `upcast(upcast(x)) == upcast(x)` — idempotence at the target version.
 pub trait MutationUpcaster<Op> {
-    fn upcast(&self, from_version: crate::os_spr::ids::SchemaVersion, op: Op) -> Op;
+    async fn upcast(&self, from_version: crate::os_spr::ids::SchemaVersion, op: Op) -> Op;
 }
 //#endregion 🔖️Upcast
 
@@ -572,25 +581,27 @@ pub struct Planner<P, Op: Mutation<P>> {
 
 /// 🎯️ Prefixes `message.target` with `prefix` as its new outermost segment — how [`Planner::call`]
 /// attributes each local step's messages back to "the step path" (§C4).
+// 🚫️async: R9 pure accessor — only consumer is `Iterator::map`'s sync closure below; no
+// suspension point exists in the body either.
 fn prefix_message(mut message: MutationMessage, prefix: &str) -> MutationMessage {
     message.target.insert(0, prefix.to_string());
     message
 }
 
 impl<P: Clone, Op: Mutation<P>> Planner<P, Op> {
-    pub fn new(base: &P) -> Self {
+    pub async fn new(base: &P) -> Self {
         Self { base: base.clone(), steps: Vec::new(), pre_states: Vec::new(), depth: 0, seen: Vec::new(), messages: Vec::new() }
     }
 
     /// 🪞️ The snapshot as it stands after every step `call`ed so far.
-    pub fn base(&self) -> &P {
+    pub async fn base(&self) -> &P {
         &self.base
     }
 
     /// 📨️ Every message folded in so far, across every `call`ed step (including the failing one, if
     /// any — a caller reading `Err(PlanError::StepRejected(..))` still finds the `Fatal` message(s)
     /// that caused it here).
-    pub fn messages(&self) -> &[MutationMessage] {
+    pub async fn messages(&self) -> &[MutationMessage] {
         &self.messages
     }
 
@@ -601,9 +612,9 @@ impl<P: Clone, Op: Mutation<P>> Planner<P, Op> {
     /// message stops the plan outright (`Err(PlanError::StepRejected)`) without advancing `base`;
     /// a merely `Error`/`Warning`/`Info` message still advances `base` and continues planning — only
     /// [`fold_plan_diff`]'s all-or-nothing fold treats those as poisoning the composite's own diff.
-    pub fn call(&mut self, op: Op) -> Result<(), PlanError> {
+    pub async fn call(&mut self, op: Op) -> Result<(), PlanError> {
         let step_index = self.steps.len();
-        let (diff, messages) = op.diff(&self.base).into_parts();
+        let (diff, messages) = op.diff(&self.base).await.into_parts().await;
         let is_fatal = messages.iter().any(|message| message.level == crate::os_dsl::Severity::Fatal);
         let reason = messages.iter().filter(|message| message.level == crate::os_dsl::Severity::Fatal).map(|message| message.message.clone()).collect::<Vec<_>>().join("; ");
         let prefix = format!("step-{step_index}");
@@ -612,7 +623,7 @@ impl<P: Clone, Op: Mutation<P>> Planner<P, Op> {
             return Err(PlanError::StepRejected(reason));
         }
         let pre_state = self.base.clone();
-        self.base = diff.apply(&self.base)?;
+        self.base = diff.apply(&self.base).await?;
         self.steps.push(PlanStep::Local(op));
         self.pre_states.push(Some(pre_state));
         Ok(())
@@ -621,7 +632,7 @@ impl<P: Clone, Op: Mutation<P>> Planner<P, Op> {
     /// 🪜️ Records a hop to another artifact, enforcing [`MAX_PLAN_DEPTH`] and rejecting a repeated
     /// `(mutation_id, payload hash)` pair as a cycle — both typed [`PlanError`]s, never a panic.
     /// Deliberately does NOT advance `base` (a foreign step's effect is on a DIFFERENT snapshot).
-    pub fn call_foreign(&mut self, step: ForeignStep) -> Result<(), PlanError> {
+    pub async fn call_foreign(&mut self, step: ForeignStep) -> Result<(), PlanError> {
         let next_depth = self.depth.checked_add(1).filter(|depth| *depth <= MAX_PLAN_DEPTH).ok_or(PlanError::DepthExceeded(MAX_PLAN_DEPTH))?;
         let key = (step.mutation_id.0.clone(), *blake3::hash(&step.payload).as_bytes());
         if self.seen.contains(&key) {
@@ -634,21 +645,21 @@ impl<P: Clone, Op: Mutation<P>> Planner<P, Op> {
         Ok(())
     }
 
-    pub fn steps(&self) -> &[PlanStep<Op>] {
+    pub async fn steps(&self) -> &[PlanStep<Op>] {
         &self.steps
     }
 
-    pub fn into_steps(self) -> Vec<PlanStep<Op>> {
+    pub async fn into_steps(self) -> Vec<PlanStep<Op>> {
         self.steps
     }
 
     /// 🧭️ Consumes the plan with each local step's already-validated pre-state.
-    fn into_steps_with_pre_states(self) -> (Vec<PlanStep<Op>>, Vec<Option<P>>) {
+    async fn into_steps_with_pre_states(self) -> (Vec<PlanStep<Op>>, Vec<Option<P>>) {
         (self.steps, self.pre_states)
     }
 
     /// ➡️ Consumes `self` into its raw `(steps, messages)` parts — [`fold_plan_diff`]'s primitive.
-    pub fn into_parts(self) -> (Vec<PlanStep<Op>>, Vec<MutationMessage>) {
+    pub async fn into_parts(self) -> (Vec<PlanStep<Op>>, Vec<MutationMessage>) {
         (self.steps, self.messages)
     }
 }
@@ -666,9 +677,9 @@ impl<P: Clone, Op: Mutation<P>> Planner<P, Op> {
 /// semantics regardless of who calls it.
 pub trait CompositeMutationKind<P, Op: Mutation<P>>: Clone + serde::Serialize + serde::de::DeserializeOwned {
     const SEMANTICS: SemanticDescriptor;
-    fn plan(&self, base: &P, planner: &mut Planner<P, Op>) -> Result<(), PlanError>;
-    fn label(&self) -> String;
-    fn target(&self) -> Vec<String> {
+    async fn plan(&self, base: &P, planner: &mut Planner<P, Op>) -> Result<(), PlanError>;
+    async fn label(&self) -> String;
+    async fn target(&self) -> Vec<String> {
         Vec::new()
     }
 }
@@ -677,10 +688,10 @@ pub trait CompositeMutationKind<P, Op: Mutation<P>>: Clone + serde::Serialize + 
 /// `impl<T: CompositeMutationKind> MutationKind for T` — coherence rejects that against the ~200
 /// concrete `impl MutationKind` in the tree — so every other free helper here, and the
 /// `#[derive(CompositeMutation)]` delegation, is built on top of this one instead.
-pub fn plan_of<P: Clone, Op: Mutation<P>, K: CompositeMutationKind<P, Op>>(kind: &K, base: &P) -> Result<Vec<PlanStep<Op>>, PlanError> {
-    let mut planner = Planner::new(base);
-    kind.plan(base, &mut planner)?;
-    Ok(planner.into_steps())
+pub async fn plan_of<P: Clone, Op: Mutation<P>, K: CompositeMutationKind<P, Op>>(kind: &K, base: &P) -> Result<Vec<PlanStep<Op>>, PlanError> {
+    let mut planner = Planner::new(base).await;
+    kind.plan(base, &mut planner).await?;
+    Ok(planner.into_steps().await)
 }
 
 /// @emoji 🧬️ Folds a composite's LOCAL steps into one [`MutationOutcome`] via
@@ -693,34 +704,34 @@ pub fn plan_of<P: Clone, Op: Mutation<P>, K: CompositeMutationKind<P, Op>>(kind:
 /// way is still kept, so a caller sees exactly why. A `PlanError` additionally contributes one
 /// `Fatal` `"mutation.invariant"` message. Never panics, matching this fn's frozen non-`Result`
 /// signature.
-pub fn fold_plan_diff<P: Clone, Op: Mutation<P>, K: CompositeMutationKind<P, Op>>(kind: &K, base: &P) -> MutationOutcome<<Op as Mutation<P>>::Diff> {
-    let mut planner = Planner::new(base);
-    let plan_result = kind.plan(base, &mut planner);
-    let (steps, mut messages) = planner.into_parts();
+pub async fn fold_plan_diff<P: Clone, Op: Mutation<P>, K: CompositeMutationKind<P, Op>>(kind: &K, base: &P) -> MutationOutcome<<Op as Mutation<P>>::Diff> {
+    let mut planner = Planner::new(base).await;
+    let plan_result = kind.plan(base, &mut planner).await;
+    let (steps, mut messages) = planner.into_parts().await;
     if let Err(error) = &plan_result {
-        messages.push(MutationMessage::fatal("mutation.invariant", error.to_string()));
+        messages.push(MutationMessage::fatal("mutation.invariant", error.to_string()).await);
     }
-    let rejected = plan_result.is_err() || matches!(worst_level(&messages), Some(level) if level >= crate::os_dsl::Severity::Error);
+    let rejected = plan_result.is_err() || matches!(worst_level(&messages).await, Some(level) if level >= crate::os_dsl::Severity::Error);
     if rejected {
-        return MutationOutcome::new(<Op as Mutation<P>>::Diff::default()).absorb_messages(messages);
+        return MutationOutcome::new(<Op as Mutation<P>>::Diff::default()).await.absorb_messages(messages).await;
     }
 
     let mut current = base.clone();
     let mut folded = <Op as Mutation<P>>::Diff::default();
     for step in steps {
         if let PlanStep::Local(op) = step {
-            let diff = op.diff(&current).into_parts().0;
-            match diff.apply(&current) {
+            let diff = op.diff(&current).await.into_parts().await.0;
+            match diff.apply(&current).await {
                 Ok(next) => current = next,
                 Err(error) => {
-                    messages.push(MutationMessage::fatal("mutation.invariant", error.to_string()).at(error.target));
-                    return MutationOutcome::new(<Op as Mutation<P>>::Diff::default()).absorb_messages(messages);
+                    messages.push(MutationMessage::fatal("mutation.invariant", error.to_string()).await.at(error.target).await);
+                    return MutationOutcome::new(<Op as Mutation<P>>::Diff::default()).await.absorb_messages(messages).await;
                 }
             }
             folded.absorb(diff);
         }
     }
-    MutationOutcome::new(folded).absorb_messages(messages)
+    MutationOutcome::new(folded).await.absorb_messages(messages).await
 }
 
 /// @emoji ↩️ The inverse of [`fold_plan_diff`]'s effect: each local step's `Mutation::inverse` is
@@ -728,12 +739,12 @@ pub fn fold_plan_diff<P: Clone, Op: Mutation<P>, K: CompositeMutationKind<P, Op>
 /// reversed — the same "collect per-op inverses, then reverse the batch" shape
 /// `🏪️store/🦀️component.rs`'s own replay/rewrite paths already use — so applying the composite
 /// then this restores `base`. A planning failure folds to `Vec::new()`, never a panic.
-pub fn fold_plan_inverse<P: Clone, Op: Mutation<P>, K: CompositeMutationKind<P, Op>>(kind: &K, base: &P) -> Vec<Op> {
-    let mut planner = Planner::new(base);
-    if kind.plan(base, &mut planner).is_err() {
+pub async fn fold_plan_inverse<P: Clone, Op: Mutation<P>, K: CompositeMutationKind<P, Op>>(kind: &K, base: &P) -> Vec<Op> {
+    let mut planner = Planner::new(base).await;
+    if kind.plan(base, &mut planner).await.is_err() {
         return Vec::new();
     }
-    let (steps, pre_states) = planner.into_steps_with_pre_states();
+    let (steps, pre_states) = planner.into_steps_with_pre_states().await;
     let mut local_steps: Vec<(Op, P)> = Vec::new();
     for (step, pre_state) in steps.into_iter().zip(pre_states) {
         if let (PlanStep::Local(op), Some(pre_state)) = (step, pre_state) {
@@ -742,7 +753,7 @@ pub fn fold_plan_inverse<P: Clone, Op: Mutation<P>, K: CompositeMutationKind<P, 
     }
     let mut inverses = Vec::new();
     for (op, pre_state) in local_steps.into_iter().rev() {
-        inverses.extend(op.inverse(&pre_state));
+        inverses.extend(op.inverse(&pre_state).await);
     }
     inverses
 }
@@ -750,8 +761,8 @@ pub fn fold_plan_inverse<P: Clone, Op: Mutation<P>, K: CompositeMutationKind<P, 
 /// @emoji 🌐️ The [`ForeignStep`]s of a composite's plan, in discovery order — what
 /// `#[derive(CompositeMutation)]`'s generated `MutationKind::foreign_steps` delegates to. A
 /// planning failure folds to `Vec::new()`, never a panic.
-pub fn plan_foreign_steps<P: Clone, Op: Mutation<P>, K: CompositeMutationKind<P, Op>>(kind: &K, base: &P) -> Vec<ForeignStep> {
-    let Ok(steps) = plan_of(kind, base) else {
+pub async fn plan_foreign_steps<P: Clone, Op: Mutation<P>, K: CompositeMutationKind<P, Op>>(kind: &K, base: &P) -> Vec<ForeignStep> {
+    let Ok(steps) = plan_of(kind, base).await else {
         return Vec::new();
     };
     steps
@@ -770,16 +781,16 @@ mod tests {
     use super::*;
 
     //#region 🧪️ApplyErrorContract
-    #[test]
-    fn mutation_apply_error_json_round_trip_matches_typescript_parity_vector() {
+    #[semio_framework_async_macros::async_test]
+    async fn mutation_apply_error_json_round_trip_matches_typescript_parity_vector() {
         let error = MutationApplyError::new("mutation.apply.invalid-index", "index 4 exceeds length 2").at(["slides", "4"]);
         let json = serde_json::to_string(&error).expect("serialize apply error");
         assert_eq!(json, r#"{"code":"mutation.apply.invalid-index","message":"index 4 exceeds length 2","target":["slides","4"]}"#);
         assert_eq!(serde_json::from_str::<MutationApplyError>(&json).expect("deserialize apply error"), error);
     }
 
-    #[test]
-    fn mutation_apply_error_under_prefixes_without_losing_inner_target() {
+    #[semio_framework_async_macros::async_test]
+    async fn mutation_apply_error_under_prefixes_without_losing_inner_target() {
         let error = MutationApplyError::new("mutation.apply.missing-target", "vertex missing").at(["vertices", "v1"]).under(["objects", "o1"]);
         assert_eq!(error.target, vec!["objects", "o1", "vertices", "v1"]);
     }
@@ -793,10 +804,10 @@ mod tests {
         delta: i64,
     }
     impl MutationDiff<i64> for AddDiff {
-        fn apply(&self, base: &i64) -> MutationApplyResult<i64> {
+        async fn apply(&self, base: &i64) -> MutationApplyResult<i64> {
             Ok(base + self.delta)
         }
-        fn absorb(&mut self, other: Self) {
+        async fn absorb(&mut self, other: Self) {
             self.delta += other.delta;
         }
     }
@@ -807,18 +818,18 @@ mod tests {
     }
     impl Mutation<i64> for AddOp {
         type Diff = AddDiff;
-        fn diff(&self, _base: &i64) -> MutationOutcome<AddDiff> {
+        async fn diff(&self, _base: &i64) -> MutationOutcome<AddDiff> {
             MutationOutcome::new(AddDiff { delta: self.delta })
         }
-        fn inverse(&self, _base: &i64) -> Vec<Self> {
+        async fn inverse(&self, _base: &i64) -> Vec<Self> {
             vec![AddOp { delta: -self.delta }]
         }
     }
     impl OpText for AddOp {
-        fn print_op(&self) -> String {
+        async fn print_op(&self) -> String {
             format!("add {}", self.delta)
         }
-        fn parse_op(line: &str) -> Result<Self, crate::os_dsl::TextError> {
+        async fn parse_op(line: &str) -> Result<Self, crate::os_dsl::TextError> {
             let rest = line.strip_prefix("add ").ok_or_else(|| crate::os_dsl::TextError::new("expected 'add <n>'", crate::os_dsl::TextSpan::at(1, 1)))?;
             let delta: i64 = rest.trim().parse().map_err(|_| crate::os_dsl::TextError::new("invalid integer", crate::os_dsl::TextSpan::at(1, 1)))?;
             Ok(AddOp { delta })
@@ -831,15 +842,15 @@ mod tests {
         value: i64,
     }
     impl Identified<String> for Item {
-        fn id(&self) -> &String {
+        async fn id(&self) -> &String {
             &self.id
         }
     }
     impl Patchable<i64> for Item {
-        fn apply_patch(&mut self, patch: &i64) {
+        async fn apply_patch(&mut self, patch: &i64) {
             self.value += patch;
         }
-        fn diff_patch(&self, other: &Self) -> Option<i64> {
+        async fn diff_patch(&self, other: &Self) -> Option<i64> {
             let delta = other.value - self.value;
             if delta == 0 {
                 None
@@ -858,12 +869,12 @@ mod tests {
     }
     impl CompositeMutationKind<i64, AddOp> for DoubleAdd {
         const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "add", entity: "counter", kind: "double-add", record: "DoubleAdded" };
-        fn plan(&self, _base: &i64, planner: &mut Planner<i64, AddOp>) -> Result<(), PlanError> {
+        async fn plan(&self, _base: &i64, planner: &mut Planner<i64, AddOp>) -> Result<(), PlanError> {
             planner.call(AddOp { delta: self.delta })?;
             planner.call(AddOp { delta: self.delta })?;
             Ok(())
         }
-        fn label(&self) -> String {
+        async fn label(&self) -> String {
             format!("Add {} twice", self.delta)
         }
     }
@@ -877,18 +888,18 @@ mod tests {
     }
     impl CompositeMutationKind<i64, AddOp> for QuadAdd {
         const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "add", entity: "counter", kind: "quad-add", record: "QuadAdded" };
-        fn plan(&self, base: &i64, planner: &mut Planner<i64, AddOp>) -> Result<(), PlanError> {
+        async fn plan(&self, base: &i64, planner: &mut Planner<i64, AddOp>) -> Result<(), PlanError> {
             DoubleAdd { delta: self.delta }.plan(base, planner)?;
             let mid = *planner.base();
             DoubleAdd { delta: self.delta }.plan(&mid, planner)?;
             Ok(())
         }
-        fn label(&self) -> String {
+        async fn label(&self) -> String {
             format!("Add {} four times", self.delta)
         }
     }
 
-    fn foreign_step_fixture(n: u8) -> ForeignStep {
+    async fn foreign_step_fixture(n: u8) -> ForeignStep {
         ForeignStep {
             target: ForeignTarget { artifact_id: format!("artifact-{n}"), artifact_kind: "s.demo.widget".into(), dialect: None },
             mutation_id: crate::os_spr::ids::SchemaId("widget.doc#set-color".into()),
@@ -906,22 +917,22 @@ mod tests {
     }
     impl CompositeMutationKind<i64, AddOp> for AddThenNotifyForeign {
         const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "add", entity: "counter", kind: "add-then-notify-foreign", record: "AddedThenNotifiedForeign" };
-        fn plan(&self, _base: &i64, planner: &mut Planner<i64, AddOp>) -> Result<(), PlanError> {
+        async fn plan(&self, _base: &i64, planner: &mut Planner<i64, AddOp>) -> Result<(), PlanError> {
             planner.call(AddOp { delta: self.delta })?;
             for n in 0..self.foreign_count {
                 planner.call_foreign(foreign_step_fixture(n))?;
             }
             Ok(())
         }
-        fn label(&self) -> String {
+        async fn label(&self) -> String {
             "Add then notify foreign".into()
         }
     }
     //#endregion 🧸️CompositeFixtures
 
     //#region 🧪️MutationLaws
-    #[test]
-    fn operation_diff_apply_matches_backwards_inverse() {
+    #[semio_framework_async_macros::async_test]
+    async fn operation_diff_apply_matches_backwards_inverse() {
         let base: i64 = 10;
         let op = AddOp { delta: 5 };
         let forward = op.diff(&base).diff().apply(&base).expect("valid forward diff");
@@ -931,15 +942,15 @@ mod tests {
         assert_eq!(restored, base);
     }
 
-    #[test]
-    fn operation_diff_absorb_accumulates() {
+    #[semio_framework_async_macros::async_test]
+    async fn operation_diff_absorb_accumulates() {
         let mut a = AddDiff { delta: 3 };
         a.absorb(AddDiff { delta: 4 });
         assert_eq!(a.delta, 7);
     }
 
-    #[test]
-    fn operation_defaults_are_stable() {
+    #[semio_framework_async_macros::async_test]
+    async fn operation_defaults_are_stable() {
         let op = AddOp { delta: 1 };
         assert_eq!(op.mutation_id(), None);
         assert!(op.dependencies().is_empty());
@@ -953,8 +964,8 @@ mod tests {
     //#endregion 🧪️MutationLaws
 
     //#region 🧪️OpTextLaws
-    #[test]
-    fn op_text_round_trip() {
+    #[semio_framework_async_macros::async_test]
+    async fn op_text_round_trip() {
         let op = AddOp { delta: -7 };
         let line = op.print_op();
         assert!(!line.contains('\n'));
@@ -962,16 +973,16 @@ mod tests {
         assert_eq!(parsed, op);
     }
 
-    #[test]
-    fn op_text_parse_error_carries_message() {
+    #[semio_framework_async_macros::async_test]
+    async fn op_text_parse_error_carries_message() {
         let error = AddOp::parse_op("nope").unwrap_err();
         assert!(!error.message.is_empty());
     }
     //#endregion 🧪️OpTextLaws
 
     //#region 🧪️MetaSerde
-    #[test]
-    fn operation_meta_serde_round_trip() {
+    #[semio_framework_async_macros::async_test]
+    async fn operation_meta_serde_round_trip() {
         let meta = MutationMeta {
             mutation_id: Some(crate::os_spr::ids::MutationId("op-1".into())),
             dependencies: vec![crate::os_spr::ids::MutationId("op-0".into())],
@@ -997,8 +1008,8 @@ mod tests {
         assert_eq!(solitary_round_tripped, solitary);
     }
 
-    #[test]
-    fn edit_serde_round_trip() {
+    #[semio_framework_async_macros::async_test]
+    async fn edit_serde_round_trip() {
         let edit = Edit::<AddOp> {
             id: "edit-1".into(),
             actor: Some("actor-1".into()),
@@ -1030,8 +1041,8 @@ mod tests {
     //#endregion 🧪️MetaSerde
 
     //#region 🧪️CollectionLaws
-    #[test]
-    fn apply_add_remove_move_patch() {
+    #[semio_framework_async_macros::async_test]
+    async fn apply_add_remove_move_patch() {
         let mut items = vec![Item { id: "a".into(), value: 1 }, Item { id: "b".into(), value: 2 }];
 
         apply_collection_mutation(&mut items, &CollectionMutation::Add { index: 1, item: Item { id: "c".into(), value: 3 } });
@@ -1047,8 +1058,8 @@ mod tests {
         assert_eq!(items.iter().map(|i| i.id.clone()).collect::<Vec<_>>(), vec!["b", "c"]);
     }
 
-    #[test]
-    fn invert_collection_operation_round_trips_every_kind() {
+    #[semio_framework_async_macros::async_test]
+    async fn invert_collection_operation_round_trips_every_kind() {
         let original = vec![Item { id: "a".into(), value: 1 }, Item { id: "b".into(), value: 2 }];
 
         let add = CollectionMutation::Add { index: 2, item: Item { id: "c".into(), value: 3 } };
@@ -1080,8 +1091,8 @@ mod tests {
         assert_eq!(items, original);
     }
 
-    #[test]
-    fn collection_diff_from_operation_projects_each_kind() {
+    #[semio_framework_async_macros::async_test]
+    async fn collection_diff_from_operation_projects_each_kind() {
         let items = vec![Item { id: "a".into(), value: 1 }, Item { id: "b".into(), value: 2 }];
 
         let add = CollectionMutation::<String, Item, i64>::Add { index: 0, item: Item { id: "c".into(), value: 3 } };
@@ -1105,8 +1116,8 @@ mod tests {
     //#endregion 🧪️CollectionLaws
 
     //#region 🧪️DiffKitLaws
-    #[test]
-    fn named_apply_removes_patches_then_adds() {
+    #[semio_framework_async_macros::async_test]
+    async fn named_apply_removes_patches_then_adds() {
         let mut items = vec![Item { id: "a".into(), value: 1 }, Item { id: "b".into(), value: 2 }, Item { id: "c".into(), value: 3 }];
         let diff = NamedTripleDiff::<String, Item, i64> { removed: vec!["a".into()], modified: vec![ItemPatch { id: "b".into(), patch: 10 }], added: vec![Item { id: "d".into(), value: 4 }] };
         named_apply(&mut items, &diff).expect("valid named diff");
@@ -1114,16 +1125,16 @@ mod tests {
         assert_eq!(items.iter().find(|i| i.id == "b").unwrap().value, 12);
     }
 
-    #[test]
-    fn named_triple_diff_is_empty_holds() {
+    #[semio_framework_async_macros::async_test]
+    async fn named_triple_diff_is_empty_holds() {
         let empty: NamedTripleDiff<String, Item, i64> = NamedTripleDiff::default();
         assert!(empty.is_empty());
         let nonempty = NamedTripleDiff::<String, Item, i64> { added: vec![Item { id: "a".into(), value: 1 }], ..Default::default() };
         assert!(!nonempty.is_empty());
     }
 
-    #[test]
-    fn indexed_apply_modifies_removes_descending_then_inserts_ascending() {
+    #[semio_framework_async_macros::async_test]
+    async fn indexed_apply_modifies_removes_descending_then_inserts_ascending() {
         let mut items = vec![Item { id: "a".into(), value: 1 }, Item { id: "b".into(), value: 2 }, Item { id: "c".into(), value: 3 }];
         // BASE state: [a, b, c]. modified targets base index 0 (a). removed targets base index 2 (c).
         // added targets FINAL indices 0 and 2 in the post-remove/pre-add state [a', b].
@@ -1133,8 +1144,8 @@ mod tests {
         assert_eq!(items[1].value, 101, "modified applies to BASE-state index 0 (item a) before removal/insertion shift it");
     }
 
-    #[test]
-    fn indexed_apply_rejects_duplicate_added_indices_without_mutating() {
+    #[semio_framework_async_macros::async_test]
+    async fn indexed_apply_rejects_duplicate_added_indices_without_mutating() {
         let original = vec![Item { id: "a".into(), value: 1 }];
         let mut items = original.clone();
         let diff = IndexedTripleDiff::<Item, i64> {
@@ -1146,8 +1157,8 @@ mod tests {
         assert_eq!(items, original, "rejected indexed diff must be atomic");
     }
 
-    #[test]
-    fn indexed_triple_diff_is_empty_holds() {
+    #[semio_framework_async_macros::async_test]
+    async fn indexed_triple_diff_is_empty_holds() {
         let empty: IndexedTripleDiff<Item, i64> = IndexedTripleDiff::default();
         assert!(empty.is_empty());
         let nonempty = IndexedTripleDiff::<Item, i64> { removed: vec![0], ..Default::default() };
@@ -1156,23 +1167,23 @@ mod tests {
     //#endregion 🧪️DiffKitLaws
 
     //#region 🧪️SemanticsLaws
-    #[test]
-    fn str_eq_matches_std_partial_eq() {
+    #[semio_framework_async_macros::async_test]
+    async fn str_eq_matches_std_partial_eq() {
         assert!(str_eq("rename-piece", "rename-piece"));
         assert!(!str_eq("rename-piece", "rename-part"));
         assert!(!str_eq("short", "shorter"));
     }
 
-    #[test]
-    fn is_approved_verb_matches_the_table() {
+    #[semio_framework_async_macros::async_test]
+    async fn is_approved_verb_matches_the_table() {
         assert!(is_approved_verb("rename"));
         assert!(is_approved_verb("flatten"));
         assert!(!is_approved_verb("set-snapshot"));
         assert!(!is_approved_verb("modify"));
     }
 
-    #[test]
-    fn approved_verbs_are_unique_and_lowercase() {
+    #[semio_framework_async_macros::async_test]
+    async fn approved_verbs_are_unique_and_lowercase() {
         let mut seen = std::collections::HashSet::new();
         for (verb, record) in APPROVED_VERBS {
             assert_eq!(*verb, verb.to_lowercase(), "verb {verb:?} must be lowercase");
@@ -1181,8 +1192,8 @@ mod tests {
         }
     }
 
-    #[test]
-    fn mutation_descriptor_with_semantics_attaches_without_changing_fingerprint() {
+    #[semio_framework_async_macros::async_test]
+    async fn mutation_descriptor_with_semantics_attaches_without_changing_fingerprint() {
         let semantics = SemanticDescriptor { verb: "rename", entity: "widget", kind: "rename-widget", record: "RenamedWidget" };
         let base = MutationDescriptor::new(crate::os_spr::ids::SchemaId("demo.rename-widget".into()), crate::os_spr::ids::SchemaVersion(1), crate::os_spr::StateClass::Artifact);
         let fingerprint_before = base.fingerprint;
@@ -1210,10 +1221,10 @@ mod tests {
         name: Option<String>,
     }
     impl MutationDiff<MiniDoc> for MiniDiff {
-        fn apply(&self, base: &MiniDoc) -> MutationApplyResult<MiniDoc> {
+        async fn apply(&self, base: &MiniDoc) -> MutationApplyResult<MiniDoc> {
             Ok(MiniDoc { name: self.name.clone().unwrap_or_else(|| base.name.clone()) })
         }
-        fn absorb(&mut self, other: Self) {
+        async fn absorb(&mut self, other: Self) {
             if other.name.is_some() {
                 self.name = other.name;
             }
@@ -1229,13 +1240,13 @@ mod tests {
         }
         impl MutationKind<MiniDoc, MiniMutation> for RenameMini {
             const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "rename", entity: "mini", kind: "rename-mini", record: "RenamedMini" };
-            fn diff(&self, _base: &MiniDoc) -> MutationOutcome<MiniDiff> {
+            async fn diff(&self, _base: &MiniDoc) -> MutationOutcome<MiniDiff> {
                 MutationOutcome::new(MiniDiff { name: Some(self.new_name.clone()) })
             }
-            fn inverse(&self, base: &MiniDoc) -> Vec<MiniMutation> {
+            async fn inverse(&self, base: &MiniDoc) -> Vec<MiniMutation> {
                 vec![MiniMutation::RenameMini(RenameMini { new_name: base.name.clone() })]
             }
-            fn label(&self) -> String {
+            async fn label(&self) -> String {
                 format!("Rename mini to \"{}\"", self.new_name)
             }
         }
@@ -1247,8 +1258,8 @@ mod tests {
         RenameMini(rename_mini::RenameMini),
     }
 
-    #[test]
-    fn derive_mutations_wires_mutation_and_semantic_mutation() {
+    #[semio_framework_async_macros::async_test]
+    async fn derive_mutations_wires_mutation_and_semantic_mutation() {
         let base = MiniDoc { name: "a".into() };
         let mutation = MiniMutation::RenameMini(rename_mini::RenameMini { new_name: "b".into() });
 
@@ -1276,8 +1287,8 @@ mod tests {
     //#endregion 🧪️MutationsDeriveLaws
 
     //#region 🧪️DescriptorLaws
-    #[test]
-    fn operation_descriptor_fingerprint_is_golden_pinned() {
+    #[semio_framework_async_macros::async_test]
+    async fn operation_descriptor_fingerprint_is_golden_pinned() {
         let descriptor = MutationDescriptor::new(crate::os_spr::ids::SchemaId("note.append".into()), crate::os_spr::ids::SchemaVersion(1), crate::os_spr::StateClass::Artifact);
         let hex: String = descriptor.fingerprint.iter().map(|b| format!("{b:02x}")).collect();
         // Golden pin computed once from `descriptor_fingerprint`'s canonical-JSON+blake3 encoding;
@@ -1294,13 +1305,13 @@ mod tests {
     // upcast(x)` holds because `max(max(x, 10), 10) == max(x, 10)` for every `x`.
     struct ClampToFloor;
     impl MutationUpcaster<i64> for ClampToFloor {
-        fn upcast(&self, _from_version: crate::os_spr::ids::SchemaVersion, op: i64) -> i64 {
+        async fn upcast(&self, _from_version: crate::os_spr::ids::SchemaVersion, op: i64) -> i64 {
             op.max(10)
         }
     }
 
-    #[test]
-    fn upcaster_is_idempotent_at_target_version() {
+    #[semio_framework_async_macros::async_test]
+    async fn upcaster_is_idempotent_at_target_version() {
         let upcaster = ClampToFloor;
         let version = crate::os_spr::ids::SchemaVersion(1);
         for start in [0i64, 3, 7, 10, 40] {
@@ -1328,23 +1339,23 @@ mod tests {
         }
     }
     impl Inference<i64> for AddInference {
-        fn infer(snapshot: &i64) -> Self {
+        async fn infer(snapshot: &i64) -> Self {
             AddInference { is_even: snapshot % 2 == 0, abs_value: snapshot.abs() }
         }
     }
     impl InferenceSpec<i64> for AddInference {
-        fn inference_schema_id() -> &'static str {
+        async fn inference_schema_id() -> &'static str {
             "s.wave3.synthetic.inference"
         }
-        fn schema_version() -> u32 {
+        async fn schema_version() -> u32 {
             1
         }
-        fn fields() -> &'static [InferenceFieldSpec] {
+        async fn fields() -> &'static [InferenceFieldSpec] {
             &[InferenceFieldSpec { id: "isEven", reads: &["value"] }, InferenceFieldSpec { id: "absValue", reads: &["value"] }]
         }
     }
     impl DiffRegions for AddDiff {
-        fn touches(&self) -> TouchedPaths {
+        async fn touches(&self) -> TouchedPaths {
             if self.delta == 0 {
                 TouchedPaths::default()
             } else {
@@ -1353,8 +1364,8 @@ mod tests {
         }
     }
 
-    #[test]
-    fn inference_determinism_law() {
+    #[semio_framework_async_macros::async_test]
+    async fn inference_determinism_law() {
         let base: i64 = 42;
         assert_eq!(AddInference::infer(&base), AddInference::infer(&base));
         let json_a = serde_json::to_string(&AddInference::infer(&base)).unwrap();
@@ -1362,13 +1373,13 @@ mod tests {
         assert_eq!(json_a, json_b, "equal snapshots must infer byte-equal canonical serializations");
     }
 
-    #[test]
-    fn inference_default_law() {
+    #[semio_framework_async_macros::async_test]
+    async fn inference_default_law() {
         assert_eq!(AddInference::infer(&i64::default()), AddInference::default());
     }
 
-    #[test]
-    fn inference_diff_consistency_law() {
+    #[semio_framework_async_macros::async_test]
+    async fn inference_diff_consistency_law() {
         let base: i64 = 10;
         let noop = AddDiff { delta: 0 };
         assert!(!noop.touches().intersects_any(AddInference::fields()[0].reads));
@@ -1379,15 +1390,15 @@ mod tests {
         assert_ne!(AddInference::infer(&real.apply(&base).expect("valid real diff")), AddInference::infer(&base));
     }
 
-    #[test]
-    fn inference_spec_carries_schema_identity() {
+    #[semio_framework_async_macros::async_test]
+    async fn inference_spec_carries_schema_identity() {
         assert_eq!(AddInference::inference_schema_id(), "s.wave3.synthetic.inference");
         assert_eq!(AddInference::schema_version(), 1);
         assert_eq!(AddInference::fields().len(), 2);
     }
 
-    #[test]
-    fn touched_paths_intersects_ancestor_and_descendant_prefixes() {
+    #[semio_framework_async_macros::async_test]
+    async fn touched_paths_intersects_ancestor_and_descendant_prefixes() {
         let coarse = TouchedPaths::new(["objects"]);
         assert!(coarse.intersects_prefix("objects/o1/vortices"), "a coarse write region must cover a finer read region beneath it");
 
@@ -1398,15 +1409,15 @@ mod tests {
         assert!(!unrelated.intersects_prefix("attractions"), "disjoint subtrees must not intersect");
     }
 
-    #[test]
-    fn touched_paths_intersects_any_matches_first_hit() {
+    #[semio_framework_async_macros::async_test]
+    async fn touched_paths_intersects_any_matches_first_hit() {
         let touched = TouchedPaths::new(["attractions/a1"]);
         assert!(touched.intersects_any(&["objects", "attractions"]));
         assert!(!touched.intersects_any(&["objects", "vortices"]));
     }
 
-    #[test]
-    fn touched_paths_default_is_empty_and_intersects_nothing() {
+    #[semio_framework_async_macros::async_test]
+    async fn touched_paths_default_is_empty_and_intersects_nothing() {
         let empty = TouchedPaths::default();
         assert!(empty.paths.is_empty());
         assert!(!empty.intersects_prefix("anything"));
@@ -1414,8 +1425,8 @@ mod tests {
     //#endregion 🧪️InferenceLaws
 
     //#region 🧪️OutcomeLaws
-    #[test]
-    fn command_outcome_default_is_empty() {
+    #[semio_framework_async_macros::async_test]
+    async fn command_outcome_default_is_empty() {
         let outcome: CommandOutcome<AddDiff> = CommandOutcome::default();
         assert!(outcome.persistent.is_empty());
         assert!(outcome.shared_ui.is_empty());
@@ -1424,8 +1435,8 @@ mod tests {
         assert!(outcome.effects.is_empty());
     }
 
-    #[test]
-    fn operation_event_serde_round_trip() {
+    #[semio_framework_async_macros::async_test]
+    async fn operation_event_serde_round_trip() {
         let event = MutationEvent { mutation_id: crate::os_spr::ids::MutationId("op-1".into()), state_class: crate::os_spr::StateClass::Transient, payload: serde_json::json!({ "kind": "toast", "text": "saved" }) };
         let json = serde_json::to_string(&event).expect("serialize");
         let round_tripped: MutationEvent = serde_json::from_str(&json).expect("deserialize");
@@ -1434,8 +1445,8 @@ mod tests {
     //#endregion 🧪️OutcomeLaws
 
     //#region 🧪️CompositeLaws
-    #[test]
-    fn fold_plan_diff_equals_sequential_apply() {
+    #[semio_framework_async_macros::async_test]
+    async fn fold_plan_diff_equals_sequential_apply() {
         let base: i64 = 10;
         let kind = DoubleAdd { delta: 3 };
         let diff = fold_plan_diff(&kind, &base);
@@ -1451,8 +1462,8 @@ mod tests {
         assert_eq!(diff.diff().apply(&base), Ok(sequential), "fold_plan_diff must equal sequential application of the plan's local steps");
     }
 
-    #[test]
-    fn fold_plan_inverse_restores_base() {
+    #[semio_framework_async_macros::async_test]
+    async fn fold_plan_inverse_restores_base() {
         let base: i64 = 10;
         let kind = DoubleAdd { delta: 3 };
         let forward = fold_plan_diff(&kind, &base).diff().apply(&base).expect("valid folded diff");
@@ -1465,8 +1476,8 @@ mod tests {
         assert_eq!(restored, base, "fold_plan_inverse applied after the composite must restore base");
     }
 
-    #[test]
-    fn composite_of_composite_nests_and_folds_identically_to_flattened_plan() {
+    #[semio_framework_async_macros::async_test]
+    async fn composite_of_composite_nests_and_folds_identically_to_flattened_plan() {
         let base: i64 = 0;
         let quad = QuadAdd { delta: 2 };
         let diff = fold_plan_diff(&quad, &base);
@@ -1490,25 +1501,25 @@ mod tests {
         assert_eq!(restored, base);
     }
 
-    #[test]
-    fn plan_depth_beyond_max_is_typed_error_never_panics() {
+    #[semio_framework_async_macros::async_test]
+    async fn plan_depth_beyond_max_is_typed_error_never_panics() {
         let base: i64 = 0;
         let kind = AddThenNotifyForeign { delta: 1, foreign_count: MAX_PLAN_DEPTH + 1 };
         let error = plan_of(&kind, &base).expect_err("a plan with more foreign hops than MAX_PLAN_DEPTH must be rejected, not panic");
         assert_eq!(error, PlanError::DepthExceeded(MAX_PLAN_DEPTH));
     }
 
-    #[test]
-    fn plan_cycle_is_typed_error_never_panics() {
+    #[semio_framework_async_macros::async_test]
+    async fn plan_cycle_is_typed_error_never_panics() {
         let base: i64 = 0;
-        let mut planner: Planner<i64, AddOp> = Planner::new(&base);
+        let mut planner: Planner<i64, AddOp> = Planner::new(&base).await;
         planner.call_foreign(foreign_step_fixture(0)).expect("first hop to a fresh target succeeds");
         let error = planner.call_foreign(foreign_step_fixture(0)).expect_err("repeating the identical (mutation_id, payload) pair must be rejected as a cycle, not panic");
         assert_eq!(error, PlanError::Cycle("artifact-0".to_string()));
     }
 
-    #[test]
-    fn foreign_steps_are_excluded_from_fold_plan_diff() {
+    #[semio_framework_async_macros::async_test]
+    async fn foreign_steps_are_excluded_from_fold_plan_diff() {
         let base: i64 = 5;
         let kind = AddThenNotifyForeign { delta: 4, foreign_count: 2 };
         let diff = fold_plan_diff(&kind, &base);
@@ -1531,18 +1542,18 @@ mod tests {
     }
     impl CompositeMutationKind<i64, AddOp> for DerivedDoubleAdd {
         const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "add", entity: "counter", kind: "derived-double-add", record: "DerivedDoubleAdded" };
-        fn plan(&self, _base: &i64, planner: &mut Planner<i64, AddOp>) -> Result<(), PlanError> {
+        async fn plan(&self, _base: &i64, planner: &mut Planner<i64, AddOp>) -> Result<(), PlanError> {
             planner.call(AddOp { delta: self.delta })?;
             planner.call(AddOp { delta: self.delta })?;
             Ok(())
         }
-        fn label(&self) -> String {
+        async fn label(&self) -> String {
             format!("Add {} twice (derived)", self.delta)
         }
     }
 
-    #[test]
-    fn derive_composite_mutation_wires_delegating_mutation_kind() {
+    #[semio_framework_async_macros::async_test]
+    async fn derive_composite_mutation_wires_delegating_mutation_kind() {
         let base: i64 = 1;
         let kind = DerivedDoubleAdd { delta: 5 };
         let diff = MutationKind::<i64, AddOp>::diff(&kind, &base);

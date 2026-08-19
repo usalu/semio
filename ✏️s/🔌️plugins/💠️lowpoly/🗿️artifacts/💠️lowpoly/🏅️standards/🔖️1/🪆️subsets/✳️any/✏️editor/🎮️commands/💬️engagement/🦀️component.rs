@@ -70,7 +70,7 @@ mod tests {
     use crate::editor::lowpoly::testkit::{app_with_registry, dispatch, select_face};
     use crate::editor::lowpoly::LowpolyCommand;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn engagement_submit_resolves_a_typed_token_into_a_real_command() {
         use semio_framework_plugin::PluginApp;
         let mut a = app_with_registry();
@@ -81,7 +81,7 @@ mod tests {
         assert_ne!(a.snapshot().expect("projection").objects[0].mesh, before, "typed 'extrude' must run the extrude command");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn engagement_submit_ignores_unresolvable_input() {
         let mut a = app_with_registry();
         let result = dispatch(&mut a, LowpolyCommand::EngagementSubmit(super::engagement_submit::EngagementSubmit { value: Some("bogus".into()) }));

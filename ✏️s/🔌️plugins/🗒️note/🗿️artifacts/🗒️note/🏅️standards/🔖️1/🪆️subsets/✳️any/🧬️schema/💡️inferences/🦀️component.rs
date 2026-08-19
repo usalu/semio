@@ -33,7 +33,7 @@ impl protocol::Inference<NoteSnapshot> for NoteInference {
 /// 🌱 Defined in terms of `infer` (not derived) — keeps the law correct regardless of whether
 /// `NoteSnapshot::default()`'s `blocks` field ever stops being empty.
 impl Default for NoteInference {
-    async fn default() -> Self {
+    fn default() -> Self {
         <Self as protocol::Inference<NoteSnapshot>>::infer(&NoteSnapshot::default())
     }
 }
@@ -88,13 +88,13 @@ mod tests {
     use super::*;
     use protocol::Inference;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = NoteSnapshot::default();
         assert_eq!(NoteInference::infer(&snapshot), NoteInference::infer(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(NoteInference::infer(&NoteSnapshot::default()), NoteInference::default());
     }

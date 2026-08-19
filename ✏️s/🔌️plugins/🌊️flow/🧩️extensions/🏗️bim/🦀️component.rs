@@ -183,8 +183,8 @@ async fn operator_info(meta: OperatorMeta<'_>, inputs: Vec<ChannelSpec>, output:
     }
 }
 
-async fn register_element(registry: &mut Registry, info: OperatorInfo, operation: Box<dyn Operator>, schema_id: &str) {
-    registry.register_operator(info, vec![OperatorImpl { schemas: vec![], operator: operation }], &[schema_id, "element"]);
+async fn register_element<O: Operator + 'static>(registry: &mut Registry, info: OperatorInfo, operation: O, schema_id: &str) {
+    registry.register_operator(info, vec![OperatorImpl { schemas: vec![], operator: Box::new(operation) }], &[schema_id, "element"]);
 }
 
 async fn read_channel_number(input: &Dictionary, key: &str) -> Result<f64, EvalError> {
@@ -455,7 +455,7 @@ pub async fn register(registry: &mut Registry) {
             out_material(),
             &["Elements"],
         ),
-        Box::new(MaterialElement),
+        MaterialElement,
         "material",
     );
     register_element(
@@ -466,7 +466,7 @@ pub async fn register(registry: &mut Registry) {
             out_space(),
             &["Elements"],
         ),
-        Box::new(SpaceElement),
+        SpaceElement,
         "space",
     );
     register_element(
@@ -477,7 +477,7 @@ pub async fn register(registry: &mut Registry) {
             out_wall(),
             &["Elements"],
         ),
-        Box::new(WallElement),
+        WallElement,
         "wall",
     );
     register_element(
@@ -488,7 +488,7 @@ pub async fn register(registry: &mut Registry) {
             out_slab(),
             &["Elements"],
         ),
-        Box::new(SlabElement),
+        SlabElement,
         "slab",
     );
     register_element(
@@ -499,7 +499,7 @@ pub async fn register(registry: &mut Registry) {
             out_column(),
             &["Elements"],
         ),
-        Box::new(ColumnElement),
+        ColumnElement,
         "column",
     );
     register_element(
@@ -510,7 +510,7 @@ pub async fn register(registry: &mut Registry) {
             out_window(),
             &["Elements"],
         ),
-        Box::new(WindowElement),
+        WindowElement,
         "window",
     );
 
@@ -582,7 +582,7 @@ mod tests {
         out.get(channel).and_then(|v| v.as_dictionary()).cloned().expect("channel payload")
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn wall_element_emits_wall_schema() {
         let mut reg = Registry::new();
         register(&mut reg);
@@ -594,7 +594,7 @@ mod tests {
         assert_eq!(read_field_number(&wall, "length"), Some(5.0));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn assemble_story_splits_spaces() {
         let mut reg = Registry::new();
         register(&mut reg);
@@ -633,7 +633,7 @@ mod tests {
         assert_eq!(read_field_text(spaces.get("0").and_then(|value| value.as_dictionary()).unwrap(), "name"), Some("Lobby".into()));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn assemble_building_and_measure_floor_area() {
         let mut reg = Registry::new();
         register(&mut reg);
@@ -656,7 +656,7 @@ mod tests {
         assert_eq!(read_field_number(&area, "value"), Some(80.0));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn measure_gross_volume() {
         let mut reg = Registry::new();
         register(&mut reg);
@@ -677,7 +677,7 @@ mod tests {
         assert_eq!(read_field_number(&volume, "value"), Some(300.0));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn manifest_lists_bim_operators() {
         let json = build_manifest_json("bim", "Bim", "0.1.0", &module_registry(), vec!["onStartup".into()], vec![], vec![], vec![]);
         assert!(json.contains("flow.extension"));
@@ -687,7 +687,7 @@ mod tests {
         assert!(json.contains("\"building\""));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn evaluate_json_wall() {
         let reg = module_registry();
         let input = Dictionary::new().insert("length", Value::Dictionary(number_dictionary(4.0))).insert("height", Value::Dictionary(number_dictionary(2.8))).insert("thickness", Value::Dictionary(number_dictionary(0.2)));
@@ -696,7 +696,7 @@ mod tests {
         assert_eq!(channel_payload(&out, "wall").schema(), Some("wall"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn schema_component_round_trips_wall() {
         let mut reg = Registry::new();
         register(&mut reg);
@@ -707,7 +707,7 @@ mod tests {
         assert_eq!(deconstructed.get("length").and_then(|value| value.as_dictionary()).and_then(|dictionary| dictionary.get("value")).and_then(|value| value.as_atom()).and_then(|atom| atom.as_f64()), Some(5.0));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn extension_bundle_extends_flow_and_evaluates() {
         use semio_framework_plugin::{extension_activate, extension_invoke, extension_manifest, install_extension_bundle, ExtensionBundle};
 

@@ -35,7 +35,7 @@ impl protocol::Inference<RasterSnapshot> for RasterInference {
 /// 🌱 Defined in terms of `infer` (not derived) — keeps the law correct regardless of whether
 /// `RasterSnapshot::default()`'s `layers` field ever stops being empty.
 impl Default for RasterInference {
-    async fn default() -> Self {
+    fn default() -> Self {
         <Self as protocol::Inference<RasterSnapshot>>::infer(&RasterSnapshot::default())
     }
 }
@@ -83,13 +83,13 @@ mod tests {
     use super::*;
     use protocol::Inference;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = RasterSnapshot::default();
         assert_eq!(RasterInference::infer(&snapshot), RasterInference::infer(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(RasterInference::infer(&RasterSnapshot::default()), RasterInference::default());
     }

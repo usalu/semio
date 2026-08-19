@@ -52,6 +52,7 @@ thiserror = { workspace = true }
 libz-sys = { workspace = true }
 
 [dev-dependencies]
+semio-framework-async-macros = { path = "../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 criterion = { version = "0.5", default-features = false, features = ["html_reports"] }
 miniz_oxide = "=0.8.9"
 zlib-rs = "=0.6.3"

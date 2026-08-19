@@ -23,7 +23,7 @@ mod tests {
     use crate::editor::note::testkit::{dispatch, note_app, render};
     use crate::editor::note::{NoteCommand, NOTE_PLAY_BODY_DOCUMENT};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn note_labels_resolve_german_locale() {
         let mut app = note_app();
         dispatch(&mut app, NoteCommand::SetLocale(SetLocale { value: "de-DE".into() }));

@@ -28,12 +28,12 @@ mod tests {
     use crate::artifacts::procedural3d::dsl;
     use semio_framework_os_kernel::os_store::test_support;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dsl_pack_equivalence_empty_projection() {
         test_support::assert_dsl_pack_equivalence(&Procedural3dSnapshot::default());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn pack_round_trips_the_hex_column_example() {
         let projection = dsl::parse_dsl(dsl::PROCEDURAL3D_EXAMPLE_HEX_COLUMN_TEXT).expect("parse fixture");
         let bytes = encode(&projection);

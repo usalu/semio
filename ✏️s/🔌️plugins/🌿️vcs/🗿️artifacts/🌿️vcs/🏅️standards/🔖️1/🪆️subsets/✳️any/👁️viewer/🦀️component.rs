@@ -96,14 +96,14 @@ pub async fn create_vcs_viewer() -> semio_framework_plugin::AppDefinition {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_vcs_viewer_builds_a_definition_for_the_viewer_role() {
         let def = create_vcs_viewer();
         assert_eq!(def.role, semio_framework_plugin::AppRole::Viewer);
         assert_eq!(def.dialect, VCS_DIALECT.into());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn viewer_dialect_matches_the_artifact_coordinate() {
         assert_eq!(<VcsViewer as ArtifactViewer>::DIALECT, VCS_DIALECT);
     }

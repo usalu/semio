@@ -32,7 +32,7 @@ pub struct SequenceArtifact {
 
 //#region 🔖️Conversions
 impl Default for SequenceArtifact {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self {
             schema: SEQUENCE_DOCUMENT_SCHEMA.into(),
             content: crate::artifacts::sequence::sequence_content_child_handle_and_cache(Vec::new(), Vec::new()),

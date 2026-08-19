@@ -225,6 +225,36 @@ export function interpretShardFrame(frame: ShardFrame, tracker: GrantedBudgetTra
 }
 //#endregion 📨️ShardFrame
 
+//#region 🌉️HostEffect
+/** ⚖️ Stand-in for the ts-rs mirror of Rust `semio_framework_kernel::QuotaBreach` (same "hand-mirrored,
+ * not-yet-emitted generated type" pattern as {@link ShardBudget} above) — describes ONE outstanding-
+ * effects cap breach, mirroring `QuotaBreach { quota, limit, actual }` field-for-field rather than
+ * inventing a parallel vocabulary. `design-abi.md`'s `QuotaSchema.outstanding_requests` is the host-side
+ * analog this client-side cap protects independently of — a guest's granted budget is enforced
+ * host-side too, but this cap exists so `ShardClient` itself never queues unbounded concurrent
+ * host-effect handler invocations regardless of what the host later decides. */
+export interface ShardQuotaBreach {
+  readonly quota: string;
+  readonly limit: number;
+  readonly actual: number;
+}
+
+function formatQuotaBreachMessage(breach: ShardQuotaBreach): string {
+  return `outstanding effect quota exceeded: ${breach.quota} limit=${breach.limit} actual=${breach.actual}`;
+}
+
+/** 🌉️ What `ShardClient` calls for every `"effect-request"` frame a worker posts up
+ * (`🟨️host-shim.js`'s `effectRequest` — 🧪️ terra-web-bridges) — the ONE seam `http-fetch`/`blob-read`/
+ * `storage-read`/… etc actually resolve through. `ShardClient` implements NONE of these itself (`🎭️actor`
+ * stays free of `web_sys`/host assumptions per this ticket's naming-hazards rule) — the React host, the
+ * wgpu host, and tests each supply their own. `signal` aborts when the owning shard is lost
+ * (`terminate`/watchdog rebuild) or the actor is `dispose`d, so a real fetch-backed handler can hand it
+ * straight to `fetch(url, { signal })` and genuinely cancel a dead actor's in-flight network request
+ * rather than merely forgetting it. Resolve with the effect's success value; reject (throw) to signal
+ * failure — the rejection's `message` becomes the guest's `effect-error` `.message`. */
+export type HostEffectHandler = (actorId: string, effect: string, params: unknown, signal: AbortSignal) => Promise<unknown>;
+//#endregion 🌉️HostEffect
+
 //#region 🌉️WorkerLike
 /** 🌉️ The slice of `Worker` `ShardClient` depends on — lets tests (and any non-browser host) inject a
  * fake without a real `Worker`/`MessagePort`. A real browser `Worker` satisfies this structurally. */
@@ -259,12 +289,22 @@ type InboundMessage =
   | { readonly kind: "result"; readonly requestId: string; readonly ok: true; readonly value: unknown }
   | { readonly kind: "result"; readonly requestId: string; readonly ok: false; readonly error: string; readonly stack?: string; readonly type?: string; readonly framesBytes?: number }
   | { readonly kind: "heartbeat"; readonly turnSeq: number }
-  | { readonly kind: "trap"; readonly actorId: string; readonly message: string };
+  | { readonly kind: "trap"; readonly actorId: string; readonly message: string }
+  /** 📨️ terra-shard-effect-bridge: the worker→kernel direction of `🟨️host-shim.js`'s `effectRequest`
+   * (🧪️ terra-web-bridges) — an async host import the guest `.await`ed. Reuses `ShardFrame`'s own
+   * `Envelope` shape verbatim (`frame.envelope.payload` is `{kind:"effect-request", payload:{effect,
+   * requestId, params}}`), never a second wire. Carries no `requestId` of its OWN at this outer level
+   * (unlike every other inbound kind) — correlation lives inside `frame.envelope.payload.payload`. */
+  | { readonly kind: "frame"; readonly actorId: string; readonly frame: ShardFrame };
 //#endregion 📨️WireMessages
 
 //#region ⏱️Heartbeat
 const DEFAULT_HEARTBEAT_TIMEOUT_MS = 5000;
 const HEARTBEAT_MISSED_LIMIT = 3;
+/** 🚦️ terra-shard-effect-bridge: default cap on CONCURRENT unresolved `effect-request`s per actor —
+ * see {@link ShardClientOptions.maxOutstandingEffectsPerActor}'s own doc for why this mirrors
+ * `QuotaSchema.outstanding_requests` without being it. */
+const DEFAULT_MAX_OUTSTANDING_EFFECTS_PER_ACTOR = 64;
 
 type ShardHeartbeatState = {
   lastHeartbeatAtMs: number;
@@ -328,6 +368,18 @@ export interface ShardClientOptions {
    * on a freshly `rebuild()`-ed shard; this class only does the mechanical worker lifecycle. */
   readonly onShardLost?: (shardIndex: number, actorIds: readonly string[]) => void;
   readonly onActorTrap?: (actorId: string, message: string) => void;
+  /** 🌉️ terra-shard-effect-bridge: answers `effect-request` frames — `http-fetch`/`blob-read`/
+   * `storage-read`/… . Omitted entirely means every effect-request fails FAST with `"no host effect
+   * handler installed"` rather than hanging the guest's `.await` forever; see {@link HostEffectHandler}'s
+   * own doc for the full contract (including the cancellation `signal`). */
+  readonly onHostEffect?: HostEffectHandler;
+  /** 🚦️ Per-actor cap on CONCURRENT unresolved `effect-request`s — mirrors the CONCEPT of
+   * `QuotaSchema.outstanding_requests` (the host-side per-instance quota) on the client's own ledger,
+   * independent of it: this is `ShardClient`'s own backpressure against queuing unbounded concurrent
+   * host-effect handler invocations, regardless of what a later host-side quota decides. A request
+   * beyond the cap is rejected immediately with a {@link ShardQuotaBreach}-shaped message. Defaults to
+   * {@link DEFAULT_MAX_OUTSTANDING_EFFECTS_PER_ACTOR}. */
+  readonly maxOutstandingEffectsPerActor?: number;
 }
 
 /** 🧵️ One `ShardClient` instance owns the WHOLE bounded pool (design: "ShardClient... replaces both
@@ -346,6 +398,13 @@ export class ShardClient {
   private readonly createWorker: CreateShardWorker;
   private readonly onShardLost?: ShardClientOptions["onShardLost"];
   private readonly onActorTrap?: ShardClientOptions["onActorTrap"];
+  private readonly onHostEffect?: HostEffectHandler;
+  private readonly maxOutstandingEffectsPerActor: number;
+  /** 🌉️ terra-shard-effect-bridge: `actorId` → (`requestId` → its `AbortController`) — the ledger
+   * {@link handleEffectRequest}/{@link settleEffect}/{@link abortOutstandingEffects} share; its size
+   * per actor IS the outstanding-effect count {@link handleEffectRequest} caps. */
+  private readonly outstandingEffectsByActor = new Map<string, Map<string, AbortController>>();
+  private effectReplySeq = 0;
   private nextRoundRobin = 0;
   private requestSeq = 0;
   private watchdogHandle: ReturnType<typeof setInterval> | null = null;
@@ -359,6 +418,8 @@ export class ShardClient {
     this.heartbeatSabView = options.heartbeatSab ? new Int32Array(options.heartbeatSab) : null;
     this.onShardLost = options.onShardLost;
     this.onActorTrap = options.onActorTrap;
+    this.onHostEffect = options.onHostEffect;
+    this.maxOutstandingEffectsPerActor = options.maxOutstandingEffectsPerActor ?? DEFAULT_MAX_OUTSTANDING_EFFECTS_PER_ACTOR;
     const exclusiveCount = Math.max(0, Math.min(options.exclusiveShardCount ?? Math.min(2, options.shardCount - 1), options.shardCount - 1));
     const exclusive = new Set<number>();
     for (let index = options.shardCount - exclusiveCount; index < options.shardCount; index += 1) exclusive.add(index);
@@ -379,6 +440,11 @@ export class ShardClient {
     return slot;
   }
 
+  /** 📬️ Per-worker inbound dispatch. `"frame"` is checked BEFORE the generic `pending`-lookup path
+   * below (`"result"`'s implicit fallthrough) — mirroring `🟨️shard-worker.js`'s own `deliverEffectResult`
+   * ordering note (🧪️ terra-web-bridges): an inbound `"frame"` carries no `requestId` of its own and is
+   * never an answer this class is waiting on, so falling through to the generic path would look up a
+   * `requestId` nothing ever registered and silently no-op, masking a real effect-request. */
   private handleMessage(slot: ShardSlot, message: InboundMessage): void {
     if (message.kind === "heartbeat") {
       this.recordHeartbeat(slot, message.turnSeq, this.now());
@@ -386,6 +452,10 @@ export class ShardClient {
     }
     if (message.kind === "trap") {
       this.onActorTrap?.(message.actorId, message.message);
+      return;
+    }
+    if (message.kind === "frame") {
+      this.handleInboundFrame(slot, message.actorId, message.frame);
       return;
     }
     const entry = this.pending.get(message.requestId);
@@ -425,7 +495,10 @@ export class ShardClient {
     }
     slot.pendingRequestIds.clear();
     slot.heartbeat.oldestPendingStartedAtMs = null;
-    for (const actorId of slot.actorIds) this.actorShard.delete(actorId);
+    for (const actorId of slot.actorIds) {
+      this.abortOutstandingEffects(actorId);
+      this.actorShard.delete(actorId);
+    }
     slot.actorIds.clear();
   }
   //#endregion 🌱️Lifecycle
@@ -575,6 +648,7 @@ export class ShardClient {
   dispose(actorId: string): void {
     const shardIndex = this.actorShard.get(actorId);
     if (shardIndex === undefined) return;
+    this.abortOutstandingEffects(actorId);
     this.shards[shardIndex]!.worker.postMessage({ kind: "dispose", actorId } satisfies OutboundMessage);
     this.shards[shardIndex]!.actorIds.delete(actorId);
     this.actorShard.delete(actorId);
@@ -586,6 +660,101 @@ export class ShardClient {
     return this.shards[index]!;
   }
   //#endregion 📮️Requests
+
+  //#region 🌉️HostEffectBridge
+  /** 📨️ terra-shard-effect-bridge: dispatches an inbound `"frame"` — today the ONLY frame a worker
+   * ever sends UP is `🟨️host-shim.js`'s `effect-request` (🧪️ terra-web-bridges); any other `Envelope`
+   * payload kind (the `effect-emit`/`ui-patch-emit` fire-and-forget doors, or a future frame kind
+   * entirely) is intentionally ignored here rather than thrown on — the same forward-compat tolerance
+   * {@link interpretShardFrame}'s own `"unknown"` branch already established for this file. Routing
+   * `effect-emit`/`ui-patch-emit` to a real handler is explicitly out of this packet's scope (its own
+   * ticket brief only closes the effect-request/effect-complete/effect-error loop) — flagged in the
+   * accompanying report as a known gap for whoever owns emit routing next. */
+  private handleInboundFrame(slot: ShardSlot, actorId: string, frame: ShardFrame): void {
+    if (frame.kind !== "Envelope") return;
+    const payload = frame.envelope.payload;
+    if (payload.kind !== "effect-request") return;
+    const request = payload.payload as { readonly effect: string; readonly requestId: string; readonly params: unknown };
+    this.handleEffectRequest(slot, actorId, request.effect, request.requestId, request.params);
+  }
+
+  /** 🚪️ Answers one `effect-request`: quota-checks against {@link maxOutstandingEffectsPerActor}, then
+   * hands off to {@link onHostEffect} — or, absent one, fails FAST with an explicit `effect-error`
+   * rather than ever leaving the guest's `.await` pending, per this ticket's own acceptance bar. Always
+   * settles exactly once, via {@link replyEffectComplete}/{@link replyEffectError}. */
+  private handleEffectRequest(slot: ShardSlot, actorId: string, effect: string, requestId: string, params: unknown): void {
+    const outstanding = this.outstandingEffectsByActor.get(actorId) ?? new Map<string, AbortController>();
+    if (outstanding.size >= this.maxOutstandingEffectsPerActor) {
+      const breach: ShardQuotaBreach = { quota: "outstandingRequests", limit: this.maxOutstandingEffectsPerActor, actual: outstanding.size };
+      this.replyEffectError(slot, actorId, requestId, formatQuotaBreachMessage(breach));
+      return;
+    }
+    if (!this.onHostEffect) {
+      this.replyEffectError(slot, actorId, requestId, "no host effect handler installed");
+      return;
+    }
+    const controller = new AbortController();
+    outstanding.set(requestId, controller);
+    this.outstandingEffectsByActor.set(actorId, outstanding);
+    this.onHostEffect(actorId, effect, params, controller.signal).then(
+      (value) => {
+        if (this.settleEffect(actorId, requestId)) this.replyEffectComplete(slot, actorId, requestId, value);
+      },
+      (error: unknown) => {
+        if (this.settleEffect(actorId, requestId)) this.replyEffectError(slot, actorId, requestId, error instanceof Error ? error.message : String(error));
+      },
+    );
+  }
+
+  /** ✅ Removes `requestId` from the outstanding-effect ledger; returns `false` if it was already gone
+   * (settled once already, or cleared by {@link abortOutstandingEffects} while in flight) — the caller
+   * must then skip posting a reply: the shard/actor a late reply would target may already be gone, or
+   * worse, a DIFFERENT actor instance may since have reused the same id after a fresh `activate()`. */
+  private settleEffect(actorId: string, requestId: string): boolean {
+    const outstanding = this.outstandingEffectsByActor.get(actorId);
+    if (!outstanding || !outstanding.delete(requestId)) return false;
+    if (outstanding.size === 0) this.outstandingEffectsByActor.delete(actorId);
+    return true;
+  }
+
+  /** 🧹️ Aborts and clears every outstanding host-effect for one actor — called by {@link failShard}
+   * (whole shard lost) and {@link dispose} (single actor gone), so losing a worker never strands a
+   * pending effect. A handler using `signal` (e.g. `fetch`) genuinely stops the underlying work; either
+   * way the ledger entry is gone immediately, so a later settle callback for the same `requestId` is
+   * recognized as stale by {@link settleEffect} and posts no reply. */
+  private abortOutstandingEffects(actorId: string): void {
+    const outstanding = this.outstandingEffectsByActor.get(actorId);
+    if (!outstanding) return;
+    this.outstandingEffectsByActor.delete(actorId);
+    for (const controller of outstanding.values()) controller.abort();
+  }
+
+  /** 📤️ Posts one `ShardFrame::Envelope` DOWN to the worker — `kernel`→`actorId`, mirroring
+   * {@link handleEffectRequest}'s own up-going shape exactly (`to`/`from`/`lane`/`seq`/`deadlineMs`/
+   * `coalesce`/`cancelOf`/`payload`) with `payload.kind` `"effect-complete"`/`"effect-error"`.
+   * Fire-and-forget on the wire (posted directly via `slot.worker.postMessage`, never through
+   * {@link send}) — `🟨️shard-worker.js`'s own dispatch settles the guest's Promise and sends nothing
+   * back, so awaiting a `"result"` here would hang forever. The fresh `requestId` on the OUTER
+   * `OutboundMessage` only satisfies that message kind's shape; the worker's effect-complete/
+   * effect-error branch never reads it (🧪️ terra-web-bridges: it dispatches on
+   * `frame.envelope.payload.kind` alone, before the generic `requestId` gate). */
+  private postEffectReply(slot: ShardSlot, actorId: string, kind: "effect-complete" | "effect-error", innerPayload: unknown): void {
+    this.effectReplySeq += 1;
+    const frame: ShardFrame = {
+      kind: "Envelope",
+      envelope: { to: actorId, from: { kind: "kernel" }, lane: "Background", seq: this.effectReplySeq, deadlineMs: null, coalesce: null, cancelOf: null, payload: { kind, payload: innerPayload } },
+    };
+    slot.worker.postMessage({ kind: "frame", requestId: this.nextRequestId(), actorId, frame } satisfies OutboundMessage);
+  }
+
+  private replyEffectComplete(slot: ShardSlot, actorId: string, requestId: string, value: unknown): void {
+    this.postEffectReply(slot, actorId, "effect-complete", { requestId, value });
+  }
+
+  private replyEffectError(slot: ShardSlot, actorId: string, requestId: string, message: string): void {
+    this.postEffectReply(slot, actorId, "effect-error", { requestId, message });
+  }
+  //#endregion 🌉️HostEffectBridge
 
   //#region ⏱️HeartbeatWatchdog
   private recordHeartbeat(slot: ShardSlot, turnSeq: number, atMs: number): void {
@@ -1190,6 +1359,131 @@ if (import.meta.vitest) {
     });
   });
   //#endregion 📨️ShardFrame tests
+
+  //#region 🌉️HostEffectBridge tests
+  function makeEffectRequestFrame(actorId: string, effect: string, requestId: string, params: unknown): InboundMessage {
+    return { kind: "frame", actorId, frame: { kind: "Envelope", envelope: { to: "kernel", from: { kind: "actor", id: actorId }, lane: "Background", seq: 1, deadlineMs: null, coalesce: null, cancelOf: null, payload: { kind: "effect-request", payload: { effect, requestId, params } } } } };
+  }
+
+  type EffectReplyPayload = { readonly requestId: string; readonly value?: unknown; readonly message?: string };
+  type EffectReplyMessage = { readonly kind: "frame"; readonly frame: { readonly kind: "Envelope"; readonly envelope: { readonly payload: { readonly kind: "effect-complete" | "effect-error"; readonly payload: EffectReplyPayload } } } };
+
+  function findEffectReply(sent: readonly unknown[], requestId: string, kind: "effect-complete" | "effect-error"): EffectReplyMessage | undefined {
+    return (sent as readonly { readonly kind: string; readonly frame?: { readonly kind: string; readonly envelope?: { readonly payload?: { readonly kind?: string; readonly payload?: { readonly requestId?: string } } } } }[]).find(
+      (message) => message.kind === "frame" && message.frame?.kind === "Envelope" && message.frame.envelope?.payload?.kind === kind && message.frame.envelope.payload?.payload?.requestId === requestId,
+    ) as EffectReplyMessage | undefined;
+  }
+
+  async function activateActor(client: ShardClient, workers: readonly FakeShardWorker[], actorId: string, shardIndex = 0): Promise<void> {
+    const promise = client.activate(actorId, `https://x/${actorId}.js`, [], BUDGET);
+    const message = workers[shardIndex]!.sent.at(-1) as { readonly requestId: string };
+    workers[shardIndex]!.deliver({ kind: "result", requestId: message.requestId, ok: true, value: undefined });
+    await promise;
+  }
+
+  function flushMicrotasks(): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, 0));
+  }
+
+  describe("ShardClient host-effect bridge — handler success", () => {
+    it("resolves an effect-request through onHostEffect and posts an effect-complete frame back to the worker", async () => {
+      const { client, workers } = harness(1, { onHostEffect: async (actorId, effect, params) => ({ actorId, effect, params, from: "handler" }) });
+      await activateActor(client, workers, "a");
+
+      workers[0]!.deliver(makeEffectRequestFrame("a", "http-fetch", "a:http-fetch:1", { url: "https://example.test" }));
+      await flushMicrotasks();
+
+      const reply = findEffectReply(workers[0]!.sent, "a:http-fetch:1", "effect-complete");
+      expect(reply).toBeDefined();
+      expect(reply?.frame.envelope.payload.payload.value).toEqual({ actorId: "a", effect: "http-fetch", params: { url: "https://example.test" }, from: "handler" });
+    });
+  });
+
+  describe("ShardClient host-effect bridge — handler error", () => {
+    it("a rejected onHostEffect settles as effect-error, never a hang", async () => {
+      const { client, workers } = harness(1, { onHostEffect: async () => { throw new Error("boom"); } });
+      await activateActor(client, workers, "a");
+
+      workers[0]!.deliver(makeEffectRequestFrame("a", "blob-read", "a:blob-read:1", { hash: "x" }));
+      await flushMicrotasks();
+
+      const reply = findEffectReply(workers[0]!.sent, "a:blob-read:1", "effect-error");
+      expect(reply?.frame.envelope.payload.payload.message).toBe("boom");
+    });
+  });
+
+  describe("ShardClient host-effect bridge — no handler installed", () => {
+    it("fails FAST with an explicit effect-error, synchronously, never a silent hang", async () => {
+      const { client, workers } = harness(1); // no onHostEffect
+      await activateActor(client, workers, "a");
+
+      workers[0]!.deliver(makeEffectRequestFrame("a", "storage-read", "a:storage-read:1", {}));
+      // no `await flushMicrotasks()` — the reply must already be sent, proving this path never touches a Promise chain
+      const reply = findEffectReply(workers[0]!.sent, "a:storage-read:1", "effect-error");
+      expect(reply?.frame.envelope.payload.payload.message).toBe("no host effect handler installed");
+    });
+  });
+
+  describe("ShardClient host-effect bridge — backpressure cap", () => {
+    it("rejects an effect-request beyond maxOutstandingEffectsPerActor with a quota-shaped effect-error, while the earlier one stays pending", async () => {
+      const { client, workers } = harness(1, { maxOutstandingEffectsPerActor: 1, onHostEffect: () => new Promise(() => {}) });
+      await activateActor(client, workers, "a");
+
+      workers[0]!.deliver(makeEffectRequestFrame("a", "spawn-job", "a:spawn-job:1", {}));
+      workers[0]!.deliver(makeEffectRequestFrame("a", "spawn-job", "a:spawn-job:2", {}));
+
+      expect(findEffectReply(workers[0]!.sent, "a:spawn-job:1", "effect-error")).toBeUndefined();
+      expect(findEffectReply(workers[0]!.sent, "a:spawn-job:1", "effect-complete")).toBeUndefined();
+      const reply = findEffectReply(workers[0]!.sent, "a:spawn-job:2", "effect-error");
+      expect(reply?.frame.envelope.payload.payload.message).toMatch(/outstandingRequests.*limit=1.*actual=1/);
+    });
+  });
+
+  describe("ShardClient host-effect bridge — shard-loss settlement", () => {
+    it("terminate() aborts every outstanding effect for its actors, and a late handler resolution posts no reply to the dead worker", async () => {
+      let capturedSignal: AbortSignal | undefined;
+      const { client, workers } = harness(1, {
+        onHostEffect: (_actorId, _effect, _params, signal) =>
+          new Promise((resolve) => {
+            capturedSignal = signal;
+            signal.addEventListener("abort", () => resolve("too-late"));
+          }),
+      });
+      await activateActor(client, workers, "a");
+
+      workers[0]!.deliver(makeEffectRequestFrame("a", "http-fetch", "a:http-fetch:1", {}));
+      expect(capturedSignal?.aborted).toBe(false);
+
+      client.terminate(0);
+      expect(capturedSignal?.aborted).toBe(true);
+
+      const sentBeforeLateResolve = workers[0]!.sent.length;
+      await flushMicrotasks();
+      expect(workers[0]!.sent.length).toBe(sentBeforeLateResolve); // the abort-triggered resolve did NOT produce a late effect-complete/effect-error post
+      expect(findEffectReply(workers[0]!.sent, "a:http-fetch:1", "effect-complete")).toBeUndefined();
+      expect(findEffectReply(workers[0]!.sent, "a:http-fetch:1", "effect-error")).toBeUndefined();
+    });
+
+    it("dispose(actorId) aborts that actor's outstanding effects without touching a sibling actor's", async () => {
+      const signals: Record<string, AbortSignal> = {};
+      const { client, workers } = harness(1, {
+        onHostEffect: (actorId, _effect, _params, signal) => {
+          signals[actorId] = signal;
+          return new Promise(() => {});
+        },
+      });
+      await activateActor(client, workers, "a");
+      await activateActor(client, workers, "b");
+
+      workers[0]!.deliver(makeEffectRequestFrame("a", "http-fetch", "a:http-fetch:1", {}));
+      workers[0]!.deliver(makeEffectRequestFrame("b", "http-fetch", "b:http-fetch:1", {}));
+
+      client.dispose("a");
+      expect(signals.a?.aborted).toBe(true);
+      expect(signals.b?.aborted).toBe(false);
+    });
+  });
+  //#endregion 🌉️HostEffectBridge tests
 
   void vi;
 }

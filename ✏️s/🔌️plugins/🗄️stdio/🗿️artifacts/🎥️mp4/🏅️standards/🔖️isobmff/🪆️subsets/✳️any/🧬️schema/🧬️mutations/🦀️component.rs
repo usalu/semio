@@ -193,7 +193,7 @@ mod tests {
     }
 
     /// 🧪️ mutation_diff_law + inverse_law, exercised across every real variant.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mutation_diff_law_and_inverse_law_hold_for_every_variant() {
         let base = base_snapshot();
         let variants = vec![
@@ -220,7 +220,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn remove_track_then_insert_track_round_trips() {
         let mut base = base_snapshot();
         base.tracks.push(Mp4Track { track_id: 2, timescale: 1000, codec: Mp4Codec::default(), width: 10, height: 10, metadata: Mp4TrackMetadata::default(), chunk_sample_counts: vec![0], samples: vec![] });
@@ -236,7 +236,7 @@ mod tests {
         assert_eq!(round, base);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn remove_sample_then_insert_sample_round_trips() {
         let mut base = base_snapshot();
         base.tracks[0].samples.push(Mp4Sample { data: vec![4, 5], duration: 33, cts_offset: 0, sync: false });
@@ -250,7 +250,7 @@ mod tests {
         assert_eq!(round, base);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_snapshot_still_works_as_a_full_replace() {
         let base = base_snapshot();
         let mut next = base.clone();
@@ -265,7 +265,7 @@ mod tests {
     }
 
     /// 🧪️ op_text_binary_roundtrip_law
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_text_binary_roundtrip_law() {
         let base = base_snapshot();
         for m in
@@ -282,7 +282,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn exact_fixture_no_mutation_inverse_and_set_snapshot_binary_codec_preserve_source() {
         let path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../temp/bauen-mit-bestand.mp4");
         let bytes = std::fs::read(path).expect("read exact MP4 fixture");

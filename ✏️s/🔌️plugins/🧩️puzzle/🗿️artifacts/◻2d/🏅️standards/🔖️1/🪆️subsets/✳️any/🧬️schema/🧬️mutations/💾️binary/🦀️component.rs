@@ -36,7 +36,7 @@ pub type Puzzle2dStore = ArtifactStore<Puzzle2dSnapshot, Puzzle2dMutation>;
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn puzzle2d_document_vcs_replays_granular_operations() {
         use crate::artifacts::puzzle2d::schema::empty_puzzle2d_snapshot;
         use crate::artifacts::puzzle2d::mutations::create_node;
@@ -84,7 +84,7 @@ mod wire_format_guard {
     }
 
     /// ⚖️ Every operation still prints, parses, encodes, and decodes back to an equal value.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn operations_round_trip_text_and_binary() {
         let operations = ops();
         assert!(!operations.is_empty());

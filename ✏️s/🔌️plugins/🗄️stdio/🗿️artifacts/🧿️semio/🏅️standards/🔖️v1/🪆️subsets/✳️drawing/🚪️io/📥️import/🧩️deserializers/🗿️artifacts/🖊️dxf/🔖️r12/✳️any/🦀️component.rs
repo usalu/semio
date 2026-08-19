@@ -142,7 +142,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn buckets_entities_by_layer_and_drops_unmodeled() {
         let drawing = semio_framework_plugin::resolve_ready(SemioDrawingFromDxf::deserialize(&sample_dxf())).expect("deserialize");
         assert_eq!(drawing.layers.len(), 2);

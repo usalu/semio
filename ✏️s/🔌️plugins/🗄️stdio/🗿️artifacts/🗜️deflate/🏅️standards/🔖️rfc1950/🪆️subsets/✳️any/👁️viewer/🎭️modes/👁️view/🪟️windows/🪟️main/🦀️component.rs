@@ -64,7 +64,7 @@ pub async fn render(document: &DeflateSnapshot) -> UiNode {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn definition_declares_a_read_only_text_window() {
         let def = definition();
         assert_eq!(def.id, WINDOW_KIND_ID);
@@ -72,7 +72,7 @@ mod tests {
         assert!(def.actions.is_empty(), "a viewer window kind declares no mutation-shaped actions");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn render_carries_the_header_fields_as_read_only_text() {
         let document = DeflateSnapshot { compression_method: 8, window_bits: 7, compression_level_hint: DeflateLevelHint::Default, dict_id: None, payload: vec![1, 2, 3, 4], ..DeflateSnapshot::default() };
         let UiNode::ComponentScene(node) = render(&document) else { panic!("expected ComponentScene") };

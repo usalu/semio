@@ -187,7 +187,7 @@ pub mod derived_composition {
             out
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn clean_snapshot_composes_and_stamps_iso21320() {
             let snapshot = ZipIso21320Builder::new().with_stored_entry("a.txt", b"hello".to_vec()).build().unwrap();
             let bytes = <ZipSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
@@ -196,7 +196,7 @@ pub mod derived_composition {
             assert!(composed.diagnostics.iter().all(|d| d.severity != Severity::Error), "no hard diagnostics expected: {:?}", composed.diagnostics);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn encrypted_wire_archive_composes_to_clean_logical_output() {
             let raw = raw_zip_with_flags(FLAG_ENCRYPTED, 20);
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Binary(&raw) }];
@@ -205,7 +205,7 @@ pub mod derived_composition {
             assert!(check_iso21320_wire_conformance(&rematerialized).iter().all(|d| d.code.0 != CODE_ENCRYPTED));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn subset_validator_flags_real_violations_without_normalizing() {
             let raw = raw_zip_with_flags(FLAG_ENCRYPTED, 20);
             let diagnostics = ZipIso21320Validator::validate(&IoPayload::Binary(raw));

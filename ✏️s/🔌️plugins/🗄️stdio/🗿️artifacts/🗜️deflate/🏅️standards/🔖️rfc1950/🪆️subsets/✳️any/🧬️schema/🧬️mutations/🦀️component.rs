@@ -155,7 +155,7 @@ mod tests {
     /// 🧪️ `op_text_binary_roundtrip_law`: every variant (incl. both `SetPresetDictionary` arms,
     /// `Some`/`None`, and the `SetSnapshot` struct-payload variant) round-trips through
     /// `print_op`/`parse_op` (one line, no `\n`) AND `encode_op`/`decode_op`.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_text_binary_roundtrip_law() {
         let base = base_snapshot();
         for mutation in [

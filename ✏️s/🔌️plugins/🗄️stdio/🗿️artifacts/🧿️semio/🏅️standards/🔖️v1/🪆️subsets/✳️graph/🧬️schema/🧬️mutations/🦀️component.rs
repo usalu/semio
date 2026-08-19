@@ -115,7 +115,7 @@ mod tests {
         forward
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_delete_node_round_trips() {
         let base = fixture();
         let new_node = SemioGraphNode { id: GraphNodeId::new("n3"), kind: "extra".into(), label: "Extra".into(), position: SemioPoint2 { x: 5.0, y: 5.0 }, ports: vec![], properties: vec![] };
@@ -141,7 +141,7 @@ mod tests {
         assert!(after_delete.edges.is_empty(), "delete-node must cascade-remove every severed edge");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn delete_node_of_an_absent_id_has_an_empty_inverse() {
         let base = fixture();
         let delete = SemioGraphMutation::DeleteNode(delete_node::mutation::DeleteNode { id: GraphNodeId::new("absent") });
@@ -149,7 +149,7 @@ mod tests {
         assert_eq!(delete.diff(&base).diff().apply(&base).expect("apply must succeed for a well-formed fixture"), base, "an absent-id delete is a no-op");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn delete_node_inverse_is_a_real_multi_mutation_cascade() {
         let base = fixture();
         let delete = SemioGraphMutation::DeleteNode(delete_node::mutation::DeleteNode { id: GraphNodeId::new("n1") });
@@ -169,7 +169,7 @@ mod tests {
         assert_eq!(undo[1], SemioGraphMutation::CreateEdge(create_edge::mutation::CreateEdge { id: GraphEdgeId::new("e1"), source: GraphNodeId::new("n1"), target: GraphNodeId::new("n2"), kind: "flow".into(), label: "Main".into() }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn change_node_kind_and_label_and_move_node_round_trip() {
         let base = fixture();
 
@@ -189,7 +189,7 @@ mod tests {
         assert!(missing.inverse(&base).is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_remove_node_port_round_trips() {
         let base = fixture();
         let port = SemioGraphPort { name: "extra".into(), kind: SemioGraphPortKind::InOut };
@@ -206,7 +206,7 @@ mod tests {
         assert!(after_remove.nodes[0].ports.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_remove_node_property_round_trips() {
         let base = fixture();
         let property = SemioValueEntry { key: "weight".into(), value: SemioValue::Int { lexeme: "7".into() } };
@@ -223,7 +223,7 @@ mod tests {
         assert_eq!(remove.diff(&base).diff().apply(&base).expect("apply must succeed for a well-formed fixture"), base);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_delete_edge_round_trips() {
         let base = fixture();
         let new_edge = SemioGraphEdge { id: GraphEdgeId::new("e2"), source: GraphNodeId::new("n2"), target: GraphNodeId::new("n1"), kind: "back".into(), label: "Return".into() };
@@ -241,7 +241,7 @@ mod tests {
         assert_eq!(after_delete.nodes.len(), base.nodes.len(), "delete-edge must not cascade into nodes");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn semantic_kinds_cover_every_variant() {
         assert_eq!(SemioGraphMutation::kinds().len(), 11);
         let mutation = SemioGraphMutation::DeleteNode(delete_node::mutation::DeleteNode { id: GraphNodeId::new("n1") });

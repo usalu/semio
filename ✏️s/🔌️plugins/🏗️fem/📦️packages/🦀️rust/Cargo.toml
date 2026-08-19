@@ -53,3 +53,4 @@ serde_json.workspace = true
 wasm-bindgen.workspace = true
 
 [dev-dependencies]
+semio-framework-async-macros = { path = "../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }

@@ -29,7 +29,7 @@ impl Vdi3805Outline {
 }
 
 impl Default for Vdi3805Outline {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self::compute(&Vdi3805Snapshot::default())
     }
 }
@@ -40,13 +40,13 @@ impl Default for Vdi3805Outline {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn outline_field_count_matches_section_outline_length() {
         let outline = Vdi3805Outline::compute(&Vdi3805Snapshot::default());
         assert_eq!(outline.field_count as usize, outline.section_outline.len());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn outline_is_deterministic() {
         let snapshot = Vdi3805Snapshot::default();
         assert_eq!(Vdi3805Outline::compute(&snapshot), Vdi3805Outline::compute(&snapshot));

@@ -2,6 +2,14 @@
 //!
 //! WIRING ONLY. Every pub mod points at one taxonomy component via #[path].
 
+// 🚫️async: R7 — `async fn` in a public trait warns because auto trait bounds (e.g. `Send`) cannot
+// be named on the method. Answered structurally per R3: every former `dyn` seam in this crate is a
+// concrete enum or a generic parameter, so `Send` is derived at each call site from the concrete
+// type, never from a bound on the trait method's returned future. This crate is guest-reachable, so
+// its futures are deliberately `?Send` — do not "fix" this warning by adding `-> impl Future<..> +
+// Send` (contradicts R3) or by making a trait method sync (contradicts O1/R1).
+#![allow(async_fn_in_trait)]
+
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;

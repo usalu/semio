@@ -287,7 +287,7 @@ mod tests {
     //#region 🔖️CommandSurface
     /// 🏷️ Every declared manifest action id must be reachable as exactly one command row, and every row's
     /// wire keyword must be distinct — the cross-cutting invariant `app_commands!` is there to hold.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn command_ids_are_unique() {
         let commands = every_command();
         let ids: Vec<&str> = commands.iter().map(|command| command.command_id()).collect();
@@ -299,7 +299,7 @@ mod tests {
     }
 
     /// ⚖️ LAW: text and binary are two projections of the same command, for every single row.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn every_command_round_trips_through_text_and_binary() {
         for command in every_command() {
         store::os_store::test_support::assert_op_text_binary_equivalence(&command);
@@ -310,7 +310,7 @@ mod tests {
     /// kebab-cased command id for every row except `setLocale`, preserved exactly (VERBATIM off the
     /// pre-migration `playbook_protocol::PlaybookCommand`'s own `#[dsl(key = ..)]` attribute) so the wire
     /// format stays byte-identical across the migration; see TEMPLATE.md §5.1.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
         for command in every_command() {
             let id = command.command_id();
@@ -341,7 +341,7 @@ mod tests {
     //#endregion 🔖️CommandSurface
 
     //#region 🔖️ManifestSanity
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn the_manifest_stitches_every_taxonomy_node() {
         let json = serde_json::to_string(&create_playbook_play_app()).expect("app definition json");
         assert!(json.contains(PLAYBOOK_PLAY_WINDOW_BUILDER), "window kind missing from the manifest: {json}");
@@ -349,7 +349,7 @@ mod tests {
         assert!(json.contains("text.playbook"), "artifact kind missing from the manifest");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn playbook_play_app_declares_builder_window_only() {
         let definition = create_playbook_play_app();
         assert_eq!(definition.window_kinds.len(), 1);
@@ -359,7 +359,7 @@ mod tests {
     //#endregion 🔖️ManifestSanity
 
     //#region 🔖️Interaction
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn blocks_interaction_domain_is_declared_topology_pick_only_on_the_builder_window() {
         let definition = create_playbook_play_app();
         let domain = definition.interactions.iter().find(|interaction| interaction.id == PLAYBOOK_INTERACTION_BLOCKS).expect("blocks interaction domain declared");
@@ -372,7 +372,7 @@ mod tests {
 
     /// 🌳️ `interaction_topology` walks every step and every one of its blocks into a `TopologyNode`, so
     /// `validate_state` can prune a deleted step's OR block's id out of a stale selection.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn interaction_topology_covers_every_step_and_block() {
         let mut app = playbook_app();
         dispatch(&mut app, PlaybookCommand::AddStep(add_step::AddStep {}));
@@ -391,13 +391,13 @@ mod tests {
     //#endregion 🔖️Interaction
 
     //#region 🔖️CrossCutting
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn undo_redo_round_trip_through_the_wrapper() {
         let mut app = playbook_app();
         testkit::assert_undo_redo_round_trip(&mut app, PlaybookCommand::AddStep(add_step::AddStep {}), |app| app.snapshot().expect("materialize projection").steps().len(), 1, 2);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
         use crate::editor::playbook::testkit::render;
         let mut app = playbook_app();
@@ -408,7 +408,7 @@ mod tests {
     /// DISJOINT edits (A adds a step, B adds a block to the pre-existing step), and exchanging operations
     /// over a backbone converges both sides onto the same projection — impossible under whole-document
     /// `setDocument` snapshots, where one side's write would clobber the other's.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn two_instances_converge_disjoint_edits_via_backbone() {
         testkit::assert_two_instances_converge::<EditorApp<PlaybookPlayApp>, (usize, usize)>(
             "mem://playbook-convergence",
@@ -424,7 +424,7 @@ mod tests {
     //#endregion 🔖️CrossCutting
 
     //#region 🔖️PortTests
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn playbook_io_declares_the_extra_chapters_in_port_and_its_own_kind() {
         let io = playbook_io();
         assert_eq!(io.artifact.id, "text.playbook");
@@ -438,7 +438,7 @@ mod tests {
         Media { media_type: semio_framework_plugin::MediaType { class: MediaClass::Text, form: MediaForm::Document }, payload: MediaPayload::Structured { schema: "text.document".into(), json: serde_json::to_string(&payload).unwrap() } }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn import_media_creates_the_imported_step_and_a_note_block() {
         let spec = crate::artifacts::playbook::empty_playbook_snapshot();
         let history = semio_framework_plugin::HistoryView::empty();
@@ -458,7 +458,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn import_media_reuses_the_imported_step_on_a_second_import() {
         let base = crate::artifacts::playbook::empty_playbook_snapshot();
         let mut steps = base.steps();
@@ -472,7 +472,7 @@ mod tests {
         assert!(matches!(&emit.artifact_mutations[0], PlaybookMutation::AddBlock(payload) if payload.step_id == PLAYBOOK_IMPORTED_STEP_ID));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn import_media_rejects_unknown_ports_and_malformed_payloads() {
         let spec = crate::artifacts::playbook::empty_playbook_snapshot();
         let history = semio_framework_plugin::HistoryView::empty();

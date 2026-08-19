@@ -317,7 +317,7 @@ mod tests {
     use crate::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::{GraphEdgeId, GraphNodeId, STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA};
     use protocol::DiffCodec;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn apply_replaces_nodes_and_edges_wholesale() {
         let base = SemioGraphSnapshot { schema: STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA.into(), nodes: vec![SemioGraphNode { id: GraphNodeId::new("a"), ..Default::default() }], edges: vec![] };
         let diff = SemioGraphDiff { nodes: Some(SemioGraphNodeList { values: vec![SemioGraphNode { id: GraphNodeId::new("b"), ..Default::default() }] }), edges: None };
@@ -325,7 +325,7 @@ mod tests {
         assert_eq!(next.nodes[0].id, GraphNodeId::new("b"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_last_write_wins() {
         let mut d1 = SemioGraphDiff { nodes: Some(SemioGraphNodeList { values: vec![SemioGraphNode { id: GraphNodeId::new("a"), ..Default::default() }] }), edges: None };
         let d2 = SemioGraphDiff { nodes: Some(SemioGraphNodeList { values: vec![SemioGraphNode { id: GraphNodeId::new("b"), ..Default::default() }] }), edges: None };
@@ -333,7 +333,7 @@ mod tests {
         assert_eq!(d1, d2);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn diff_codec_graph_binary_roundtrip_law() {
         for d in demo_diff_cases() {
             let printed = d.print_diff();
@@ -347,12 +347,12 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn empty_diff_prints_empty_string() {
         assert_eq!(SemioGraphDiff::default().print_diff(), "");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn edge_id_helper_smoke() {
         assert_eq!(dec_edge_id("").unwrap(), GraphEdgeId::new(""));
     }

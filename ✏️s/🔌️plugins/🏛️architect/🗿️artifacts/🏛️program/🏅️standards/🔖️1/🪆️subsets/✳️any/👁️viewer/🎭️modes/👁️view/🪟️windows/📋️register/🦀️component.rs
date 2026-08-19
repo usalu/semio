@@ -86,21 +86,21 @@ mod tests {
     use super::*;
     use crate::artifacts::program::{empty_plugin, sample_plugin};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn definition_declares_the_table_surface_and_body_key() {
         let definition = definition();
         assert_eq!(definition.body_key, ARCHITECT_VIEW_BODY_REGISTER);
         assert!(matches!(definition.surface_kind, SurfaceKind::Table));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn the_overview_lists_every_non_empty_register_with_its_counts() {
         let json = serde_json::to_string(&render(&sample_plugin())).expect("json");
         assert!(json.contains("\"elements\""));
         assert!(json.contains("Total: 2"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn an_empty_program_renders_the_placeholder() {
         let json = serde_json::to_string(&render(&empty_plugin())).expect("json");
         assert!(json.contains("No entities in this program yet."));

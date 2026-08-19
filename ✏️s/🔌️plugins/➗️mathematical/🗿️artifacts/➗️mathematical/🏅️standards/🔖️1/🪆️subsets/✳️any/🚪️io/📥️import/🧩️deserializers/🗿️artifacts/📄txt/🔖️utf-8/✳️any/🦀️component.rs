@@ -17,7 +17,7 @@ pub struct TxtIntoMathematical;
 impl Deserializer<MathematicalSnapshot> for TxtIntoMathematical {
     const FROM: Dialect = TXT_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    async fn deserialize(_payload: &IoPayload) -> IoResult<MathematicalSnapshot> {
+    fn deserialize(_payload: &IoPayload) -> IoResult<MathematicalSnapshot> {
         Err(IoError { message: "txt import not yet implemented".to_string(), diagnostics: Vec::new() })
     }
 }

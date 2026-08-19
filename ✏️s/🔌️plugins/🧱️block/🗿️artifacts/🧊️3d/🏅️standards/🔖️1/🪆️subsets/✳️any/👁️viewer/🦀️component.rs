@@ -91,19 +91,19 @@ pub async fn create_block3d_viewer() -> semio_framework_plugin::AppDefinition {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_block3d_viewer_builds_a_definition_for_the_viewer_role() {
         let def = create_block3d_viewer();
         assert_eq!(def.role, semio_framework::AppRole::Viewer);
         assert_eq!(def.dialect, BLOCK3D_DIALECT.into());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn viewer_dialect_matches_the_artifact_coordinate() {
         assert_eq!(<Block3dViewer as ArtifactViewer>::DIALECT, BLOCK3D_DIALECT);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn noop_command_round_trips_and_never_mutates() {
         let mut app = semio_framework_plugin::testkit::new_app::<semio_framework_plugin::ViewerApp<Block3dViewer>>();
         let before = app.snapshot().expect("snapshot");

@@ -1065,7 +1065,7 @@ mod tests {
     //#endregion 🔖️Fixtures
 
     //#region 🔖️between_roundtrip_law
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn between_roundtrip_law_and_field_sweep_both_directions() {
         let (a, b) = (sweep_a(), sweep_b());
         let d_ab = SemioBrepDiff::between(&a, &b);
@@ -1077,7 +1077,7 @@ mod tests {
     //#endregion 🔖️between_roundtrip_law
 
     //#region 🔖️field_sweep
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn field_sweep_every_field_present_in_diff() {
         let (a, b) = (sweep_a(), sweep_b());
         let d = SemioBrepDiff::between(&a, &b);
@@ -1117,7 +1117,7 @@ mod tests {
     //#endregion 🔖️field_sweep
 
     //#region 🔖️inverse_law
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inverse_law_diff_level_round_trips() {
         let (a, b) = (sweep_a(), sweep_b());
         let d = SemioBrepDiff::between(&a, &b);
@@ -1127,7 +1127,7 @@ mod tests {
     //#endregion 🔖️inverse_law
 
     //#region 🔖️absorb_law
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_law_add_then_remove_of_same_added_key_cancels() {
         let base = SemioBrepSnapshot::default();
         let mut d1 = SemioBrepDiff::default();
@@ -1140,7 +1140,7 @@ mod tests {
         assert_eq!(d1.apply(&base).expect("apply must succeed for a well-formed fixture"), base, "add-then-remove-of-same-key must net to a no-op");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_law_add_then_setfield_patches_added_payload() {
         let base = SemioBrepSnapshot::default();
         let mut d1 = SemioBrepDiff::default();
@@ -1154,7 +1154,7 @@ mod tests {
         assert_eq!(result.vertices[0].point, SemioPoint3 { x: 5.0, y: 5.0, z: 5.0 });
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_law_modify_then_remove_drops_pending_patch() {
         let mut base = SemioBrepSnapshot::default();
         base.vertices.push(BrepVertex { id: "v1".into(), point: SemioPoint3::default() });
@@ -1169,7 +1169,7 @@ mod tests {
         assert!(result.vertices.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_law_associativity() {
         let base = sweep_a();
         let mid = sweep_b();
@@ -1185,7 +1185,7 @@ mod tests {
     //#endregion 🔖️absorb_law
 
     //#region 🔖️diff_codec_text_binary_roundtrip_law
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn diff_codec_text_binary_roundtrip_law() {
         use protocol::DiffCodec;
         let (a, b) = (sweep_a(), sweep_b());

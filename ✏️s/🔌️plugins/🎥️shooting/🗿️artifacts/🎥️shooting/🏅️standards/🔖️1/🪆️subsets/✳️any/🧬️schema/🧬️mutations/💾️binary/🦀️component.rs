@@ -36,7 +36,7 @@ mod tests {
     use super::*;
     use crate::artifacts::shooting::ShootingSnapshot;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_binary_round_trips_and_agrees_with_text() {
         let operation = ShootingMutation::SetActiveShot(crate::artifacts::shooting::schema::mutations::set_active_shot::mutation::SetActiveShot { shot_id: Some("s1".into()) });
         store::os_store::test_support::assert_op_text_binary_equivalence(&operation);
@@ -44,7 +44,7 @@ mod tests {
         assert_eq!(decode_op(&bytes).expect("decode"), operation);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn shooting_document_text_round_trips_store_with_applied_operation() {
         use store::ArtifactCommand;
 

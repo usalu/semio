@@ -25,7 +25,7 @@ pub struct LasArtifact {
 
 //#region 🔖️Conversions
 impl Default for LasArtifact {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self::from_snapshot(LasSnapshot::default())
     }
 }

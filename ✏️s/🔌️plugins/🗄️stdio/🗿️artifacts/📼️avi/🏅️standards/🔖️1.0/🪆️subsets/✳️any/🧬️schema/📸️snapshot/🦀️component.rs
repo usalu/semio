@@ -82,7 +82,7 @@ pub enum AviStreamFormat {
 }
 
 impl Default for AviStreamFormat {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self::Raw { data: Vec::new() }
     }
 }
@@ -251,7 +251,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn json_pack_round_trips_via_real_avi_bytes() {
         let snap = sample_snapshot();
         let bytes = <AviSnapshot as store::ArtifactPack>::encode_pack(&snap);
@@ -259,7 +259,7 @@ mod tests {
         assert_eq!(snap, back);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dsl_text_round_trips_via_real_avi_bytes() {
         let snap = sample_snapshot();
         let text = <AviSnapshot as store::ArtifactDsl>::print_dsl(&snap);
@@ -267,7 +267,7 @@ mod tests {
         assert_eq!(snap, back);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn default_snapshot_round_trips_through_real_codec() {
         // 🧭️ `..AviSnapshot::default()` gives `schema: ""`/`reserved: vec![]` (derived `Default`,
         // not the real codec's own normal form): `decode_avi` always stamps `schema` from

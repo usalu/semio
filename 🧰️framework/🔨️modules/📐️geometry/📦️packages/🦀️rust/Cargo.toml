@@ -19,3 +19,6 @@ path = "📦️glue.rs"
 [dependencies]
 kurbo = "0.13.1"
 serde = { version = "1.0.219", features = ["derive"] }
+
+[dev-dependencies]
+semio-framework-async-macros = { path = "../../../⏳️async/✨️macros/📦️packages/🦀️rust" }

@@ -33,7 +33,7 @@ mod tests {
         MathematicalCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations_json: serde_json::to_string(&vec![operation]).unwrap() })
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_algorithm_updates_graph_and_seed() {
         let mut app = math_app();
         dispatch(&mut app, MathematicalCommand::SetAlgorithm(SetAlgorithm { algorithm: "bfs".into(), seed: Some("a".into()) }));
@@ -42,14 +42,14 @@ mod tests {
         assert_eq!(mathematical_graph(&projection).algorithm_seed.as_deref(), Some("a"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_directed_toggles_the_graph() {
         let mut app = math_app();
         dispatch(&mut app, MathematicalCommand::SetDirected(set_directed::SetDirected { directed: false }));
         assert!(!mathematical_graph(&app.snapshot().expect("projection")).directed);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn node_graph_viewport_writes_config_not_mutations() {
         let mut app: MathApp = math_app();
         let camera = MathematicalCamera { x: 5.0, y: 6.0, zoom: 2.0 };
@@ -57,7 +57,7 @@ mod tests {
         assert!(result.mutations.is_empty(), "nodeGraphViewport must not emit a VCS operation");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn node_graph_edit_add_node_appends_a_node() {
         let mut app = math_app();
         let before = mathematical_graph(&app.snapshot().expect("projection")).nodes.len();
@@ -65,7 +65,7 @@ mod tests {
         assert_eq!(mathematical_graph(&app.snapshot().expect("projection")).nodes.len(), before + 1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn node_graph_edit_move_updates_node_position() {
         let mut app = math_app();
         let node_id = mathematical_graph(&app.snapshot().expect("projection")).nodes[0].id.clone();
@@ -74,7 +74,7 @@ mod tests {
         assert_eq!((moved.x, moved.y), (42.0, 43.0));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn node_graph_edit_connect_appends_an_edge() {
         let mut app = math_app();
         let before = mathematical_graph(&app.snapshot().expect("projection")).edges.len();
@@ -84,7 +84,7 @@ mod tests {
         assert!(projection.edges.iter().any(|edge| edge.source == "a" && edge.target == "d"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn node_graph_edit_delete_selection_removes_nodes_and_incident_edges() {
         let mut app = math_app();
         dispatch(&mut app, node_graph_edit(serde_json::json!({ "operation": "deleteSelection", "nodeIds": ["a"] })));
@@ -93,7 +93,7 @@ mod tests {
         assert!(!projection.edges.iter().any(|edge| edge.source == "a" || edge.target == "a"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn node_graph_edit_unknown_operation_and_empty_array_emit_no_operations() {
         let mut app = math_app();
         let result = app.dispatch_typed(node_graph_edit(serde_json::json!({ "operation": "unknownTag" })), &semio_framework_plugin::testkit::meta("local")).expect("no-op tag");
@@ -102,14 +102,14 @@ mod tests {
         assert!(result.mutations.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn undo_redo_round_trip_through_the_wrapper() {
         let mut app = math_app();
         let before = mathematical_graph(&app.snapshot().expect("projection")).nodes.len();
         semio_framework_plugin::testkit::assert_undo_redo_round_trip(&mut app, node_graph_edit(serde_json::json!({ "operation": "addNode", "x": 1.0, "y": 2.0 })), |app| mathematical_graph(&app.snapshot().expect("projection")).nodes.len(), before, before + 1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn two_instances_converge_disjoint_edits_via_backbone() {
         semio_framework_plugin::testkit::assert_two_instances_converge::<semio_framework_plugin::EditorApp<crate::editor::mathematical::MathematicalPlayApp>, _>(
             "mem://mathematical-convergence",
@@ -122,7 +122,7 @@ mod tests {
         );
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn ingest_operations_is_idempotent_for_mathematical() {
         semio_framework_plugin::testkit::assert_ingest_idempotent::<semio_framework_plugin::EditorApp<crate::editor::mathematical::MathematicalPlayApp>, _>(node_graph_edit(serde_json::json!({ "operation": "addNode", "x": 3.0, "y": 4.0 })), |app| mathematical_graph(&app.snapshot().expect("projection")).nodes.len());
     }

@@ -46,7 +46,7 @@ pub enum EntropyError {
 }
 
 impl core::fmt::Display for EntropyError {
-    async fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
             Self::InvalidConfig { field, reason } => write!(f, "invalid config field `{field}`: {reason}"),
             Self::EmptyInput { what } => write!(f, "empty input: {what}"),
@@ -289,7 +289,7 @@ pub struct Tolerances {
 }
 
 impl Default for Tolerances {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { renormalize_sum: 1e-8, negative_probability: -1e-12 }
     }
 }
@@ -638,7 +638,7 @@ pub mod numeric {
     mod tests {
         use super::*;
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn ln_gamma_matches_known_factorials() {
             for n in 1..10u32 {
                 let expected = (1..n).map(|k| k as f64).product::<f64>().ln();
@@ -646,31 +646,31 @@ pub mod numeric {
             }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn ln_gamma_half_matches_sqrt_pi() {
             let expected = core::f64::consts::PI.sqrt().ln();
             assert!((ln_gamma(0.5) - expected).abs() < 1e-9);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn digamma_matches_known_value_at_one() {
             // 🔬️ psi(1) = -gamma (Euler-Mascheroni constant).
             let euler_mascheroni = 0.577_215_664_901_532_9;
             assert!((digamma(1.0) - (-euler_mascheroni)).abs() < 1e-9);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn digamma_recurrence_holds() {
             let x = 3.7;
             assert!((digamma(x + 1.0) - (digamma(x) + 1.0 / x)).abs() < 1e-9);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn trigamma_matches_pi_squared_over_six_at_one() {
             assert!((trigamma(1.0) - core::f64::consts::PI.powi(2) / 6.0).abs() < 1e-8);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn erf_endpoints() {
             // 🔬️ A&S 7.1.26 has a stated max absolute error of ~1.5e-7; it is not exact at x=0.
             assert!((erf(0.0)).abs() < 1e-6);
@@ -678,12 +678,12 @@ pub mod numeric {
             assert!((erf(-10.0) + 1.0).abs() < 1e-6);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn normal_cdf_at_zero_is_half() {
             assert!((normal_cdf(0.0) - 0.5).abs() < 1e-6);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn inverse_normal_cdf_roundtrips_normal_cdf() {
             for p in [0.001, 0.01, 0.1, 0.3, 0.5, 0.7, 0.9, 0.99, 0.999] {
                 let x = inverse_normal_cdf(p);
@@ -692,13 +692,13 @@ pub mod numeric {
             }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn incomplete_gamma_full_integral_is_one() {
             assert!((regularized_lower_incomplete_gamma(2.5, 1e6) - 1.0).abs() < 1e-9);
             assert!(regularized_upper_incomplete_gamma(2.5, 1e6) < 1e-9);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn log_factorial_cache_matches_ln_gamma() {
             let cache = LogFactorialCache::new(20);
             for n in 0..20 {
@@ -706,12 +706,12 @@ pub mod numeric {
             }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn neumaier_sum_exact_on_simple_case() {
             assert_eq!(neumaier_sum([1.0, 2.0, 3.0]), 6.0);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn neumaier_more_accurate_than_naive_for_ill_conditioned_sum() {
             let mut values = vec![1e16, 1.0, -1e16];
             let naive: f64 = values.iter().sum();
@@ -722,7 +722,7 @@ pub mod numeric {
             assert!((neumaier_sum(values) - 1.0).abs() < 1e-9);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn pairwise_sum_matches_neumaier_on_large_array() {
             let values: Vec<f64> = (0..10_000).map(|i| (i as f64).sin()).collect();
             let a = pairwise_sum(&values);
@@ -730,21 +730,21 @@ pub mod numeric {
             assert!((a - b).abs() < 1e-6);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn x_ln_x_zero_at_zero() {
             assert_eq!(x_ln_x(0.0), 0.0);
             assert!((x_ln_x(1.0) - 0.0).abs() < 1e-12);
             assert!(x_ln_x(core::f64::consts::E) > 0.0);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn log_sum_exp_matches_naive_for_moderate_values() {
             let values: [f64; 4] = [0.1, 0.5, -0.3, 0.2];
             let naive = values.iter().map(|v: &f64| v.exp()).sum::<f64>().ln();
             assert!((log_sum_exp(&values) - naive).abs() < 1e-9);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn log_sum_exp_avoids_overflow() {
             let values = [1000.0, 1000.5, 999.0];
             let result = log_sum_exp(&values);
@@ -752,7 +752,7 @@ pub mod numeric {
             assert!(result > 1000.0 && result < 1002.0);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn xorshift_is_deterministic_for_fixed_seed() {
             let mut a = Xorshift64::new(42);
             let mut b = Xorshift64::new(42);
@@ -761,7 +761,7 @@ pub mod numeric {
             }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn xorshift_uniform_range_respected() {
             let mut rng = Xorshift64::new(1234);
             for _ in 0..1000 {
@@ -772,7 +772,7 @@ pub mod numeric {
             }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn shuffle_is_a_permutation() {
             let mut rng = Xorshift64::new(99);
             let mut data: Vec<u32> = (0..50).collect();
@@ -782,7 +782,7 @@ pub mod numeric {
             assert_eq!(sorted, (0..50).collect::<Vec<u32>>());
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn checked_state_count_detects_overflow() {
             assert_eq!(checked_state_count(&[2, 3, 4]), Some(24));
             // 🔬️ usize::MAX * 2 (~3.6e19) fits comfortably inside u128 (~3.4e38); an overflow needs
@@ -790,7 +790,7 @@ pub mod numeric {
             assert_eq!(checked_state_count(&[usize::MAX; 8]), None);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn clamp_near_zero_behavior() {
             assert_eq!(clamp_near_zero(-1e-14, 1e-12), 0.0);
             assert_eq!(clamp_near_zero(-1.0, 1e-12), -1.0);
@@ -800,7 +800,7 @@ pub mod numeric {
         mod quick {
             use super::*;
 
-            #[test]
+            #[semio_framework_async_macros::async_test]
             async fn xorshift_gaussian_mean_and_variance_converge() {
                 let mut rng = Xorshift64::new(7);
                 let n = 20_000;
@@ -811,7 +811,7 @@ pub mod numeric {
                 assert!((var - 1.0).abs() < 0.05, "var={var}");
             }
 
-            #[test]
+            #[semio_framework_async_macros::async_test]
             async fn digamma_asymptotic_region_matches_recurrence_shifted_from_small_x() {
                 for x in [0.1, 0.5, 1.5, 5.9, 6.1, 50.0, 500.0] {
                     let direct = digamma(x);
@@ -1106,7 +1106,7 @@ pub mod counts {
     mod tests {
         use super::*;
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn from_symbols_counts_correctly() {
             let counts = Counts::from_symbols(&[0, 1, 1, 2, 0, 0], 3).unwrap();
             assert_eq!(counts.raw(), &[3.0, 2.0, 1.0]);
@@ -1114,17 +1114,17 @@ pub mod counts {
             assert_eq!(counts.n_raw(), 6);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn from_symbols_rejects_empty() {
             assert!(matches!(Counts::from_symbols(&[], 3), Err(EntropyError::EmptyInput { .. })));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn from_symbols_rejects_out_of_range() {
             assert!(matches!(Counts::from_symbols(&[0, 5], 3), Err(EntropyError::ShapeMismatch { .. })));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn probabilities_normalize_to_one() {
             let counts = Counts::from_symbols(&[0, 1, 1, 2], 3).unwrap();
             let p = counts.probabilities();
@@ -1132,7 +1132,7 @@ pub mod counts {
             assert!((p[1] - 0.5).abs() < 1e-12);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn weighted_counts_effective_sample_size() {
             let counts = Counts::from_weighted(&[0, 1], &[1.0, 1.0], 2).unwrap();
             assert!((counts.n_effective() - 2.0).abs() < 1e-9);
@@ -1140,7 +1140,7 @@ pub mod counts {
             assert!(skewed.n_effective() < 1.1);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn support_and_singleton_diagnostics() {
             let counts = Counts::from_symbols(&[0, 0, 1, 2, 2, 2], 4).unwrap();
             assert_eq!(counts.support_size(), 3);
@@ -1148,7 +1148,7 @@ pub mod counts {
             assert_eq!(counts.doubletons(), 1);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn laplace_smoothing_adds_pseudocount() {
             let counts = Counts::from_symbols(&[0, 0, 1], 2).unwrap();
             let p = counts.smoothed_probabilities(SmoothingPrior::Laplace);
@@ -1157,7 +1157,7 @@ pub mod counts {
             assert!((p[1] - 0.4).abs() < 1e-12);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn joint_counts_marginals_match_independent_construction() {
             let x = [0, 0, 1, 1];
             let y = [0, 1, 0, 1];
@@ -1167,23 +1167,23 @@ pub mod counts {
             assert_eq!(joint.total(), 4.0);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn validate_probabilities_renormalizes_within_tolerance() {
             let p = validate_probabilities(&[0.5, 0.5 + 1e-10], Tolerances::default()).unwrap();
             assert!((p.iter().sum::<f64>() - 1.0).abs() < 1e-12);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn validate_probabilities_rejects_large_deviation() {
             assert!(matches!(validate_probabilities(&[0.5, 0.2], Tolerances::default()), Err(EntropyError::NotNormalized { .. })));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn validate_probabilities_rejects_nan() {
             assert!(matches!(validate_probabilities(&[0.5, f64::NAN], Tolerances::default()), Err(EntropyError::NonFinite { .. })));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn encode_categories_is_first_seen_order() {
             let (symbols, k) = encode_categories(&["b", "a", "b", "c"]);
             assert_eq!(symbols, vec![0, 1, 0, 2]);
@@ -1379,7 +1379,7 @@ pub mod discrete {
     mod tests {
         use super::*;
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn uniform_entropy_equals_log_support_size() {
             for k in [2usize, 3, 8, 16] {
                 let p = vec![1.0 / k as f64; k];
@@ -1388,24 +1388,24 @@ pub mod discrete {
             }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn fair_coin_entropy_is_one_bit() {
             let h = binary_entropy(0.5, LogBase::Bits).unwrap();
             assert!((h - 1.0).abs() < 1e-9);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn deterministic_distribution_entropy_is_zero() {
             let h = entropy(&[1.0, 0.0, 0.0], LogBase::Bits).unwrap();
             assert!(h.abs() < 1e-12);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn entropy_rejects_empty() {
             assert!(matches!(entropy(&[], LogBase::Bits), Err(EntropyError::EmptyInput { .. })));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn cross_entropy_of_identical_distributions_equals_entropy() {
             let p = [0.2, 0.3, 0.5];
             let h = entropy(&p, LogBase::Bits).unwrap();
@@ -1413,14 +1413,14 @@ pub mod discrete {
             assert!((h - ce).abs() < 1e-9);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn cross_entropy_infinite_on_support_mismatch() {
             let p = [0.5, 0.5];
             let q = [1.0, 0.0];
             assert_eq!(cross_entropy(&p, &q, LogBase::Bits).unwrap(), f64::INFINITY);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn chain_rule_holds_for_joint_entropy() {
             // 🔐️ X,Y independent uniform over {0,1}: H(X,Y) = H(X) + H(Y|X) = 2 bits.
             let joint = [0.25, 0.25, 0.25, 0.25];
@@ -1431,7 +1431,7 @@ pub mod discrete {
             assert!((h_xy - 2.0).abs() < 1e-9);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn conditional_entropy_zero_when_y_determined_by_x() {
             // 🔐️ Y = X exactly: H(Y|X) = 0.
             let joint = [0.5, 0.0, 0.0, 0.5];
@@ -1439,24 +1439,24 @@ pub mod discrete {
             assert!(h.abs() < 1e-9);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn hartley_entropy_matches_log_k() {
             assert!((hartley_entropy(8, LogBase::Bits).unwrap() - 3.0).abs() < 1e-9);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn renyi_rejects_alpha_exactly_one() {
             assert!(matches!(renyi_entropy(&[0.5, 0.5], 1.0, LogBase::Bits), Err(EntropyError::UndefinedResult { .. })));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn renyi_alpha_zero_equals_hartley_over_support() {
             let p = [0.5, 0.5, 0.0];
             let h = renyi_entropy(&p, 0.0, LogBase::Bits).unwrap();
             assert!((h - 1.0).abs() < 1e-9); // support size 2 -> log2(2) = 1
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn renyi_alpha_two_equals_collision_entropy() {
             let p = [0.5, 0.25, 0.25];
             let a = renyi_entropy(&p, 2.0, LogBase::Bits).unwrap();
@@ -1464,7 +1464,7 @@ pub mod discrete {
             assert!((a - b).abs() < 1e-12);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn renyi_continuity_near_alpha_one_approaches_shannon() {
             let p = [0.2, 0.3, 0.5];
             let shannon = entropy(&p, LogBase::Nats).unwrap();
@@ -1472,14 +1472,14 @@ pub mod discrete {
             assert!((near - shannon).abs() < 1e-4);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn min_entropy_matches_negative_log_max_probability() {
             let p = [0.6, 0.3, 0.1];
             let h = min_entropy(&p, LogBase::Bits).unwrap();
             assert!((h - (-(0.6_f64.log2()))).abs() < 1e-9);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn tsallis_limit_at_q_one_equals_shannon_nats() {
             let p = [0.2, 0.3, 0.5];
             let shannon = entropy(&p, LogBase::Nats).unwrap();
@@ -1487,7 +1487,7 @@ pub mod discrete {
             assert!((tsallis - shannon).abs() < 1e-9);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn tsallis_uniform_matches_closed_form() {
             // 🔐️ S_q(uniform_k) = (1 - k^(1-q)) / (q - 1)
             let k = 4;
@@ -1497,7 +1497,7 @@ pub mod discrete {
             assert!((tsallis_entropy(&p, q).unwrap() - expected).abs() < 1e-9);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn kaniadakis_limit_at_kappa_zero_equals_shannon_nats() {
             let p = [0.2, 0.3, 0.5];
             let shannon = entropy(&p, LogBase::Nats).unwrap();
@@ -1505,7 +1505,7 @@ pub mod discrete {
             assert!((kaniadakis - shannon).abs() < 1e-9);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn sharma_mittal_reduces_to_renyi_as_beta_approaches_one() {
             let p = [0.2, 0.3, 0.5];
             let alpha = 2.0;
@@ -1514,19 +1514,19 @@ pub mod discrete {
             assert!((sm - renyi).abs() < 1e-4);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn normalized_entropy_of_uniform_is_one() {
             let p = [0.25, 0.25, 0.25, 0.25];
             assert!((normalized_entropy(&p, LogBase::Bits).unwrap() - 1.0).abs() < 1e-9);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn normalized_entropy_of_deterministic_is_zero() {
             let p = [1.0, 0.0, 0.0, 0.0];
             assert!(normalized_entropy(&p, LogBase::Bits).unwrap().abs() < 1e-12);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn entropy_non_negative_for_random_distributions() {
             let mut rng = crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(2024);
             for _ in 0..200 {
@@ -1545,7 +1545,7 @@ pub mod discrete {
         mod quick {
             use super::*;
 
-            #[test]
+            #[semio_framework_async_macros::async_test]
             async fn renyi_is_monotone_nonincreasing_in_alpha() {
                 let p = [0.6, 0.3, 0.1];
                 let alphas = [-2.0, -0.5, 0.5, 2.0, 5.0, 20.0];
@@ -1878,7 +1878,7 @@ pub mod estimators {
     mod tests {
         use super::*;
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn plugin_matches_direct_entropy_computation() {
             let counts = [10u64, 7, 5, 2, 1, 1];
             let est = entropy_discrete(&counts, DiscreteMethod::Plugin, LogBase::Nats).unwrap();
@@ -1888,7 +1888,7 @@ pub mod estimators {
             assert!((est.value - expected).abs() < 1e-9);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn uniform_counts_all_methods_close_to_log_k() {
             let counts = vec![1000u64; 8];
             let expected = 8.0_f64.ln();
@@ -1898,7 +1898,7 @@ pub mod estimators {
             }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn miller_madow_correction_matches_hand_computation() {
             // 🔐️ 3 bins, all occupied, N=6: correction = (3-1)/(2*6) = 1/6.
             let counts = [3u64, 2, 1];
@@ -1907,7 +1907,7 @@ pub mod estimators {
             assert!((est.value - (plugin.value + 1.0 / 6.0)).abs() < 1e-9);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn bias_corrected_methods_closer_to_truth_than_plugin_on_undersampled_uniform() {
             // 🔐️ K=64 uniform, N=100: plug-in should underestimate ln(64) more than Miller-Madow.
             let mut rng = crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(7);
@@ -1922,7 +1922,7 @@ pub mod estimators {
             assert!((truth - mm.value).abs() <= (truth - program.value).abs() + 1e-9);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn chao_shen_handles_all_singletons() {
             let counts = [1u64, 1, 1, 1];
             let est = entropy_discrete(&counts, DiscreteMethod::ChaoShen, LogBase::Nats).unwrap();
@@ -1930,12 +1930,12 @@ pub mod estimators {
             assert!(est.value >= 0.0);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn dirichlet_rejects_nonpositive_alpha() {
             assert!(matches!(entropy_discrete(&[1, 2, 3], DiscreteMethod::Dirichlet(0.0), LogBase::Nats), Err(EntropyError::InvalidConfig { .. })));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn james_stein_shrinks_toward_uniform_reducing_variance_estimate() {
             let counts = [50u64, 1, 1, 1];
             let est = entropy_discrete(&counts, DiscreteMethod::JamesStein, LogBase::Nats).unwrap();
@@ -1944,7 +1944,7 @@ pub mod estimators {
             assert!(est.value >= program.value - 1e-9);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn nsb_returns_finite_value_between_zero_and_log_k() {
             let counts = [10u64, 7, 5, 2, 1, 1, 0, 0];
             let est = entropy_discrete(&counts, DiscreteMethod::Nsb, LogBase::Nats).unwrap();
@@ -1953,7 +1953,7 @@ pub mod estimators {
             assert!(est.value <= (counts.len() as f64).ln() + 1e-6);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn schurmann_grassberger_close_to_plugin_for_large_n_uniform() {
             let counts = vec![10_000u64; 4];
             let est = entropy_discrete(&counts, DiscreteMethod::SchurmannGrassberger, LogBase::Nats).unwrap();
@@ -1961,7 +1961,7 @@ pub mod estimators {
             assert!((est.value - expected).abs() < 0.01);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn jackknife_matches_hand_computation_on_small_example() {
             // 🔐️ 2 bins [3,1]: N=4.
             let counts = [3u64, 1];
@@ -1970,14 +1970,14 @@ pub mod estimators {
             assert!(est.value >= -1e-9);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn small_sample_warning_triggers_for_undersampled_input() {
             let counts = [1u64; 100];
             let est = entropy_discrete(&counts, DiscreteMethod::Plugin, LogBase::Nats).unwrap();
             assert!(est.warnings.iter().any(|w| matches!(w, Warning::SmallSample { .. })) || est.n == 100);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn gauss_legendre_nodes_are_symmetric_and_weights_sum_to_two() {
             let (nodes, weights) = gauss_legendre(20);
             let sum_w: f64 = weights.iter().sum();
@@ -1987,7 +1987,7 @@ pub mod estimators {
             }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn gauss_legendre_integrates_polynomial_exactly() {
             // 🔐️ 20-point GL is exact for polynomials up to degree 39; integrate x^4 over [-1,1] = 2/5.
             let (nodes, weights) = gauss_legendre(20);
@@ -1998,7 +1998,7 @@ pub mod estimators {
         mod quick {
             use super::*;
 
-            #[test]
+            #[semio_framework_async_macros::async_test]
             async fn all_methods_consistency_as_n_grows() {
                 let k = 16usize;
                 let truth = (k as f64).ln();
@@ -2208,14 +2208,14 @@ pub mod knn {
             (0..n * dim).map(|_| rng.next_f64() * 10.0 - 5.0).collect()
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn build_rejects_empty_and_bad_shape() {
             assert!(KdTree::build(&[], 2).is_err());
             assert!(KdTree::build(&[1.0, 2.0, 3.0], 2).is_err());
             assert!(KdTree::build(&[1.0, 2.0], 0).is_err());
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn kd_tree_matches_brute_force_knn_euclidean() {
             let points = random_points(200, 3, 11);
             let tree = KdTree::build(&points, 3).unwrap();
@@ -2231,7 +2231,7 @@ pub mod knn {
             }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn kd_tree_matches_brute_force_for_chebyshev_and_manhattan() {
             let points = random_points(150, 2, 22);
             let tree = KdTree::build(&points, 2).unwrap();
@@ -2250,7 +2250,7 @@ pub mod knn {
             }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn radius_count_matches_brute_force() {
             let points = random_points(100, 2, 33);
             let tree = KdTree::build(&points, 2).unwrap();
@@ -2263,7 +2263,7 @@ pub mod knn {
             }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn k_nearest_excludes_self_when_requested() {
             let points = vec![0.0, 0.0, 1.0, 0.0, 2.0, 0.0];
             let tree = KdTree::build(&points, 2).unwrap();
@@ -2272,7 +2272,7 @@ pub mod knn {
             assert_eq!(result.len(), 2);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn k_nearest_on_single_point_tree() {
             let points = vec![5.0, 5.0];
             let tree = KdTree::build(&points, 2).unwrap();
@@ -2284,7 +2284,7 @@ pub mod knn {
         mod quick {
             use super::*;
 
-            #[test]
+            #[semio_framework_async_macros::async_test]
             async fn kd_tree_matches_brute_force_on_larger_random_set() {
                 let points = random_points(1000, 4, 999);
                 let tree = KdTree::build(&points, 4).unwrap();
@@ -2673,7 +2673,7 @@ pub mod continuous {
             (0..n).map(|_| rng.next_gaussian()).collect()
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn gaussian_mle_matches_closed_form() {
             let x = box_muller_gaussian(5000, 1);
             let est = entropy_continuous(&x, &ContinuousMethod::GaussianMle, LogBase::Nats).unwrap();
@@ -2681,7 +2681,7 @@ pub mod continuous {
             assert!((est.value - expected).abs() < 0.05, "got {}", est.value);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn knn_entropy_matches_gaussian_closed_form() {
             let x = box_muller_gaussian(3000, 2);
             let est = entropy_continuous(&x, &ContinuousMethod::Knn { k: 5 }, LogBase::Nats).unwrap();
@@ -2689,7 +2689,7 @@ pub mod continuous {
             assert!((est.value - expected).abs() < 0.1, "got {}", est.value);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn kde_entropy_matches_gaussian_closed_form() {
             let x = box_muller_gaussian(2000, 3);
             let cfg = KdeConfig { kernel: Kernel::Gaussian, bandwidth: Bandwidth::Silverman };
@@ -2698,7 +2698,7 @@ pub mod continuous {
             assert!((est.value - expected).abs() < 0.1, "got {}", est.value);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn vasicek_entropy_matches_gaussian_closed_form() {
             let x = box_muller_gaussian(5000, 4);
             let est = entropy_continuous(&x, &ContinuousMethod::Vasicek { m: 0 }, LogBase::Nats).unwrap();
@@ -2706,7 +2706,7 @@ pub mod continuous {
             assert!((est.value - expected).abs() < 0.05, "got {}", est.value);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn correa_entropy_matches_gaussian_closed_form() {
             let x = box_muller_gaussian(3000, 5);
             let est = entropy_continuous(&x, &ContinuousMethod::Correa { m: 0 }, LogBase::Nats).unwrap();
@@ -2714,7 +2714,7 @@ pub mod continuous {
             assert!((est.value - expected).abs() < 0.1, "got {}", est.value);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn uniform_entropy_near_zero() {
             let mut rng = crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(6);
             let x: Vec<f64> = (0..5000).map(|_| rng.next_f64()).collect();
@@ -2722,7 +2722,7 @@ pub mod continuous {
             assert!(est.value.abs() < 0.05, "got {}", est.value);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn histogram_entropy_reasonable_for_uniform() {
             let mut rng = crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(7);
             let x: Vec<f64> = (0..5000).map(|_| rng.next_f64()).collect();
@@ -2730,20 +2730,20 @@ pub mod continuous {
             assert!(est.value.abs() < 0.2, "got {}", est.value);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn rejects_constant_series() {
             let x = vec![1.0; 100];
             assert!(entropy_continuous(&x, &ContinuousMethod::GaussianMle, LogBase::Nats).is_err());
             assert!(entropy_continuous(&x, &ContinuousMethod::Knn { k: 3 }, LogBase::Nats).is_err());
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn rejects_too_few_samples() {
             let x = vec![1.0];
             assert!(matches!(entropy_continuous(&x, &ContinuousMethod::GaussianMle, LogBase::Nats), Err(EntropyError::InsufficientData { .. })));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn kde_loo_differs_from_naive_resubstitution_direction() {
             // 🔐️ LOO removes the self-term's downward bias, so LOO entropy should exceed naive
             // resubstitution (which double-counts each point against itself).
@@ -2758,7 +2758,7 @@ pub mod continuous {
         mod quick {
             use super::*;
 
-            #[test]
+            #[semio_framework_async_macros::async_test]
             async fn exponential_entropy_matches_closed_form() {
                 // 🔐️ differential entropy of Exp(1) is 1 nat.
                 let mut rng = crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(9);
@@ -2767,7 +2767,7 @@ pub mod continuous {
                 assert!((est.value - 1.0).abs() < 0.05, "got {}", est.value);
             }
 
-            #[test]
+            #[semio_framework_async_macros::async_test]
             async fn all_continuous_estimators_agree_within_tolerance_on_gaussian() {
                 let x = box_muller_gaussian(4000, 42);
                 let expected = 0.5 * (2.0 * core::f64::consts::PI * core::f64::consts::E).ln();
@@ -3102,13 +3102,13 @@ pub mod divergence {
     mod tests {
         use super::*;
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn kl_of_identical_distributions_is_zero() {
             let p = [0.2, 0.3, 0.5];
             assert!(kl_divergence(&p, &p, LogBase::Bits).unwrap().abs() < 1e-9);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn kl_is_non_negative_for_random_distributions() {
             let mut rng = crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(1);
             for _ in 0..200 {
@@ -3124,14 +3124,14 @@ pub mod divergence {
             }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn kl_infinite_on_support_mismatch() {
             let p = [0.5, 0.5];
             let q = [1.0, 0.0];
             assert_eq!(kl_divergence(&p, &q, LogBase::Bits).unwrap(), f64::INFINITY);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn js_divergence_symmetric_and_bounded_by_ln2() {
             let p = [0.9, 0.1];
             let q = [0.1, 0.9];
@@ -3142,13 +3142,13 @@ pub mod divergence {
             assert!(a >= 0.0);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn js_of_identical_distributions_is_zero() {
             let p = [0.3, 0.7];
             assert!(js_divergence(&p, &p, LogBase::Bits).unwrap().abs() < 1e-9);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn hellinger_distance_bounds_and_identity() {
             let p = [0.5, 0.5];
             assert!(hellinger_distance(&p, &p).unwrap().abs() < 1e-9);
@@ -3157,7 +3157,7 @@ pub mod divergence {
             assert!((0.0..=1.0).contains(&d));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn total_variation_bounds_and_identity() {
             let p = [0.5, 0.5];
             assert!(total_variation(&p, &p).unwrap().abs() < 1e-9);
@@ -3165,25 +3165,25 @@ pub mod divergence {
             assert!((total_variation(&p, &q).unwrap() - 0.5).abs() < 1e-9);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn chi_square_of_identical_distributions_is_zero() {
             let p = [0.2, 0.3, 0.5];
             assert!(chi_square_divergence(&p, &p).unwrap().abs() < 1e-9);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn renyi_divergence_rejects_alpha_one() {
             assert!(matches!(renyi_divergence(&[0.5, 0.5], &[0.3, 0.7], 1.0, LogBase::Bits), Err(EntropyError::UndefinedResult { .. })));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn renyi_divergence_of_identical_distributions_is_zero() {
             let p = [0.2, 0.3, 0.5];
             let d = renyi_divergence(&p, &p, 2.0, LogBase::Nats).unwrap();
             assert!(d.abs() < 1e-9);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn tsallis_divergence_limit_matches_kl() {
             let p = [0.2, 0.3, 0.5];
             let q = [0.3, 0.3, 0.4];
@@ -3192,13 +3192,13 @@ pub mod divergence {
             assert!((kl - tsallis).abs() < 1e-6);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn wasserstein_1d_of_identical_samples_is_zero() {
             let x = [1.0, 2.0, 3.0, 4.0];
             assert!(wasserstein_1d(&x, &x).unwrap().abs() < 1e-9);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn wasserstein_1d_matches_hand_computation_equal_size() {
             // 🔐️ equal-size sorted samples: W1 = mean |x_sorted - y_sorted|.
             let x = [1.0, 2.0, 3.0];
@@ -3207,13 +3207,13 @@ pub mod divergence {
             assert!((w - 3.0).abs() < 1e-9);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn energy_distance_of_identical_distributions_is_near_zero() {
             let x = [1.0, 2.0, 3.0, 4.0, 5.0];
             assert!(energy_distance(&x, &x).unwrap().abs() < 1e-9);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn energy_distance_is_non_negative() {
             let mut rng = crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(2);
             let x: Vec<f64> = (0..30).map(|_| rng.next_gaussian()).collect();
@@ -3221,14 +3221,14 @@ pub mod divergence {
             assert!(energy_distance(&x, &y).unwrap() > 0.0);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn log_det_divergence_of_identical_matrices_is_zero() {
             let cov = vec![4.0, 1.0, 1.0, 3.0];
             let d = log_det_divergence(&cov, &cov, 2).unwrap();
             assert!(d.abs() < 1e-7);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn bregman_squared_euclidean_matches_direct_formula() {
             let p = [1.0, 2.0, 3.0];
             let q = [0.5, 2.5, 2.0];
@@ -3239,7 +3239,7 @@ pub mod divergence {
             assert!((d - expected).abs() < 1e-9);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn itakura_saito_of_identical_spectra_is_zero() {
             let p = [1.0, 2.0, 3.0];
             assert!(itakura_saito_divergence(&p, &p).unwrap().abs() < 1e-9);
@@ -3248,7 +3248,7 @@ pub mod divergence {
         mod quick {
             use super::*;
 
-            #[test]
+            #[semio_framework_async_macros::async_test]
             async fn renyi_divergence_monotone_in_alpha() {
                 let p = [0.6, 0.3, 0.1];
                 let q = [0.2, 0.3, 0.5];
@@ -3532,7 +3532,7 @@ pub mod mutual {
     mod tests {
         use super::*;
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn mi_of_independent_variables_is_near_zero() {
             let mut rng = crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(1);
             let n = 5000;
@@ -3542,7 +3542,7 @@ pub mod mutual {
             assert!(est.value.abs() < 0.02, "got {}", est.value);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn mi_of_identical_variables_equals_entropy() {
             let mut rng = crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(2);
             let x: Vec<u32> = (0..2000).map(|_| rng.next_below(5) as u32).collect();
@@ -3552,12 +3552,12 @@ pub mod mutual {
             assert!((mi.value - h.value).abs() < 1e-9);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn mi_rejects_length_mismatch() {
             assert!(matches!(mutual_information(&[0, 1], &[0], DiscreteMethod::Plugin, LogBase::Bits), Err(EntropyError::LengthMismatch { .. })));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn cmi_zero_when_x_and_y_independent_given_z() {
             let mut rng = crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(3);
             let n = 4000;
@@ -3568,7 +3568,7 @@ pub mod mutual {
             assert!(est.value.abs() < 0.05, "got {}", est.value);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn ksg1_matches_gaussian_closed_form() {
             // 🔐️ bivariate Gaussian with correlation rho: I(X;Y) = -0.5*ln(1-rho^2).
             let mut rng = crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(4);
@@ -3588,7 +3588,7 @@ pub mod mutual {
             assert!((est.value - expected).abs() < 0.05, "got {} expected {}", est.value, expected);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn ksg2_matches_gaussian_closed_form() {
             let mut rng = crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(5);
             let rho = 0.5_f64;
@@ -3607,7 +3607,7 @@ pub mod mutual {
             assert!((est.value - expected).abs() < 0.08, "got {} expected {}", est.value, expected);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn ksg_mi_of_independent_gaussians_is_near_zero() {
             let mut rng = crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(6);
             let n = 1500;
@@ -3618,7 +3618,7 @@ pub mod mutual {
             assert!(est.value.abs() < 0.05, "got {}", est.value);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn total_correlation_of_independent_variables_is_near_zero() {
             let mut rng = crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(7);
             let n = 3000;
@@ -3629,13 +3629,13 @@ pub mod mutual {
             assert!(est.value.abs() < 0.05, "got {}", est.value);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn dual_total_correlation_requires_at_least_two_variables() {
             let a = [0u32, 1, 0, 1];
             assert!(matches!(dual_total_correlation(&[&a], &[2], LogBase::Nats), Err(EntropyError::InvalidConfig { .. })));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn o_information_of_redundant_copy_is_positive() {
             // 🔐️ X1=X2=X3 (perfect redundancy): O-information should be strongly positive.
             let mut rng = crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(8);
@@ -3644,7 +3644,7 @@ pub mod mutual {
             assert!(est.value > 0.5, "got {}", est.value);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn pack_symbols_rejects_overflow() {
             let a = [0u32];
             let result = pack_symbols(&[&a, &a], &[u32::MAX as usize, u32::MAX as usize]);
@@ -3958,7 +3958,7 @@ pub mod pid {
         use crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64;
 
         // #region 🔖️TwoSourceLogicGates
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn copy_gate_shows_dominant_unique1_and_near_zero_synergy() {
             // 🔐️ T = S1 exactly, S2 independent noise: all info about T is uniquely S1's.
             let mut rng = Xorshift64::new(101);
@@ -3973,7 +3973,7 @@ pub mod pid {
             assert!(atoms.synergy.abs() < 0.1, "synergy={}", atoms.synergy);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn xor_gate_shows_dominant_synergy_near_one_bit() {
             // 🔐️ T = S1 XOR S2, S1/S2 independent fair coins: the classic pure-synergy example.
             let mut rng = Xorshift64::new(202);
@@ -3990,19 +3990,19 @@ pub mod pid {
         // #endregion 🔖️TwoSourceLogicGates
 
         // #region 🔖️TwoSourceValidation
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn pid_two_sources_rejects_length_mismatch() {
             assert!(matches!(pid_two_sources(&[0, 1], &[0], &[0, 1], (2, 1, 2), LogBase::Nats), Err(EntropyError::LengthMismatch { .. })));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn pid_two_sources_rejects_empty_input() {
             assert!(matches!(pid_two_sources(&[], &[], &[], (2, 2, 2), LogBase::Nats), Err(EntropyError::EmptyInput { .. })));
         }
         // #endregion 🔖️TwoSourceValidation
 
         // #region 🔖️Lattice
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn lattice_has_exactly_eighteen_nodes() {
             let mut rng = Xorshift64::new(303);
             let n = 1000;
@@ -4014,14 +4014,14 @@ pub mod pid {
             assert_eq!(lattice.node_count(), 18);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn lattice_rejects_source_counts_other_than_three() {
             let s1 = [0u32, 1, 0, 1];
             let target = [0u32, 1, 1, 0];
             assert!(matches!(PidLattice::compute(&[&s1, &s1], &target, &[2, 2], 2, LogBase::Nats), Err(EntropyError::InvalidConfig { .. })));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn full_set_node_i_min_equals_total_joint_mi_and_singletons_node_is_smaller() {
             let mut rng = Xorshift64::new(404);
             let n = 2000;
@@ -4036,7 +4036,7 @@ pub mod pid {
             assert!(lattice.i_min_nats[singletons_idx] <= lattice.i_min_nats[full_set_idx] + 1e-9);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn sum_of_all_partial_information_equals_total_mutual_information() {
             // 🔐️ the critical Mobius/zeta consistency check: sum(Pi) over all 18 nodes must equal the
             // total joint MI exactly (an algebraic identity of the inversion, not a statistical
@@ -4055,7 +4055,7 @@ pub mod pid {
             }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn partial_information_lookup_matches_internal_full_set_node() {
             let mut rng = Xorshift64::new(505);
             let n = 1200;
@@ -4143,26 +4143,26 @@ pub mod fisher {
     mod tests {
         use super::*;
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn aic_matches_hand_computed_value() {
             assert!((aic(-10.0, 3) - 26.0).abs() < 1e-12);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn bic_matches_hand_computed_value() {
             let n = 100;
             let expected = 3.0 * (100.0_f64).ln() - 2.0 * -10.0;
             assert!((bic(-10.0, 3, n) - expected).abs() < 1e-12);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn mdl_matches_hand_computed_value() {
             let n = 100;
             let expected = 10.0 + 0.5 * 3.0 * (100.0_f64).ln();
             assert!((mdl(-10.0, 3, n) - expected).abs() < 1e-12);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn aic_increases_with_num_params() {
             let ln_l = -50.0;
             let mut prev = aic(ln_l, 1);
@@ -4173,7 +4173,7 @@ pub mod fisher {
             }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn bic_increases_with_num_params() {
             let ln_l = -50.0;
             let n = 200;
@@ -4185,7 +4185,7 @@ pub mod fisher {
             }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn hqc_increases_with_num_params() {
             let ln_l = -50.0;
             let n = 200;
@@ -4197,7 +4197,7 @@ pub mod fisher {
             }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn mdl_increases_with_num_params() {
             let ln_l = -50.0;
             let n = 200;
@@ -4209,7 +4209,7 @@ pub mod fisher {
             }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn aicc_approaches_aic_for_large_n() {
             let ln_l = -50.0;
             let k = 3;
@@ -4222,18 +4222,18 @@ pub mod fisher {
             assert!((ac - a).abs() < 1e-4, "aicc={ac} aic={a}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn aicc_errs_when_n_leq_k_plus_one() {
             assert!(matches!(aicc(-10.0, 3, 4), Err(EntropyError::InvalidConfig { .. })));
             assert!(matches!(aicc(-10.0, 3, 3), Err(EntropyError::InvalidConfig { .. })));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn aicc_ok_when_n_greater_than_k_plus_one() {
             assert!(aicc(-10.0, 3, 5).is_ok());
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn bic_penalizes_more_than_aic_when_ln_n_exceeds_two() {
             // 🔐️ BIC's penalty is k*ln(n) vs AIC's 2*k; ln(n) > 2 (n > e^2 ~= 7.39) means BIC > AIC
             // for the same ln_L and k, since both share the -2*ln_L term.
@@ -4244,7 +4244,7 @@ pub mod fisher {
             assert!(bic(ln_l, k, n) > aic(ln_l, k));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn hqc_small_n_edge_case_has_zero_penalty() {
             let ln_l = -5.0;
             for n in [1usize, 2] {
@@ -4254,7 +4254,7 @@ pub mod fisher {
             }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn fisher_information_matches_gaussian_closed_form() {
             // 🔐️ log_lik(theta) = -0.5 * sum((x_i - theta)^2) / sigma^2 has exact Fisher information
             // n / sigma^2 for the mean parameter, independent of the sample itself.
@@ -4269,7 +4269,7 @@ pub mod fisher {
             assert!(rel_err < 1e-3, "observed={observed} expected={expected} rel_err={rel_err}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn fisher_information_zero_for_flat_log_likelihood() {
             let flat = |_theta: f64| -> f64 { 42.0 };
             let observed = fisher_information(flat, 5.0);
@@ -4405,7 +4405,7 @@ pub mod symbolic {
 
     impl Default for OrdinalConfig {
         /// 🔤️ The literature-default embedding: `dim = 3`, `tau = 1`.
-        async fn default() -> Self {
+        fn default() -> Self {
             Self { dim: 3, tau: 1, ties: TiePolicy::StableRank }
         }
     }
@@ -4592,27 +4592,27 @@ pub mod symbolic {
         use super::*;
 
         // #region 🔖️EmbedTests
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn embed_produces_expected_windows_and_values() {
             let x = [1.0, 2.0, 3.0, 4.0, 5.0];
             let windows = embed(&x, 3, 1).unwrap();
             assert_eq!(windows, vec![vec![1.0, 2.0, 3.0], vec![2.0, 3.0, 4.0], vec![3.0, 4.0, 5.0]]);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn embed_respects_tau() {
             let x = [0.0, 1.0, 2.0, 3.0, 4.0];
             let windows = embed(&x, 2, 2).unwrap();
             assert_eq!(windows, vec![vec![0.0, 2.0], vec![1.0, 3.0], vec![2.0, 4.0]]);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn embed_rejects_zero_dim_and_zero_tau() {
             assert!(matches!(embed(&[1.0, 2.0], 0, 1), Err(EntropyError::InvalidConfig { field: "dim", .. })));
             assert!(matches!(embed(&[1.0, 2.0], 1, 0), Err(EntropyError::InvalidConfig { field: "tau", .. })));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn embed_rejects_insufficient_data() {
             let x = [1.0, 2.0];
             assert!(matches!(embed(&x, 5, 1), Err(EntropyError::InsufficientData { needed: 5, actual: 2, .. })));
@@ -4620,17 +4620,17 @@ pub mod symbolic {
         // #endregion 🔖️EmbedTests
 
         // #region 🔖️OrdinalTests
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn ordinal_config_rejects_dim_less_than_two() {
             assert!(matches!(OrdinalConfig::new(1, 1), Err(EntropyError::InvalidConfig { field: "dim", .. })));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn ordinal_config_rejects_zero_tau() {
             assert!(matches!(OrdinalConfig::new(3, 0), Err(EntropyError::InvalidConfig { field: "tau", .. })));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn ordinal_config_default_is_dim3_tau1() {
             let cfg = OrdinalConfig::default();
             assert_eq!(cfg.dim, 3);
@@ -4638,13 +4638,13 @@ pub mod symbolic {
             assert_eq!(cfg.ties, TiePolicy::StableRank);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn ordinal_config_with_ties_overrides_default() {
             let cfg = OrdinalConfig::new(3, 1).unwrap().with_ties(TiePolicy::Error);
             assert_eq!(cfg.ties, TiePolicy::Error);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn ordinal_pattern_symbol_hand_computed_example() {
             // 🔤️ Window [3, 1, 4]: ascending order is index1(1) < index0(3) < index2(4), whose
             // Lehmer code (base 3!) is [1, 0, 0] -> 1*2! + 0*1! + 0*0! = 2.
@@ -4652,7 +4652,7 @@ pub mod symbolic {
             assert_eq!(symbol, 2);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn ordinal_symbolizer_all_six_dim3_patterns_are_distinct() {
             let cfg = OrdinalConfig::new(3, 1).unwrap();
             let symbolizer = OrdinalSymbolizer::new(cfg);
@@ -4681,7 +4681,7 @@ pub mod symbolic {
             assert!(symbols.iter().all(|&s| s < 6));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn ordinal_symbolizer_monotone_series_yields_constant_pattern() {
             let cfg = OrdinalConfig::new(3, 1).unwrap();
             let symbolizer = OrdinalSymbolizer::new(cfg);
@@ -4692,13 +4692,13 @@ pub mod symbolic {
             assert_eq!(symbols[0], 0); // 🔤️ strictly ascending window == identity permutation
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn ordinal_symbolizer_alphabet_size_is_factorial() {
             assert_eq!(OrdinalSymbolizer::new(OrdinalConfig::new(4, 1).unwrap()).alphabet_size(), 24);
             assert_eq!(OrdinalSymbolizer::new(OrdinalConfig::new(5, 1).unwrap()).alphabet_size(), 120);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn ordinal_ties_error_policy_rejects_equal_values() {
             let cfg = OrdinalConfig::new(3, 1).unwrap().with_ties(TiePolicy::Error);
             let symbolizer = OrdinalSymbolizer::new(cfg);
@@ -4706,7 +4706,7 @@ pub mod symbolic {
             assert!(matches!(result, Err(EntropyError::DegenerateInput { .. })));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn ordinal_ties_stable_rank_breaks_by_original_index() {
             // 🔤️ [2, 2, 1]: ascending stable order is index2(1) < index0(2) < index1(2), whose
             // Lehmer code (base 3!) is [2, 0, 0] -> 2*2! + 0*1! + 0*0! = 4.
@@ -4716,27 +4716,27 @@ pub mod symbolic {
         // #endregion 🔖️OrdinalTests
 
         // #region 🔖️DispersionTests
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn dispersion_symbolizer_rejects_invalid_config() {
             assert!(matches!(DispersionSymbolizer::new(1, 2, 1), Err(EntropyError::InvalidConfig { field: "classes", .. })));
             assert!(matches!(DispersionSymbolizer::new(3, 0, 1), Err(EntropyError::InvalidConfig { field: "dim", .. })));
             assert!(matches!(DispersionSymbolizer::new(3, 2, 0), Err(EntropyError::InvalidConfig { field: "tau", .. })));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn dispersion_symbolizer_alphabet_size_is_classes_pow_dim() {
             let symbolizer = DispersionSymbolizer::new(3, 2, 1).unwrap();
             assert_eq!(symbolizer.alphabet_size(), 9);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn dispersion_symbolizer_rejects_constant_series() {
             let symbolizer = DispersionSymbolizer::new(3, 2, 1).unwrap();
             let x = vec![5.0; 20];
             assert!(matches!(symbolizer.symbolize(&x), Err(EntropyError::DegenerateInput { .. })));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn dispersion_symbolizer_symbol_count_matches_embedding() {
             let symbolizer = DispersionSymbolizer::new(4, 3, 1).unwrap();
             let mut rng = crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(11);
@@ -4748,17 +4748,17 @@ pub mod symbolic {
         // #endregion 🔖️DispersionTests
 
         // #region 🔖️QuantileTests
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn quantile_symbolizer_rejects_bins_less_than_two() {
             assert!(matches!(QuantileSymbolizer::new(1), Err(EntropyError::InvalidConfig { field: "bins", .. })));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn quantile_symbolizer_alphabet_size_equals_bins() {
             assert_eq!(QuantileSymbolizer::new(5).unwrap().alphabet_size(), 5);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn quantile_symbolizer_splits_small_example_in_half() {
             let symbolizer = QuantileSymbolizer::new(2).unwrap();
             let symbols = symbolizer.symbolize(&[1.0, 2.0, 3.0, 4.0]).unwrap();
@@ -4767,22 +4767,22 @@ pub mod symbolic {
         // #endregion 🔖️QuantileTests
 
         // #region 🔖️ThresholdTests
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn threshold_symbolizer_rejects_empty_edges() {
             assert!(matches!(ThresholdSymbolizer::new(vec![]), Err(EntropyError::InvalidConfig { field: "edges", .. })));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn threshold_symbolizer_rejects_unsorted_edges() {
             assert!(matches!(ThresholdSymbolizer::new(vec![1.0, 0.0, 2.0]), Err(EntropyError::InvalidConfig { field: "edges", .. })));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn threshold_symbolizer_rejects_non_finite_edges() {
             assert!(matches!(ThresholdSymbolizer::new(vec![0.0, f64::NAN]), Err(EntropyError::InvalidConfig { field: "edges", .. })));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn threshold_symbolizer_classifies_against_edges() {
             let symbolizer = ThresholdSymbolizer::new(vec![0.0, 10.0]).unwrap();
             assert_eq!(symbolizer.alphabet_size(), 3);
@@ -4794,7 +4794,7 @@ pub mod symbolic {
         mod quick {
             use super::*;
 
-            #[test]
+            #[semio_framework_async_macros::async_test]
             async fn ordinal_symbols_always_within_alphabet_for_random_series() {
                 let cfg = OrdinalConfig::new(4, 2).unwrap();
                 let symbolizer = OrdinalSymbolizer::new(cfg);
@@ -4808,7 +4808,7 @@ pub mod symbolic {
                 }
             }
 
-            #[test]
+            #[semio_framework_async_macros::async_test]
             async fn quantile_symbolizer_bins_are_roughly_balanced() {
                 let symbolizer = QuantileSymbolizer::new(4).unwrap();
                 let mut rng = crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(777);
@@ -4824,7 +4824,7 @@ pub mod symbolic {
                 }
             }
 
-            #[test]
+            #[semio_framework_async_macros::async_test]
             async fn dispersion_symbols_always_within_alphabet_for_random_series() {
                 let symbolizer = DispersionSymbolizer::new(5, 3, 1).unwrap();
                 let alphabet = symbolizer.alphabet_size();
@@ -5077,13 +5077,13 @@ pub mod regularity {
             (0..n).map(|_| rng.next_gaussian()).collect()
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn regularity_config_rejects_m_zero() {
             assert!(matches!(RegularityConfig::new(0, Tolerance::Auto), Err(EntropyError::InvalidConfig { field: "m", .. })));
             assert!(RegularityConfig::new(1, Tolerance::Auto).is_ok());
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn resolve_tolerance_auto_matches_hand_computation() {
             // 🔐️ [1,2,3,4,5]: mean=3, sample variance=(4+1+0+1+4)/4=2.5, sd=sqrt(2.5).
             let x = [1.0, 2.0, 3.0, 4.0, 5.0];
@@ -5092,21 +5092,21 @@ pub mod regularity {
             assert!((r - expected).abs() < 1e-12, "r={r} expected={expected}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn resolve_tolerance_rejects_constant_series() {
             let x = [5.0; 10];
             assert!(matches!(resolve_tolerance(&x, Tolerance::Auto), Err(EntropyError::DegenerateInput { .. })));
             assert!(matches!(resolve_tolerance(&x, Tolerance::RelativeToSd(1.0)), Err(EntropyError::DegenerateInput { .. })));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn sample_entropy_rejects_very_short_series() {
             let cfg = RegularityConfig::new(2, Tolerance::Auto).unwrap();
             let x = [1.0, 2.0, 3.0];
             assert!(matches!(sample_entropy(&x, cfg, LogBase::Nats), Err(EntropyError::InsufficientData { .. })));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn sample_entropy_reports_infinity_when_no_higher_order_matches_exist() {
             // 🔐️ Hand-verified: at m=1 the pairs (0,1),(0,3),(1,3) match within r=1.0, but every one
             // of those pairs diverges by 4-8 at m+1=2, so A=0 while B=3 — SampEn must be +infinity.
@@ -5117,7 +5117,7 @@ pub mod regularity {
             assert!(est.warnings.iter().any(|w| matches!(w, Warning::NotConvergedSoft { .. })));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn near_constant_signal_under_generous_tolerance_has_near_zero_regularity_entropy() {
             // 🔐️ A constant plus a 1e-10-scale perturbation, compared against a tolerance orders of
             // magnitude larger than the perturbation: virtually every template matches every other
@@ -5132,7 +5132,7 @@ pub mod regularity {
             assert!(sampen.value.abs() < 1e-6, "sampen={}", sampen.value);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn regular_sine_has_much_lower_regularity_entropy_than_white_noise() {
             // 🔐️ THE canonical ApEn/SampEn/FuzzyEn sanity check: a smooth periodic signal is far more
             // "regular" (predictable from its own past) than i.i.d. noise of the same length, so all
@@ -5155,7 +5155,7 @@ pub mod regularity {
             assert!(fuzzyen_sine < fuzzyen_noise - 0.5, "fuzzyen_sine={fuzzyen_sine} fuzzyen_noise={fuzzyen_noise}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn approximate_entropy_small_sample_warning() {
             let cfg = RegularityConfig::new(2, Tolerance::Auto).unwrap();
             let x = sine_series(30, 10.0);
@@ -5163,7 +5163,7 @@ pub mod regularity {
             assert!(est.warnings.iter().any(|w| matches!(w, Warning::SmallSample { .. })));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn base_conversion_is_consistent_across_apen_sampen_fuzzyen() {
             let cfg = RegularityConfig::new(2, Tolerance::Auto).unwrap();
             let x = sine_series(200, 25.0);
@@ -5177,7 +5177,7 @@ pub mod regularity {
         mod quick {
             use super::*;
 
-            #[test]
+            #[semio_framework_async_macros::async_test]
             async fn fuzzy_entropy_finite_and_defined_for_moderate_series() {
                 let cfg = RegularityConfig::new(2, Tolerance::Auto).unwrap();
                 let x = white_noise_series(500, 7);
@@ -5369,7 +5369,7 @@ pub mod ordinal {
     mod tests {
         use super::*;
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn permutation_entropy_of_monotone_series_is_zero() {
             let x: Vec<f64> = (0..100).map(|i| i as f64).collect();
             let cfg = OrdinalConfig::new(3, 1).unwrap();
@@ -5377,7 +5377,7 @@ pub mod ordinal {
             assert!(est.value.abs() < 1e-9);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn permutation_entropy_of_noise_approaches_max() {
             let mut rng = crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(1);
             let x: Vec<f64> = (0..3000).map(|_| rng.next_f64()).collect();
@@ -5387,12 +5387,12 @@ pub mod ordinal {
             assert!(est.value > 0.9 * max, "got {} max {}", est.value, max);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn dispersion_config_rejects_small_classes() {
             assert!(DispersionConfig::new(1, 2, 1).is_err());
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn dispersion_entropy_of_noise_is_positive() {
             let mut rng = crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(2);
             let x: Vec<f64> = (0..2000).map(|_| rng.next_gaussian()).collect();
@@ -5401,7 +5401,7 @@ pub mod ordinal {
             assert!(est.value > 0.0);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn increment_entropy_of_constant_series_is_zero() {
             let x = vec![5.0; 100];
             // 🔐️ all increments are exactly zero -> single symbol -> zero entropy.
@@ -5409,7 +5409,7 @@ pub mod ordinal {
             assert!(est.value.abs() < 1e-9);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn increment_entropy_of_noise_is_positive() {
             let mut rng = crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(3);
             let x: Vec<f64> = (0..2000).map(|_| rng.next_gaussian()).collect();
@@ -5417,27 +5417,27 @@ pub mod ordinal {
             assert!(est.value > 0.0);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn increment_entropy_rejects_zero_word_length() {
             let x = vec![1.0, 2.0, 3.0, 4.0];
             assert!(increment_entropy(&x, 0, 3, LogBase::Bits).is_err());
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn slope_entropy_rejects_bad_thresholds() {
             let x: Vec<f64> = (0..10).map(|i| i as f64).collect();
             assert!(slope_entropy(&x, (0.5, 0.3), 2, LogBase::Bits).is_err());
             assert!(slope_entropy(&x, (-0.1, 0.5), 2, LogBase::Bits).is_err());
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn slope_entropy_of_straight_line_is_zero() {
             let x: Vec<f64> = (0..100).map(|i| i as f64).collect();
             let est = slope_entropy(&x, (0.2, 0.8), 2, LogBase::Bits).unwrap();
             assert!(est.value.abs() < 1e-9);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn slope_entropy_of_noise_is_positive() {
             let mut rng = crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(4);
             let x: Vec<f64> = (0..2000).map(|_| rng.next_gaussian()).collect();
@@ -5448,7 +5448,7 @@ pub mod ordinal {
         mod quick {
             use super::*;
 
-            #[test]
+            #[semio_framework_async_macros::async_test]
             async fn permutation_entropy_orders_regularity_correctly() {
                 let mut rng = crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(5);
                 let n = 2000;
@@ -5641,26 +5641,26 @@ pub mod markov {
             -(x_ln_x(p) + x_ln_x(1.0 - p))
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn fit_rejects_too_short_sequence() {
             let seq = [0u32, 1];
             let result = MarkovChain::fit(&seq, 2, 2);
             assert!(matches!(result, Err(EntropyError::InsufficientData { .. })));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn fit_rejects_order_zero() {
             let seq = [0u32, 1, 0, 1];
             assert!(matches!(MarkovChain::fit(&seq, 2, 0), Err(EntropyError::InvalidConfig { .. })));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn fit_rejects_out_of_range_symbol() {
             let seq = [0u32, 1, 2, 0];
             assert!(matches!(MarkovChain::fit(&seq, 2, 1), Err(EntropyError::InvalidConfig { .. })));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn order_one_matches_ordinary_transition_counts() {
             let seq = [0u32, 0, 1, 0, 1, 1, 1, 0];
             let chain = MarkovChain::fit(&seq, 2, 1).unwrap();
@@ -5675,7 +5675,7 @@ pub mod markov {
             }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn periodic_two_cycle_has_near_zero_entropy_rate() {
             let seq: Vec<u32> = (0..100u32).map(|i| i % 2).collect();
             let chain = MarkovChain::fit(&seq, 2, 1).unwrap();
@@ -5686,7 +5686,7 @@ pub mod markov {
             assert!((pi[1] - 0.5).abs() < 1e-6, "pi={pi:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn entropy_rate_diagnostics_report_order_and_alphabet() {
             let seq = [0u32, 1, 0, 1, 0, 1];
             let chain = MarkovChain::fit(&seq, 2, 1).unwrap();
@@ -5699,7 +5699,7 @@ pub mod markov {
         mod quick {
             use super::*;
 
-            #[test]
+            #[semio_framework_async_macros::async_test]
             async fn two_state_chain_converges_to_analytic_stationary_and_entropy_rate() {
                 // ⛓️ pi P = pi for [[0.9, 0.1], [0.5, 0.5]] solves to pi = (5/6, 1/6).
                 let transition = [[0.9, 0.1], [0.5, 0.5]];
@@ -5862,26 +5862,26 @@ pub mod multiscale {
     mod tests {
         use super::*;
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn multiscale_config_rejects_zero_scales() {
             let inner = MsInner::Permutation(OrdinalConfig::new(3, 1).unwrap());
             assert!(MultiscaleConfig::new(0, Grain::Mean, inner).is_err());
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn coarse_grain_mean_matches_hand_computation() {
             let x = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
             let coarse = coarse_grain(&x, 2, Grain::Mean);
             assert_eq!(coarse, vec![1.5, 3.5, 5.5]);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn coarse_grain_scale_one_is_identity() {
             let x = vec![1.0, 2.0, 3.0];
             assert_eq!(coarse_grain(&x, 1, Grain::Mean), x);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn multiscale_entropy_reports_requested_scales_for_long_series() {
             let mut rng = crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(1);
             let x: Vec<f64> = (0..3000).map(|_| rng.next_f64()).collect();
@@ -5892,7 +5892,7 @@ pub mod multiscale {
             assert_eq!(result.per_scale.len(), 5);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn multiscale_entropy_stops_early_for_short_series() {
             let x: Vec<f64> = (0..20).map(|i| i as f64).collect();
             let inner = MsInner::Permutation(OrdinalConfig::new(3, 1).unwrap());
@@ -5904,7 +5904,7 @@ pub mod multiscale {
         mod quick {
             use super::*;
 
-            #[test]
+            #[semio_framework_async_macros::async_test]
             async fn white_noise_multiscale_entropy_differs_from_pink_like_noise() {
                 let mut rng = crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(2);
                 let n = 4000;
@@ -6096,8 +6096,9 @@ pub mod lz {
     /// 🗜️ Normalized compression distance (Cilibrasi & Vitanyi, 2005):
     /// `(C(xy) - min(C(x), C(y))) / max(C(x), C(y))`, a compressor-driven approximation to
     /// normalized information distance in `[0, ~1]`. `compressor` decides what "compressed" means;
-    /// [`Lz78Compressor`] is a reasonable zero-dependency default.
-    pub async fn ncd(x: &[u8], y: &[u8], compressor: &dyn Compressor) -> Result<f64, EntropyError> {
+    /// [`Lz78Compressor`] is a reasonable zero-dependency default. Generic over the compressor (O1 —
+    /// R11(a): a borrowed-reference parameter is trivially generic).
+    pub async fn ncd<C: Compressor>(x: &[u8], y: &[u8], compressor: &C) -> Result<f64, EntropyError> {
         if x.is_empty() {
             return Err(EntropyError::EmptyInput { what: "x" });
         }
@@ -6128,7 +6129,7 @@ pub mod lz {
             s.chars().map(|c| if c == '1' { 1 } else { 0 }).collect()
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn lz76_matches_canonical_test_string() {
             // 🔐️ See `exhaustive::lz76_canonical_value_matches_verified_reference` for the full
             // cross-validation story behind this specific number.
@@ -6136,13 +6137,13 @@ pub mod lz {
             assert_eq!(lz76_complexity(&s), 6);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn lz76_constant_sequence_is_minimally_complex() {
             let s = vec![0u32; 200];
             assert!(lz76_complexity(&s) <= 3);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn lz76_repetitive_much_lower_than_random_of_same_length() {
             let mut rng = crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(7);
             let n = 500;
@@ -6153,12 +6154,12 @@ pub mod lz {
             assert!(c_rep * 3 < c_rand, "c_rep={c_rep} c_rand={c_rand}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn lempel_ziv_complexity_rejects_empty() {
             assert!(matches!(lempel_ziv_complexity(&[], false), Err(EntropyError::EmptyInput { .. })));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn lempel_ziv_complexity_raw_matches_lz76() {
             let s = binary_string("0001101001000101");
             let est = lempel_ziv_complexity(&s, false).unwrap();
@@ -6167,7 +6168,7 @@ pub mod lz {
             assert_eq!(est.diagnostics[1], ("raw_complexity", 6.0));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn lempel_ziv_complexity_normalized_is_zero_for_single_symbol_alphabet() {
             let s = vec![0u32; 50];
             let est = lempel_ziv_complexity(&s, true).unwrap();
@@ -6175,14 +6176,14 @@ pub mod lz {
             assert_eq!(est.diagnostics[0], ("alphabet_size", 1.0));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn lempel_ziv_complexity_small_sample_warns() {
             let s = binary_string("0001101001000101");
             let est = lempel_ziv_complexity(&s, false).unwrap();
             assert!(est.warnings.iter().any(|w| matches!(w, Warning::SmallSample { .. })));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn lempel_ziv_complexity_large_sample_does_not_warn() {
             let mut rng = crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(3);
             let s: Vec<u32> = (0..200).map(|_| rng.next_below(4) as u32).collect();
@@ -6190,12 +6191,12 @@ pub mod lz {
             assert!(est.warnings.is_empty());
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn lz78_empty_input_compresses_to_zero() {
             assert_eq!(Lz78Compressor.compressed_len(&[]), 0);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn lz78_repetitive_input_compresses_shorter_than_random() {
             let repetitive = b"abababababababab".to_vec();
             let mut rng = crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(42);
@@ -6204,14 +6205,14 @@ pub mod lz {
             assert!(comp.compressed_len(&repetitive) <= comp.compressed_len(&random));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn ncd_rejects_empty_inputs() {
             let comp = Lz78Compressor;
             assert!(matches!(ncd(&[], b"x", &comp), Err(EntropyError::EmptyInput { .. })));
             assert!(matches!(ncd(b"x", &[], &comp), Err(EntropyError::EmptyInput { .. })));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn ncd_of_a_string_with_itself_is_well_below_unrelated_random_strings() {
             let comp = Lz78Compressor;
             let text: Vec<u8> = b"the quick brown fox jumps over the lazy dog ".repeat(8);
@@ -6227,7 +6228,7 @@ pub mod lz {
             assert!(d_diff > 0.5, "expected two unrelated random byte strings to be far apart: {d_diff}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn ncd_is_bounded_below_by_zero() {
             let comp = Lz78Compressor;
             let x = b"identical payload identical payload".to_vec();
@@ -6238,7 +6239,7 @@ pub mod lz {
         mod quick {
             use super::*;
 
-            #[test]
+            #[semio_framework_async_macros::async_test]
             async fn lz76_is_non_decreasing_in_sequence_length_for_a_growing_random_stream() {
                 let mut rng = crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(11);
                 let full: Vec<u32> = (0..300).map(|_| rng.next_below(5) as u32).collect();
@@ -6250,7 +6251,7 @@ pub mod lz {
                 }
             }
 
-            #[test]
+            #[semio_framework_async_macros::async_test]
             async fn lz78_concatenation_never_shrinks_relative_to_either_half() {
                 let comp = Lz78Compressor;
                 let mut rng = crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(55);
@@ -6322,7 +6323,7 @@ pub mod lz {
                 phrases
             }
 
-            #[test]
+            #[semio_framework_async_macros::async_test]
             async fn lz76_matches_definitional_brute_force_for_every_short_binary_string() {
                 let mut checked = 0usize;
                 for len in 1..=12usize {
@@ -6337,7 +6338,7 @@ pub mod lz {
                 assert_eq!(checked, 8190); // 2^1 + 2^2 + ... + 2^12
             }
 
-            #[test]
+            #[semio_framework_async_macros::async_test]
             async fn lz76_canonical_value_matches_verified_reference() {
                 // 🔐️ The literal incremental-parsing pseudocode, cross-checked against
                 // `brute_force_lz76` above on all 8190 binary strings of length 1..=12 with zero
@@ -6408,21 +6409,21 @@ pub mod fft {
 
     impl Add for Complex {
         type Output = Complex;
-        async fn add(self, rhs: Complex) -> Complex {
+        fn add(self, rhs: Complex) -> Complex {
             Complex { re: self.re + rhs.re, im: self.im + rhs.im }
         }
     }
 
     impl Sub for Complex {
         type Output = Complex;
-        async fn sub(self, rhs: Complex) -> Complex {
+        fn sub(self, rhs: Complex) -> Complex {
             Complex { re: self.re - rhs.re, im: self.im - rhs.im }
         }
     }
 
     impl Mul for Complex {
         type Output = Complex;
-        async fn mul(self, rhs: Complex) -> Complex {
+        fn mul(self, rhs: Complex) -> Complex {
             Complex { re: self.re * rhs.re - self.im * rhs.im, im: self.re * rhs.im + self.im * rhs.re }
         }
     }
@@ -6716,7 +6717,7 @@ pub mod fft {
             (a.re - b.re).abs() < tol && (a.im - b.im).abs() < tol
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn radix2_fft_matches_naive_dft() {
             for n in [2usize, 4, 8, 16, 32, 64] {
                 let mut rng = crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(n as u64);
@@ -6729,7 +6730,7 @@ pub mod fft {
             }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn bluestein_fft_matches_naive_dft_for_arbitrary_lengths() {
             for n in [1usize, 3, 5, 6, 7, 11, 13, 17, 100, 101, 257] {
                 let mut rng = crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(n as u64 + 1);
@@ -6742,7 +6743,7 @@ pub mod fft {
             }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn forward_then_inverse_roundtrips() {
             for n in [8usize, 15, 32, 100] {
                 let mut rng = crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(n as u64 + 99);
@@ -6756,7 +6757,7 @@ pub mod fft {
             }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn parseval_theorem_holds() {
             let n = 32;
             let mut rng = crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(3);
@@ -6767,14 +6768,14 @@ pub mod fft {
             assert!((time_energy - freq_energy).abs() < 1e-9);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn real_fft_returns_one_sided_spectrum_length() {
             let signal: Vec<f64> = (0..16).map(|i| (i as f64).sin()).collect();
             let spectrum = real_fft(&signal);
             assert_eq!(spectrum.len(), 16 / 2 + 1);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn window_functions_produce_expected_length_and_endpoints() {
             for kind in [WindowKind::Rectangular, WindowKind::Hann, WindowKind::Hamming, WindowKind::Blackman, WindowKind::BlackmanHarris, WindowKind::Kaiser(8.0), WindowKind::Tukey(0.5)] {
                 let w = window(kind, 64);
@@ -6783,14 +6784,14 @@ pub mod fft {
             }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn hann_window_endpoints_are_zero() {
             let w = window(WindowKind::Hann, 32);
             assert!(w[0].abs() < 1e-9);
             assert!(w[31].abs() < 1e-9);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn rectangular_window_is_all_ones() {
             let w = window(WindowKind::Rectangular, 10);
             assert!(w.iter().all(|&v| (v - 1.0).abs() < 1e-12));
@@ -6799,7 +6800,7 @@ pub mod fft {
         mod quick {
             use super::*;
 
-            #[test]
+            #[semio_framework_async_macros::async_test]
             async fn bluestein_matches_radix2_on_power_of_two_length() {
                 let n = 64;
                 let mut rng = crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(77);
@@ -6811,7 +6812,7 @@ pub mod fft {
                 }
             }
 
-            #[test]
+            #[semio_framework_async_macros::async_test]
             async fn large_prime_length_dft_matches_naive() {
                 let n = 101; // prime, not near a power of two
                 let mut rng = crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(4242);
@@ -6858,7 +6859,7 @@ pub mod spectral {
     }
 
     impl Default for SpectralConfig {
-        async fn default() -> Self {
+        fn default() -> Self {
             Self { window: WindowKind::Hann, segment_len: 0, overlap: 0.5, band: None, normalize: false }
         }
     }
@@ -7000,7 +7001,7 @@ pub mod spectral {
             (0..n).map(|_| rng.next_f64() - 0.5).collect()
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn pure_sine_has_low_normalized_spectral_entropy() {
             let x = sine(4096, 50.0, 1000.0);
             let cfg = SpectralConfig { window: WindowKind::Hann, normalize: true, ..Default::default() };
@@ -7009,7 +7010,7 @@ pub mod spectral {
             assert!(est.n_effective >= 4.0);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn white_noise_has_high_normalized_spectral_entropy() {
             let x = white_noise(4096, 7);
             let cfg = SpectralConfig { window: WindowKind::Hann, normalize: true, ..Default::default() };
@@ -7017,7 +7018,7 @@ pub mod spectral {
             assert!(est.value > 0.85, "got {}", est.value);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn band_restriction_changes_entropy_and_validates_range() {
             let x = sine(4096, 50.0, 1000.0);
             let full = spectral_entropy(&x, SpectralConfig { normalize: true, ..Default::default() }).unwrap();
@@ -7030,14 +7031,14 @@ pub mod spectral {
             assert!(matches!(spectral_entropy(&x, SpectralConfig { band: Some((0.6, 0.7)), ..Default::default() }), Err(EntropyError::InvalidConfig { field: "band", .. })));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn rejects_segment_len_larger_than_input() {
             let x = vec![0.0, 1.0, 2.0, 3.0];
             let cfg = SpectralConfig { segment_len: 100, ..Default::default() };
             assert!(matches!(spectral_entropy(&x, cfg), Err(EntropyError::InvalidConfig { field: "segment_len", .. })));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn config_new_rejects_overlap_at_or_above_one() {
             assert!(matches!(SpectralConfig::new(WindowKind::Hann, 128, 1.0), Err(EntropyError::InvalidConfig { field: "overlap", .. })));
             assert!(matches!(SpectralConfig::new(WindowKind::Hann, 128, 1.5), Err(EntropyError::InvalidConfig { field: "overlap", .. })));
@@ -7288,7 +7289,7 @@ pub mod wavelet {
     mod tests {
         use super::*;
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn haar_periodic_one_level_preserves_energy() {
             // 🔐️ Parseval / energy-preservation: Haar under periodic boundary is exactly orthonormal,
             // so sum(a^2) + sum(d^2) == sum(s^2) to tight tolerance.
@@ -7300,7 +7301,7 @@ pub mod wavelet {
             assert!((subband_total - signal_total).abs() < 1e-9, "subband={subband_total} signal={signal_total}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn haar_periodic_multi_level_preserves_energy() {
             let mut rng = crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(11);
             let x: Vec<f64> = (0..64).map(|_| rng.next_f64() * 10.0 - 5.0).collect();
@@ -7311,7 +7312,7 @@ pub mod wavelet {
             assert!((subband_total - signal_total).abs() < 1e-6, "subband={subband_total} signal={signal_total}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn constant_signal_has_zero_haar_detail_energy() {
             let x = [3.0; 8];
             let cfg = WaveletConfig::new(WaveletFamily::Haar, 1, BoundaryMode::Periodic).unwrap();
@@ -7320,7 +7321,7 @@ pub mod wavelet {
             assert!(energies[0].abs() < 1e-9, "detail energy = {}", energies[0]);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn smooth_ramp_has_lower_wavelet_entropy_than_noise() {
             let n = 256;
             let ramp: Vec<f64> = (0..n).map(|i| i as f64).collect();
@@ -7333,7 +7334,7 @@ pub mod wavelet {
             assert!(ramp_est.value < noise_est.value, "ramp={} noise={}", ramp_est.value, noise_est.value);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn white_noise_has_higher_wavelet_entropy_than_pure_tone() {
             let n = 512;
             let mut rng = crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(33);
@@ -7346,19 +7347,19 @@ pub mod wavelet {
             assert!(noise_est.value > sine_est.value, "noise={} sine={}", noise_est.value, sine_est.value);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn config_new_rejects_zero_levels() {
             assert!(matches!(WaveletConfig::new(WaveletFamily::Haar, 0, BoundaryMode::Zero), Err(EntropyError::InvalidConfig { field: "levels", .. })));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn decompose_rejects_input_shorter_than_filter() {
             let x = [1.0, 2.0, 3.0];
             let cfg = WaveletConfig::new(WaveletFamily::Daubechies8, 1, BoundaryMode::Zero).unwrap();
             assert!(matches!(Dwt::decompose(&x, cfg), Err(EntropyError::InsufficientData { needed: 8, actual: 3, .. })));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn decompose_stops_early_when_signal_runs_out_of_levels() {
             // 🔐️ 8 samples with Haar (filter_len 2) can only produce 3 dyadic halvings (8->4->2->1)
             // before the approximation would drop below the filter length on a 4th level.
@@ -7369,7 +7370,7 @@ pub mod wavelet {
             assert!(dwt.levels_achieved() >= 1);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn wavelet_entropy_reports_levels_achieved_diagnostic() {
             let x = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0];
             let cfg = WaveletConfig::new(WaveletFamily::Haar, 10, BoundaryMode::Periodic).unwrap();
@@ -7378,14 +7379,14 @@ pub mod wavelet {
             assert!(levels < 10.0);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn wavelet_entropy_rejects_all_zero_input() {
             let x = [0.0; 16];
             let cfg = WaveletConfig::new(WaveletFamily::Haar, 2, BoundaryMode::Zero).unwrap();
             assert!(matches!(wavelet_entropy(&x, cfg), Err(EntropyError::DegenerateInput { .. })));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn daubechies_filters_are_orthonormal_sum_sqrt2() {
             for family in [WaveletFamily::Haar, WaveletFamily::Daubechies4, WaveletFamily::Daubechies6, WaveletFamily::Daubechies8] {
                 let h = family.low_pass();
@@ -7760,7 +7761,7 @@ pub mod matrix {
             out
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn jacobi_matches_diagonal_matrix_eigenvalues() {
             let n = 3;
             let a = vec![5.0, 0.0, 0.0, 0.0, 2.0, 0.0, 0.0, 0.0, 9.0];
@@ -7770,7 +7771,7 @@ pub mod matrix {
             assert!((eigenvalues[2] - 2.0).abs() < 1e-9);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn jacobi_reconstructs_symmetric_matrix() {
             let n = 3;
             let a = vec![4.0, 1.0, 2.0, 1.0, 3.0, 0.5, 2.0, 0.5, 5.0];
@@ -7786,7 +7787,7 @@ pub mod matrix {
             }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn jacobi_hand_3x3_matches_known_eigenvalues() {
             // 🔐️ A = [[2,-1,0],[-1,2,-1],[0,-1,2]] has eigenvalues 2, 2±sqrt(2).
             let a = vec![2.0, -1.0, 0.0, -1.0, 2.0, -1.0, 0.0, -1.0, 2.0];
@@ -7801,7 +7802,7 @@ pub mod matrix {
             }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn cholesky_reconstructs_positive_definite_matrix() {
             let n = 3;
             let a = vec![4.0, 2.0, 2.0, 2.0, 5.0, 1.0, 2.0, 1.0, 6.0];
@@ -7813,21 +7814,21 @@ pub mod matrix {
             }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn cholesky_regularizes_near_singular_matrix() {
             let a = vec![1.0, 1.0, 1.0, 1.0]; // rank-1, singular
             let result = cholesky(&a, 2);
             assert!(result.is_ok());
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn log_det_matches_known_determinant() {
             let a = vec![4.0, 0.0, 0.0, 9.0];
             let ld = log_det(&a, 2).unwrap();
             assert!((ld - 36.0_f64.ln()).abs() < 1e-9);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn svd_reconstructs_matrix() {
             let rows = 4;
             let cols = 3;
@@ -7849,7 +7850,7 @@ pub mod matrix {
             }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn svd_entropy_of_equal_singular_values_is_maximal() {
             // 🔐️ identity-like: all singular values equal -> normalized entropy = 1.
             let a = vec![1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0];
@@ -7857,21 +7858,21 @@ pub mod matrix {
             assert!((est.value - 3.0_f64.log2()).abs() < 1e-6);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn svd_entropy_of_rank_one_matrix_is_zero() {
             let a = vec![1.0, 2.0, 3.0, 2.0, 4.0, 6.0]; // rank 1, 2x3
             let est = svd_entropy(&a, 2, 3, LogBase::Bits).unwrap();
             assert!(est.value.abs() < 1e-6);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn von_neumann_entropy_of_pure_state_is_zero() {
             let density = vec![1.0, 0.0, 0.0, 0.0];
             let est = von_neumann_entropy(&density, 2, LogBase::Nats).unwrap();
             assert!(est.value.abs() < 1e-9);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn von_neumann_entropy_of_maximally_mixed_state_is_log_n() {
             let n = 4;
             let mut density = vec![0.0_f64; n * n];
@@ -7882,7 +7883,7 @@ pub mod matrix {
             assert!((est.value - (n as f64).ln()).abs() < 1e-9);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn von_neumann_clips_tiny_negative_eigenvalues() {
             let density = vec![0.5 + 1e-16, 0.5, 0.5, 0.5 - 1e-16];
             // 🔐️ near-singular; should not error, should clip.
@@ -8193,7 +8194,7 @@ pub mod inference {
             data.iter().sum::<f64>() / data.len() as f64
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn bootstrap_ci_contains_true_mean_for_fixed_seed() {
             let mut rng = Xorshift64::new(11);
             let true_mean = 5.0;
@@ -8202,14 +8203,14 @@ pub mod inference {
             assert!(ci.lower <= true_mean && true_mean <= ci.upper, "ci={ci:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn bootstrap_ci_rejects_insufficient_data_and_bad_level() {
             assert!(matches!(bootstrap_ci(&[], mean, 100, 0.95, 1), Err(EntropyError::EmptyInput { .. })));
             assert!(matches!(bootstrap_ci(&[1.0], mean, 100, 0.95, 1), Err(EntropyError::InsufficientData { .. })));
             assert!(matches!(bootstrap_ci(&[1.0, 2.0], mean, 100, 1.5, 1), Err(EntropyError::InvalidConfig { .. })));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn jackknife_ci_matches_classical_mean_ci_for_large_n() {
             let mut rng = Xorshift64::new(22);
             let n = 1000;
@@ -8225,13 +8226,13 @@ pub mod inference {
             assert!((ci.upper - classical_upper).abs() < 0.05, "upper {} vs {}", ci.upper, classical_upper);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn jackknife_ci_rejects_insufficient_data_and_bad_level() {
             assert!(matches!(jackknife_ci(&[], mean, 0.95), Err(EntropyError::EmptyInput { .. })));
             assert!(matches!(jackknife_ci(&[1.0, 2.0], mean, 0.0), Err(EntropyError::InvalidConfig { .. })));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn permutation_test_p_value_high_under_null_low_under_effect() {
             let mut rng = Xorshift64::new(33);
             let x: Vec<f64> = (0..200).map(|_| rng.next_gaussian()).collect();
@@ -8249,7 +8250,7 @@ pub mod inference {
             assert!(p_effect < 0.05, "p_effect={p_effect}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn permutation_test_rejects_empty_groups_and_zero_permutations() {
             let diff_means = |a: &[f64], b: &[f64]| mean(a) - mean(b);
             assert!(matches!(permutation_test(&[], &[1.0], diff_means, 10, 1), Err(EntropyError::EmptyInput { .. })));
@@ -8257,13 +8258,13 @@ pub mod inference {
             assert!(matches!(permutation_test(&[1.0], &[2.0], diff_means, 0, 1), Err(EntropyError::InvalidConfig { .. })));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn surrogate_config_rejects_zero_count_and_block_size() {
             assert!(matches!(SurrogateConfig::new(SurrogateKind::CircularShift, 0, 1), Err(EntropyError::InvalidConfig { .. })));
             assert!(matches!(SurrogateConfig::new(SurrogateKind::BlockShuffle { block_size: 0 }, 5, 1), Err(EntropyError::InvalidConfig { .. })));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn circular_shift_and_block_shuffle_preserve_value_multiset() {
             let x: Vec<f64> = (0..40).map(|i| (i as f64).sin() * 3.0 + i as f64 * 0.1).collect();
             let mut sorted_x = x.clone();
@@ -8283,7 +8284,7 @@ pub mod inference {
             }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn phase_randomized_and_iaaft_preserve_power_spectrum() {
             let n = 64;
             let mut rng = Xorshift64::new(77);
@@ -8311,7 +8312,7 @@ pub mod inference {
             assert!((sq_err / sq_total).sqrt() < 0.15, "iaaft relative spectral error too high");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn iaaft_preserves_value_distribution_phase_randomized_generally_does_not() {
             let n = 50;
             let mut rng = Xorshift64::new(111);
@@ -8333,14 +8334,14 @@ pub mod inference {
             assert!(differs, "phase-randomized surrogate unexpectedly preserved the exact distribution");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn fdr_bh_separates_tiny_and_large_p_values() {
             let p_values = vec![0.001, 0.002, 0.5, 0.7, 0.9];
             let rejected = fdr_bh(&p_values, 0.05).unwrap();
             assert_eq!(rejected, vec![true, true, false, false, false]);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn fdr_bh_rejects_empty_input_and_bad_alpha() {
             assert!(matches!(fdr_bh(&[], 0.05), Err(EntropyError::EmptyInput { .. })));
             assert!(matches!(fdr_bh(&[0.1, 0.2], 1.0), Err(EntropyError::InvalidConfig { .. })));
@@ -8349,7 +8350,7 @@ pub mod inference {
         mod quick {
             use super::*;
 
-            #[test]
+            #[semio_framework_async_macros::async_test]
             async fn fdr_bh_is_stricter_than_uncorrected_threshold_under_known_null_proportion() {
                 let mut rng = Xorshift64::new(444);
                 let m = 200;
@@ -8368,7 +8369,7 @@ pub mod inference {
                 assert!(bh_rejections <= uncorrected_rejections, "bh={bh_rejections} uncorrected={uncorrected_rejections}");
             }
 
-            #[test]
+            #[semio_framework_async_macros::async_test]
             async fn surrogate_series_is_reproducible_from_the_same_seed() {
                 let x: Vec<f64> = (0..30).map(|i| (i as f64 * 0.3).sin()).collect();
                 let cfg = SurrogateConfig::new(SurrogateKind::Iaaft { iterations: 5 }, 4, 555).unwrap();
@@ -8660,12 +8661,12 @@ pub mod transfer {
     mod tests {
         use super::*;
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn transfer_config_rejects_zero_history() {
             assert!(TransferConfig::new(0, 1, TeBackend::Discrete { bins: 3 }).is_err());
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn te_of_independent_series_discrete_is_near_zero() {
             let mut rng = crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(1);
             let n = 3000;
@@ -8676,7 +8677,7 @@ pub mod transfer {
             assert!(est.value.abs() < 0.05, "got {}", est.value);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn te_detects_coupling_discrete() {
             // 🔐️ target[i] = source[i-1] (with some noise mixed via binning): TE(source->target)
             // should be clearly larger than TE(target->source).
@@ -8692,7 +8693,7 @@ pub mod transfer {
             assert!(forward.value > 0.1, "forward={}", forward.value);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn ais_of_white_noise_is_near_zero() {
             let mut rng = crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(3);
             let x: Vec<f64> = (0..2000).map(|_| rng.next_f64()).collect();
@@ -8700,7 +8701,7 @@ pub mod transfer {
             assert!(est.value.abs() < 0.05, "got {}", est.value);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn ais_of_highly_predictable_series_is_positive() {
             let mut rng = crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(4);
             let n = 2000;
@@ -8713,7 +8714,7 @@ pub mod transfer {
             assert!(est.value > 0.1, "got {}", est.value);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn te_rejects_length_mismatch() {
             let cfg = TransferConfig::new(1, 1, TeBackend::Discrete { bins: 3 }).unwrap();
             assert!(matches!(transfer_entropy(&[1.0, 2.0], &[1.0], cfg), Err(EntropyError::LengthMismatch { .. })));
@@ -8722,7 +8723,7 @@ pub mod transfer {
         mod quick {
             use super::*;
 
-            #[test]
+            #[semio_framework_async_macros::async_test]
             async fn te_knn_detects_coupling_on_coupled_logistic_maps() {
                 let mut rng = crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(5);
                 let n = 800;
@@ -8854,14 +8855,14 @@ pub mod spatial {
     mod tests {
         use super::*;
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn constant_image_is_rejected() {
             let pixels = vec![5.0; 16];
             let cfg = SpatialConfig::new(SpatialMethod::Global, 4).unwrap();
             assert!(matches!(entropy_2d(&pixels, 4, 4, cfg), Err(EntropyError::DegenerateInput { .. })));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn noisy_image_has_higher_glcm_entropy_than_smooth_gradient() {
             // 🔐️ A checkerboard is NOT a good "high texture" counter-example here: it alternates
             // between exactly two values, so its dx=1 co-occurrence matrix is nearly deterministic
@@ -8878,7 +8879,7 @@ pub mod spatial {
             assert!(h_noise > h_gradient, "noise={h_noise} gradient={h_gradient}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn global_entropy_of_uniform_random_image_is_near_max() {
             let mut rng = crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(1);
             let width = 32;
@@ -8889,14 +8890,14 @@ pub mod spatial {
             assert!(est.value > 0.8 * 8.0_f64.ln(), "got {}", est.value);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn shape_mismatch_is_rejected() {
             let pixels = vec![1.0, 2.0, 3.0];
             let cfg = SpatialConfig::new(SpatialMethod::Global, 4).unwrap();
             assert!(matches!(entropy_2d(&pixels, 2, 2, cfg), Err(EntropyError::ShapeMismatch { .. })));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn spatial_config_rejects_small_bins() {
             assert!(SpatialConfig::new(SpatialMethod::Global, 1).is_err());
         }
@@ -9045,7 +9046,7 @@ pub mod graph {
     mod tests {
         use super::*;
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn degree_entropy_of_regular_graph_is_zero() {
             // 🔐️ a 4-cycle: every node has degree 2.
             let edges = [(0, 1), (1, 2), (2, 3), (3, 0)];
@@ -9053,13 +9054,13 @@ pub mod graph {
             assert!(est.value.abs() < 1e-9);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn degree_entropy_rejects_out_of_range_endpoint() {
             let edges = [(0, 5)];
             assert!(matches!(degree_distribution_entropy(&edges, 3, false, LogBase::Bits), Err(EntropyError::ShapeMismatch { .. })));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn random_walk_entropy_rate_of_complete_graph_matches_uniform_row_entropy() {
             // 🔐️ K4: every node connects to every other node; each row is uniform over 3 neighbors.
             let edges = [(0, 1), (0, 2), (0, 3), (1, 2), (1, 3), (2, 3)];
@@ -9068,7 +9069,7 @@ pub mod graph {
             assert!((est.value - expected).abs() < 1e-6, "got {}", est.value);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn random_walk_entropy_rate_of_cycle_matches_binary_entropy() {
             // 🔐️ 4-cycle: every row is [0.5, 0.5] over its two neighbors -> 1 bit.
             let edges = [(0, 1), (1, 2), (2, 3), (3, 0)];
@@ -9076,14 +9077,14 @@ pub mod graph {
             assert!((est.value - 1.0).abs() < 1e-6, "got {}", est.value);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn random_walk_handles_isolated_node() {
             let edges = [(0, 1)];
             let est = random_walk_entropy_rate(&edges, 3, None, LogBase::Bits).unwrap();
             assert!(est.value.is_finite());
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn random_walk_rejects_negative_weight() {
             let edges = [(0, 1)];
             assert!(random_walk_entropy_rate(&edges, 2, Some(&[-1.0]), LogBase::Bits).is_err());
@@ -9220,28 +9221,28 @@ pub mod ml {
     mod tests {
         use super::*;
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn predictive_entropy_of_confident_prediction_is_zero() {
             let probs = [1.0, 0.0, 0.0];
             let est = predictive_entropy(&probs, 3, LogBase::Bits).unwrap();
             assert!(est[0].value.abs() < 1e-9);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn predictive_entropy_of_uniform_is_max() {
             let probs = [0.25, 0.25, 0.25, 0.25];
             let est = predictive_entropy(&probs, 4, LogBase::Bits).unwrap();
             assert!((est[0].value - 2.0).abs() < 1e-9);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn predictive_entropy_batch_shape() {
             let probs = [0.5, 0.5, 0.9, 0.1, 0.25, 0.75];
             let est = predictive_entropy(&probs, 2, LogBase::Bits).unwrap();
             assert_eq!(est.len(), 3);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn bald_of_unanimous_ensemble_is_near_zero() {
             // 🔐️ every member gives the same confident prediction: no epistemic disagreement.
             let ensemble = [1.0, 0.0, 1.0, 0.0, 1.0, 0.0];
@@ -9249,7 +9250,7 @@ pub mod ml {
             assert!(est[0].value.abs() < 1e-9);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn bald_of_disagreeing_ensemble_is_positive() {
             // 🔐️ members confidently disagree with each other but each is individually confident.
             let ensemble = [1.0, 0.0, 0.0, 1.0];
@@ -9257,7 +9258,7 @@ pub mod ml {
             assert!(est[0].value > 0.9, "got {}", est[0].value);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn ece_of_perfectly_calibrated_predictions_is_zero() {
             let mut rng = crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(1);
             let n = 5000;
@@ -9267,7 +9268,7 @@ pub mod ml {
             assert!(ece < 0.05, "got {ece}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn ece_of_badly_miscalibrated_predictions_is_large() {
             let confidences = vec![0.95; 100];
             let correct = vec![false; 100];
@@ -9275,12 +9276,12 @@ pub mod ml {
             assert!(ece > 0.8, "got {ece}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn ece_rejects_length_mismatch() {
             assert!(expected_calibration_error(&[0.5], &[], 5).is_err());
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn ece_rejects_out_of_range_confidence() {
             assert!(expected_calibration_error(&[1.5], &[true], 5).is_err());
         }
@@ -9552,7 +9553,7 @@ pub mod streaming {
     mod tests {
         use super::*;
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn streaming_counts_update_matches_batch_entropy() {
             let mut sc = StreamingCounts::new(4, LogBase::Bits);
             for &x in &[0u32, 1, 1, 2, 2, 2, 3] {
@@ -9564,7 +9565,7 @@ pub mod streaming {
             assert!((est.value - expected).abs() < 1e-9);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn streaming_counts_remove_undoes_update() {
             let mut sc = StreamingCounts::new(3, LogBase::Nats);
             sc.update(0);
@@ -9573,14 +9574,14 @@ pub mod streaming {
             assert_eq!(sc.n_raw, 1);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn streaming_counts_remove_rejects_unobserved_symbol() {
             let mut sc = StreamingCounts::new(3, LogBase::Nats);
             sc.update(0);
             assert!(sc.remove(1).is_err());
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn streaming_counts_merge_matches_combined_batch() {
             let mut a = StreamingCounts::new(3, LogBase::Nats);
             let mut b = StreamingCounts::new(3, LogBase::Nats);
@@ -9597,7 +9598,7 @@ pub mod streaming {
             assert!((est.value - expected).abs() < 1e-9);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn streaming_counts_snapshot_restore_roundtrips() {
             let mut sc = StreamingCounts::new(3, LogBase::Bits);
             for &x in &[0u32, 1, 2, 2] {
@@ -9608,7 +9609,7 @@ pub mod streaming {
             assert_eq!(sc.estimate().unwrap().value, restored.estimate().unwrap().value);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn sliding_window_matches_batch_recomputed_at_every_step() {
             let mut rng = crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(1);
             let capacity = 20;
@@ -9627,7 +9628,7 @@ pub mod streaming {
             }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn sliding_window_remove_and_merge_are_unsupported() {
             let mut sw = SlidingWindowEntropy::new(3, 5, LogBase::Nats).unwrap();
             sw.update(0);
@@ -9636,20 +9637,20 @@ pub mod streaming {
             assert!(sw.merge(&other).is_err());
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn decayed_entropy_rejects_bad_decay() {
             assert!(DecayedEntropy::new(3, 0.0, LogBase::Nats).is_err());
             assert!(DecayedEntropy::new(3, 1.5, LogBase::Nats).is_err());
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn decayed_entropy_remove_is_unsupported() {
             let mut de = DecayedEntropy::new(3, 0.9, LogBase::Nats).unwrap();
             de.update(0);
             assert!(de.remove(0).is_err());
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn decayed_entropy_forgets_old_symbols() {
             let mut de = DecayedEntropy::new(2, 0.5, LogBase::Bits).unwrap();
             for _ in 0..50 {
@@ -9666,7 +9667,7 @@ pub mod streaming {
             assert!(after < 0.5, "got {after}"); // 🔐️ decay erased symbol-0 history; now near-deterministic on symbol 1
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn decayed_entropy_snapshot_restore_roundtrips() {
             let mut de = DecayedEntropy::new(3, 0.8, LogBase::Nats).unwrap();
             de.update(0);
@@ -9816,7 +9817,7 @@ pub mod features {
     mod tests {
         use super::*;
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn standard_registry_computes_all_features_in_order() {
             let mut rng = crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(1);
             let x: Vec<f64> = (0..2000).map(|_| rng.next_gaussian()).collect();
@@ -9829,7 +9830,7 @@ pub mod features {
             }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn with_feature_appends_after_standard_entries() {
             let registry = FeatureRegistry::standard().with_feature("custom", feature_histogram_entropy as FeatureFn);
             let mut rng = crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(2);
@@ -9838,28 +9839,28 @@ pub mod features {
             assert_eq!(features.last().unwrap().name, "custom");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn compute_propagates_first_error() {
             let registry = FeatureRegistry::standard();
             let constant = vec![1.0; 500];
             assert!(registry.compute(&constant).is_err());
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn suggest_bins_prefers_freedman_diaconis_for_spread_data() {
             let mut rng = crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(3);
             let x: Vec<f64> = (0..500).map(|_| rng.next_gaussian()).collect();
             assert!(matches!(suggest_bins(&x), BinsSpec::FreedmanDiaconis));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn suggest_bins_falls_back_to_sturges_for_degenerate_iqr() {
             let mut x = vec![0.0; 100];
             x[0] = 1000.0; // 🔐️ a single outlier keeps the IQR at zero
             assert!(matches!(suggest_bins(&x), BinsSpec::Sturges));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn suggest_knn_k_scales_with_sample_size_and_stays_bounded() {
             assert_eq!(suggest_knn_k(0), 3);
             assert!(suggest_knn_k(16) <= 4);

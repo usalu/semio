@@ -1045,7 +1045,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn pair_geometry_preserves_contact_distance_and_box_overlap_leaf_semantics() {
         let first = box_part([0.0, 0.0, 0.0], [4.0, 3.0, 3.0]);
         let contact = box_part([4.0, 0.0, 0.0], [5.0, 3.0, 3.0]);

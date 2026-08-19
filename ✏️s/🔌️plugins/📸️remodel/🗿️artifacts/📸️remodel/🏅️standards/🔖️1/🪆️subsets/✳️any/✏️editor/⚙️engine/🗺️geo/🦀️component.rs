@@ -962,7 +962,7 @@ mod tests {
     use geometry::random::{normal, Rng};
 
     // #region 🔖️GeodesyTests
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn ecef_enu_round_trip_sub_millimeter() {
         let cases =
             [(0.0_f64, 0.0_f64, 100.0_f64), (89.9_f64.to_radians(), 45.0_f64.to_radians(), 10.0), (-33.9_f64.to_radians(), 151.2_f64.to_radians(), 50.0), (47.3769_f64.to_radians(), 8.5417_f64.to_radians(), 500.0), (-90.0_f64.to_radians(), 0.0, 0.0)];
@@ -982,7 +982,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn utm_round_trip_sub_millimeter() {
         let cases = [(47.3769_f64, 8.5417_f64), (0.0001_f64, 5.9999_f64), (0.0001_f64, 6.0001_f64), (-33.9_f64, 151.2_f64), (60.0_f64, -1.0_f64), (10.0_f64, 100.0_f64)];
         for &(lat_deg, lon_deg) in &cases {
@@ -999,7 +999,7 @@ mod tests {
     // #endregion 🔖️GeodesyTests
 
     // #region 🔖️GcpTests
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn georeference_recovers_planted_similarity_under_noise() {
         let mut rng = Rng::from_seed(9001);
         let scene = remodel_sfm::synthetic_scene(9001, 6, 12, false);
@@ -1031,7 +1031,7 @@ mod tests {
         10.0 + 5.0 * (-(x * x + y * y) / 8.0).exp()
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dsm_dtm_match_known_terrain_and_idw_fills_holes() {
         let mut rng = Rng::from_seed(77);
         let mut positions = Vec::new();
@@ -1075,7 +1075,7 @@ mod tests {
     // #endregion 🔖️DsmTests
 
     // #region 🔖️OrthoTests
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn orthomosaic_blends_smoothly_across_camera_overlap() {
         let dsm = Raster { width: 40, height: 4, cell_size: 0.5, origin: [0.0, 0.0], values: vec![0.0; 160], valid: vec![true; 160] };
         let intr = Intrinsics { fx: 200.0, fy: 200.0, cx: 100.0, cy: 100.0, skew: 0.0, distortion: remodel_camera::Distortion::None };
@@ -1118,7 +1118,7 @@ mod tests {
     // #endregion 🔖️OrthoTests
 
     // #region 🔖️ContoursTests
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn circular_feature_extracts_closed_contour_with_expected_perimeter() {
         let n = 61_u32;
         let cell = 0.1;
@@ -1150,7 +1150,7 @@ mod tests {
     // #endregion 🔖️ContoursTests
 
     // #region 🔖️VolumeTests
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn cut_fill_matches_planted_block_volume() {
         let n = 20_u32;
         let cell = 1.0;
@@ -1175,7 +1175,7 @@ mod tests {
     // #endregion 🔖️VolumeTests
 
     // #region 🔖️QualityTests
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn quality_report_populates_sane_fields_from_real_sfm_output() {
         let scene = remodel_sfm::synthetic_scene(4242, 5, 40, false);
         let scene_obs = remodel_sfm::project_observations(&scene, 0.3, 0.0, 4242);

@@ -48,7 +48,7 @@ pub enum Puzzle3dScale {
 /// structs, which bind `scale` as `Option<serde_json::Value>` and are out of this derive's scope)
 /// keeps parsing it exactly as before.
 impl Serialize for Puzzle3dScale {
-    async fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         match self {
             Puzzle3dScale::Uniform(scale) => serializer.serialize_f64(*scale),
             Puzzle3dScale::Vec3(vec3) => vec3.serialize(serializer),
@@ -57,7 +57,7 @@ impl Serialize for Puzzle3dScale {
 }
 
 impl<'de> Deserialize<'de> for Puzzle3dScale {
-    async fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         match serde_json::Value::deserialize(deserializer)? {
             serde_json::Value::Number(n) => Ok(Puzzle3dScale::Uniform(n.as_f64().unwrap_or(1.0))),
             serde_json::Value::Array(items) if items.len() >= 3 => {
@@ -363,7 +363,7 @@ async fn puzzle3d_default_direction() -> [f64; 3] {
 }
 
 impl Default for Puzzle3dCatalogVortexTemplate {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { id: String::new(), name: String::new(), label: String::new(), description: String::new(), icon: String::new(), vortex_kind: None, point: [0.0, 0.0, 0.0], direction: puzzle3d_default_direction(), t: None, mandatory: None, radius: None }
     }
 }
@@ -675,7 +675,7 @@ pub use crate::artifacts::puzzle3d::op::Puzzle3dPlaySnapshot;
 mod design_parity_schema_tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn attraction_exposes_eight_connection_parameters_with_zero_defaults() {
         let attraction = Puzzle3dAttraction { id: "a".into(), attracting: "o1:v0".into(), attracted: "o2:v0".into(), gap: 0.0, shift: 0.0, rise: 0.0, rotation: 0.0, turn: 0.0, tilt: 0.0, x: 0.0, y: 0.0 };
         let json = serde_json::to_value(&attraction).expect("serialize");
@@ -692,7 +692,7 @@ mod design_parity_schema_tests {
         assert_eq!(parsed.gap, 0.0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn object_anchor_defaults_to_fixed() {
         let object: Puzzle3dObject = serde_json::from_value(serde_json::json!({
             "id": "o1"
@@ -702,7 +702,7 @@ mod design_parity_schema_tests {
         assert_eq!(serde_json::to_value(Puzzle3dObjectAnchor::Derived).unwrap(), serde_json::json!("derived"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn object_kind_is_type_like_with_representations() {
         let kind = Puzzle3dCatalogObjectKind {
             id: "Capsule".into(),
@@ -741,7 +741,7 @@ mod design_parity_schema_tests {
         assert_eq!(round.representations[0].mime, "model/gltf-binary");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn vortex_kind_is_port_like() {
         let kind = Puzzle3dCatalogVortexKind {
             id: "c-t".into(),
@@ -759,7 +759,7 @@ mod design_parity_schema_tests {
         assert_eq!(json["defaultCableKind"], "cable.link");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn kind_compatibility_uses_typed_specificity() {
         let rule = Puzzle3dKindCompatibility { source: "c-t".into(), target: "c-b".into(), bidirectional: true, important: false, specificity: Puzzle3dCompatSpecificity::Vortex };
         let json = serde_json::to_value(&rule).expect("serialize");

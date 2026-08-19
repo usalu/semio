@@ -39,7 +39,7 @@ pub async fn derive(payload: &GltfChangeMaterialAlphaModePayload, base: &GltfSna
 #[cfg(test)]
 mod tests {
     use super::*;
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn direct_diff_applies_the_canonical_forward_vector() {
         let mut snapshot = GltfSnapshot::default();
         snapshot.document.materials.push(Default::default());

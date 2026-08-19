@@ -53,7 +53,7 @@ mod tests {
     use crate::editor::process3d::testkit;
     use crate::editor::process3d::Process3dCommand;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn definition_binds_the_framework_inspection_tab_to_this_body_key() {
         let definition = definition();
         assert_eq!(definition.id(), FRAMEWORK_PANEL_TAB_INSPECTION_ID);
@@ -72,7 +72,7 @@ mod tests {
     /// 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): the inspector no longer selects
     /// the new step (selection is framework-owned now, unreachable from `Emit`), so this only
     /// asserts the still-real mutation dispatch, not a rendered inspector state.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_step_dispatches_its_no_op_mutation() {
         let mut app = testkit::app();
         let result = testkit::dispatch(&mut app, Process3dCommand::AddStep(add_step::AddStep { measure: Some("drill".into()), machine_id: None, capability_id: None, position: None }));
@@ -83,14 +83,14 @@ mod tests {
     /// entry point: even a stock the pre-migration code would have rejected (circular saw needs
     /// height ≤ 0.065m; the default timber beam is 0.24m) now succeeds, since the dimension gate
     /// can no longer read real stock extents.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_step_via_catalogue_no_longer_gates_on_stock_dimensions() {
         let mut app = testkit::app();
         let result = testkit::dispatch(&mut app, Process3dCommand::AddStep(add_step::AddStep { measure: None, machine_id: Some("circularSaw".into()), capability_id: Some("crosscut".into()), position: None }));
         assert!(!result.mutations.is_empty(), "documented gap: the dimension-validation gate can no longer reject an oversized stock");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn measure_arg_routes_to_generic_machine_and_dispatches() {
         let mut app = testkit::app();
         let result = testkit::dispatch(&mut app, Process3dCommand::AddStep(add_step::AddStep { measure: Some("cut".into()), machine_id: None, capability_id: None, position: None }));
@@ -100,7 +100,7 @@ mod tests {
     /// 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): `render` carries no `InteractionView`
     /// (a known SDK gap — see this file's own header comment), so the inspector always renders its
     /// empty state now, regardless of framework-owned selection.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inspector_always_renders_the_empty_state() {
         let mut app = testkit::app();
         let rendered = testkit::render(&mut app, PROCESS_3D_PLAY_BODY_INSPECTION);

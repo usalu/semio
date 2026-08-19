@@ -92,7 +92,7 @@ mod tests {
     use super::*;
     use crate::artifacts::wires::{empty_wires_snapshot, wires_working_board};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn pack_round_trips_empty() {
         let snapshot = empty_wires_snapshot();
         let bytes = <WiresSnapshot as store::ArtifactPack>::encode_pack(&snapshot);

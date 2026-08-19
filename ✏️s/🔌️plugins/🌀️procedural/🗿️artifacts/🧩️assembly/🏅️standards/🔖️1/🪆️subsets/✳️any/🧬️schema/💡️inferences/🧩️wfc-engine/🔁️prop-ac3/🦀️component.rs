@@ -91,7 +91,7 @@ mod tests {
         (model, tb.build().unwrap(), adj)
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn propagation_forces_alternation_after_one_pin() {
         let (model, topo, _adj) = checkerboard(4);
         let mut domains = DomainStore::new_full(4, model.weights());
@@ -109,7 +109,7 @@ mod tests {
         assert!(metrics.propagations > 0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn odd_cycle_pin_propagates_to_wipeout() {
         let mut b = ModelBuilder::new();
         let black = b.add_pattern(1.0);
@@ -138,7 +138,7 @@ mod tests {
         assert!(result.is_err());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn no_dirty_nodes_means_no_op() {
         let (model, topo, _adj) = checkerboard(3);
         let mut domains = DomainStore::new_full(3, model.weights());

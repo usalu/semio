@@ -110,21 +110,21 @@ mod tests {
     use super::*;
     use crate::artifacts::program::{empty_plugin, sample_plugin};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn definition_declares_the_adjacency_surface_and_body_key() {
         let definition = definition();
         assert_eq!(definition.body_key, ARCHITECT_BODY_ADJACENCY);
         assert!(matches!(definition.surface_kind, SurfaceKind::Canvas2d));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn the_matrix_renders_a_triangle_strip_with_element_labels() {
         let json = serde_json::to_string(&render(&sample_plugin(), &ArchitectConfig::default())).expect("json");
         assert!(json.contains('▲'));
         assert!(json.contains("Reception"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn an_empty_program_renders_the_placeholder() {
         let json = serde_json::to_string(&render(&empty_plugin(), &ArchitectConfig::default())).expect("json");
         assert!(json.contains("Add program elements"));

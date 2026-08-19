@@ -88,7 +88,7 @@ pub mod derived_construction {
     }
 
     impl Default for Ifc2x3Cv20BuilderConstruction {
-        async fn default() -> Self {
+        fn default() -> Self {
             Self::new()
         }
     }
@@ -145,13 +145,13 @@ pub mod derived_construction {
     mod tests {
         use super::*;
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn new_builds_clean() {
             let snapshot = Ifc2x3Cv20BuilderConstruction::new().add_product(2, "IFCWALL", "Wall 1").build().expect("conforming construction must build");
             assert_eq!(snapshot.document.instances.len(), 4);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn hard_violation_injected_via_raw_mutate_still_fails_build() {
             let violating = Part21Instance { id: 99, entities: vec![("IFCSTRUCTURALANALYSISMODEL".into(), vec![])] };
             let mut snapshot = Ifc2x3Cv20BuilderConstruction::new().build().unwrap();
@@ -332,13 +332,13 @@ pub mod derived_analysis {
             Ifc2x3Snapshot { schema: "stdio.ifc.2x3".into(), document: Part21Document { header: header("CoordinationView"), instances: vec![placement, project, wall, units] }, edm_preamble: None }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn conforming_snapshot_has_no_hard_diagnostics() {
             let diagnostics = check_cv20_conformance(&conforming_snapshot());
             assert!(diagnostics.iter().all(|d| d.severity != Severity::Error), "got {diagnostics:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn wrong_file_schema_is_hard() {
             let mut snap = conforming_snapshot();
             snap.document.header.file_schema = vec![Part21Value::List(vec![Part21Value::Str("IFC4".into())])];
@@ -346,7 +346,7 @@ pub mod derived_analysis {
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_FILE_SCHEMA && d.severity == Severity::Error), "got {diagnostics:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn missing_view_definition_is_hard() {
             let mut snap = conforming_snapshot();
             snap.document.header = header("StructuralAnalysisView");
@@ -354,7 +354,7 @@ pub mod derived_analysis {
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_VIEW_DEFINITION && d.severity == Severity::Error), "got {diagnostics:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn structural_entity_present_is_hard() {
             let mut snap = conforming_snapshot();
             snap.document.instances.push(Part21Instance { id: 99, entities: vec![("IFCSTRUCTURALANALYSISMODEL".into(), vec![])] });
@@ -362,7 +362,7 @@ pub mod derived_analysis {
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_STRUCTURAL_ENTITY && d.severity == Severity::Error), "got {diagnostics:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn missing_unit_assignment_is_soft() {
             let mut snap = conforming_snapshot();
             for (name, args) in snap.document.instances[1].entities.iter_mut() {
@@ -374,7 +374,7 @@ pub mod derived_analysis {
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_PROJECT_UNITS && d.severity == Severity::Warning), "got {diagnostics:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn product_without_placement_is_soft() {
             let mut snap = conforming_snapshot();
             for (name, args) in snap.document.instances[2].entities.iter_mut() {

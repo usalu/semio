@@ -90,19 +90,19 @@ pub mod derived_construction {
             PptxSnapshot { opc, ..PptxSnapshot::default() }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn empty_builder_has_no_office_document_relationship_and_fails_build() {
             let err = PptxStrictBuilderConstruction::empty().build().expect_err("an empty package has no officeDocument relationship, must fail build()");
             assert!(err.iter().any(|d| d.code.0 == crate::artifacts::pptx::standards::v_ecma_376::subsets::strict::schema::CODE_MAIN_NS));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn conforming_strict_snapshot_builds_clean() {
             let snapshot = PptxStrictBuilderConstruction::from_snapshot(strict_snapshot()).build().expect("conforming Strict snapshot must build");
             assert!(snapshot.opc.part_bytes("ppt/presentation.xml").is_some());
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn hard_violation_injected_via_raw_mutate_still_fails_build() {
             let mut violating = strict_snapshot();
             violating.opc.set_part("ppt/slides/slide1.xml", "application/vnd.openxmlformats-officedocument.presentationml.slide+xml", b"<v:shape xmlns:v=\"urn:schemas-microsoft-com:vml\"/>".to_vec());
@@ -264,13 +264,13 @@ pub mod derived_analysis {
             PptxSnapshot { opc, ..PptxSnapshot::default() }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn conforming_strict_snapshot_reports_nothing() {
             let diagnostics = check_strict_conformance(&strict_snapshot());
             assert!(diagnostics.is_empty(), "got {diagnostics:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn transitional_main_ns_on_root_part_is_hard() {
             let mut snapshot = strict_snapshot();
             let transitional_xml = STRICT_PRESENTATION_XML.replace(STRICT_MAIN_NS, TRANSITIONAL_MAIN_NS);
@@ -279,7 +279,7 @@ pub mod derived_analysis {
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_MAIN_NS && d.severity == Severity::Error), "got {diagnostics:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn transitional_namespace_anywhere_in_package_is_hard() {
             let mut snapshot = strict_snapshot();
             snapshot.opc.set_part("ppt/slides/slide1.xml", "application/vnd.openxmlformats-officedocument.presentationml.slide+xml", format!("<p:sld xmlns:p=\"{TRANSITIONAL_MAIN_NS}\"/>").into_bytes());
@@ -287,7 +287,7 @@ pub mod derived_analysis {
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_TRANSITIONAL_NS_PRESENT && d.severity == Severity::Error), "got {diagnostics:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn vml_markup_is_hard() {
             let mut snapshot = strict_snapshot();
             snapshot.opc.set_part("ppt/slides/slide1.xml", "application/vnd.openxmlformats-officedocument.presentationml.slide+xml", format!("<v:shape xmlns:v=\"{VML_NS}\"/>").into_bytes());
@@ -295,7 +295,7 @@ pub mod derived_analysis {
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_VML_PRESENT && d.severity == Severity::Error), "got {diagnostics:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn transitional_relationship_base_is_hard() {
             let mut snapshot = strict_snapshot();
             snapshot.opc.set_part("ppt/slides/slide1.xml", "application/vnd.openxmlformats-officedocument.presentationml.slide+xml", b"<p:sld/>".to_vec());
@@ -304,7 +304,7 @@ pub mod derived_analysis {
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_REL_BASE && d.severity == Severity::Error), "got {diagnostics:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn missing_conformance_attribute_is_soft() {
             let mut snapshot = strict_snapshot();
             let no_conformance = STRICT_PRESENTATION_XML.replace(" conformance=\"strict\"", "");
@@ -314,7 +314,7 @@ pub mod derived_analysis {
             assert!(diagnostics.iter().all(|d| d.severity != Severity::Error), "got {diagnostics:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn alternate_content_markup_is_soft() {
             let mut snapshot = strict_snapshot();
             snapshot.opc.set_part("ppt/slides/slide1.xml", "application/vnd.openxmlformats-officedocument.presentationml.slide+xml", b"<mc:AlternateContent/>".to_vec());
@@ -323,7 +323,7 @@ pub mod derived_analysis {
             assert!(diagnostics.iter().all(|d| d.severity != Severity::Error), "got {diagnostics:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn missing_office_document_relationship_is_hard() {
             let snapshot = PptxSnapshot::default();
             let diagnostics = check_strict_conformance(&snapshot);

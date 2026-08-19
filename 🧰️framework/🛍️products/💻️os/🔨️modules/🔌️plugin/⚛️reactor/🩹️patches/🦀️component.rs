@@ -74,7 +74,7 @@ mod tests {
         UiNode::Text(UiTextNode { value: Label::data(text), emphasize: None, data_attributes: None, presence: UiPresence::default(), menu: None })
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn first_diff_for_a_surface_is_dirty_with_base_revision_zero() {
         let tracker = PatchTracker::new();
         let patch = tracker.diff("main", node("a")).expect("first observation of a surface must be dirty");
@@ -82,14 +82,14 @@ mod tests {
         assert_eq!(patch.revision, 1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn an_identical_body_produces_no_patch() {
         let tracker = PatchTracker::new();
         tracker.diff("main", node("a"));
         assert!(tracker.diff("main", node("a")).is_none(), "an unchanged body must not re-emit a patch");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn a_changed_body_advances_the_revision() {
         let tracker = PatchTracker::new();
         tracker.diff("main", node("a"));
@@ -98,7 +98,7 @@ mod tests {
         assert_eq!(patch.revision, 2);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mark_rejected_resets_the_surface_to_base_revision_zero() {
         let tracker = PatchTracker::new();
         tracker.diff("main", node("a"));

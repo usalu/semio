@@ -84,7 +84,7 @@ impl store::ArtifactPack for ArchitectConfig {
 //#endregion 🔖️ArtifactCodec
 
 impl Default for ArchitectConfig {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self {
             active_register: String::new(),
             search_query: String::new(),
@@ -236,13 +236,13 @@ pub async fn snapshot(next: ArchitectConfig) -> Vec<ArchitectConfigMutation> {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn active_register_falls_back_to_elements() {
         assert_eq!(active_register(&ArchitectConfig::default()), "elements");
         assert_eq!(active_register(&ArchitectConfig { active_register: "risks".into(), ..ArchitectConfig::default() }), "risks");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn a_snapshot_operation_replaces_the_whole_config_and_inverts_to_the_base() {
         let base = ArchitectConfig::default();
         let next = ArchitectConfig { search_query: "hall".into(), ..ArchitectConfig::default() };
@@ -251,7 +251,7 @@ mod tests {
         assert_eq!(operation.inverse(&base), vec![ArchitectConfigMutation::Snapshot { config: base }]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn an_empty_active_report_parses_to_none() {
         assert!(parse_active_report(&ArchitectConfig::default()).is_none());
         assert!(parse_search_history(&ArchitectConfig::default()).is_empty());

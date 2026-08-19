@@ -90,14 +90,14 @@ mod tests {
     use crate::editor::imperative::testkit::{imperative_app, render as render_body};
     use crate::editor::imperative::ImperativeCommand;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn renders_table_scene() {
         let mut app = imperative_app();
         let json = render_body(&mut app, IMPERATIVE_PLAY_BODY_MAIN);
         assert!(json.contains("table"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn run_command_expands_scope_into_readable_rows_without_truncation() {
         use crate::editor::imperative::testkit::dispatch;
         use crate::editor::imperative::commands::run;

@@ -191,12 +191,12 @@ impl GltfAccessorType {
 /// [`GltfComponentType::from_code`] rather than deriving (a derive would emit the Rust variant
 /// name, not a spec-legal wire value).
 impl Serialize for GltfComponentType {
-    async fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         serializer.serialize_u64(self.code())
     }
 }
 impl<'de> Deserialize<'de> for GltfComponentType {
-    async fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         let code = u64::deserialize(deserializer)?;
         Self::from_code(code).map_err(serde::de::Error::custom)
     }
@@ -205,12 +205,12 @@ impl<'de> Deserialize<'de> for GltfComponentType {
 /// 🧵 `accessor.type` on the wire is always the spec string (`"SCALAR"`, `"VEC3"`, …) -- hand-rolled
 /// for the same reason as [`GltfComponentType`]'s impl above.
 impl Serialize for GltfAccessorType {
-    async fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         serializer.serialize_str(self.as_str())
     }
 }
 impl<'de> Deserialize<'de> for GltfAccessorType {
-    async fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         let s = String::deserialize(deserializer)?;
         Self::from_str(&s).map_err(serde::de::Error::custom)
     }
@@ -537,13 +537,13 @@ pub use derived_composition::*;
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn empty_snapshot_matches_schema() {
         let snapshot = crate::artifacts::gltf::engine::empty_gltf_snapshot();
         assert_eq!(snapshot.schema, STDIO_GLTF_DOCUMENT_SCHEMA);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn codec_round_trip() {
         let snap = crate::artifacts::gltf::engine::empty_gltf_snapshot();
         let text = store::ArtifactDsl::print_dsl(&snap);
@@ -563,7 +563,7 @@ mod tests {
     }
 
     //#region 🔖️Base64Tests
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn base64_round_trips_plain_and_data_uri() {
         for payload in [&b""[..], b"a", b"ab", b"abc", b"abcd", &[0u8, 255, 128, 1, 2, 3][..]] {
             let enc = b64_encode(payload);
@@ -584,7 +584,7 @@ mod tests {
     /// 🧪️ Ticket ARTIFACT-SYSTEM-OVERHAUL: the prior `encode_glb` omitted the BIN chunk's own
     /// padding from the header's total-length field whenever `bin.len()` wasn't 4-byte-aligned.
     /// Sweeps json/bin lengths across every mod-4 residue to pin the fix down.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn glb_total_length_header_matches_actual_bytes_across_alignments() {
         for json_len in [0usize, 1, 2, 3, 4, 5, 61] {
             for bin_len in [0usize, 1, 2, 3, 4, 5, 100] {
@@ -604,7 +604,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn glb_json_padding_is_space_and_bin_padding_is_zero() {
         let document = doc_with_buffer(3);
         let snap = GltfSnapshot { schema: STDIO_GLTF_DOCUMENT_SCHEMA.into(), document, buffers: vec![vec![1u8, 2, 3]], source_form: GltfSourceForm::Glb };
@@ -635,7 +635,7 @@ mod tests {
         GltfBufferView { buffer, byte_offset, byte_length: 0, byte_stride, target: None, name: None, extensions: None, extras: None }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn decode_accessor_handles_byte_stride_interleaved_vec3() {
         let mut buf = Vec::new();
         let verts: [[f32; 3]; 2] = [[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]];
@@ -661,7 +661,7 @@ mod tests {
         assert_eq!(nrm.components, vec![0.0, 0.0, 1.0, 0.0, 1.0, 0.0]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn decode_accessor_handles_all_component_types() {
         let document = GltfDocument {
             buffers: vec![GltfBuffer { byte_length: 32, uri: None, name: None, extensions: None, extras: None }],
@@ -674,7 +674,7 @@ mod tests {
         assert_eq!(acc.components, vec![10.0, 20.0, 30.0, 255.0]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn decode_accessor_applies_spec_normalization_after_sparse_overlay() {
         let document = GltfDocument {
             buffers: vec![GltfBuffer { byte_length: 7, uri: None, name: None, extensions: None, extras: None }],
@@ -700,7 +700,7 @@ mod tests {
         assert_eq!(acc.components, vec![-1.0, 0.0, 64.0 / 127.0, 1.0]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn accessor_normalization_covers_every_legal_integer_component_type() {
         let cases = [
             (GltfComponentType::Byte, vec![-128.0, 127.0], vec![-1.0, 1.0]),
@@ -716,7 +716,7 @@ mod tests {
         assert!(normalize_components(GltfComponentType::Float, &mut [1.0]).is_err());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn decode_accessor_applies_sparse_substitution_over_zero_base() {
         let document = GltfDocument {
             buffers: vec![GltfBuffer { byte_length: 100, uri: None, name: None, extensions: None, extras: None }],
@@ -751,7 +751,7 @@ mod tests {
     //#region 🔖️LenientParseTests
     /// 🧪️ Ticket ARTIFACT-SYSTEM-OVERHAUL: the prior parser hard-failed any document lacking a
     /// POSITION accessor. A scene-only document (zero meshes) is legitimately valid glTF.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn parse_gltf_document_accepts_scene_only_document_without_position() {
         let text = br#"{"asset":{"version":"2.0"},"scenes":[{"nodes":[]}],"scene":0}"#;
         let snap = parse_gltf_document(text).expect("scene-only document must parse leniently");
@@ -759,7 +759,7 @@ mod tests {
         assert!(snap.buffers.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn parse_gltf_document_preserves_morph_target_maps() {
         let text = br#"{"asset":{"version":"2.0"},"meshes":[{"primitives":[{"attributes":{"POSITION":0},"targets":[{"POSITION":1,"NORMAL":2}]}]}]}"#;
         let snap = parse_gltf_document(text).expect("morph targets are core glTF 2.0 data");
@@ -770,13 +770,13 @@ mod tests {
         assert_eq!(reparsed.document.meshes[0].primitives[0].targets, snap.document.meshes[0].primitives[0].targets);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn parse_gltf_document_rejects_missing_asset_version() {
         let text = br#"{"scenes":[]}"#;
         assert!(parse_gltf_document(text).is_err());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn parse_gltf_document_preserves_unknown_top_level_fields_verbatim() {
         let text = br#"{"asset":{"version":"2.0"},"extensions":{"KHR_lights_punctual":{"lights":[{"type":"directional"}]}},"extras":{"authorNote":"kept verbatim"}}"#;
         let snap = parse_gltf_document(text).expect("parse");
@@ -786,7 +786,7 @@ mod tests {
         assert_eq!(extras[0], ("authorNote".to_string(), GltfJson::String("kept verbatim".into())));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn parse_gltf_document_decodes_data_uri_buffer() {
         let bytes: &[u8] = &[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
         let uri = encode_data_uri("application/octet-stream", bytes);
@@ -797,7 +797,7 @@ mod tests {
     //#endregion 🔖️LenientParseTests
 
     //#region 🔖️DualCodecTests
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn glb_round_trip_preserves_json_and_bin_semantically() {
         let position_bytes: Vec<u8> = [[0.0f32, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0]].iter().flat_map(|v| v.iter().flat_map(|c| c.to_le_bytes())).collect();
         let document = GltfDocument {
@@ -827,7 +827,7 @@ mod tests {
     /// 🧪️ `codec_retention_law`: decode -> encode -> decode is byte-preserving up to the
     /// documented normal form (spec-default numeric fields round-trip as "present" iff they carry
     /// a non-default value -- see the `is_*`/`default_*` helpers in the snapshot module).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn codec_retention_law_glb_decode_encode_decode_is_semantically_faithful() {
         let bytes: Vec<u8> = (0..24u8).collect();
         let document = GltfDocument {
@@ -851,7 +851,7 @@ mod tests {
         assert_eq!(redecoded, decoded, "second decode->encode->decode cycle must be a fixed point");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn gltf_json_serialize_embeds_glb_sourced_buffer_as_data_uri() {
         let bytes: Vec<u8> = vec![9, 9, 9, 9];
         let document = doc_with_buffer(4);
@@ -894,7 +894,7 @@ mod tests {
         /// ✅️ "committed files parse": all 6 handcrafted `.grammar.semio`/`.protocol.semio` files
         /// parse under the real dialect — independent of, and cheaper than, the two `recognize`/
         /// `walk_protocol` laws below (a parse failure here fails fast with a clearer message).
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn committed_facet_files_parse() {
             for (label, text) in [("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", mutation_transport::text::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO)] {
                 let grammar = dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
@@ -909,7 +909,7 @@ mod tests {
         /// the demo (genuinely non-trivial) snapshot — same preamble-stripped body reconstruction
         /// `m5_handcrafted_grammar_conformance`'s own `dsl_body_from_fixture` uses, so this is a
         /// direct proof this artifact will pass that harness once graduated, not merely an analogue.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn grammar_conformance_law() {
             let grammar = dsl::parse_grammar(snapshot::text::COMPONENT_GRAMMAR_SEMIO).expect("parse snapshot grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
@@ -921,7 +921,7 @@ mod tests {
 
         /// ✅️ `ops_grammar_conformance_law`: the mutations grammar recognizes the canonical generic
         /// envelope, independently of the registered command payload shape.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn ops_grammar_conformance_law() {
             let grammar = dsl::parse_grammar(mutation_transport::text::COMPONENT_GRAMMAR_SEMIO).expect("parse mutations grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
@@ -933,7 +933,7 @@ mod tests {
             }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn generic_envelope_registry_and_transport_laws() {
             let mutation = alpha_mode_mutation();
             assert!(registered_gltf_mutation_command_ids().expect("valid immutable mutation registry").contains(&mutation::ID));
@@ -953,7 +953,7 @@ mod tests {
         /// ✅️ `diff_grammar_conformance_law`: the diff grammar recognizes real `print_diff` output
         /// for every representative `GltfDiff` (`diff::demo_diff_cases()`), incl. the empty
         /// (all-`None`) diff and the fully-populated rich diff.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn diff_grammar_conformance_law() {
             let grammar = dsl::parse_grammar(diff::text::COMPONENT_GRAMMAR_SEMIO).expect("parse diff grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
@@ -967,7 +967,7 @@ mod tests {
         /// snapshot pack (`encode_pack`, envelope-unwrapped first, matching how
         /// `m5_handcrafted_protocol_conformance` itself feeds `walk_protocol`), a generic mutation
         /// envelope's `encode_op`, and every demo diff's `encode_diff` — asserting `consumed == bytes.len()`.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn protocol_walk_law() {
             let pack_spec = dsl::parse_protocol(snapshot::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
             let packed = store::ArtifactPack::encode_pack(&crate::artifacts::gltf::engine::demo_gltf_snapshot());
@@ -997,7 +997,7 @@ mod tests {
         /// demo()`, `print_dsl(demo()) == fixture` (byte-for-byte), and the pack twin — so the
         /// fixtures can never silently drift back to a fake (the pre-FG3 `{"hello":"stdio.gltf",
         /// "n":1}` stub this program's own recipe explicitly calls out as the wrong shape).
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn fixture_honesty_law() {
             const FIXTURE_DSL: &str = include_str!("../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
             const FIXTURE_PACK: &[u8] = include_bytes!("../📚️examples/🎬️demo/🖼️assets/🎒️example.pack.semio");

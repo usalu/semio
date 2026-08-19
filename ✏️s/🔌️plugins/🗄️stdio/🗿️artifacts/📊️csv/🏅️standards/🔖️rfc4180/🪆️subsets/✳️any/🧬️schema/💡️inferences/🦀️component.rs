@@ -71,13 +71,13 @@ mod tests {
     use super::*;
     use protocol::Inference;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = CsvSnapshot::default();
         assert_eq!(CsvInference::infer(&snapshot), CsvInference::infer(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(CsvInference::infer(&CsvSnapshot::default()), CsvInference::default());
     }
@@ -98,7 +98,7 @@ mod tests {
         /// genuine `print_dsl` output (envelope-id-normalized, matching how
         /// `dsl::fixture_sweep::m5_handcrafted_grammar_conformance::dsl_body_from_fixture` feeds the
         /// Recognizer, mirrored here so this law does not depend on the framework's own harness).
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn grammar_conformance_law() {
             let grammar_text = snapshot::text::COMPONENT_GRAMMAR_SEMIO;
             let grammar = dsl::parse_grammar(grammar_text).expect("parse snapshot grammar");
@@ -116,7 +116,7 @@ mod tests {
         /// own law) — snapshot's Pack facet walks the post-`unwrap_binary` payload of a genuine
         /// `encode_pack` call; mutations' Spr facet walks a genuine `encode_op` frame; diff's own
         /// protocol facet walks a genuine `encode_diff` frame.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn protocol_walk_law() {
             // Pack (snapshot binary facet).
             let snap = snapshot::demo_csv_snapshot();
@@ -145,7 +145,7 @@ mod tests {
         /// 🧪️ P2-P1 item 5: fixture honesty — the committed `.dsl.semio`/`.pack.semio` fixtures are
         /// genuinely `print_dsl`/`encode_pack` output of the SAME demo snapshot, round-tripping both
         /// ways (never allowed to silently drift again).
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn fixture_honesty_law() {
             let demo = snapshot::demo_csv_snapshot();
             assert_eq!(<snapshot::CsvSnapshot as store::ArtifactDsl>::parse_dsl(crate::artifacts::csv::examples::demo::PRIMARY_TEXT).unwrap(), demo);
@@ -158,7 +158,7 @@ mod tests {
         /// 🧪️ P2-P1 item 6: every committed grammar/protocol file for this standard genuinely
         /// parses under `dsl::parse_grammar`/`dsl::parse_protocol` — this artifact's own early
         /// warning, independent of the eventual repo-wide policy gate.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn committed_grammar_and_protocol_files_parse() {
             let g1 = dsl::parse_grammar(snapshot::text::COMPONENT_GRAMMAR_SEMIO);
             assert!(g1.is_ok(), "snapshot grammar must parse: {g1:?}");

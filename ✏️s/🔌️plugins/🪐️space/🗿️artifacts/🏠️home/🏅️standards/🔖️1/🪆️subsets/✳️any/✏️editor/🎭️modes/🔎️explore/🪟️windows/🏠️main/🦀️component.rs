@@ -148,14 +148,14 @@ mod tests {
         crate::HomeSpaceRow { id: "sp-hub".into(), name: "Fabrication".into(), kind: "studio".into(), visibility: "public".into(), members: "2".into(), updated: "1000".into(), origin: "hub" }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn empty_rows_render_the_empty_message_not_a_zero_row_table() {
         let json = serde_json::to_string(&render_rows(&[], &HomeTableLabels::NATIVE_EN, &SHomeLabels::NATIVE_EN)).unwrap();
         assert!(json.contains("No studios yet"), "empty rows render the empty message, not a zero-row table: {json}");
         assert!(!json.contains("framework.window.table"), "empty rows must not render the table scene at all: {json}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn a_local_row_renders_with_open_only_actions() {
         let json = serde_json::to_string(&render_rows(&[one_local_row()], &HomeTableLabels::NATIVE_EN, &SHomeLabels::NATIVE_EN)).unwrap();
         assert!(json.contains("Fixture Studio"));
@@ -163,7 +163,7 @@ mod tests {
         assert!(!json.contains("rename"), "local-only rows offer open only, no rename/share/delete: {json}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn a_hub_row_renders_with_the_full_action_set() {
         let json = serde_json::to_string(&render_rows(&[one_hub_row()], &HomeTableLabels::NATIVE_EN, &SHomeLabels::NATIVE_EN)).unwrap();
         assert!(json.contains("Fabrication"));
@@ -174,7 +174,7 @@ mod tests {
     /// 🆔️ Contract §C0: `data-row-id="space:<id>"` must reach the table scene's own row id, and every
     /// row action must be a real, dispatchable `ActionDescriptor` (controller + action id + spaceId
     /// arg) — not text, per ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS lane 3-F.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn a_hub_row_stamps_the_space_row_id_and_carries_dispatchable_row_actions() {
         let UiNode::ComponentScene(node) = render_rows(&[one_hub_row()], &HomeTableLabels::NATIVE_EN, &SHomeLabels::NATIVE_EN) else { panic!("expected ComponentScene") };
         let scene = node.table.expect("table scene");
@@ -187,7 +187,7 @@ mod tests {
         assert_eq!(delete_button["action"]["args"]["spaceId"], serde_json::json!("sp-hub"), "the delete button's descriptor already carries the row's own space id: {delete_button:?}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn a_local_row_only_carries_an_open_action_button() {
         let UiNode::ComponentScene(node) = render_rows(&[one_local_row()], &HomeTableLabels::NATIVE_EN, &SHomeLabels::NATIVE_EN) else { panic!("expected ComponentScene") };
         let scene = node.table.expect("table scene");
@@ -198,7 +198,7 @@ mod tests {
         assert_eq!(buttons[0]["action"]["action"], serde_json::json!("openSpace"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn seeded_local_studio_renders_a_table_row() {
         let cfg = HomeConfig::default();
         // 🌱️ `crate::catalog_port()` lazily seeds a demo space on first access (plugin root's own
@@ -211,7 +211,7 @@ mod tests {
         assert!(json.contains("local"), "the seeded demo studio has no directory entry, so it renders origin=local: {json}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn german_locale_labels_resolve_in_the_rendered_table() {
         let json = serde_json::to_string(&render_rows(&[one_local_row()], &HomeTableLabels::NATIVE_DE, &SHomeLabels::NATIVE_DE)).unwrap();
         assert!(json.contains("Aktualisiert"), "German column header must resolve: {json}");
@@ -219,7 +219,7 @@ mod tests {
         assert!(json.contains("lokal"), "German origin label must resolve for a local-only row: {json}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn render_resolves_labels_from_config_locale() {
         let cfg = HomeConfig { locale: "de".into(), ..HomeConfig::default() };
         let json = serde_json::to_string(&render_rows(&[one_local_row()], &HomeTableLabels::NATIVE_DE, &SHomeLabels::NATIVE_DE)).unwrap();
@@ -232,7 +232,7 @@ mod tests {
     /// this directly instead of hunting the command palette. The button is preceded by two
     /// `window_content_dead_line_spacer()` separators (see that fn's doc) — found by type, not a
     /// hardcoded index, so this test stays valid if the spacer count ever changes.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn render_wraps_the_table_with_a_real_create_space_button() {
         let UiNode::Stack(stack) = render(&HomeConfig::default()) else { panic!("expected a Stack wrapping button + table") };
         let button = stack.children.iter().find_map(|child| if let UiNode::Button(button) = child { Some(button) } else { None }).expect("a create-space button somewhere in the stack");
@@ -242,7 +242,7 @@ mod tests {
         assert!(button.action.args.is_none(), "an empty-args dispatch is what makes the handler open the dialog");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn empty_catalog_still_renders_the_create_space_button() {
         let UiNode::Stack(stack) = render_rows_wrapped_for_test(&[]) else { panic!("expected a Stack") };
         assert!(stack.children.iter().any(|child| matches!(child, UiNode::Button(_))), "the create button must survive the empty-table branch too");

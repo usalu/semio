@@ -37,26 +37,26 @@ pub async fn print_dsl(document: &CurateSnapshot) -> String {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     #[ignore = "manual fixture export"]
     async fn export_demo_stock_fixture_text() {
         let document = crate::artifacts::curate::curate_snapshot_from_stock(crate::artifacts::curate::schema::demo_stock(), Vec::new());
         println!("{}", store::ArtifactDsl::print_dsl(&document));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn demo_stock_example_dsl_round_trips() {
         let document = parse_dsl(DEMO_STOCK_TEXT).expect("parse demo-stock example");
         store::os_store::test_support::assert_dsl_round_trip(&document);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn empty_curation_example_dsl_round_trips() {
         let document = parse_dsl(EMPTY_CURATION_TEXT).expect("parse empty-curation example");
         store::os_store::test_support::assert_dsl_round_trip(&document);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn curate_document_dsl_round_trips_a_mesh_kind_and_a_curated_selection() {
         use crate::artifacts::curate::{GeometryRecipe, ObjectKind};
 

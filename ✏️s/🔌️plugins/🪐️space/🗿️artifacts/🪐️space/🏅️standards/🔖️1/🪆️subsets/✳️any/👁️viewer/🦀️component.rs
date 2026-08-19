@@ -87,18 +87,18 @@ pub async fn create_space_index_viewer() -> semio_framework_plugin::AppDefinitio
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_space_index_viewer_builds_a_definition_for_this_dialect() {
         let def = create_space_index_viewer();
         assert_eq!(def.dialect, SPACE_INDEX_DIALECT.into());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn viewer_dialect_matches_the_artifact_coordinate() {
         assert_eq!(<SpaceIndexViewer as ArtifactViewer>::DIALECT, SPACE_INDEX_DIALECT);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn an_unknown_body_key_falls_back_to_a_text_node() {
         let snapshot = SSpaceSnapshot::default();
         let history = semio_framework_plugin::HistoryView::empty();

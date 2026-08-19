@@ -27,7 +27,7 @@ mod tests {
     use crate::editor::sourcing::testkit::{dispatch, new_app, render};
     use crate::editor::sourcing::SourcingCurateCommand;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_filter_min_availability_clamps_to_zero() {
         let mut app = new_app();
         dispatch(&mut app, SourcingCurateCommand::SetFilterMinAvailability(SetFilterMinAvailability { delta: Some(-1000.0), value: None }));

@@ -2345,7 +2345,7 @@ pub(crate) async fn demo_diff_cases() -> Vec<LasDiff> {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn invalid_collection_targets_are_rejected_before_mutation() {
         let base = LasSnapshot::default();
         let diff = LasDiff { vlrs: Some(LasVlrsDiff { removed: vec![0], ..Default::default() }), ..Default::default() };
@@ -2361,7 +2361,7 @@ mod tests {
     /// `removed`/`modified`/`added`) simultaneously via `demo_diff_cases()`'s real `between()`
     /// results — the single source of truth also reused by `⚙️engine/🦀️component.rs`'s
     /// `diff_grammar_conformance_law`/`protocol_walk_law`.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn diff_codec_text_binary_roundtrip_law() {
         for d in demo_diff_cases() {
             let printed = d.print_diff();

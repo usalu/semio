@@ -26,7 +26,7 @@ pub enum KernelError {
 }
 
 impl std::fmt::Display for KernelError {
-    async fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             KernelError::InvalidInput(msg) => write!(f, "invalid input: {msg}"),
             KernelError::MissingEntity(id) => write!(f, "missing entity: {id}"),
@@ -41,19 +41,19 @@ impl std::fmt::Display for KernelError {
 impl std::error::Error for KernelError {}
 
 impl From<IntersectError> for KernelError {
-    async fn from(e: IntersectError) -> Self {
+    fn from(e: IntersectError) -> Self {
         KernelError::Intersect(e)
     }
 }
 
 impl From<BooleanError> for KernelError {
-    async fn from(e: BooleanError) -> Self {
+    fn from(e: BooleanError) -> Self {
         KernelError::Boolean(e)
     }
 }
 
 impl From<StepError> for KernelError {
-    async fn from(e: StepError) -> Self {
+    fn from(e: StepError) -> Self {
         KernelError::Step(e)
     }
 }
@@ -71,7 +71,7 @@ pub enum IntersectError {
 }
 
 impl std::fmt::Display for IntersectError {
-    async fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             IntersectError::Tangent => write!(f, "tangent configuration"),
             IntersectError::Unresolved(msg) => write!(f, "unresolved: {msg}"),
@@ -94,7 +94,7 @@ pub enum BooleanError {
 }
 
 impl std::fmt::Display for BooleanError {
-    async fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             BooleanError::ImprintFailed(msg) => write!(f, "imprint failed: {msg}"),
             BooleanError::ClassificationAmbiguous(msg) => write!(f, "ambiguous classification: {msg}"),
@@ -105,7 +105,7 @@ impl std::fmt::Display for BooleanError {
 }
 
 impl From<IntersectError> for BooleanError {
-    async fn from(e: IntersectError) -> Self {
+    fn from(e: IntersectError) -> Self {
         BooleanError::Intersect(e)
     }
 }
@@ -122,7 +122,7 @@ pub enum StepError {
 }
 
 impl std::fmt::Display for StepError {
-    async fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             StepError::Syntax(msg) => write!(f, "syntax error: {msg}"),
             StepError::UnresolvedReference(id) => write!(f, "unresolved reference #{id}"),
@@ -147,7 +147,7 @@ pub struct ValidationIssue {
 }
 
 impl std::fmt::Display for ValidationIssue {
-    async fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "[{}] {}: {}", self.code, self.entity, self.message)
     }
 }
@@ -159,25 +159,25 @@ impl std::fmt::Display for ValidationIssue {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn kernel_error_displays_readable_message() {
         let e = KernelError::InvalidInput("radius must be positive".to_string());
         assert_eq!(e.to_string(), "invalid input: radius must be positive");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn intersect_error_converts_into_kernel_error() {
         let e: KernelError = IntersectError::Tangent.into();
         assert!(matches!(e, KernelError::Intersect(IntersectError::Tangent)));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn boolean_error_wraps_intersect_error() {
         let e: BooleanError = IntersectError::Degenerate("zero length".to_string()).into();
         assert!(matches!(e, BooleanError::Intersect(IntersectError::Degenerate(_))));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn validation_issue_displays_code_entity_message() {
         let issue = ValidationIssue { entity: "edge-3".to_string(), code: "same-parameter-violated", message: "residual 1e-3 exceeds tol 1e-6".to_string() };
         assert_eq!(issue.to_string(), "[same-parameter-violated] edge-3: residual 1e-3 exceeds tol 1e-6");

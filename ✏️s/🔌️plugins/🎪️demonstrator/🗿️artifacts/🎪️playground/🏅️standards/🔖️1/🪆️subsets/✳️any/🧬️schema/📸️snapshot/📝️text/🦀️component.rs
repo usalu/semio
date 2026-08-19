@@ -26,12 +26,12 @@ pub async fn print_dsl(snapshot: &PlaygroundSnapshot) -> String {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn playground_snapshot_dsl_round_trips() {
         store::os_store::test_support::assert_dsl_round_trip(&crate::artifacts::playground::standards::v1::subsets::any::schema::empty_playground_snapshot());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn default_example_dsl_round_trips() {
         let document = parse_dsl(PLAYGROUND_DEMO_DEFAULT_EXAMPLE_TEXT).expect("parse default playground example");
         store::os_store::test_support::assert_dsl_round_trip(&document);

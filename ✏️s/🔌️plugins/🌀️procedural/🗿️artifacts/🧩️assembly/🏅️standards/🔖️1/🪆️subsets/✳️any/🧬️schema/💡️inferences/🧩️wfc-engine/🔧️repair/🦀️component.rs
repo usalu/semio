@@ -83,7 +83,7 @@ mod tests {
         AdjacencyView::new(neighbors, vec![RegionId(0); n])
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn halo_radius_zero_is_just_the_centers() {
         let adj = line_adjacency(5);
         let mut h = halo(&adj, &[NodeId(2)], 0);
@@ -91,7 +91,7 @@ mod tests {
         assert_eq!(h, vec![NodeId(2)]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn halo_expands_by_relation_hops_and_stays_in_bounds() {
         let adj = line_adjacency(5);
         let mut h = halo(&adj, &[NodeId(2)], 1);
@@ -105,7 +105,7 @@ mod tests {
         assert_eq!(whole, (0..5).map(NodeId::from_index).collect::<Vec<_>>());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn halo_from_multiple_centers_unions_their_neighborhoods() {
         let adj = line_adjacency(7);
         let mut h = halo(&adj, &[NodeId(0), NodeId(6)], 1);
@@ -113,7 +113,7 @@ mod tests {
         assert_eq!(h, vec![NodeId(0), NodeId(1), NodeId(5), NodeId(6)]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn repair_region_reproduces_a_solved_checkerboard_when_reopened_around_one_node() {
         use crate::wfc_engine::model::ModelBuilder;
         use crate::wfc_engine::oracle;
@@ -159,7 +159,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn repair_region_with_radius_zero_pins_everything_and_reproduces_the_input_exactly() {
         use crate::wfc_engine::model::ModelBuilder;
         use crate::wfc_engine::topology::GraphTopologyBuilder;

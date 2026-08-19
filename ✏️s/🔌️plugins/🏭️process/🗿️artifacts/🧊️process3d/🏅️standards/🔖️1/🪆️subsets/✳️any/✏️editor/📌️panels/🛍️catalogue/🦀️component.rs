@@ -5,7 +5,7 @@ use crate::editor::process3d::process3d_action;
 use crate::editor::process3d::terminology::Process3dLabels;
 use crate::editor::process3d::installed_catalogs;
 use crate::artifacts::process3d::schema::inferences::{validate_capability, validation_reason, ValidationContext};
-use crate::artifacts::process3d::{Process3dSnapshot, WorkshopMachine};
+use crate::artifacts::process3d::{MachineCatalog, Process3dSnapshot, WorkshopMachine};
 use semio_framework_plugin::{tree_item_desc, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, UiTreeItemNode, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL};
 use serde_json::json;
 
@@ -91,14 +91,14 @@ mod tests {
 
     /// 🪵️ The default timber beam (0.24m tall) exceeds both the circular saw's 0.065m max cut depth
     /// and the table saw's 0.102m — both wood machines list, both are disabled with a reason.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     /// 🌉️ Ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM wave 4: `fixture.stock_solid` is a
     /// composed `s.stdio.semio.brep` CHILD HANDLE now, with no resolvable dimensions without a
     /// `LinkResolver` (see `render`'s own doc comment) — every capability now renders as valid
     /// (an unconstrained stock), so the "mixed validity" premise this test's name describes is a
     /// documented gap rather than real behavior; it now asserts only that the wood catalog's
     /// machines still appear.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn catalogue_lists_workshop_wood_machines() {
         let mut app = testkit::app();
         let rendered = testkit::render(&mut app, PROCESS_3D_PLAY_BODY_CATALOGUE);
@@ -106,7 +106,7 @@ mod tests {
         assert!(rendered.contains("Table Saw"), "expected wood's table saw in the catalogue: {rendered}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn definition_binds_the_framework_catalogue_tab_to_this_body_key() {
         let definition = definition();
         assert_eq!(definition.id(), FRAMEWORK_PANEL_TAB_CATALOGUE_ID);

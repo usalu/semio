@@ -17,7 +17,7 @@ use store::ArtifactPack;
 pub struct PresentPresence {}
 
 impl Default for PresentPresence {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self {}
     }
 }

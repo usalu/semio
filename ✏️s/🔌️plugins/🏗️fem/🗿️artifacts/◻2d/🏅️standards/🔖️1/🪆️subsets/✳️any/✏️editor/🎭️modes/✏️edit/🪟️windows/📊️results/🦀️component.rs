@@ -284,20 +284,20 @@ mod tests {
         dispatch(app, Fem2dCommand::SetActiveExample(crate::editor::fem2d::commands::set_active_example::SetActiveExample { example_id: "default".into() }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn renders_fem2d_results_scene() {
         let mut app = fem2d_app();
         load_default_example(&mut app);
         assert!(render_body(&mut app, BODY_KEY).contains("canvas-2d"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn results_window_surfaces_solver_error_without_panicking_2d() {
         let mut app = fem2d_app();
         let _ = render_body(&mut app, BODY_KEY);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn results_window_buckling_with_no_load_case_shows_placeholder_2d() {
         let doc = crate::artifacts::fem2d::schema::empty_fem2d_snapshot();
         let display = ResultDisplay { source_id: None, mode: DisplayMode::Buckling(0) };
@@ -306,7 +306,7 @@ mod tests {
         assert!(json.contains("No load case defined"), "{json}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn results_window_renders_contour_for_region() {
         let mut app = fem2d_app();
         load_default_example(&mut app);
@@ -318,7 +318,7 @@ mod tests {
         assert!(json.contains("contour-"), "expected contour-prefixed layer ids: {json}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn results_window_renders_reaction_labels_2d() {
         let mut app = fem2d_app();
         load_default_example(&mut app);
@@ -327,7 +327,7 @@ mod tests {
         assert!(json.contains("reaction-"), "expected reaction-prefixed text label layers: {json}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn results_window_renders_modal_mode_shape_2d() {
         let mut app = fem2d_app();
         load_default_example(&mut app);
@@ -337,7 +337,7 @@ mod tests {
         assert!(!json.contains("Modal analysis error"), "unexpected modal error: {json}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn results_window_renders_buckling_mode_shape_2d() {
         let mut app = fem2d_app();
         load_default_example(&mut app);
@@ -347,19 +347,19 @@ mod tests {
         assert!(!json.contains("Buckling analysis error"), "unexpected buckling error: {json}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn interpolate_at_value_falls_back_to_midpoint_when_values_equal() {
         let (point, value) = interpolate_at_value(((0.0, 0.0), 5.0), ((10.0, 20.0), 5.0), 5.0);
         assert_eq!(point, (5.0, 10.0));
         assert_eq!(value, 5.0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn clip_by_value_empty_polygon_returns_empty() {
         assert!(clip_by_value(&[], 0.0, true).is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn clip_by_value_keeps_only_the_requested_half_plane() {
         let poly: Vec<ValuedPoint> = vec![((0.0, 0.0), 0.0), ((10.0, 0.0), 10.0), ((0.0, 10.0), 0.0)];
         let above = clip_by_value(&poly, 5.0, true);

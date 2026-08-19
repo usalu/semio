@@ -114,31 +114,31 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn illuminance_increases_with_sun() {
         let e = reference_point_illuminance_lux(10_000.0, 50_000.0, 0.5, 0.6, 0.05, 1.0);
         assert!(e > 500.0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dimming_reduces_at_high_daylight() {
         let frac = lighting_dimming_fraction(600.0, 500.0, 0.1);
         assert!((frac - 0.1).abs() < 1e-6);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dimming_full_when_dark() {
         let frac = lighting_dimming_fraction(50.0, 500.0, 0.1);
         assert!(frac > 0.8);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn glare_high_for_bright_window() {
         let gi = simplified_glare_index(5000.0, 0.2, 300.0);
         assert!(gi > 0.1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn zone_average_illuminance() {
         let zone = sample_zone();
         let lux = vec![400.0, 600.0];

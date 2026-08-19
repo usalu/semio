@@ -81,7 +81,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fem2d_mesh_preview_returns_region_triangles() {
         let doc = rectangle_region_doc();
         let meshes = fem2d_mesh_preview(&doc).expect("mesh preview succeeds");
@@ -101,7 +101,7 @@ mod tests {
     /// (biaxial-ish but still smoothly varying membrane stress) produces FINITE values at every node —
     /// not a tight numeric benchmark (the region isn't a pure patch-test field), just a wiring check that
     /// the document-bridge correctly plumbs `crate::analyses::nodal_averaged_scalar`.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fem2d_nodal_von_mises_returns_one_value_per_mesh_node() {
         let mut doc = rectangle_region_doc();
         doc.load_cases = vec![FemLoadCase { id: "pressure".into(), name: "pressure".into(), loads: vec![FemLoad::Area { id: "a1".into(), region_id: "r1".into(), pressure: 5000.0 }], self_weight: false }];

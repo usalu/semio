@@ -113,7 +113,7 @@ pub struct Puzzle5dConfig {
 
 /// ⚠️ Explicit impl (not `#[derive(Default)]`) so Rust construction matches the serde field defaults above.
 impl Default for Puzzle5dConfig {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self {
             camera2d: Puzzle5dCamera2d { x: 0.0, y: 0.0, zoom: 1.0 },
             camera3d: Puzzle5dCamera3d { position: [8.0, -8.0, 8.0], target: [0.0, 0.0, 0.0], zoom: 1.0 },

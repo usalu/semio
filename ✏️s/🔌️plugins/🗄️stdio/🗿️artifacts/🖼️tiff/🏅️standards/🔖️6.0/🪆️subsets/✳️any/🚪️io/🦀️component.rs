@@ -581,7 +581,7 @@ mod tests {
 
     /// 🔬 Load-bearing regression: non-solid 9x5 checkerboard/gradient round-tripped through the
     /// real uncompressed IFD codec.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn gradient_checkerboard_uncompressed_round_trip() {
         let (w, h) = (9u32, 5u32);
         let rgba = gradient_checkerboard_rgba(w, h);
@@ -596,7 +596,7 @@ mod tests {
     /// 🔬 Same fixture through real PackBits encode+decode — proves PackBits compression is
     /// actually exercised (not just pass-through), by asserting the compressed strip is smaller
     /// than the raw RGB and that decode reconstructs the exact original pixels.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn gradient_checkerboard_packbits_round_trip() {
         let (w, h) = (9u32, 5u32);
         let rgba = gradient_checkerboard_rgba(w, h);
@@ -610,7 +610,7 @@ mod tests {
 
     /// 🔬 PackBits actually runs real repeat/literal RLE, not a pass-through: a solid-color strip
     /// (long repeat runs) must compress to fewer bytes than the raw RGB.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn packbits_compresses_repetitive_data() {
         let (w, h) = (20u32, 10u32);
         let rgba: Vec<u8> = (0..w * h).flat_map(|_| [128u8, 128, 128, 255]).collect();
@@ -622,7 +622,7 @@ mod tests {
         assert_eq!(decoded.pixels, rgba);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn packbits_hand_decode_control_bytes() {
         // literal run of 3 (10,20,30), then repeat run of 5x99, then literal run of 2 (1,2)
         let encoded: [u8; 9] = [2, 10, 20, 30, 0xFC, 99, 1, 1, 2];
@@ -636,7 +636,7 @@ mod tests {
 
     /// 🔬 Big-endian (`MM`) byte order must decode correctly too, AND encode must round-trip
     /// `byte_order` itself (real round-trip, not always-little-endian).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn big_endian_round_trip() {
         let (w, h) = (2u32, 1u32);
         let rgba = vec![10u8, 20, 30, 255, 40, 50, 60, 255];
@@ -653,7 +653,7 @@ mod tests {
     /// 🔬 A non-core tag (`Artist`, ASCII, out-of-line since its value exceeds 4 bytes) set on
     /// `ifds[0]` must survive an encode/decode round trip verbatim — proves the generic
     /// tag/type/value model, not just the hardcoded strip-geometry tags.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn carried_ascii_tag_round_trips() {
         let (w, h) = (2u32, 2u32);
         let rgba = vec![1u8; (w * h * 4) as usize];
@@ -667,7 +667,7 @@ mod tests {
     }
 
     /// 🔬 A short (inline) non-core numeric tag also survives.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn carried_short_tag_round_trips() {
         let (w, h) = (2u32, 2u32);
         let rgba = vec![1u8; (w * h * 4) as usize];
@@ -679,13 +679,13 @@ mod tests {
         assert_eq!(decoded.tag(296).expect("ResolutionUnit must survive").values, TiffValues::Short(vec![2]));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn sniff_rejects_non_tiff_bytes() {
         let err = decode_tiff(b"not a tiff at all").unwrap_err();
         assert!(err.contains("byte-order"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn unsupported_compression_is_a_typed_error() {
         let (w, h) = (2u32, 2u32);
         let mut ifd = ifd0_snapshot(w, h);
@@ -735,7 +735,7 @@ mod tests {
         /// files parse under the real dialect — independent of, and cheaper than, the two
         /// `recognize`/`walk_protocol` laws below (a parse failure here fails fast with a
         /// clearer message).
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn committed_facet_files_parse() {
             for (label, text) in [("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO)] {
                 let grammar = dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
@@ -752,7 +752,7 @@ mod tests {
         /// reconstruction `m5_handcrafted_grammar_conformance`'s own `dsl_body_from_fixture`
         /// uses, so this is a direct proof this artifact will pass that harness once graduated,
         /// not merely an analogue.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn grammar_conformance_law() {
             let grammar = dsl::parse_grammar(snapshot::text::COMPONENT_GRAMMAR_SEMIO).expect("parse snapshot grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
@@ -764,7 +764,7 @@ mod tests {
 
         /// ✅️ `ops_grammar_conformance_law`: the mutations grammar recognizes real `print_op`
         /// output for every `TiffMutation` variant (`mutations::demo_mutation_cases()`).
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn ops_grammar_conformance_law() {
             let grammar = dsl::parse_grammar(mutations::text::COMPONENT_GRAMMAR_SEMIO).expect("parse mutations grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
@@ -778,7 +778,7 @@ mod tests {
         /// output for every representative `TiffDiff` (`diff::demo_diff_cases()`), incl. the
         /// empty diff, every IFD-level/tag-level collection-triple shape, and every
         /// `TiffValues` field-type family.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn diff_grammar_conformance_law() {
             let grammar = dsl::parse_grammar(diff::text::COMPONENT_GRAMMAR_SEMIO).expect("parse diff grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
@@ -797,7 +797,7 @@ mod tests {
         /// out-of-line-offset/IFD-chain resolution are honest mechanism gaps) before the
         /// trailing `chain rest bytes` consumes everything past that point — so `consumed ==
         /// bytes.len()` still holds exactly for every facet, same as the op/diff protocols.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn protocol_walk_law() {
             let pack_spec = dsl::parse_protocol(snapshot::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
             let packed = store::ArtifactPack::encode_pack(&demo_tiff_snapshot());
@@ -824,7 +824,7 @@ mod tests {
         /// GENUINE `print_dsl`/`encode_pack` output of `demo_tiff_snapshot()` —
         /// `parse_dsl(fixture) == demo()`, `print_dsl(demo()) == fixture` (byte-for-byte), and
         /// the pack twin — so the fixtures can never silently drift back to a fake again.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn fixture_honesty_law() {
             const FIXTURE_DSL: &str = include_str!("../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
             const FIXTURE_PACK: &[u8] = include_bytes!("../📚️examples/🎬️demo/🖼️assets/🎒️example.pack.semio");
@@ -843,7 +843,7 @@ mod tests {
             assert_eq!(native.as_slice(), include_bytes!("../📚️examples/🎬️demo/🖼️assets/🖼️example.tiff"), "encode_tiff(demo) drifted from 🖼️example.tiff");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         #[ignore]
         async fn zzz_write_native_tiff_fixture() {
             let demo = demo_tiff_snapshot();

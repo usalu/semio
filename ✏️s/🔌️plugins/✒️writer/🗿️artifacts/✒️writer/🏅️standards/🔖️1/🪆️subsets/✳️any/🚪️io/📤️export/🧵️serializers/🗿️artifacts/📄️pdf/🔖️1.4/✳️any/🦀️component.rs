@@ -18,7 +18,7 @@ impl Serializer<WriterSnapshot> for WriterIntoPdf {
     const INTO: Dialect = PDF_DIALECT;
     /// 🪧️ Lossy — see the sibling deserializer's doc comment.
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    async fn serialize(from: &WriterSnapshot) -> IoResult<IoPayload> {
+    fn serialize(from: &WriterSnapshot) -> IoResult<IoPayload> {
         let pdf = PdfSnapshot { schema: STDIO_PDF_DOCUMENT_SCHEMA.into(), page: PageDoc { width: 612.0, height: 792.0, text: writer_text(from) } };
         Ok(IoOutcome { value: IoPayload::Binary(<PdfSnapshot as store::ArtifactPack>::encode_pack(&pdf)), diagnostics: Vec::new() })
     }
@@ -29,7 +29,7 @@ impl Serializer<WriterSnapshot> for WriterIntoPdf {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn writer_into_pdf_round_trips_through_pdf_into_writer() {
         let snapshot = crate::artifacts::writer::writer_snapshot_with_text("writer.document", "id", "plain", "writer://id", "hello");
         let outcome = WriterIntoPdf::serialize(&snapshot).expect("serialize");

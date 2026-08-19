@@ -32,7 +32,7 @@ impl protocol::MutationKind<GltfSnapshot, GltfMutation> for ReparentNode {
 }
 
 impl GltfSemanticMutation for ReparentNode {
-    async fn apply(&self, snapshot: &mut GltfSnapshot) -> Result<(), GltfMutationRejection> {
+    fn apply(&self, snapshot: &mut GltfSnapshot) -> Result<(), GltfMutationRejection> {
         let document = &mut snapshot.document;
         check_index("document/nodes", self.index, document.nodes.len())?;
         if self.parent.is_some() && self.scene.is_some() {

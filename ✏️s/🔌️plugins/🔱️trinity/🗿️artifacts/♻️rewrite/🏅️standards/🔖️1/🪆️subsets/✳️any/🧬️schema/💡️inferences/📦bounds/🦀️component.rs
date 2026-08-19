@@ -50,12 +50,12 @@ mod tests {
     use crate::artifacts::rewrite::LayoutPoint;
     use std::collections::BTreeMap;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn empty_rule_layout_yields_default_bounds() {
         assert_eq!(compute_bounds(&RewriteSnapshot::default()), RewriteBounds::default());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn bounds_matches_rule_layout_extents() {
         let mut rule_layout = BTreeMap::new();
         rule_layout.insert("a".to_string(), LayoutPoint { x: 0.0, y: 0.0 });

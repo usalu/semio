@@ -36,7 +36,7 @@ mod tests {
     use crate::editor::note::testkit::{dispatch, note_app};
     use crate::editor::note::NoteCommand;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_block_action_emits_one_op_and_grows_projection() {
         let mut app = note_app();
         let result = dispatch(&mut app, NoteCommand::AddBlock(AddBlock { kind: "text".into(), x: 80.0, y: 80.0 }));
@@ -46,14 +46,14 @@ mod tests {
         assert_eq!(crate::artifacts::note::schema::block_kind(&projection.blocks[0]), "text");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_block_then_undo_round_trip() {
         use semio_framework_plugin::testkit;
         let mut app = note_app();
         testkit::assert_undo_redo_round_trip(&mut app, NoteCommand::AddBlock(AddBlock { kind: "text".into(), x: 0.0, y: 0.0 }), |app| app.snapshot().expect("snapshot").blocks.len(), 0, 1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn patch_blocks_table_row_and_column_ops_clamp_at_one() {
         let mut app = note_app();
         dispatch(&mut app, NoteCommand::AddBlock(AddBlock { kind: "table".into(), x: 0.0, y: 0.0 }));
@@ -75,7 +75,7 @@ mod tests {
     /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the source block is selected via
     /// the framework's injected `interactionSelect` verb now (`select_blocks`), not an app command —
     /// requires `note_app_with_registry()` (see that helper's own doc comment).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn duplicate_selection_clones_with_offset() {
         use crate::editor::note::testkit::{note_app_with_registry, select_blocks};
         let mut app = note_app_with_registry();

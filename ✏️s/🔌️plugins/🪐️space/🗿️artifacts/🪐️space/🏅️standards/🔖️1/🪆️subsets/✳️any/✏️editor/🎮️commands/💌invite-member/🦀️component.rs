@@ -28,7 +28,7 @@ mod tests {
     use crate::editor::space_index::{testkit, SpaceIndexCommand};
     
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn invite_member_relays_upsert_member() {
         let mut app = testkit::new_app();
         let result = app.dispatch_typed(SpaceIndexCommand::InviteMember(InviteMember { email: "a@example.com".into(), role: "author".into() }), &semio_framework_plugin::testkit::meta("local")).expect("invite");

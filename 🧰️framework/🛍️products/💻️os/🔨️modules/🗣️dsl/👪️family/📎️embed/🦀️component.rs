@@ -3,7 +3,7 @@
 pub use crate::os_dsl::notation::{print_edge, EdgeLabel, EdgeLink, EdgeNode, EdgeValue};
 
 /// @emoji 🏷️ Parses `lang` id from a fence header line (` ```jack `).
-pub fn parse_fence_lang(header: &str) -> Option<String> {
+pub async fn parse_fence_lang(header: &str) -> Option<String> {
     let trimmed = header.trim();
     let rest = trimmed.strip_prefix("```")?;
     let lang = rest.split_whitespace().next()?;
@@ -14,8 +14,8 @@ pub fn parse_fence_lang(header: &str) -> Option<String> {
 #[cfg(test)]
 mod tests {
     /// @emoji 📖️ The fragment's `.grammar` file must parse under `dsl_grammar`'s parser.
-    #[test]
-    fn grammar_file_is_syntactically_valid() {
+    #[semio_framework_async_macros::async_test]
+    async fn grammar_file_is_syntactically_valid() {
         let source = include_str!("📖️family-embed.grammar.semio");
         let grammar = crate::os_dsl::grammar::parse_grammar(source).expect("family-embed.grammar must parse");
         assert_eq!(grammar.id, "family-embed");

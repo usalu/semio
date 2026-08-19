@@ -40,7 +40,7 @@ impl Inference<SHomeSnapshot> for SHomeInference {
 /// schema/generation) and would break `inference_default_law`. Defining default as "infer the
 /// default snapshot" makes the two definitionally equal.
 impl Default for SHomeInference {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self::infer(&SHomeSnapshot::default())
     }
 }
@@ -96,18 +96,18 @@ mod tests {
     use super::*;
 
     //#region 🧪️InferenceLaws
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = SHomeSnapshot { schema: "s.home".into(), catalog_generation: 7 };
         assert_eq!(SHomeInference::infer(&snapshot), SHomeInference::infer(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(SHomeInference::infer(&SHomeSnapshot::default()), SHomeInference::default());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn different_generations_yield_different_digests() {
         let a = SHomeSnapshot { schema: "s.home".into(), catalog_generation: 1 };
         let b = SHomeSnapshot { schema: "s.home".into(), catalog_generation: 2 };

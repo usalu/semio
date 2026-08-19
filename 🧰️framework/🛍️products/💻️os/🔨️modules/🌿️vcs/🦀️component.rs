@@ -15,7 +15,7 @@ use crate::os_spr::{Edit, Mutation, MutationApplyError, MutationDiff};
 
 //#region 🆔️Ids
 /// @emoji 🔑 Content-addressed entity id: `{prefix}-{hex16(blake3(prefix || 0 || payload))}`.
-pub fn content_addressed_entity_id(prefix: &str, payload: &[u8]) -> String {
+pub async fn content_addressed_entity_id(prefix: &str, payload: &[u8]) -> String {
     let mut input = prefix.as_bytes().to_vec();
     input.push(0);
     input.extend_from_slice(payload);
@@ -25,49 +25,49 @@ pub fn content_addressed_entity_id(prefix: &str, payload: &[u8]) -> String {
 }
 
 /// @emoji 🆔️ Deterministic child id scoped to an edit: blake3(`{edit_id}:{ordinal}`).
-pub fn edit_scoped_id(edit_id: &str, ordinal: u32) -> String {
+pub async fn edit_scoped_id(edit_id: &str, ordinal: u32) -> String {
     let digest = blake3::hash(format!("{edit_id}:{ordinal}").as_bytes());
     let hex16: String = digest.as_bytes()[..8].iter().map(|byte| format!("{byte:02x}")).collect();
     format!("scoped-{hex16}")
 }
 
 /// @emoji ✏️ Content-addressed edit id from actor + sequence + forwards fingerprint (no global counter).
-pub fn mint_edit_id(actor: Option<&str>, sequence: i32, forwards_fingerprint: &[u8]) -> String {
+pub async fn mint_edit_id(actor: Option<&str>, sequence: i32, forwards_fingerprint: &[u8]) -> String {
     let mut payload = Vec::new();
     payload.extend_from_slice(actor.unwrap_or("").as_bytes());
     payload.push(0);
     payload.extend_from_slice(&sequence.to_le_bytes());
     payload.push(0);
     payload.extend_from_slice(forwards_fingerprint);
-    content_addressed_entity_id("edit", &payload)
+    content_addressed_entity_id("edit", &payload).await
 }
 
 /// @emoji 📦️ Content-addressed change id from ordered edit ids (+ optional description distinguisher).
-pub fn mint_change_id(edit_ids: &[String], description: Option<&str>) -> String {
+pub async fn mint_change_id(edit_ids: &[String], description: Option<&str>) -> String {
     let mut payload = edit_ids.join("\0").into_bytes();
     payload.push(0);
     payload.extend_from_slice(description.unwrap_or("").as_bytes());
-    content_addressed_entity_id("change", &payload)
+    content_addressed_entity_id("change", &payload).await
 }
 
 /// @emoji 🌿️ Content-addressed alternative id from name + ordered checkpoint ids.
-pub fn mint_alternative_id(name: &str, checkpoint_ids: &[String]) -> String {
+pub async fn mint_alternative_id(name: &str, checkpoint_ids: &[String]) -> String {
     let mut payload = name.as_bytes().to_vec();
     payload.push(0);
     payload.extend_from_slice(checkpoint_ids.join("\0").as_bytes());
-    content_addressed_entity_id("alternative", &payload)
+    content_addressed_entity_id("alternative", &payload).await
 }
 
 /// @emoji ⚙️ Content-addressed operation id from the operation's binary (or other) fingerprint bytes.
-pub fn mint_mutation_id(mutation_bytes: &[u8]) -> String {
-    content_addressed_entity_id("mutation", mutation_bytes)
+pub async fn mint_mutation_id(mutation_bytes: &[u8]) -> String {
+    content_addressed_entity_id("mutation", mutation_bytes).await
 }
 
 /// @emoji 🆔️ Legacy-compatible prefix-only mint — identical inputs collide.
 /// Prefer [`mint_edit_id`] / [`mint_change_id`] / [`mint_alternative_id`] / [`mint_mutation_id`] /
 /// [`content_addressed_entity_id`] with a distinguishing payload.
-pub fn create_document_vcs_id(prefix: &str) -> String {
-    content_addressed_entity_id(prefix, prefix.as_bytes())
+pub async fn create_document_vcs_id(prefix: &str) -> String {
+    content_addressed_entity_id(prefix, prefix.as_bytes()).await
 }
 //#endregion 🆔️Ids
 
@@ -272,13 +272,17 @@ impl<TId, TPatch, TAdded> Default for CollectionDiff<TId, TPatch, TAdded> {
 //#region 🔖️CollectionMutation
 /// @emoji 🏷️ Identifies an item within a `Vec` by a stable id, for generic collection operations.
 pub trait Identified<TId> {
+    // 🚫️async: E1 pure accessor — every real caller is a std `Iterator`/`Vec` closure
+    // (`retain`/`position`/`find`), `FnMut(&T) -> bool` signature fixed outside this repo and
+    // cannot be async — see R9, R10 residue shape #1. Two of the three known implementors
+    // (🌊️flow/🌿️vcs, ♾️infinite/…/dag) already converged on sync independently.
     fn id(&self) -> &TId;
 }
 
 /// @emoji 🩹️ Applies a patch in place and returns the patch that undoes it (captured from prior state).
 pub trait Patchable<TPatch>: Sized {
-    fn apply_patch(&mut self, patch: &TPatch);
-    fn diff_patch(&self, other: &Self) -> Option<TPatch>;
+    async fn apply_patch(&mut self, patch: &TPatch);
+    async fn diff_patch(&self, other: &Self) -> Option<TPatch>;
 }
 
 /// @emoji 🧺️ Generic ordered-collection operation (add/remove/move/patch) with mechanical pre-state inverses.
@@ -304,7 +308,7 @@ pub enum CollectionMutation<TId, TItem, TPatch> {
 }
 
 /// @emoji ▶️ Applies a `CollectionMutation` to a `Vec` in place.
-pub fn apply_collection_mutation<TId, TItem, TPatch>(items: &mut Vec<TItem>, operation: &CollectionMutation<TId, TItem, TPatch>)
+pub async fn apply_collection_mutation<TId, TItem, TPatch>(items: &mut Vec<TItem>, operation: &CollectionMutation<TId, TItem, TPatch>)
 where
     TId: PartialEq + Clone,
     TItem: Identified<TId> + Clone + Patchable<TPatch>,
@@ -326,7 +330,7 @@ where
         }
         CollectionMutation::Patch { id, patch } => {
             if let Some(item) = items.iter_mut().find(|item| item.id() == id) {
-                item.apply_patch(patch);
+                item.apply_patch(patch).await;
             }
         }
     }
@@ -334,7 +338,7 @@ where
 
 /// @emoji ↩️ Computes the inverse `CollectionMutation` from the pre-state `items`. Panics if `operation` targets
 /// an id absent from `items` (Remove/Move/Patch always target an existing item by construction).
-pub fn inverse_collection_mutation<TId, TItem, TPatch>(items: &[TItem], operation: &CollectionMutation<TId, TItem, TPatch>) -> CollectionMutation<TId, TItem, TPatch>
+pub async fn inverse_collection_mutation<TId, TItem, TPatch>(items: &[TItem], operation: &CollectionMutation<TId, TItem, TPatch>) -> CollectionMutation<TId, TItem, TPatch>
 where
     TId: PartialEq + Clone,
     TItem: Identified<TId> + Clone + Patchable<TPatch>,
@@ -352,8 +356,8 @@ where
         CollectionMutation::Patch { id, patch } => {
             let prior = items.iter().find(|item| item.id() == id).cloned().expect("patch target must exist in pre-state");
             let mut after = prior.clone();
-            after.apply_patch(patch);
-            let inverse_patch = after.diff_patch(&prior).expect("a patch that changed state must yield a computable inverse");
+            after.apply_patch(patch).await;
+            let inverse_patch = after.diff_patch(&prior).await.expect("a patch that changed state must yield a computable inverse");
             CollectionMutation::Patch { id: id.clone(), patch: inverse_patch }
         }
     }
@@ -364,7 +368,7 @@ where
 /// `added`. `Add` → `added`, `Remove` → `removed`, `Patch` → `modified`. `CollectionDiff` has no
 /// positional-move channel, so `Move` is encoded as `removed` + `added` (delete then re-add by
 /// identity); a plugin that keeps items keyed by id reconstructs order from item identity.
-pub fn collection_diff_from_mutation<TId, TItem, TPatch>(items: &[TItem], operation: &CollectionMutation<TId, TItem, TPatch>) -> CollectionDiff<TId, TPatch, TItem>
+pub async fn collection_diff_from_mutation<TId, TItem, TPatch>(items: &[TItem], operation: &CollectionMutation<TId, TItem, TPatch>) -> CollectionDiff<TId, TPatch, TItem>
 where
     TId: PartialEq + Clone,
     TItem: Identified<TId> + Clone,
@@ -397,12 +401,12 @@ where
 /// callers that must not silently apply a rejected op check `worst_level(&messages)` against their
 /// `MergePolicy` themselves (this fn stays policy-agnostic, matching its old unconditional-apply
 /// shape).
-pub fn apply_mutation<P, Mutation>(snapshot: &P, operation: &Mutation) -> Result<(P, Vec<crate::os_spr::MutationMessage>), MutationApplyError>
+pub async fn apply_mutation<P, Mutation>(snapshot: &P, operation: &Mutation) -> Result<(P, Vec<crate::os_spr::MutationMessage>), MutationApplyError>
 where
     Mutation: self::Mutation<P>,
 {
-    let (diff, messages) = operation.diff(snapshot).into_parts();
-    Ok((diff.apply(snapshot)?, messages))
+    let (diff, messages) = operation.diff(snapshot).await.into_parts().await;
+    Ok((diff.apply(snapshot).await?, messages))
 }
 
 //#endregion 🔖️Mutation
@@ -432,7 +436,7 @@ where
 /// natural deterministic order of its own, and two peers committing the identical pin SET must
 /// still converge on the identical id regardless of which order their local dispatch happened to
 /// discover the children in.
-pub fn content_addressed_checkpoint_id(parent_id: Option<&str>, change_ids: &[String], changes: &[Change], message: Option<&str>, authors: &[Author], timestamp: &str, pins: &[CompositionPin]) -> String {
+pub async fn content_addressed_checkpoint_id(parent_id: Option<&str>, change_ids: &[String], changes: &[Change], message: Option<&str>, authors: &[Author], timestamp: &str, pins: &[CompositionPin]) -> String {
     let mut input = Vec::new();
     input.extend_from_slice(parent_id.unwrap_or("").as_bytes());
     input.push(0);
@@ -450,7 +454,12 @@ pub fn content_addressed_checkpoint_id(parent_id: Option<&str>, change_ids: &[St
     input.push(0);
     input.extend_from_slice(timestamp.as_bytes());
     if !pins.is_empty() {
-        let mut ordered: Vec<(String, &CompositionPin)> = pins.iter().map(|pin| (pin.child_ref.to_uri(), pin)).collect();
+        // 🪡️ `to_uri` (🚪️io, out of this packet's scope) is async — `Iterator::map`'s closure is
+        // sync (E0728), so the await is hoisted into a plain loop before the sort (R10 residue #1).
+        let mut ordered: Vec<(String, &CompositionPin)> = Vec::with_capacity(pins.len());
+        for pin in pins {
+            ordered.push((pin.child_ref.to_uri().await, pin));
+        }
         ordered.sort_by(|(a, _), (b, _)| a.cmp(b));
         input.push(0);
         for (uri, pin) in ordered {
@@ -489,19 +498,19 @@ mod tests {
     }
 
     impl Patchable<DemoItemPatch> for DemoItem {
-        fn apply_patch(&mut self, patch: &DemoItemPatch) {
+        async fn apply_patch(&mut self, patch: &DemoItemPatch) {
             if let Some(value) = patch.value {
                 self.value = value;
             }
         }
 
-        fn diff_patch(&self, other: &Self) -> Option<DemoItemPatch> {
+        async fn diff_patch(&self, other: &Self) -> Option<DemoItemPatch> {
             (self.value != other.value).then(|| DemoItemPatch { value: Some(other.value) })
         }
     }
 
     #[test]
-    fn collection_diff_from_op_projects_each_variant() {
+    async fn collection_diff_from_op_projects_each_variant() {
         let items: Vec<DemoItem> = vec![DemoItem { id: "a".into(), value: 1 }, DemoItem { id: "b".into(), value: 2 }];
         let added = collection_diff_from_mutation::<String, DemoItem, DemoItemPatch>(&items, &CollectionMutation::Add { index: 0, item: DemoItem { id: "c".into(), value: 3 } });
         assert_eq!(added.added.len(), 1);
@@ -521,7 +530,7 @@ mod tests {
     }
 
     #[test]
-    fn collection_op_add_and_invert() {
+    async fn collection_op_add_and_invert() {
         let items: Vec<DemoItem> = vec![DemoItem { id: "a".into(), value: 1 }];
         let operation = CollectionMutation::Add { index: 1, item: DemoItem { id: "b".into(), value: 2 } };
         let mut applied = items.clone();
@@ -534,7 +543,7 @@ mod tests {
     }
 
     #[test]
-    fn collection_op_move_and_invert() {
+    async fn collection_op_move_and_invert() {
         let items: Vec<DemoItem> = vec![DemoItem { id: "a".into(), value: 1 }, DemoItem { id: "b".into(), value: 2 }, DemoItem { id: "c".into(), value: 3 }];
         let operation = CollectionMutation::Move { id: "a".into(), to_index: 2 };
         let mut applied = items.clone();
@@ -546,7 +555,7 @@ mod tests {
     }
 
     #[test]
-    fn collection_op_patch_and_invert() {
+    async fn collection_op_patch_and_invert() {
         let items: Vec<DemoItem> = vec![DemoItem { id: "a".into(), value: 1 }];
         let operation = CollectionMutation::Patch { id: "a".into(), patch: DemoItemPatch { value: Some(9) } };
         let mut applied = items.clone();
@@ -558,7 +567,7 @@ mod tests {
     }
 
     #[test]
-    fn collection_op_remove_and_invert() {
+    async fn collection_op_remove_and_invert() {
         let items: Vec<DemoItem> = vec![DemoItem { id: "a".into(), value: 1 }, DemoItem { id: "b".into(), value: 2 }];
         let operation = CollectionMutation::Remove { id: "a".into() };
         let mut applied = items.clone();
@@ -573,7 +582,7 @@ mod tests {
 
     //#region 🔖️ContentAddressedCheckpointAndMergeBase
     #[test]
-    fn content_addressed_checkpoint_id_is_deterministic_and_content_sensitive() {
+    async fn content_addressed_checkpoint_id_is_deterministic_and_content_sensitive() {
         let root_change = Change { id: "change-root".into(), edit_ids: vec!["edit-1".into()], description: Some("root".into()), saved_at: "2026-07-27T00:00:00Z".into() };
         let changes = vec![root_change];
         let change_ids = vec!["change-root".to_string()];
@@ -600,7 +609,7 @@ mod tests {
     /// same bytes `content_addressed_checkpoint_id` produced before this field existed, so every
     /// checkpoint id ever minted for a non-composite artifact stays valid.
     #[test]
-    fn content_addressed_checkpoint_id_composition_pins_are_deterministic_and_backward_compatible() {
+    async fn content_addressed_checkpoint_id_composition_pins_are_deterministic_and_backward_compatible() {
         let root_change = Change { id: "change-root".into(), edit_ids: vec!["edit-1".into()], description: Some("root".into()), saved_at: "2026-07-27T00:00:00Z".into() };
         let changes = vec![root_change];
         let change_ids = vec!["change-root".to_string()];
@@ -666,7 +675,7 @@ mod tests {
 
     //#region 🆔️Ids
     #[test]
-    fn content_addressed_entity_and_mint_helpers_are_deterministic() {
+    async fn content_addressed_entity_and_mint_helpers_are_deterministic() {
         assert_eq!(content_addressed_entity_id("x", b"payload"), content_addressed_entity_id("x", b"payload"));
         assert_ne!(content_addressed_entity_id("x", b"a"), content_addressed_entity_id("x", b"b"));
         assert_eq!(edit_scoped_id("edit-1", 0), edit_scoped_id("edit-1", 0));

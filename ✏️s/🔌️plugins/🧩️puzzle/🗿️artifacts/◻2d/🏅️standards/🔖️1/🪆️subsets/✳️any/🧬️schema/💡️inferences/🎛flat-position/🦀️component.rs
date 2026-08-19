@@ -71,18 +71,18 @@ mod tests {
     //#endregion 🧸️Fixtures
 
     //#region 🧪️FlatPositionLaws
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = parent_child_snapshot();
         assert_eq!(compute_flat_position(&snapshot), compute_flat_position(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(compute_flat_position(&Puzzle2dSnapshot::default()), Puzzle2dFlatPosition::default());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fixed_parent_keeps_its_coordinates_and_derived_child_offsets_by_edge_xy() {
         let flat = compute_flat_position(&parent_child_snapshot());
         let p = flat.positions.get("p").expect("p present");

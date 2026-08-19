@@ -157,7 +157,7 @@ mod tests {
     use crate::editor::gis2d::testkit::{app, app_with_registry, dispatch, render};
     use crate::editor::gis2d::Gis2dCommand;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_render_mode_is_view_state() {
         let mut app = app();
         let result = dispatch(&mut app, Gis2dCommand::SetRenderMode(set_render_mode::SetRenderMode { value: "vector".into() }));
@@ -167,7 +167,7 @@ mod tests {
 
     /// 👁️ A representative View action mutates only config state, so under the real registry it
     /// emits no operations and never trips the View → emits-operations guard.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn view_actions_emit_no_ops_under_registry_kind_discipline() {
         let mut app = app_with_registry();
         let render_mode = dispatch(&mut app, Gis2dCommand::SetRenderMode(set_render_mode::SetRenderMode { value: "vector".into() }));
@@ -176,7 +176,7 @@ mod tests {
         assert!(fit.mutations.is_empty(), "framing the world only moves the config camera");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn toggling_a_layer_flips_its_visibility_in_the_rendered_scene() {
         let mut app = app();
         assert!(render(&mut app, GIS2D_PLAY_BODY_COMPOSITE).contains("\\\"water\\\":true"));
@@ -184,7 +184,7 @@ mod tests {
         assert!(render(&mut app, GIS2D_PLAY_BODY_COMPOSITE).contains("\\\"water\\\":false"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn layer_stroke_scale_is_clamped_to_the_surface_crates_range() {
         let mut app = app();
         dispatch(&mut app, Gis2dCommand::SetLayerStrokeScale(set_layer_stroke_scale::SetLayerStrokeScale { layer_id: "roads".into(), value: 99.0 }));
@@ -192,7 +192,7 @@ mod tests {
         assert!(!json.contains("\\\"roads\\\":99"), "an out-of-range weight is clamped before it reaches the config");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn camera_writes_straight_through_to_the_config() {
         let mut app = app();
         dispatch(&mut app, Gis2dCommand::SetCamera(set_camera::SetCamera { camera_json: r#"{"x":5,"y":6,"zoom":7}"#.into() }));
@@ -200,7 +200,7 @@ mod tests {
         assert!(json.contains("\\\"zoom\\\":7"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn focus_feature_on_an_unknown_id_emits_nothing() {
         let mut app = app();
         let result = dispatch(&mut app, Gis2dCommand::FocusFeature(focus_feature::FocusFeature { feature_id: "nope".into(), feature_kind: "position".into() }));

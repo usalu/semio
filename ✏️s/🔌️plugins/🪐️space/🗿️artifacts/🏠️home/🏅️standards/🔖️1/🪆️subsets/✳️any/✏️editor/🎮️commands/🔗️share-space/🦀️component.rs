@@ -43,7 +43,7 @@ mod tests {
         ArtifactView::new(doc_snapshot, history)
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn empty_email_opens_the_share_dialog() {
         let history = semio_framework_plugin::HistoryView::empty();
         let doc_snapshot = SHomeSnapshot::default();
@@ -54,7 +54,7 @@ mod tests {
         assert!(matches!(emit.effects.as_slice(), [Effect::OpenDialog { dialog_id, .. }] if dialog_id == "shareSpace"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn email_and_role_relay_upsert_member() {
         let history = semio_framework_plugin::HistoryView::empty();
         let doc_snapshot = SHomeSnapshot::default();
@@ -76,7 +76,7 @@ mod tests {
         assert_eq!(args_value["role"], "author");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn blank_role_defaults_to_spectator() {
         let history = semio_framework_plugin::HistoryView::empty();
         let doc_snapshot = SHomeSnapshot::default();

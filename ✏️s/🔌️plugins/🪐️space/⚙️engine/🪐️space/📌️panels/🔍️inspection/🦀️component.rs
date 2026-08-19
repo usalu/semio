@@ -219,7 +219,7 @@ mod tests {
     use crate::engine::space::config::SpaceConfig;
     use semio_framework_plugin::UiControlNode;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inspector_tree_exposes_label_field() {
         let projection = demo_space_projection();
         let ids: Vec<String> = projection.graph.nodes.iter().take(2).map(|node| node.id.clone()).collect();

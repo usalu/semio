@@ -755,7 +755,7 @@ mod tests {
     /// 🧮️ Cross-validates `solve_multi_case`'s sparse RCM-ordered pipeline (single case) against
     /// `solve_linear_static`'s already-correct dense pipeline on an equivalent model — same oracle
     /// strategy already used elsewhere in this crate.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn solve_multi_case_matches_single_case_dense_solve() {
         let (e, area, iy, l) = (200e9, 0.01, 1e-5, 2.0);
         let (model, cases) = cantilever_analysis_model(e, area, iy, l, 0.0);
@@ -784,7 +784,7 @@ mod tests {
     }
 
     /// ➕️ A `Combination` must equal hand-computed superposition of the individually-solved case results.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn combination_equals_manual_superposition() {
         let (e, area, iy, l) = (200e9, 0.01, 1e-5, 2.0);
         let model = AnalysisModel {
@@ -819,7 +819,7 @@ mod tests {
 
     /// ⚖️ Self-weight-only equilibrium: the sum of vertical reactions must equal `ρAL * g` — a
     /// strong, simple physical check independent of the moment distribution.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn self_weight_matches_total_mass_times_gravity() {
         let (e, area, iy, l, density) = (30e9, 0.05, 1e-4, 6.0, 2400.0);
         let model = AnalysisModel {
@@ -838,7 +838,7 @@ mod tests {
     }
 
     /// 🎯️ Cantilever modal frequencies vs the classical closed form `f_i = (β_iL)²/(2πL²) · sqrt(EI/ρA)`.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn modal_cantilever_matches_analytical_frequencies() {
         let (e, iy, area, density, total_l) = (200e9, 1e-5, 0.01, 7850.0, 3.0);
         let n = 9;
@@ -857,7 +857,7 @@ mod tests {
     }
 
     /// 🌀️ Euler pinned-pinned column buckling load vs `π²EI/L²` (K=1.0).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn buckling_euler_column_matches_analytical_load() {
         let (e, iy, area, density, total_l) = (200e9, 8e-6, 0.005, 7850.0, 3.0);
         let n = 7;
@@ -887,7 +887,7 @@ mod tests {
     }
 
     /// 🔍️ Duplicate-node-id models are rejected the same way `lib.rs::validate` rejects them.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn duplicate_node_id_is_rejected() {
         let model = AnalysisModel { nodes: vec![Node { id: "a".into(), pos: [0.0, 0.0, 0.0] }, Node { id: "a".into(), pos: [1.0, 0.0, 0.0] }], elements: vec![], supports: vec![] };
         let err = solve_multi_case(&model, &[], &[], [0.0, 0.0, 0.0]).unwrap_err();
@@ -895,7 +895,7 @@ mod tests {
     }
 
     /// 🔍️ A `Bar2` model works fine through the multi-case pipeline too (not just `BeamEb2`).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn solve_multi_case_supports_bar2_truss() {
         let (e, area, l, p) = (200e9, 0.001, 2.0, 5000.0);
         let model = AnalysisModel {
@@ -915,7 +915,7 @@ mod tests {
     /// diagonal, both under the SAME uniform uniaxial strain field (`u=a*x`, `v=-nu*a*y`) — every
     /// node's averaged von Mises must equal the exact analytical `E*a` (a constant field averages to
     /// itself regardless of how many elements touch a node).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn nodal_averaged_scalar_patch_test_is_exact_under_uniform_stress() {
         use crate::elements2d::{PlaneKind, Tri3Cst};
         let (e, nu, t) = (1000.0, 0.25, 1.0);
@@ -945,7 +945,7 @@ mod tests {
     /// 🎨️ `nodal_averaged_scalar` on two elements sharing exactly one node but reporting DIFFERENT
     /// constant von Mises values: the shared node's averaged value must land strictly between the
     /// two elements' own values, while each element's exclusive nodes keep that element's exact value.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn nodal_averaged_scalar_shared_node_is_between_neighboring_element_values() {
         use crate::elements2d::{PlaneKind, Tri3Cst};
         let (e, nu, t) = (1000.0, 0.25, 1.0);
@@ -987,7 +987,7 @@ mod tests {
     }
 
     /// 🔍️ An empty `AnalysisModel` is rejected the same way `Model`'s top-level `validate` rejects it.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn empty_model_is_rejected() {
         let model = AnalysisModel { nodes: vec![], elements: vec![], supports: vec![] };
         let err = solve_multi_case(&model, &[], &[], [0.0, 0.0, 0.0]).unwrap_err();
@@ -995,7 +995,7 @@ mod tests {
     }
 
     /// 🔍️ An element referencing a node id absent from `model.nodes` is rejected.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dangling_element_node_ref_is_rejected() {
         let model = AnalysisModel { nodes: vec![Node { id: "a".into(), pos: [0.0, 0.0, 0.0] }], elements: vec![Box::new(Bar2 { id: "e1".into(), start: "a".into(), end: "missing".into(), e: 1.0, area: 1.0, density: 0.0 })], supports: vec![] };
         let err = solve_multi_case(&model, &[], &[], [0.0, 0.0, 0.0]).unwrap_err();
@@ -1003,7 +1003,7 @@ mod tests {
     }
 
     /// 🔍️ A support referencing a node id absent from `model.nodes` is rejected.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dangling_support_node_ref_is_rejected() {
         let model = AnalysisModel { nodes: vec![Node { id: "a".into(), pos: [0.0, 0.0, 0.0] }], elements: vec![], supports: vec![Support { node_id: "missing".into(), fixed: vec![Dof::Tx] }] };
         let err = solve_multi_case(&model, &[], &[], [0.0, 0.0, 0.0]).unwrap_err();
@@ -1012,7 +1012,7 @@ mod tests {
 
     /// 🔍️ A `LoadCase` nodal load referencing a node id absent from `model.nodes` is rejected —
     /// `validate_case`'s own check, distinct from `validate`'s model-wide checks above.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dangling_load_case_node_ref_is_rejected() {
         let model = AnalysisModel { nodes: vec![Node { id: "a".into(), pos: [0.0, 0.0, 0.0] }], elements: vec![], supports: vec![] };
         let case = LoadCase { id: "bad".into(), nodal_loads: vec![NodalLoad { node_id: "missing".into(), dof: Dof::Tx, value: 1.0 }], member_loads: vec![], self_weight: false };
@@ -1022,7 +1022,7 @@ mod tests {
 
     /// 🌬️ `solve_multi_case`'s member-UDL branch (`case_rhs_old`'s `equivalent_nodal_loads` path) must
     /// match `solve_linear_static`'s dense pipeline (`model.member_loads`) on an equivalent model.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn solve_multi_case_applies_member_udl_equivalent_loads() {
         let (e, area, iy, l, w) = (200e9, 0.01, 1e-5, 2.0, 500.0);
         let model = AnalysisModel {
@@ -1054,7 +1054,7 @@ mod tests {
     /// 🌱️ `zero_like` zero-initializes every non-`Beam` `ElementResult` variant (the `Beam` variant is
     /// covered by `combination_equals_manual_superposition` above), and `add_scaled_element_result` on
     /// a freshly-zeroed accumulator reduces to exactly `factor * term`, field-by-field, per variant.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn zero_like_and_add_scaled_element_result_handle_every_non_beam_variant() {
         let factor = 2.5;
 
@@ -1118,7 +1118,7 @@ mod tests {
     /// 📊️ `element_scalar_average` covers every element-kind/scalar combination it recognizes (`Some`)
     /// and every mismatched combination (`None`) — arms `nodal_averaged_scalar`'s own patch tests never
     /// happen to exercise (those only touch `Plane`/`VonMises`).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn element_scalar_average_covers_every_variant_and_scalar_combination() {
         let plane = ElementResult::Plane { gauss: vec![PlaneStress { sxx: 1.0, syy: 2.0, sxy: 3.0, von_mises: 4.0 }] };
         assert_eq!(element_scalar_average(&plane, StressScalar::VonMises), Some(4.0));

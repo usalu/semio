@@ -14,7 +14,7 @@ pub struct WiresIntoJson;
 impl Serializer<WiresSnapshot> for WiresIntoJson {
     const INTO: Dialect = JSON_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Exact;
-    async fn serialize(from: &WiresSnapshot) -> IoResult<IoPayload> {
+    fn serialize(from: &WiresSnapshot) -> IoResult<IoPayload> {
         let text = serde_json::to_string_pretty(from).map_err(|error| IoError { message: format!("WiresIntoJson: {error}"), diagnostics: Vec::new() })?;
         Ok(IoOutcome::clean(IoPayload::Text(text)))
     }

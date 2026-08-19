@@ -92,7 +92,7 @@ pub mod derived_composition {
         use crate::artifacts::xlsx::standards::v_ecma_376::subsets::transitional::schema::CODE_NAMESPACE_MISMATCH;
         use semio_framework_plugin::{AnalyzeSource, ArtifactBuilder as _};
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn conforming_builder_snapshot_composes_and_stamps_transitional() {
             let snapshot = XlsxTransitionalBuilder::new(XlsxWorkbook::default()).build().expect("conforming transitional construction must build");
             let bytes = <XlsxSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
@@ -101,7 +101,7 @@ pub mod derived_composition {
             assert!(composed.diagnostics.iter().all(|d| d.severity != Severity::Error), "no hard diagnostics expected: {:?}", composed.diagnostics);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn strict_shaped_document_fails_compose_with_real_diagnostic() {
             // ⚠️ `ArtifactPack::encode_pack` (-> `⚙️engine::encode_xlsx`) regenerates workbook.xml as
             // Transitional-shaped on every call (documented writer scope cut, see ✳️strict's composer

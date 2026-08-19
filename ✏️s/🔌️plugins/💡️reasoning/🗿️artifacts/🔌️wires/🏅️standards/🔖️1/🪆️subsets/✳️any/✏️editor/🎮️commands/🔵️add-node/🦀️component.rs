@@ -44,7 +44,7 @@ mod tests {
     use crate::editor::wires::WiresCommand;
     use crate::artifacts::wires::standards::v1::subsets::any::schema::inferences::find_board_node;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_node_appends_and_selects() {
         let mut app = new_app();
         dispatch(&mut app, WiresCommand::AddNode(AddNode { kind: "identity".into() }));

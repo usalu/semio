@@ -516,14 +516,14 @@ pub async fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDe
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn artifact_kind_uses_the_dictionary_media_kind_as_both_id_and_schema() {
         assert_eq!(artifact_kind().id, "form.dictionary");
         assert_eq!(artifact_kind().schema, "form.dictionary");
         assert_eq!(FORMS_DOCUMENT_SCHEMA, "forms.form");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn question_fields_roundtrip() {
         let json = r#"{
             "id":"q1",

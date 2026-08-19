@@ -256,7 +256,7 @@ pub struct JpgSnapshot {
 }
 
 impl Default for JpgSnapshot {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self {
             schema: STDIO_JPG_DOCUMENT_SCHEMA.into(),
             width: 0,

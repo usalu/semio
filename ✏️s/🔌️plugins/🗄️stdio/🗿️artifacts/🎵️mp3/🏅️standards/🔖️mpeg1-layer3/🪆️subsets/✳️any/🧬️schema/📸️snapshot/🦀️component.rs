@@ -95,7 +95,7 @@ pub struct Mp3Snapshot {
 }
 
 impl Default for Mp3Snapshot {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { schema: STDIO_MP3_DOCUMENT_SCHEMA.into(), id3v2: Default::default(), frames: Default::default(), id3v1: Default::default() }
     }
 }
@@ -187,7 +187,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn json_pack_round_trips() {
         let snap = sample_snapshot();
         let bytes = <Mp3Snapshot as store::ArtifactPack>::encode_pack(&snap);
@@ -195,7 +195,7 @@ mod tests {
         assert_eq!(snap, back);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dsl_text_round_trips() {
         let snap = sample_snapshot();
         let text = <Mp3Snapshot as store::ArtifactDsl>::print_dsl(&snap);

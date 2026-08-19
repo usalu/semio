@@ -859,7 +859,7 @@ mod codec_tests {
     /// encode (per-scanline filter selection) and real decode (filter reconstruction).
     /// Under the old always-filter-0 encode + no-reconstruction decode this still happened
     /// to pass trivially only for solid colors — a gradient/checkerboard is what exposes it.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn gradient_checkerboard_round_trip() {
         let (w, h) = (17u32, 13u32);
         let rgba = gradient_checkerboard_rgba(w, h);
@@ -871,7 +871,7 @@ mod codec_tests {
         assert_eq!(decoded.pixels, rgba, "decoded pixels must exactly match the original");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn solid_color_round_trip_still_works() {
         let (w, h) = (4u32, 4u32);
         let rgba: Vec<u8> = (0..w * h).flat_map(|_| [10u8, 20, 30, 255]).collect();
@@ -881,7 +881,7 @@ mod codec_tests {
         assert_eq!(decoded.pixels, rgba);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn crc_mismatch_is_rejected() {
         let (w, h) = (2u32, 2u32);
         let rgba = gradient_checkerboard_rgba(w, h);
@@ -893,7 +893,7 @@ mod codec_tests {
         assert!(err.contains("CRC") || err.contains("crc") || err.contains("truncated"), "unexpected error: {err}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn sniff_rejects_non_png_bytes() {
         let err = decode_png(b"not a png at all").unwrap_err();
         assert!(err.contains("signature"));
@@ -932,7 +932,7 @@ mod codec_tests {
         out
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn color_type_0_grayscale() {
         // 4x1, bit depth 8: values 0, 85, 170, 255
         let raw = vec![0u8, 85, 170, 255];
@@ -945,7 +945,7 @@ mod codec_tests {
         assert!(!snap.interlace);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn color_type_2_rgb() {
         let raw = vec![10u8, 20, 30, 40, 50, 60]; // 2x1 RGB
         let bytes = hand_encode(2, 1, 8, 2, None, None, &raw);
@@ -954,7 +954,7 @@ mod codec_tests {
         assert_eq!(snap.color_type, PngColorType::Rgb);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn color_type_3_palette_with_trns() {
         // palette of 3 entries; tRNS makes entry 1 half-transparent, entry 2 fully so
         let plte = [255u8, 0, 0, 0, 255, 0, 0, 0, 255]; // red, green, blue
@@ -968,7 +968,7 @@ mod codec_tests {
         assert_eq!(snap.trns, Some(PngTransparency::Indexed { alpha: vec![255, 128, 0] }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn color_type_3_sub_byte_indices() {
         // bit depth 2, 4 indices packed into a single byte: 0,1,2,3 -> 0b00_01_10_11 = 0x1B
         let plte = [0u8, 0, 0, 64, 64, 64, 128, 128, 128, 255, 255, 255];
@@ -979,7 +979,7 @@ mod codec_tests {
         assert_eq!(snap.bit_depth, 2);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn color_type_4_grayscale_alpha() {
         let raw = vec![100u8, 200, 50, 10]; // 2x1: (gray,alpha) pairs
         let bytes = hand_encode(2, 1, 8, 4, None, None, &raw);
@@ -988,7 +988,7 @@ mod codec_tests {
         assert_eq!(snap.color_type, PngColorType::GrayscaleAlpha);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn color_type_6_rgba_bit_depth_16() {
         // 1x1 pixel, 16-bit RGBA; high byte should be what survives scale_to_8
         let raw = vec![0x12u8, 0x34, 0x56, 0x78, 0x9A, 0xBC, 0xDE, 0xF0];
@@ -1003,7 +1003,7 @@ mod codec_tests {
     /// 🧪 A hand-encoded file exercising gAMA/cHRM/sRGB/pHYs/tIME/bKGD/tEXt/zTXt/iTXt plus one
     /// genuinely unknown private chunk — proves decode both TYPES every known ancillary field
     /// AND retains the unknown one verbatim, in the real relative chunk order.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn ancillary_chunks_round_trip_typed_and_unknown() {
         let raw = vec![0u8, 0, 0, 255]; // 1x1 opaque black RGBA8
         let bpp = 4usize;
@@ -1088,7 +1088,7 @@ mod codec_tests {
         assert_eq!(redecoded.pixels, snap.pixels);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn ztxt_and_itxt_round_trip() {
         // zTXt: keyword\0 + compression-method(0) + zlib(value)
         let mut ztxt = b"Comment\0\0".to_vec();
@@ -1176,7 +1176,7 @@ mod codec_tests {
         out
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn adam7_interlaced_decode_round_trip() {
         let (w, h) = (9u32, 11u32); // deliberately not a multiple of 8, exercises partial passes
         let rgba = gradient_checkerboard_rgba(w, h);

@@ -55,7 +55,7 @@ pub enum SemioSubsetSnapshot {
 }
 
 impl Default for SemioSubsetSnapshot {
-    async fn default() -> Self {
+    fn default() -> Self {
         SemioSubsetSnapshot::Brep(SemioBrepSnapshot::default())
     }
 }
@@ -79,7 +79,7 @@ pub struct SemioSnapshot {
 }
 
 impl Default for SemioSnapshot {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { schema: STDIO_SEMIO_DOCUMENT_SCHEMA.into(), subset: Default::default() }
     }
 }
@@ -369,7 +369,7 @@ pub(crate) async fn demo_semio_snapshot() -> SemioSnapshot {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn pack_round_trips_default_subset() {
         let snap = SemioSnapshot::default();
         let bytes = <SemioSnapshot as store::ArtifactPack>::encode_pack(&snap);
@@ -377,7 +377,7 @@ mod tests {
         assert_eq!(snap, back);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dsl_text_round_trips_default_subset() {
         let snap = SemioSnapshot::default();
         let text = <SemioSnapshot as store::ArtifactDsl>::print_dsl(&snap);
@@ -388,7 +388,7 @@ mod tests {
     /// 🧪️ Real delegation, non-default nested payload: the demo (flow-wrapped) snapshot's
     /// text/binary round trips must both hold, proving this isn't merely round-tripping an
     /// all-zero stub.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn pack_and_dsl_round_trip_the_demo_snapshot() {
         let snap = demo_semio_snapshot();
         let bytes = <SemioSnapshot as store::ArtifactPack>::encode_pack(&snap);
@@ -400,7 +400,7 @@ mod tests {
     /// 🧪️ Every one of the 18 subset tags real-round-trips through both facets — proves the
     /// dispatch tables (text AND binary) are wired correctly for every wrapped subset, not just
     /// the one exercised by [`demo_semio_snapshot`].
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn all_eighteen_subset_tags_round_trip_text_and_binary() {
         let subsets: Vec<SemioSubsetSnapshot> = vec![
             SemioSubsetSnapshot::Brep(Default::default()),

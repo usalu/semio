@@ -155,14 +155,14 @@ mod tests {
     }
 
     //#region 🔖️Behavior
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn rename_and_change_object_kind_round_trip() {
         let base = empty_block3d_snapshot();
         let renamed = round_trip(&base, &rename_object_kind("Renamed".into()));
         assert_eq!(renamed.object_kind.name, "Renamed");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_rename_tag_attribute_delete_representation_round_trip() {
         let base = empty_block3d_snapshot();
         let representation = BlockRepresentation { id: "r0".into(), name: "r0".into(), mesh_url: None, tags: Vec::new(), lod: None, description: String::new(), attributes: Vec::new() };
@@ -182,7 +182,7 @@ mod tests {
         assert!(deleted.representations.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_rename_delete_vortex_kind_round_trip() {
         let base = empty_block3d_snapshot();
         let vortex_kind = Block3dVortexKind { id: "vk0".into(), name: "vk0".into(), label: "VK0".into(), color: "#888".into(), default_cable_kind: "cable.link".into() };
@@ -194,7 +194,7 @@ mod tests {
         assert!(crate::artifacts::block3d::vortex_kinds_of(&deleted).is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_move_resize_delete_vortex_round_trip() {
         let base = seeded_snapshot();
         let vortex = Block3dVortexTemplate { id: "v1".into(), vortex_kind: "vk0".into(), position: [0.0, 0.0, 0.0], direction: [0.0, 1.0, 0.0], radius: 0.2, label: None };
@@ -208,7 +208,7 @@ mod tests {
         assert!(!deleted.vortices.iter().any(|v| v.id == "v1"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_remove_compatibility_rule_round_trip() {
         let base = empty_block3d_snapshot();
         let rule = BlockCompatibilityRule { id: "c0".into(), source: "a".into(), target: "b".into(), bidirectional: true };
@@ -218,7 +218,7 @@ mod tests {
         assert!(removed.compatibility.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_remove_attribute_round_trip() {
         let base = empty_block3d_snapshot();
         let attribute = BlockAttribute { key: "material".into(), value: "concrete".into(), definition: None };
@@ -228,7 +228,7 @@ mod tests {
         assert!(removed.attributes.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_remove_author_round_trip() {
         let base = empty_block3d_snapshot();
         let author = BlockAuthor { id: "a0".into(), name: "Ada".into(), email: None };
@@ -238,7 +238,7 @@ mod tests {
         assert!(removed.authors.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn move_and_scale_camera3d_round_trip() {
         let base = empty_block3d_snapshot();
         let moved = round_trip(&base, &move_camera3d([1.0, 2.0, 3.0], [0.0, 0.0, 0.0]));
@@ -247,7 +247,7 @@ mod tests {
         assert_eq!(scaled.camera3d.zoom, 2.5);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn change_meta_description_round_trips() {
         let base = empty_block3d_snapshot();
         let after = round_trip(&base, &change_meta_description("session notes".into()));
@@ -256,7 +256,7 @@ mod tests {
     //#endregion 🔖️Behavior
 
     //#region 🔖️MutationLaws
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn every_mutation_kind_satisfies_the_inverse_law() {
         let base = seeded_snapshot();
 
@@ -299,7 +299,7 @@ mod tests {
         assert_mutation_inverse_law(&base, &change_meta_description("notes".into()));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn change_object_kind_label_diff_absorb_law() {
         let base = empty_block3d_snapshot();
         let d1 = change_object_kind_label("first".into()).diff(&base).into_parts().0;
@@ -308,7 +308,7 @@ mod tests {
         assert_mutation_diff_absorb_law(&base, d1, d2);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn move_vortex_diff_absorb_law() {
         let base = seeded_snapshot();
         let d1 = move_vortex("v0".into(), [0.5, 0.0, 0.0], [1.0, 0.0, 0.0]).diff(&base).into_parts().0;
@@ -317,7 +317,7 @@ mod tests {
         assert_mutation_diff_absorb_law(&base, d1, d2);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dispatch_registers_semantic_descriptors_with_approved_verbs() {
         register_block3d_mutation_descriptors();
         for kind in Block3dMutation::kinds() {
@@ -332,7 +332,7 @@ mod tests {
     // `📓️w3-f-block-puzzle-report.md` for the `assert_outcome_policy_matrix` pending-helper note.
     use protocol::testkit::{assert_fatal_never_applies, assert_missing_target_is_error};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn missing_target_is_error_per_verb_family() {
         let base = empty_block3d_snapshot();
         assert_missing_target_is_error(&base, &delete_vortex_kind("missing".into())); // delete
@@ -341,7 +341,7 @@ mod tests {
         assert_missing_target_is_error(&base, &move_vortex("missing".into(), [0.0, 0.0, 0.0], [1.0, 0.0, 0.0])); // move/drag/rotate/scale/resize
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_duplicate_id_is_fatal_and_never_applies() {
         let mut base = empty_block3d_snapshot();
         let vortex_kind = Block3dVortexKind { id: "vk0".into(), name: "vk0".into(), label: "VK0".into(), color: "#888".into(), default_cable_kind: "cable.power".into() };

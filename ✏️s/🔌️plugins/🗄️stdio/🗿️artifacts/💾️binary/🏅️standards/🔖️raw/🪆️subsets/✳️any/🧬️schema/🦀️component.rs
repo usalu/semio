@@ -20,7 +20,7 @@ pub struct BinaryArtifact {
 
 //#region 🔖️Conversions
 impl Default for BinaryArtifact {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self::from_snapshot(BinarySnapshot::default())
     }
 }

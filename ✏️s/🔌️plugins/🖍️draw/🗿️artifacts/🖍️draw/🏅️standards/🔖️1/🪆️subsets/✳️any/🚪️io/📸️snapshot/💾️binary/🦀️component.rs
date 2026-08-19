@@ -119,7 +119,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn pack_round_trips_and_agrees_with_dsl() {
         let document = dsl::parse_dsl(dsl::SEMIO_DRAW_EXAMPLE_TEXT).expect("parse semio example");
         store::os_store::test_support::assert_dsl_pack_equivalence(&document);
@@ -127,12 +127,12 @@ mod tests {
         assert_eq!(decode(&bytes).expect("decode"), document);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn pack_round_trips_representative_document() {
         store::os_store::test_support::assert_dsl_pack_equivalence(&representative_draw_document());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn pack_round_trips_document_without_assets_or_artboard() {
         let mut doc = default_draw_document("no-extras", None);
         doc.assets = Default::default();
@@ -145,7 +145,7 @@ mod tests {
     /// 🎫️ CW7 command-envelope law (`POLICY_COMMAND_ENVELOPE_COMPLETENESS_ALLOWLIST`): proves
     /// `DrawMutation`'s `Edit` round-trips through `protocol::MutationEnvelope`s beside this file's
     /// existing pack round-trip laws.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn command_envelope_round_trip_holds_for_an_applied_operation() {
         use crate::artifacts::draw::op::DrawMutation;
         use protocol::{ArtifactId, Edit, SchemaId};

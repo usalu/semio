@@ -254,7 +254,7 @@ mod tests {
         SemioTableSnapshot { schema: STDIO_SEMIOTABLE_DOCUMENT_SCHEMA.into(), columns: vec![SemioTableColumn { name: name.into(), kind }], rows: vec![SemioTableRow { cells: vec![value] }] }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn apply_replaces_columns_and_rows_wholesale() {
         let base = one_col_row("a", SemioTableCellKind::Str, SemioValue::Str { value: "x".into() });
         let diff = SemioTableDiff {
@@ -266,7 +266,7 @@ mod tests {
         assert_eq!(next.rows[0].cells[0], SemioValue::Int { lexeme: "1".into() });
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_last_write_wins() {
         let mut d1 = SemioTableDiff { columns: None, rows: Some(SemioTableRowList { values: vec![SemioTableRow { cells: vec![SemioValue::Str { value: "a".into() }] }] }) };
         let d2 = SemioTableDiff { columns: None, rows: Some(SemioTableRowList { values: vec![SemioTableRow { cells: vec![SemioValue::Str { value: "b".into() }] }] }) };
@@ -274,7 +274,7 @@ mod tests {
         assert_eq!(d1, d2);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn diff_codec_text_binary_roundtrip_law() {
         for d in demo_diff_cases() {
             let printed = d.print_diff();
@@ -288,7 +288,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn print_diff_joins_both_fields_with_semicolon_on_one_line() {
         let d = &demo_diff_cases()[3];
         let printed = d.print_diff();

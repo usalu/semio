@@ -441,7 +441,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn round_trips_full_curve_and_surface_vocabulary_through_step() {
         let original = full_vocabulary_snapshot();
         let step = semio_framework_plugin::resolve_ready(SemioBrepToStep::serialize(&original)).expect("serialize to step");
@@ -471,7 +471,7 @@ mod tests {
         assert!(reimported.solids[0].shells.iter().any(|m| m.is_void), "void shell must survive the round trip");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dangling_reference_errors_rather_than_fabricating() {
         let mut snap = SemioBrepSnapshot::default();
         snap.edges = vec![BrepEdge { id: "e1".into(), start_vertex: "nonexistent".into(), end_vertex: "also-nonexistent".into(), curve: BrepCurve::Line { origin: SemioPoint3::default(), direction: SemioPoint3 { x: 1.0, y: 0.0, z: 0.0 } } }];

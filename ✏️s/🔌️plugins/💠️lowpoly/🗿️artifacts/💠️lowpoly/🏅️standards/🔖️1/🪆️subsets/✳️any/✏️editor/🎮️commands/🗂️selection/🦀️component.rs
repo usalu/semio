@@ -57,7 +57,7 @@ mod tests {
     use crate::editor::lowpoly::LowpolyCommand;
     use semio_framework_plugin::PluginApp;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_active_object_is_view_state_and_emits_no_operations() {
         let mut a = app();
         let object_id = a.snapshot().expect("projection").objects[0].id.clone();
@@ -65,7 +65,7 @@ mod tests {
         assert!(result.mutations.is_empty(), "setting the active object must not create an undoable operation");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_active_paint_layer_is_view_state_and_emits_no_operations() {
         let mut a = app();
         let result = dispatch(&mut a, LowpolyCommand::SetActivePaintLayer(super::set_active_paint_layer::SetActivePaintLayer { layer_index: 0 }));

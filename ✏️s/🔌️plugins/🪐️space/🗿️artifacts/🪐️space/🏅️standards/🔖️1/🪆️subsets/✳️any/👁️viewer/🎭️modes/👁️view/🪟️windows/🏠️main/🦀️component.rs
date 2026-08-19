@@ -35,14 +35,14 @@ pub async fn render(document: &SSpaceSnapshot) -> UiNode {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn render_produces_a_node_for_the_default_document() {
         let _node = render(&SSpaceSnapshot::default());
     }
 
     /// 🆔️ Contract §C0: the read-only viewer's rows must still carry `data-row-id="artifact:<id>"` —
     /// it just never attaches row action buttons to it.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn a_row_stamps_the_artifact_row_id_with_no_actions_cell() {
         use crate::artifacts::space::standards::v1::subsets::any::schema::snapshot::{SpaceArtifactDialect, SpaceArtifactRow};
         let mut document = SSpaceSnapshot::default();

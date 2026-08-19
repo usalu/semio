@@ -4,7 +4,7 @@
 
 use crate::wfc_engine::bitset::PatternSet;
 use crate::wfc_engine::chunk;
-use crate::wfc_engine::constraint::{build_adjacency_view, AdjacencyView, Constraint, ConstraintSet};
+use crate::wfc_engine::constraint::{build_adjacency_view, AdjacencyView, ConstraintSet, Constraints};
 use crate::wfc_engine::error::SolveError;
 use crate::wfc_engine::grid2d::Grid2dTopology;
 use crate::wfc_engine::ids::PatternId;
@@ -21,7 +21,7 @@ pub struct Grid2dSolverBuilder {
     init_domains: Option<Vec<PatternSet>>,
     fixed: Vec<(crate::wfc_engine::ids::NodeId, PatternId)>,
     config: SearchConfig,
-    constraints: Vec<Box<dyn Constraint>>,
+    constraints: Vec<Constraints>,
 }
 
 impl Grid2dSolverBuilder {
@@ -50,7 +50,7 @@ impl Grid2dSolverBuilder {
 
     /// 🏗️ Adds a global constraint. See [`crate::wfc_engine::constraint::Constraint`]'s docs for exactly when
     /// it runs (initial restriction + complete-assignment validation, not incremental mid-search).
-    pub async fn constraint(mut self, c: Box<dyn Constraint>) -> Self {
+    pub async fn constraint(mut self, c: Constraints) -> Self {
         self.constraints.push(c);
         self
     }
@@ -82,7 +82,7 @@ pub struct Grid2dSolver {
     init_domains: Vec<PatternSet>,
     fixed: Vec<(crate::wfc_engine::ids::NodeId, PatternId)>,
     config: SearchConfig,
-    constraints: Vec<Box<dyn Constraint>>,
+    constraints: Vec<Constraints>,
     adjacency: AdjacencyView,
 }
 
@@ -167,7 +167,7 @@ mod tests {
         (model, topo)
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn solves_a_checkerboard_grid() {
         let (model, topo) = checkerboard(5, 5, Boundary::Open);
         let mut solver = Grid2dSolverBuilder::new(model, topo).build().unwrap();
@@ -175,7 +175,7 @@ mod tests {
         assert!(matches!(outcome, SolveOutcome::Solved(_)));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fix_pins_a_cell_and_propagates() {
         let (model, topo) = checkerboard(4, 4, Boundary::Open);
         let black = PatternId(0);
@@ -191,7 +191,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn solve_chunk_respects_seam_pins_and_reproduces_deterministically() {
         let (model, topo) = checkerboard(5, 5, Boundary::Open);
         let seam_node = topo.node_at(0, 0).unwrap();
@@ -209,7 +209,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn masked_cells_are_excluded_and_solve_completes() {
         let mut b = TiledModelBuilder::new();
         let black = b.tile(1.0);
@@ -227,7 +227,7 @@ mod tests {
         assert!(matches!(outcome, SolveOutcome::Solved(_)));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn wrap_boundary_solves_consistently() {
         let (model, topo) = checkerboard(4, 4, Boundary::Wrap);
         let mut solver = Grid2dSolverBuilder::new(model, topo).build().unwrap();
@@ -235,7 +235,7 @@ mod tests {
         assert!(matches!(outcome, SolveOutcome::Solved(_)));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn odd_size_wrap_is_unsatisfiable_for_two_color_checkerboard() {
         // A 3x3 wrapped grid forces an odd cycle along each axis; two colors can't 2-color it.
         let (model, topo) = checkerboard(3, 3, Boundary::Wrap);
@@ -244,7 +244,7 @@ mod tests {
         assert!(matches!(outcome, SolveOutcome::Unsatisfiable(_)));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn graph_vs_grid2d_strict_equivalence_von_neumann_open() {
         // Independently hand-enumerated arcs for a 3x4 VonNeumann/Open grid (not derived from
         // 🦀️grid2d.rs's own resolve_coord logic) fed into a GraphTopology, compared against the
@@ -304,7 +304,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn decode_tiles_round_trips_tile_provenance() {
         let (model, topo) = checkerboard(2, 2, Boundary::Open);
         let mut solver = Grid2dSolverBuilder::new(model, topo).build().unwrap();

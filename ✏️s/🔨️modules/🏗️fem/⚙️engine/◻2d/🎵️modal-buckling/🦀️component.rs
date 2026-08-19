@@ -150,7 +150,7 @@ mod tests {
     }
     // #endregion 🔖️Fixtures
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fem2d_modal_returns_requested_mode_count() {
         let doc = rectangle_region_doc();
         let result = fem2d_modal(&doc).expect("modal solves");
@@ -163,7 +163,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fem2d_modal_mode_values_returns_node_displacements() {
         let doc = simply_supported_beam_doc();
         let (freq, values) = fem2d_modal_mode_values(&doc, 0).expect("modal mode values solves");
@@ -172,7 +172,7 @@ mod tests {
         assert!(values.contains_key("n2"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fem2d_buckling_returns_requested_mode_count() {
         let doc = simply_supported_beam_doc();
         let result = fem2d_buckling(&doc, "dead").expect("buckling solves");
@@ -182,7 +182,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fem2d_buckling_mode_values_returns_node_displacements() {
         let doc = simply_supported_beam_doc();
         let (factor, values) = fem2d_buckling_mode_values(&doc, "dead", 0).expect("buckling mode values solves");
@@ -191,7 +191,7 @@ mod tests {
         assert!(values.contains_key("n2"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fem2d_buckling_unknown_case_errors() {
         let doc = simply_supported_beam_doc();
         let err = fem2d_buckling(&doc, "missing").err().expect("expected error");

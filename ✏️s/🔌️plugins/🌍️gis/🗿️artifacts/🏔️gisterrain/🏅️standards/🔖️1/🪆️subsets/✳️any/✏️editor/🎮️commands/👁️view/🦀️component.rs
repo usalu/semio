@@ -31,14 +31,14 @@ mod tests {
     use crate::editor::gis3d::Gis3dCommand;
     use serde_json::json;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn camera_is_config_state_and_emits_no_operations() {
         let mut app = app();
         let camera = dispatch(&mut app, Gis3dCommand::SetCamera(set_camera::SetCamera { camera_json: json!({ "position": [1.0, 1.0, 1.0] }).to_string() }));
         assert!(camera.mutations.is_empty(), "camera is ephemeral config state");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn the_camera_reaches_the_rendered_scene() {
         let mut app = app();
         dispatch(&mut app, Gis3dCommand::SetCamera(set_camera::SetCamera { camera_json: json!({ "position": [123.0, 1.0, 1.0], "target": [0.0, 0.0, 0.0], "up": [0.0, 0.0, 1.0], "fov": 45.0 }).to_string() }));

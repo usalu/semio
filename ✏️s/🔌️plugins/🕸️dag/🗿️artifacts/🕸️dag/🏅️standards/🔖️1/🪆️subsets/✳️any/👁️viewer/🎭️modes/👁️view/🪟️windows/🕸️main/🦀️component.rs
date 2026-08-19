@@ -58,7 +58,7 @@ pub async fn render(document: &DagSnapshot) -> UiNode {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn definition_declares_the_node_graph_surface_and_body_key() {
         let definition = definition();
         assert_eq!(definition.body_key, BODY_KEY);
@@ -66,7 +66,7 @@ mod tests {
         assert!(definition.options.measures.is_empty(), "dag's viewer main window has no chrome measures");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn render_produces_a_read_only_node_graph_scene() {
         let document = crate::artifacts::dag::default_snapshot();
         let json = serde_json::to_string(&render(&document)).expect("render json");

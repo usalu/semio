@@ -23,7 +23,7 @@ pub struct PlaybookInference {
 }
 
 impl Default for PlaybookInference {
-    async fn default() -> Self {
+    fn default() -> Self {
         <Self as protocol::Inference<PlaybookSnapshot>>::infer(&PlaybookSnapshot::default())
     }
 }
@@ -123,18 +123,18 @@ mod tests {
     //#endregion 🧸️Fixtures
 
     //#region 🧪️InferenceLaws
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = step_with_conditional_block();
         assert_eq!(PlaybookInference::infer(&snapshot), PlaybookInference::infer(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(PlaybookInference::infer(&PlaybookSnapshot::default()), PlaybookInference::default());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn topology_orders_the_conditioned_block_after_its_dependency() {
         let snapshot = step_with_conditional_block();
         let inferred = PlaybookInference::infer(&snapshot);
@@ -144,7 +144,7 @@ mod tests {
         assert!(inferred.topology.cycle_free);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn default_snapshot_has_one_empty_step() {
         let inferred = PlaybookInference::infer(&PlaybookSnapshot::default());
         assert_eq!(inferred.topology.node_count, 1);

@@ -30,7 +30,7 @@ pub struct StepBounds {
 /// `compute_step_bounds` returns for zero `CARTESIAN_POINT` entities (the fold's identity value),
 /// keeping the inference-default law correct.
 impl Default for StepBounds {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { min: [0.0, 0.0, 0.0], max: [0.0, 0.0, 0.0], point_count: 0 }
     }
 }
@@ -100,7 +100,7 @@ mod tests {
         StepEntity { id, name: "CARTESIAN_POINT".into(), args: vec![StepValue::String(String::new()), StepValue::Aggregate(vec![StepValue::Real(x), StepValue::Real(y), StepValue::Real(z)])], complex: Vec::new() }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn bounds_matches_hand_built_entity_extent() {
         let snapshot = StepSnapshot {
             schema: STDIO_STEP_DOCUMENT_SCHEMA.into(),
@@ -113,13 +113,13 @@ mod tests {
         assert_eq!(bounds.point_count, 3);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = StepSnapshot { schema: STDIO_STEP_DOCUMENT_SCHEMA.into(), header: Default::default(), entities: vec![point_entity(1, 1.0, 1.0, 1.0)] };
         assert_eq!(compute_step_bounds(&snapshot), compute_step_bounds(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(compute_step_bounds(&StepSnapshot::default()), StepBounds::default());
     }

@@ -117,13 +117,13 @@ pub mod derived_construction {
     mod tests {
         use super::*;
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn new_requires_output_condition_and_builds_clean() {
             let snapshot = PdfVtBuilderConstruction::new("FOGRA39").add_page(PdfPage::new(200.0, 200.0)).set_info(PdfInfo { title: Some("A VT Test".into()), ..PdfInfo::default() }).build().expect("conforming construction must build");
             assert_eq!(snapshot.pages.len(), 1);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn hard_violation_injected_via_raw_mutate_still_fails_build() {
             let mut snapshot = PdfVtBuilderConstruction::new("FOGRA39").add_page(PdfPage::new(100.0, 100.0)).build().unwrap();
             if let Some(catalog_obj) = snapshot.objects.iter_mut().find(|o| o.id.num == 1) {
@@ -293,14 +293,14 @@ pub mod derived_analysis {
             ]
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn fully_conforming_vt_document_has_no_hard_diagnostics() {
             let snapshot = PdfSnapshot { objects: conforming_x_objects(), ..PdfSnapshot::default() };
             let diagnostics = check_vt_conformance(&snapshot);
             assert!(diagnostics.iter().all(|d| d.severity != Severity::Error), "got {diagnostics:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn missing_dpartroot_is_hard() {
             let mut objects = conforming_x_objects();
             if let Some(catalog_obj) = objects.iter_mut().find(|o| o.id.num == 1) {
@@ -313,7 +313,7 @@ pub mod derived_analysis {
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_DPART_ROOT && d.severity == Severity::Error), "got {diagnostics:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn x_violations_are_inherited_as_hard() {
             // No OutputIntent at all -- an X-4 violation must surface through vt too.
             let snapshot = PdfSnapshot::default();
@@ -321,7 +321,7 @@ pub mod derived_analysis {
             assert!(diagnostics.iter().any(|d| d.code.0 == crate::artifacts::pdf::standards::v1_7::subsets::x::schema::CODE_OUTPUT_INTENT && d.severity == Severity::Error), "got {diagnostics:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn dpart_missing_dpm_is_soft() {
             let mut objects = conforming_x_objects();
             if let Some(dpart) = objects.iter_mut().find(|o| o.id.num == 11) {

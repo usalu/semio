@@ -38,7 +38,7 @@ mod tests {
     use crate::editor::flow::testkit::{dispatch, flow_app};
     use crate::editor::flow::FlowCommand;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_widget_emits_operations_and_grows_the_widget_count() {
         let mut app = flow_app();
         let before = app.snapshot().expect("snapshot").to_fixture().widgets.len();
@@ -47,7 +47,7 @@ mod tests {
         assert_eq!(app.snapshot().expect("snapshot").to_fixture().widgets.len(), before + 1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn rename_rejects_blank_unchanged_and_taken_ids() {
         let mut app = flow_app();
         for value in ["", " ", "slider"] {
@@ -56,7 +56,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn patch_flow_widgets_parses_the_raw_value_string_into_the_slider() {
         let mut app = flow_app();
         dispatch(&mut app, FlowCommand::PatchFlowWidgets(crate::editor::flow::commands::patch_flow_widgets::PatchFlowWidgets { widget_ids: vec!["slider".into()], field: "value".into(), value: "7.5".into() }));

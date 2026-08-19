@@ -72,13 +72,13 @@ mod tests {
     use super::*;
     use protocol::Inference;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = En1992Snapshot::default();
         assert_eq!(En1992Inference::infer(&snapshot), En1992Inference::infer(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(En1992Inference::infer(&En1992Snapshot::default()), En1992Inference::default());
     }
@@ -133,7 +133,7 @@ mod compliance_report_tests {
     use super::*;
     use crate::document::CheckStatus;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     #[cfg(feature = "cross-fem")]
     async fn evaluate_fem_path() {
         let doc = En1992Snapshot { use_fem: true, ..En1992Snapshot::default() };
@@ -143,7 +143,7 @@ mod compliance_report_tests {
         assert!((m_ed - 90.0).abs() < 1.0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn evaluate_analytical_with_prestress() {
         let doc = En1992Snapshot { p_kn: 800.0, ..En1992Snapshot::default() };
         let report = evaluate(&doc);
@@ -151,7 +151,7 @@ mod compliance_report_tests {
         assert!(report.checks.iter().all(|c| c.status != CheckStatus::NotApplicable));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn evaluate_covers_all_parts() {
         let report = evaluate(&En1992Snapshot::default());
         assert_eq!(report.checks.len(), 9);

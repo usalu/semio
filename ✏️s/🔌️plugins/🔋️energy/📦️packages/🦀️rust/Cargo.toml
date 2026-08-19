@@ -26,3 +26,6 @@ semio-framework-plugin = { workspace = true, features = ["component-guest"] }
 semio-framework-schema = { path = "../../../../../🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust", package = "semio-framework-schema" }
 serde = { workspace = true }
 serde_json = { workspace = true }
+
+[dev-dependencies]
+semio-framework-async-macros = { path = "../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }

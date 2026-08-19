@@ -65,12 +65,12 @@ mod surface_tests {
     //! belong to their own owning plugins' surface tests, not this one).
     use semio_framework_plugin::testkit::{assert_editor_and_viewer_share_dialect, assert_viewer_never_mutates};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn playground_viewer_never_mutates() {
         assert_viewer_never_mutates::<crate::viewer::playground::PlaygroundViewer>();
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn playground_editor_and_viewer_share_dialect() {
         assert_editor_and_viewer_share_dialect::<crate::editor::playground::PlaygroundEditor, crate::viewer::playground::PlaygroundViewer>();
     }
@@ -86,7 +86,7 @@ mod tests {
         plugin().unwrap_or_else(|error| panic!("{error}"))
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn bundle_keeps_its_plugin_identity() {
         let manifest = test_bundle().manifest;
         assert_eq!(manifest.plugin_id, PLUGIN_ID);
@@ -102,7 +102,7 @@ mod tests {
     /// deleted `apps::`/`document_app` path (`s.demonstrator.playground@1/*#editor`-style ids never
     /// applied to them) — now `.editor::<E>()` + `.viewer::<V>()` like every other foreign plugin here,
     /// so each contributes TWO surfaces instead of one (8 foreign surfaces total, from 6 plugins).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn bundle_registers_its_own_and_the_six_foreign_demonstrator_surfaces() {
         let ids: Vec<String> = test_bundle().manifest.apps.iter().map(|app| app.id.clone()).collect();
         assert_eq!(
@@ -122,14 +122,14 @@ mod tests {
         );
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn every_surface_declares_a_document_schema() {
         for app in test_bundle().manifest.apps {
             assert!(!app.io.document_schema.is_empty(), "app {} declares no document schema", app.id);
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn contribution_consumers_declare_the_hidden_app_command() {
         let consumers: Vec<String> = test_bundle().manifest.apps.iter().filter(|app| app.commands.iter().any(|command| command.id == "setContributions")).map(|app| app.id.clone()).collect();
         assert_eq!(consumers, vec!["s.procedural.procedural3d@1/*#editor", "s.cad.cad@1/*#editor", "s.sourcing.curate@1/*#editor", "s.process.process3d@1/*#editor"]);

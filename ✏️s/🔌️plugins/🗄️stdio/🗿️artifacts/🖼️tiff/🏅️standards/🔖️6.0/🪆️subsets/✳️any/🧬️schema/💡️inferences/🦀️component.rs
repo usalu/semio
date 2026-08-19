@@ -33,7 +33,7 @@ impl protocol::Inference<TiffSnapshot> for TiffInference {
 /// "match `infer` of the real default, don't derive structurally" trick as `AddInference`'s
 /// hand-written `Default` in `📡️spr/🎮️command/🦀️component.rs`.
 impl Default for TiffInference {
-    async fn default() -> Self {
+    fn default() -> Self {
         <Self as protocol::Inference<TiffSnapshot>>::infer(&TiffSnapshot::default())
     }
 }
@@ -83,13 +83,13 @@ mod tests {
     use super::*;
     use protocol::Inference;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = TiffSnapshot::default();
         assert_eq!(TiffInference::infer(&snapshot), TiffInference::infer(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(TiffInference::infer(&TiffSnapshot::default()), TiffInference::default());
     }

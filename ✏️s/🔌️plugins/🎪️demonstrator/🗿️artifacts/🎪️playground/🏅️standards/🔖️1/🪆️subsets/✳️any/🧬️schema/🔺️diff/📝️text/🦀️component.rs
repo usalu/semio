@@ -70,7 +70,7 @@ pub async fn diff_set_snapshot(snapshot: &PlaygroundSnapshot) -> PlaygroundDiff 
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn empty_diff_is_a_no_operation() {
         let base = crate::artifacts::playground::standards::v1::subsets::any::schema::empty_playground_snapshot();
         let diff = PlaygroundDiff::default();

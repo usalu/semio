@@ -21,7 +21,7 @@ pub async fn handle(payload: &SetActivePanelTab, _doc: &ArtifactView<'_, Workflo
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn space_command_op_text_round_trips_every_variant() {
         use crate::engine::space::SpaceCommand;
         store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::SetActivePanelTab(SetActivePanelTab { tab_id: "s-play-catalogue".into() }));
@@ -33,7 +33,7 @@ mod tests {
     /// 🪐️ End-to-end proof of the catalogue-empty bugfix: registers an app with an EMPTY `document`
     /// breadcrumb purely through this command, then asserts the registry, `workflow_palette()`, and
     /// `build_catalogue_tree` all pick it up.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_app_registrations_command_registers_app_and_surfaces_empty_document_apps_in_catalogue() {
         use crate::engine::space::testkit::studio_emit;
         use crate::engine::space::SpaceCommand;

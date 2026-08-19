@@ -15,7 +15,7 @@ pub struct MathematicalIntoMd;
 impl Serializer<MathematicalSnapshot> for MathematicalIntoMd {
     const INTO: Dialect = MD_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Canonical;
-    async fn serialize(from: &MathematicalSnapshot) -> IoResult<IoPayload> {
+    fn serialize(from: &MathematicalSnapshot) -> IoResult<IoPayload> {
         let md = MdSnapshot::from_text(&<MathematicalSnapshot as store::ArtifactDsl>::print_dsl(from));
         let _ = STDIO_MD_DOCUMENT_SCHEMA;
         Ok(IoOutcome::clean(IoPayload::Binary(<MdSnapshot as store::ArtifactPack>::encode_pack(&md))))

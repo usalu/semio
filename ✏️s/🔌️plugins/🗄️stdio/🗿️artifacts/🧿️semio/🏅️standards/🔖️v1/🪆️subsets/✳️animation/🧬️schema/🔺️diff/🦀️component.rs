@@ -755,7 +755,7 @@ mod tests {
     //#region AbsorbCanonical
     /// 🧪️ Canonical absorb case 1 (at the innermost `keyframes` level): `Insert(2,f)` then
     /// `Remove(0)` -> `{removed:[0], added:[(1,f)]}`.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_insert_then_remove_before_shifts_index() {
         let f = kf(9.0, AnimValue::Scalar { value: 9.0 });
         let mut d1: IndexedTripleDiff<AnimKeyframeDiff, AnimKeyframe> = IndexedTripleDiff { added: vec![IndexAdded { index: 2, item: f.clone() }], ..Default::default() };
@@ -767,7 +767,7 @@ mod tests {
     }
 
     /// 🧪️ Canonical absorb case 2: `Insert(2,f)` then `Insert(2,g)` -> BOTH survive.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_insert_insert_same_index_both_survive() {
         let f = kf(1.0, AnimValue::Scalar { value: 1.0 });
         let g = kf(2.0, AnimValue::Scalar { value: 2.0 });
@@ -779,7 +779,7 @@ mod tests {
 
     /// 🧪️ Canonical absorb case 3: `Insert(1,f)` then `SetField(1,v)` patches INTO the added
     /// payload — no separate `modified` entry survives.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_insert_then_set_field_patches_into_added() {
         let f = kf(1.0, AnimValue::Scalar { value: 1.0 });
         let mut d1: IndexedTripleDiff<AnimKeyframeDiff, AnimKeyframe> = IndexedTripleDiff { added: vec![IndexAdded { index: 1, item: f.clone() }], ..Default::default() };
@@ -793,7 +793,7 @@ mod tests {
     //#endregion AbsorbCanonical
 
     /// 🧪️ absorb_law: full 3-level snapshot chain, base -> mid -> after.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_law_holds_over_curated_ops() {
         let base = SemioAnimationSnapshot {
             timelines: vec![timeline(Some("walk"), vec![channel("hip", AnimTargetProperty::Translation, AnimInterpolation::Linear, vec![kf(0.0, AnimValue::Vec3 { value: SemioPoint3 { x: 0.0, y: 0.0, z: 0.0 } })])]), timeline(Some("blink"), vec![])],
@@ -818,7 +818,7 @@ mod tests {
         assert_eq!(d1.apply(&base).expect("apply must succeed for a well-formed fixture"), after);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn between_roundtrip_law() {
         let a =
             SemioAnimationSnapshot { timelines: vec![timeline(Some("walk"), vec![channel("hip", AnimTargetProperty::Translation, AnimInterpolation::Linear, vec![kf(0.0, AnimValue::Scalar { value: 1.0 })])])], ..SemioAnimationSnapshot::default() };
@@ -833,7 +833,7 @@ mod tests {
         assert!(<SemioAnimationDiff as DiffAlgebra<SemioAnimationSnapshot>>::between(&a, &a).is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inverse_law() {
         let base =
             SemioAnimationSnapshot { timelines: vec![timeline(Some("walk"), vec![channel("hip", AnimTargetProperty::Translation, AnimInterpolation::Linear, vec![kf(0.0, AnimValue::Scalar { value: 1.0 })])])], ..SemioAnimationSnapshot::default() };
@@ -868,7 +868,7 @@ mod tests {
     /// added-reverse; channels: removed-forward/added-reverse; keyframes: added-forward, the
     /// mirror case) — same split `presentation`'s own field_sweep test already uses for its
     /// index-keyed `slides`, applied consistently at all 3 nesting depths here.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn field_sweep_covers_every_mutable_field() {
         let sweep_a = SemioAnimationSnapshot {
             timelines: vec![
@@ -925,7 +925,7 @@ mod tests {
     /// 🧪️ diff_codec_text_binary_roundtrip_law: hand-rolled `DiffCodec` text/binary grammar —
     /// exercises the empty diff, the tri-state `name`, an `AnimValue` variant change, and all
     /// three collection triples (removed/modified/added) at every nesting depth.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn diff_codec_text_binary_roundtrip_law() {
         for d in demo_diff_cases() {
             let printed = d.print_diff();

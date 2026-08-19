@@ -88,7 +88,7 @@ mod tests {
     use crate::editor::playbook::testkit::{playbook_app, render as render_body};
     use crate::editor::playbook::PLAYBOOK_PLAY_BODY_BUILDER as BODY_BUILDER;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn definition_declares_the_block_list_surface_and_body_key() {
         let definition = definition();
         assert_eq!(definition.body_key, PLAYBOOK_PLAY_BODY_BUILDER);
@@ -96,7 +96,7 @@ mod tests {
     }
 
     /// 🗂️ The open `playbook.blockKind` topic shape must surface the palette entry.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn render_builder_palette_includes_topic_contributed_block_kinds() {
         use crate::editor::playbook::config::PlaybookConfig;
         use semio_framework::{ProgramContributionEntry, TopicContribution};
@@ -113,7 +113,7 @@ mod tests {
         assert!(palette.iter().any(|entry| entry.block_kind == "buildingComponent"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn render_builder_emits_playbook_list_component_scene() {
         let mut app = playbook_app();
         let json = render_body(&mut app, BODY_BUILDER);

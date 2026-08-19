@@ -108,13 +108,13 @@ pub mod derived_construction {
     mod tests {
         use super::*;
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn new_requires_output_condition_and_builds_clean() {
             let snapshot = PdfXBuilderConstruction::new("FOGRA39").add_page(PdfPage::new(200.0, 200.0)).set_info(PdfInfo { title: Some("An X Test".into()), ..PdfInfo::default() }).build().expect("conforming construction must build");
             assert_eq!(snapshot.pages.len(), 1);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn hard_violation_injected_via_raw_mutate_still_fails_build() {
             let violating = PdfIndirectObject {
                 id: ObjRef { num: 99, gen: 0 },
@@ -357,21 +357,21 @@ pub mod derived_analysis {
             ]
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn conforming_snapshot_has_no_hard_diagnostics() {
             let snapshot = PdfSnapshot { objects: conforming_objects(), ..PdfSnapshot::default() };
             let diagnostics = check_x_conformance(&snapshot);
             assert!(diagnostics.iter().all(|d| d.severity != Severity::Error), "got {diagnostics:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn missing_output_intent_is_hard() {
             let snapshot = PdfSnapshot::default();
             let diagnostics = check_x_conformance(&snapshot);
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_OUTPUT_INTENT && d.severity == Severity::Error), "got {diagnostics:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn page_missing_trim_or_art_box_is_hard() {
             let mut objects = conforming_objects();
             objects.push(PdfIndirectObject { id: ObjRef { num: 4, gen: 0 }, value: PdfObject::Dict(vec![PdfDictEntry { key: "Type".into(), value: PdfObject::Name("Page".into()) }]) });
@@ -380,7 +380,7 @@ pub mod derived_analysis {
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_TRIM_OR_ART_BOX && d.severity == Severity::Error), "got {diagnostics:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn encryption_dict_shape_is_hard() {
             let mut objects = conforming_objects();
             objects.push(PdfIndirectObject {
@@ -398,7 +398,7 @@ pub mod derived_analysis {
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_ENCRYPT && d.severity == Severity::Error), "got {diagnostics:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn non_embedded_font_is_soft() {
             let mut objects = conforming_objects();
             objects.push(PdfIndirectObject {
@@ -410,7 +410,7 @@ pub mod derived_analysis {
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_FONT_NOT_EMBEDDED && d.severity == Severity::Warning), "got {diagnostics:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn javascript_action_is_soft() {
             let mut objects = conforming_objects();
             objects.push(PdfIndirectObject { id: ObjRef { num: 7, gen: 0 }, value: PdfObject::Dict(vec![PdfDictEntry { key: "S".into(), value: PdfObject::Name("JavaScript".into()) }]) });
@@ -419,7 +419,7 @@ pub mod derived_analysis {
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_JAVASCRIPT && d.severity == Severity::Warning), "got {diagnostics:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn movie_annotation_is_soft() {
             let mut objects = conforming_objects();
             objects.push(PdfIndirectObject { id: ObjRef { num: 8, gen: 0 }, value: PdfObject::Dict(vec![PdfDictEntry { key: "Subtype".into(), value: PdfObject::Name("Movie".into()) }]) });

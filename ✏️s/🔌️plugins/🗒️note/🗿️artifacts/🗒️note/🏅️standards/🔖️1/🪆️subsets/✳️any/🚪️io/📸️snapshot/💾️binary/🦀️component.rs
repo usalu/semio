@@ -27,7 +27,7 @@ mod tests {
     use crate::artifacts::note::{NoteBlockNode, NoteImageAsset, NoteTableCell, NoteTextParagraph, NoteTextRun, NOTE_DOCUMENT_SCHEMA};
     use std::collections::BTreeMap;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn pack_round_trips_and_agrees_with_dsl() {
         let document = crate::artifacts::note::standards::v1::subsets::any::io::snapshot::text::parse_dsl(crate::artifacts::note::standards::v1::subsets::any::io::snapshot::text::SEMIO_NOTE_EXAMPLE_TEXT).expect("parse semio example");
         store::os_store::test_support::assert_dsl_pack_equivalence(&document);
@@ -35,7 +35,7 @@ mod tests {
         assert_eq!(decode(&bytes).expect("decode"), document);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn pack_round_trips_representative_document() {
         let mut assets = BTreeMap::new();
         assets.insert("asset-1".into(), NoteImageAsset { mime: "image/png".into(), data: "data:image/png;base64,abc==".into(), width: Some(10.0), height: Some(20.0) });
@@ -95,7 +95,7 @@ mod tests {
     /// `NoteMutation`'s `Edit` round-trips through `protocol::MutationEnvelope`s beside this file's
     /// existing pack round-trip laws (same pattern as `mathematical_pack`'s own
     /// `command_envelope_round_trip_holds_for_an_applied_operation`).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn command_envelope_round_trip_holds_for_an_applied_operation() {
         use crate::artifacts::note::standards::v1::subsets::any::io::mutations::text::NoteMutation;
         use protocol::{ArtifactId, Edit, SchemaId};
@@ -116,7 +116,7 @@ mod tests {
 mod semio_protocol_conformance {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn component_protocol_semio_is_protocol_dialect() {
         let g = ::dsl::parse_grammar(COMPONENT_PROTOCOL_SEMIO).expect("parse protocol.semio");
         assert_eq!(g.dialect, ::dsl::SemioDialect::Protocol);
@@ -124,7 +124,7 @@ mod semio_protocol_conformance {
         let _ = COMPONENT_PROTOCOL_PATH;
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn verify_protocol_bytes_against_encoded_pack() {
         let document = crate::artifacts::note::standards::v1::subsets::any::io::snapshot::text::parse_dsl(crate::artifacts::note::standards::v1::subsets::any::io::snapshot::text::SEMIO_NOTE_EXAMPLE_TEXT).expect("parse fixture");
         let bytes = encode(&document);

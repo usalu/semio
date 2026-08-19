@@ -76,7 +76,7 @@ pub mod derived_construction {
         use crate::artifacts::svg::standards::v1_1::subsets::tiny::schema::CODE_ELEMENT;
         use crate::artifacts::xml::schema::snapshot::XmlNode;
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn empty_builder_injects_profile_and_builds_clean() {
             let snapshot = SvgTinyBuilderConstruction::empty().build().expect("empty document builds clean");
             match &snapshot.doc.root {
@@ -88,7 +88,7 @@ pub mod derived_construction {
             }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn hard_violation_injected_via_raw_mutate_still_fails_build() {
             let mut snapshot = SvgTinyBuilderConstruction::empty().build().unwrap();
             if let Some(XmlNode::Element { children, .. }) = snapshot.doc.root.as_mut() {
@@ -99,7 +99,7 @@ pub mod derived_construction {
             assert!(err.iter().any(|d| d.code.0 == CODE_ELEMENT));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn from_text_round_trips_through_tiny_build() {
             let text = r#"<svg xmlns="http://www.w3.org/2000/svg"><circle cx="5" cy="5" r="5"/></svg>"#;
             let built = SvgTinyBuilderConstruction::from_text(text).expect("parses").build().expect("conforming document builds");
@@ -265,35 +265,35 @@ pub mod derived_analysis {
             XmlNode::Element { name: name.into(), attrs, children: vec![] }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn fully_conforming_document_reports_no_diagnostics() {
             let snapshot = svg_root(vec![attr("baseProfile", "tiny"), attr("version", "1.1")], vec![elem("rect", vec![attr("x", "0"), attr("y", "0"), attr("width", "10"), attr("height", "10")])]);
             let diagnostics = check_svg_tiny_conformance(&snapshot);
             assert!(diagnostics.is_empty(), "got {diagnostics:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn blocklisted_element_is_hard() {
             let snapshot = svg_root(vec![attr("baseProfile", "tiny"), attr("version", "1.1")], vec![elem("linearGradient", vec![])]);
             let diagnostics = check_svg_tiny_conformance(&snapshot);
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_ELEMENT && d.severity == Severity::Error), "got {diagnostics:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn filter_primitive_by_prefix_is_hard() {
             let snapshot = svg_root(vec![attr("baseProfile", "tiny"), attr("version", "1.1")], vec![elem("feGaussianBlur", vec![])]);
             let diagnostics = check_svg_tiny_conformance(&snapshot);
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_ELEMENT && d.severity == Severity::Error), "got {diagnostics:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn blocklisted_attribute_is_hard() {
             let snapshot = svg_root(vec![attr("baseProfile", "tiny"), attr("version", "1.1")], vec![elem("rect", vec![attr("opacity", "0.5")])]);
             let diagnostics = check_svg_tiny_conformance(&snapshot);
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_ATTRIBUTE && d.severity == Severity::Error), "got {diagnostics:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn missing_base_profile_is_soft() {
             let snapshot = svg_root(vec![], vec![]);
             let diagnostics = check_svg_tiny_conformance(&snapshot);
@@ -302,14 +302,14 @@ pub mod derived_analysis {
             assert_eq!(diagnostics[0].severity, Severity::Warning);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn external_href_is_soft() {
             let snapshot = svg_root(vec![attr("baseProfile", "tiny"), attr("version", "1.1")], vec![elem("use", vec![attr("xlink:href", "http://example.com/sprite.svg#icon")])]);
             let diagnostics = check_svg_tiny_conformance(&snapshot);
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_EXTERNAL_HREF && d.severity == Severity::Warning), "got {diagnostics:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn same_document_fragment_href_is_clean() {
             let snapshot = svg_root(vec![attr("baseProfile", "tiny"), attr("version", "1.1")], vec![elem("use", vec![attr("href", "#icon")])]);
             let diagnostics = check_svg_tiny_conformance(&snapshot);

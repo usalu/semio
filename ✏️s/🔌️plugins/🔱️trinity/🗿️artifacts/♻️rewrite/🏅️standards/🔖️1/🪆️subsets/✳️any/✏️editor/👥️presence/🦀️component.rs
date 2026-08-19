@@ -21,7 +21,7 @@ pub struct RewritePresence {
 }
 
 impl Default for RewritePresence {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self {
             before_pane_camera: Camera::default(),
             lod_mode_by_window: BTreeMap::new(),

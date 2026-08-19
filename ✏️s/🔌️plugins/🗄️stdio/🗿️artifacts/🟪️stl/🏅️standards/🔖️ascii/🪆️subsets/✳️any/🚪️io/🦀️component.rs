@@ -207,13 +207,13 @@ pub use derived_composition::*;
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn empty_snapshot_matches_schema() {
         let snapshot = crate::artifacts::stl::engine::empty_stl_snapshot();
         assert_eq!(snapshot.schema, STDIO_STL_DOCUMENT_SCHEMA);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn codec_round_trip() {
         let snap = crate::artifacts::stl::engine::empty_stl_snapshot();
         let text = store::ArtifactDsl::print_dsl(&snap);
@@ -234,7 +234,7 @@ mod tests {
         StlSnapshot { schema: STDIO_STL_DOCUMENT_SCHEMA.into(), solid_name: "tetrahedron".into(), triangles }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn ascii_tetrahedron_round_trip() {
         let snap = tetrahedron();
         let text = encode_stl_ascii(&snap);
@@ -245,7 +245,7 @@ mod tests {
         assert_eq!(decoded, snap);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn binary_tetrahedron_round_trip() {
         let snap = tetrahedron();
         let bytes = encode_stl_binary(&snap);
@@ -264,7 +264,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn auto_detect_dispatches_ascii_vs_binary() {
         let snap = tetrahedron();
         let ascii_bytes = encode_stl_ascii(&snap).into_bytes();
@@ -273,7 +273,7 @@ mod tests {
         assert_eq!(decode_stl_auto(&binary_bytes).expect("binary").triangles.len(), 4);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn ascii_facet_normal_is_persisted_not_recomputed() {
         // A real-world "lazy writer" pattern: degenerate 0 0 0 facet normals that a naive
         // recompute-on-encode codec would silently overwrite. This codec must round-trip them
@@ -286,7 +286,7 @@ mod tests {
         assert_eq!(redecoded.triangles[0].normal, [0.0, 0.0, 0.0]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn ascii_solid_name_round_trips_including_empty() {
         let text = "solid\n  facet normal 0 0 1\n    outer loop\n      vertex 0 0 0\n      vertex 1 0 0\n      vertex 0 1 0\n    endloop\n  endfacet\nendsolid\n";
         let decoded = decode_stl_ascii(text).expect("decode");
@@ -308,7 +308,7 @@ mod tests {
         /// ✅️ "committed files parse": all 6 handcrafted `.grammar.semio`/`.protocol.semio` files
         /// parse under the real dialect — independent of, and cheaper than, the two `recognize`/
         /// `walk_protocol` laws below (a parse failure here fails fast with a clearer message).
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn committed_facet_files_parse() {
             for (label, text) in [("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO)] {
                 let grammar = dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
@@ -324,7 +324,7 @@ mod tests {
         /// `m5_handcrafted_grammar_conformance`'s own `dsl_body_from_fixture` uses, so this is a
         /// direct proof this artifact will pass that harness once graduated, not merely an
         /// analogue.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn grammar_conformance_law() {
             let grammar = dsl::parse_grammar(snapshot::text::COMPONENT_GRAMMAR_SEMIO).expect("parse snapshot grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
@@ -336,7 +336,7 @@ mod tests {
 
         /// ✅️ `ops_grammar_conformance_law`: the mutations grammar recognizes real `print_op`
         /// output for every `StlMutation` variant (`mutations::demo_mutation_cases()`).
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn ops_grammar_conformance_law() {
             let grammar = dsl::parse_grammar(mutations::text::COMPONENT_GRAMMAR_SEMIO).expect("parse mutations grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
@@ -349,7 +349,7 @@ mod tests {
         /// ✅️ `diff_grammar_conformance_law`: the diff grammar recognizes real `print_diff` output
         /// for every representative `StlDiff` (`diff::demo_diff_cases()`), incl. the empty diff and
         /// a full removed+modified+added triple.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn diff_grammar_conformance_law() {
             let grammar = dsl::parse_grammar(diff::text::COMPONENT_GRAMMAR_SEMIO).expect("parse diff grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
@@ -366,7 +366,7 @@ mod tests {
         /// bytes.len()`. Mutations/diff `encode_op`/`encode_diff` are the raw hand-rolled text
         /// bytes verbatim (no SEMIO envelope of their own — see those protocol files' own doc
         /// comments), so they're walked directly, unlike the snapshot pack facet.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn protocol_walk_law() {
             let pack_spec = dsl::parse_protocol(snapshot::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
             let packed = store::ArtifactPack::encode_pack(&crate::artifacts::stl::engine::demo_stl_snapshot());
@@ -393,7 +393,7 @@ mod tests {
         /// `print_dsl`/`encode_pack` output of `demo_stl_snapshot()` — `parse_dsl(fixture) ==
         /// demo()`, `print_dsl(demo()) == fixture` (byte-for-byte), and the pack twin — so the
         /// fixtures can never silently drift back to a fake again.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn fixture_honesty_law() {
             const FIXTURE_DSL: &str = include_str!("../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
             const FIXTURE_PACK: &[u8] = include_bytes!("../📚️examples/🎬️demo/🖼️assets/🎒️example.pack.semio");

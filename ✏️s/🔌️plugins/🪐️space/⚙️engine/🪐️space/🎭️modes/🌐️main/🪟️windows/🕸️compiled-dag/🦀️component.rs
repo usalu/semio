@@ -61,7 +61,7 @@ pub async fn render(projection: &WorkflowSnapshot) -> UiNode {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn renders_compiled_dag_editor() {
         use semio_framework_plugin::{PluginApp, ViewModel, VcsArtifactApp};
         let mut app = VcsArtifactApp::new(crate::engine::space::SpaceApp::default());

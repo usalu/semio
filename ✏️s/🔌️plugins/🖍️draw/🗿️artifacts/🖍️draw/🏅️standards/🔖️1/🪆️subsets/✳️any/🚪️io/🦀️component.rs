@@ -247,7 +247,7 @@ mod tests {
     /// (same shape/text/image/gradient coverage) onto the new `SemioDrawingSnapshot`→`io_dispatch`
     /// bridge — decodes the real bridged SVG back into stdio's own typed `SvgElement` tree instead
     /// of substring-matching hand-rolled markup, since the markup is no longer hand-rolled.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn draw_document_to_svg_bridges_shape_text_image_and_gradient_nodes_through_semio_drawing() {
         use semio_s_plugin_stdio::artifacts::svg::standards::v1_1::subsets::any::schema::snapshot::{parse_svg_xml, svg_element_from_xml_node, SvgElement};
 

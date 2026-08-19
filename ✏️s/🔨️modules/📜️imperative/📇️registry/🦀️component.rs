@@ -216,14 +216,14 @@ pub async fn contributions_json_from_entries(entries: &[ProgramContributionEntry
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn empty_contributions_yield_empty_registry() {
         sync_imperative_module_contributions("[]");
         let registry = imperative_module_registry();
         assert!(registry.operator_catalogue().is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn sync_is_idempotent_for_same_json() {
         sync_imperative_module_contributions("[]");
         sync_imperative_module_contributions("[]");
@@ -231,7 +231,7 @@ mod tests {
     }
 
     #[cfg(feature = "linked-modules")]
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn linked_modules_bootstrap_registers_text_operators() {
         super::linked_modules::bootstrap_linked_modules();
         let registry = imperative_module_registry();

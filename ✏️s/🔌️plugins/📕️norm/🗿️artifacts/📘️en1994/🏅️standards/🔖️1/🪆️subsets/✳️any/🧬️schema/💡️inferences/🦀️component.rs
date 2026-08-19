@@ -72,13 +72,13 @@ mod tests {
     use super::*;
     use protocol::Inference;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = En1994Snapshot::default();
         assert_eq!(En1994Inference::infer(&snapshot), En1994Inference::infer(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(En1994Inference::infer(&En1994Snapshot::default()), En1994Inference::default());
     }
@@ -172,7 +172,7 @@ pub async fn evaluate(document: &En1994Snapshot) -> CheckReport {
 mod compliance_report_tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn full_composite_worked_example() {
         let report = check_full_composite(180.0, 110.0, 80.0, 250.0, 0.75, 150.0, 20.0, "r60", "trapezoidal", 55.0, "stud_welded", AnnexChoice::De, 19.0, 95.0, 30.0, 450.0, 33_000.0, 40.0, 8.0, 355.0, 2_000_000.0, 40.0);
         assert_eq!(report.checks.len(), 7);
@@ -185,7 +185,7 @@ mod compliance_report_tests {
         assert!(report.checks[6].utilization < 1.0, "stud fatigue check should pass");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn evaluate_runs_all_parts() {
         let report = evaluate(&En1994Snapshot::default());
         assert_eq!(report.checks.len(), 7);

@@ -34,7 +34,7 @@ mod tests {
     use infinite_board_port_directed_dag::DagNodeKind;
     use semio_framework_plugin::PluginApp;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_node_action_updates_document_with_the_new_node() {
         let mut app = testkit::new_app();
         app.dispatch_typed(DagCommand::AddNode(AddNode { kind: "slider".into(), x: None, y: None }), &semio_framework_plugin::testkit::meta("local")).expect("add node");
@@ -43,7 +43,7 @@ mod tests {
         assert!(nodes.iter().any(|node| matches!(node.kind, DagNodeKind::Slider { .. })));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn rename_dag_node_rewrites_nodes_and_edges() {
         let mut app = testkit::new_app();
         let old_id = app.snapshot().expect("projection").nodes().first().map(|node| node.id.clone()).expect("node");
@@ -54,7 +54,7 @@ mod tests {
         assert!(nodes.iter().all(|node| node.id != old_id));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn rename_dag_node_is_a_no_op_for_an_empty_or_duplicate_id() {
         let mut app = testkit::new_app();
         let (first_id, second_id) = {
@@ -67,7 +67,7 @@ mod tests {
         assert!(result.mutations.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn remove_node_deletes_node_and_connected_edges() {
         let mut app = testkit::new_app();
         let node_id = app.snapshot().expect("projection").nodes().first().map(|node| node.id.clone()).expect("node");
@@ -81,7 +81,7 @@ mod tests {
         }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_node_then_undo_restores_document() {
         let mut app = testkit::new_app();
         let before = app.snapshot().expect("projection").nodes().len();
@@ -91,7 +91,7 @@ mod tests {
         assert_eq!(app.snapshot().expect("projection").nodes().len(), before);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn patch_slider_value_coalesces_into_one_edit() {
         let mut app = testkit::new_app();
         app.dispatch_typed(DagCommand::AddNode(AddNode { kind: "slider".into(), x: None, y: None }), &semio_framework_plugin::testkit::meta("local")).expect("add slider");

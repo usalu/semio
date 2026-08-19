@@ -37,7 +37,7 @@ mod tests {
     /// scoped here since this is the only sub-region that still needs it after the taxonomy split.
     type MindmapWiresStore = store::ArtifactStore<WiresSnapshot, WiresMutation>;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_binary_round_trips_and_agrees_with_text() {
         let node = dsl::to_dsl_value(&json!({ "id": "node-1", "nodeKind": "identity", "shape": "circle", "x": 0.0, "y": 0.0, "radius": 24.0, "text": "Alpha", "handles": [] })).expect("node serializes");
         let operation = create_node(node);
@@ -46,7 +46,7 @@ mod tests {
         assert_eq!(decode_op(&bytes).expect("decode"), operation);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn store_applies_node_add() {
         let mut store = MindmapWiresStore::new(store::create_document_envelope(crate::artifacts::wires::MINDMAP_WIRES_SCHEMA, "mindmap-wires", crate::artifacts::wires::empty_wires_snapshot(), None)).expect("valid artifact store fixture");
         let node = dsl::to_dsl_value(&json!({ "id": "node-1", "nodeKind": "identity", "shape": "circle", "x": 0.0, "y": 0.0, "radius": 24.0, "text": "Alpha", "handles": [] })).expect("node serializes");
@@ -54,7 +54,7 @@ mod tests {
         assert_eq!(crate::artifacts::wires::wires_working_board(&store.snapshot().expect("snapshot")).get("nodes").and_then(|value| value.as_array()).map(|items| items.len()), Some(1));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn document_text_round_trip_with_operation_applied() {
         let mut store = MindmapWiresStore::new(store::create_document_envelope(crate::artifacts::wires::MINDMAP_WIRES_SCHEMA, "mindmap-wires", crate::artifacts::wires::empty_wires_snapshot(), None)).expect("valid artifact store fixture");
         let node = dsl::to_dsl_value(&json!({ "id": "node-1", "nodeKind": "identity", "shape": "circle", "x": 0.0, "y": 0.0, "radius": 24.0, "text": "Alpha", "handles": [] })).expect("node serializes");
@@ -70,7 +70,7 @@ mod tests {
     /// `command_envelope_round_trip_holds_for_an_applied_operation`). Uses `create-node`
     /// deliberately, not a whole-document replace — a whole-snapshot variant is banned vocabulary
     /// and no longer exists on `WiresMutation` (see `📓️taxonomy.md`).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn command_envelope_round_trip_holds_for_an_applied_operation() {
         use protocol::{ArtifactId, Edit, SchemaId};
 

@@ -46,7 +46,7 @@ mod tests {
     use super::*;
     use crate::artifacts::pptx::schema::snapshot::{PptxParagraph, PptxSlide};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn counts_slides_shapes_and_words() {
         let snapshot = PptxSnapshot {
             schema: "stdio.pptx".into(),
@@ -62,7 +62,7 @@ mod tests {
         assert_eq!(outline.word_count, 2);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn outline_is_deterministic() {
         let snapshot = PptxSnapshot::default();
         assert_eq!(PptxOutline::compute(&snapshot), PptxOutline::compute(&snapshot));

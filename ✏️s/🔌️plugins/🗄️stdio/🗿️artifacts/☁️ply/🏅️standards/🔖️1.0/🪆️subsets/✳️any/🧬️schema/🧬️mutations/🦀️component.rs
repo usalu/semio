@@ -391,7 +391,7 @@ mod codec_tests {
 
     /// 🧪️ F6/P2-FG3: `OpText`/`OpBinary` round-trip laws for the hand-rolled `PlyMutation`
     /// grammar — `OpBinary` is now a REAL binary frame, no longer text-as-bytes.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_text_binary_roundtrip_law() {
         for mutation in demo_mutation_cases() {
             let printed = mutation.print_op();

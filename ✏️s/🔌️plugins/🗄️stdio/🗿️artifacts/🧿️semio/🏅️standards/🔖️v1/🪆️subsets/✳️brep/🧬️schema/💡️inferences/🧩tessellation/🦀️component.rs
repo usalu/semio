@@ -629,7 +629,7 @@ mod tests {
         add_solid(body, shell, vec![], rec)
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn unit_box_has_six_face_groups_and_unit_normals() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
@@ -650,7 +650,7 @@ mod tests {
         assert_eq!(total_group, mesh.index.len());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn tessellate_face_matches_one_box_face() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
@@ -662,7 +662,7 @@ mod tests {
         assert_eq!(mesh.position.len() / 3, 4);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn sample_edge_polyline_returns_line_endpoints() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
@@ -676,7 +676,7 @@ mod tests {
         assert!((poly[3] - 2.0).abs() < 1e-6);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn shared_edge_samples_are_identical_across_adjacent_faces() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
@@ -688,7 +688,7 @@ mod tests {
         assert_eq!(a, b);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn circle_edge_samples_respect_deflection() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
@@ -703,14 +703,14 @@ mod tests {
         assert!(coarse.len() >= 6);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn missing_solid_returns_missing_entity() {
         let body = Body::new();
         let err = tessellate_solid(&body, SolidId::from_raw(9, 0), 0.1).unwrap_err();
         assert!(matches!(err, KernelError::MissingEntity(_)));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn tessellate_rectangle_wire_emits_edge_segments() {
         use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primitives::make_rectangle_wire;
         let mut body = Body::new();

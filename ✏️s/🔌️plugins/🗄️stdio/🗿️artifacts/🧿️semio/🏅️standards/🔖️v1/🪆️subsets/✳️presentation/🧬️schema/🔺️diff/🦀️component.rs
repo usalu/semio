@@ -1553,7 +1553,7 @@ mod handcrafted_diff_codec_tests {
     /// (never reachable through any single mutation variant — only through a real structural
     /// `between()` on two full snapshots, e.g. `SetSnapshot`) must fall back to whole-shape
     /// replacement, round-trip through the hand-rolled `DiffCodec`, and apply/inverse correctly.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn shape_kind_change_produces_replace_and_round_trips() {
         let mut a = snapshot_a();
         a.slides[0].shapes = vec![SlideShape::TextBox { frame: SlideFrame { origin: SemioPoint2 { x: 0.0, y: 0.0 }, width: 1.0, height: 1.0 }, blocks: vec![DocBlock::paragraph("was text")] }];
@@ -1578,7 +1578,7 @@ mod handcrafted_diff_codec_tests {
     /// exercises masters/layouts (named-keyed removed/modified/added), slides (index-keyed
     /// removed/modified/added incl. nested shape + `DocBlock`-reuse changes), and the `layout_id`
     /// tri-state, in both directions plus the empty/self cases.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn diff_codec_text_binary_roundtrip_law() {
         let a = snapshot_a();
         let b = snapshot_b();

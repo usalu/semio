@@ -39,7 +39,7 @@ pub async fn apply(snapshot: &mut GltfSnapshot, payload: &GltfChangeMaterialDoub
 #[cfg(test)]
 mod tests {
     use super::*;
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn applies_and_rejects_identity() {
         let mut snapshot = GltfSnapshot::default();
         snapshot.document.materials.push(Default::default());

@@ -181,7 +181,7 @@ pub struct ProgramArtifact {
 
 //#region 🔖️Conversions
 impl Default for ProgramArtifact {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self::from_snapshot(crate::artifacts::program::empty_plugin())
     }
 }
@@ -601,7 +601,7 @@ pub async fn normalize_pair(a: &EntityId, b: &EntityId) -> (EntityId, EntityId) 
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn normalize_pair_orders_endpoints() {
         let a = EntityId("element-2".into());
         let b = EntityId("element-10".into());

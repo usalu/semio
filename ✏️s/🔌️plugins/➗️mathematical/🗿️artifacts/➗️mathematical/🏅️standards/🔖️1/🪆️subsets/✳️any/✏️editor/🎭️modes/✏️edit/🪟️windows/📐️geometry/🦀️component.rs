@@ -44,13 +44,13 @@ pub async fn render(geometry: &MathematicalGeometry) -> UiNode {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn renders_canvas_2d_scene() {
         let json = serde_json::to_string(&render(&MathematicalGeometry::default())).unwrap();
         assert!(json.contains("canvas-2d"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn definition_declares_the_canvas_2d_surface_and_body_key() {
         let definition = definition();
         assert_eq!(definition.body_key, MATH_PLAY_BODY_GEOMETRY);

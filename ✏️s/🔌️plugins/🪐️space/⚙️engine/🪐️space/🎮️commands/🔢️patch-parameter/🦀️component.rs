@@ -61,7 +61,7 @@ mod tests {
     use crate::demo_space_projection;
     use semio_framework_plugin::HistoryView;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn space_command_op_text_round_trips_every_variant() {
         use crate::engine::space::SpaceCommand;
         store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::PatchParameter(PatchParameter { parameter_id: "p1".into(), field: "value".into(), value: "48".into() }));
@@ -75,7 +75,7 @@ mod tests {
         store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::UnbindParameterField(crate::engine::space::commands::unbind_parameter_field::UnbindParameterField { node_id: "n1".into(), field_path: "label".into() }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn patch_parameter_action_updates_value() {
         let projection = demo_space_projection();
         let history = HistoryView::empty();
@@ -92,7 +92,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn unbind_parameter_field_removes_binding() {
         let mut projection = demo_space_projection();
         let config = SpaceConfig::default();

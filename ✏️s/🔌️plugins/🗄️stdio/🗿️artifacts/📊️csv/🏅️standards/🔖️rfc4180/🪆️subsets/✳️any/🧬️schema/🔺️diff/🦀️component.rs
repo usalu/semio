@@ -864,7 +864,7 @@ mod handcrafted_diff_codec_tests {
         CsvRecord { fields: fields.iter().map(|(v, q)| field(v, *q)).collect() }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn diff_codec_text_binary_roundtrip_law() {
         let a = CsvSnapshot { schema: "stdio.csv".into(), has_header: true, records: vec![record(&[("name", false), ("note, with comma", true)]), record(&[("a", false), ("b", false)]), record(&[("x", false), ("y", false)])] };
         let b = CsvSnapshot { schema: "stdio.csv".into(), has_header: false, records: vec![record(&[("new-a", true), ("new-b", false)]), record(&[("x", false), ("y", false)]), record(&[("brand [new]", true)])] };
@@ -885,7 +885,7 @@ mod handcrafted_diff_codec_tests {
     /// 🧪️ P2-P1 item 6: `dsl::parse_grammar` + `dsl::Recognizer` recognize REAL `print_diff`
     /// output for several real diffs, including the `records` COLLECTION-TRIPLE production
     /// (removed/modified/added) — the first real collection-triple grammar in this program.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn diff_grammar_conformance_law() {
         let grammar_text = crate::artifacts::csv::schema::diff::text::COMPONENT_GRAMMAR_SEMIO;
         let grammar = dsl::parse_grammar(grammar_text).expect("parse diff grammar");

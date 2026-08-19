@@ -459,7 +459,7 @@ mod op_codec_tests {
     /// full nested-document payload (declaration + doctype + recursive node tree). Reuses
     /// `demo_mutation_cases()` (the single source of truth also consumed by
     /// `⚙️engine/🦀️component.rs`'s `ops_grammar_conformance_law`/`protocol_walk_law`).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_text_binary_roundtrip_law() {
         for mutation in demo_mutation_cases() {
             let printed = mutation.print_op();

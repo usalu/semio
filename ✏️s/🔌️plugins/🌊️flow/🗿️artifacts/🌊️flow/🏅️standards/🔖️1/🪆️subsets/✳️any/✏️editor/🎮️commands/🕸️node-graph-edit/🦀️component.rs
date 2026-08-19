@@ -89,7 +89,7 @@ mod tests {
     /// 🎯️ The batched `DeleteSelection` sub-op must clear the node selection (visible on the rendered
     /// scene) while leaving the widget count intact when nothing resolves — the behavior that
     /// distinguishes it from the top-level `FlowCommand::DeleteSelection`.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn batched_delete_selection_clears_the_node_selection_on_the_scene() {
         let mut app = flow_app_with_registry();
         select_graph(&mut app, &["slider"], &[]);
@@ -99,7 +99,7 @@ mod tests {
         let _ = render(&mut app, crate::editor::flow::FLOW_PLAY_BODY_MAIN);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn spotlight_commit_shares_the_node_graph_edit_vocabulary() {
         use crate::editor::flow::commands::spotlight_commit;
         let mut app = flow_app_with_registry();

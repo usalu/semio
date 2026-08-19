@@ -21,7 +21,7 @@ pub struct RasterPresence {
 }
 
 impl Default for RasterPresence {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self {
             brush_size: 24.0,
             brush_opacity: 1.0,

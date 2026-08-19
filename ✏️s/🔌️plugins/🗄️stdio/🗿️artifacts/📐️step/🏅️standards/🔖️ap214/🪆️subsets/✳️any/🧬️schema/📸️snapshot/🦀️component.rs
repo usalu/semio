@@ -37,7 +37,7 @@ pub enum StepValue {
 }
 
 impl Default for StepValue {
-    async fn default() -> Self {
+    fn default() -> Self {
         StepValue::Unset
     }
 }
@@ -143,7 +143,7 @@ pub struct StepSnapshot {
 }
 
 impl Default for StepSnapshot {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { schema: STDIO_STEP_DOCUMENT_SCHEMA.into(), header: StepHeader::default(), entities: Vec::new() }
     }
 }
@@ -348,7 +348,7 @@ mod tests {
 
     const FIXTURE: &str = "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION((''),'2;1');\nFILE_NAME('semio.step','2026-08-10T00:00:00',('Ueli'),('semio'),'semio','','');\nFILE_SCHEMA(('AUTOMOTIVE_DESIGN'));\nENDSEC;\nDATA;\n#1=CARTESIAN_POINT('',(0.,0.,0.));\n#2=CARTESIAN_POINT('',(10.,0.,0.));\nENDSEC;\nEND-ISO-10303-21;\n";
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn typed_snapshot_round_trips_through_part21_text() {
         let snapshot = <StepSnapshot as store::ArtifactDsl>::parse_dsl(FIXTURE).expect("parse");
         assert_eq!(snapshot.header.file_schema.schemas, vec!["AUTOMOTIVE_DESIGN".to_string()]);
@@ -362,7 +362,7 @@ mod tests {
         assert_eq!(snapshot, reparsed, "typed round trip must be lossless");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn typed_value_wrapper_round_trips() {
         let text = "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION((''),'2;1');\nFILE_NAME('','',(''),(''),'','','');\nFILE_SCHEMA(('IFC4'));\nENDSEC;\nDATA;\n#1=IFCPROPERTYSINGLEVALUE('Height',$,IFCLENGTHMEASURE(3000.),$);\nENDSEC;\nEND-ISO-10303-21;\n";
         let snapshot = <StepSnapshot as store::ArtifactDsl>::parse_dsl(text).expect("parse");
@@ -378,7 +378,7 @@ mod tests {
         assert_eq!(snapshot, reparsed);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn complex_instance_keeps_every_type() {
         let text =
             "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION((''),'2;1');\nFILE_NAME('','',(''),(''),'','','');\nFILE_SCHEMA(('IFC4'));\nENDSEC;\nDATA;\n#1=(IFCQUANTITYAREA($,$,$,10.5,$)IFCPHYSICALSIMPLEQUANTITY($,$,$,$));\nENDSEC;\nEND-ISO-10303-21;\n";
@@ -391,7 +391,7 @@ mod tests {
         assert_eq!(snapshot, reparsed);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn pack_codec_round_trip() {
         let snapshot = <StepSnapshot as store::ArtifactDsl>::parse_dsl(FIXTURE).expect("parse");
         let bytes = store::ArtifactPack::encode_pack(&snapshot);
@@ -401,7 +401,7 @@ mod tests {
 
     /// 🧪️ `codec_retention_law`: decode -> encode is byte-preserving for both the DSL (`.step`
     /// text) and pack codecs on the real fixture.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn codec_retention_law_decode_encode_is_stable() {
         let snapshot = <StepSnapshot as store::ArtifactDsl>::parse_dsl(FIXTURE).expect("parse");
         let text_once = store::ArtifactDsl::print_dsl(&snapshot);

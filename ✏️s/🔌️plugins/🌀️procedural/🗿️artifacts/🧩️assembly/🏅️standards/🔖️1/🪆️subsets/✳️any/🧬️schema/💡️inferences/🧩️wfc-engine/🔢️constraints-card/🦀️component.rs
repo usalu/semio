@@ -144,13 +144,13 @@ mod tests {
         AdjacencyView::new(neighbors, vec![RegionId(0); n])
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn rejects_invalid_bounds() {
         let model = two_pattern_model();
         assert!(CardinalityConstraint::new(model, PatternSelector::Pattern(PatternId(0)), Scope::All, 5, 2).is_err());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn validate_complete_accepts_matching_count() {
         let model = two_pattern_model();
         let adjacency = adjacency_line(4);
@@ -159,7 +159,7 @@ mod tests {
         assert!(c.validate_complete(&assignment, &adjacency).is_ok());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn validate_complete_rejects_out_of_bounds_count() {
         let model = two_pattern_model();
         let adjacency = adjacency_line(4);
@@ -168,7 +168,7 @@ mod tests {
         assert!(c.validate_complete(&assignment, &adjacency).is_err());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn initialize_forces_pattern_when_min_equals_possible() {
         let model = two_pattern_model();
         let adjacency = adjacency_line(2);
@@ -184,7 +184,7 @@ mod tests {
         assert!(restrictions.iter().any(|(n, set)| *n == NodeId(0) && set.get(PatternId(0)) && !set.get(PatternId(1))));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn initialize_signals_infeasible_min_via_empty_domain() {
         let model = two_pattern_model();
         let adjacency = adjacency_line(1);

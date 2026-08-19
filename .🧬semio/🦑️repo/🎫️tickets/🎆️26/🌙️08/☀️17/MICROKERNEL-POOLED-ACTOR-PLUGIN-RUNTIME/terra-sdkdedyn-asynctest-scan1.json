@@ -1,0 +1,52 @@
+{
+  "mode": "scan",
+  "roots": {
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor": {
+      "files_with_sites": 8,
+      "sites": 42
+    },
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐host": {
+      "files_with_sites": 1,
+      "sites": 4
+    },
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️builder": {
+      "files_with_sites": 1,
+      "sites": 8
+    },
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️describe": {
+      "files_with_sites": 1,
+      "sites": 5
+    },
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry": {
+      "files_with_sites": 0,
+      "sites": 0
+    },
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages": {
+      "files_with_sites": 0,
+      "sites": 0
+    },
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🛂️describe": {
+      "files_with_sites": 0,
+      "sites": 0
+    },
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs": {
+      "files_with_sites": 0,
+      "sites": 0
+    },
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema": {
+      "files_with_sites": 0,
+      "sites": 0
+    },
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window-kits": {
+      "files_with_sites": 0,
+      "sites": 0
+    }
+  },
+  "total_files_with_sites": 11,
+  "total_sites": 59,
+  "manifests_needing_dev_dependency": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️describe/📦️packages/🦀️rust/Cargo.toml",
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/Cargo.toml"
+  ],
+  "manifests_touched": []
+}

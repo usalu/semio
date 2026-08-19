@@ -33,14 +33,14 @@ impl Vec3d {
 
 impl std::ops::Add for Vec3d {
     type Output = Vec3d;
-    async fn add(self, rhs: Self) -> Self {
+    fn add(self, rhs: Self) -> Self {
         Vec3d(self.0 + rhs.0)
     }
 }
 
 impl std::ops::Mul<f32> for Vec3d {
     type Output = Vec3d;
-    async fn mul(self, rhs: f32) -> Self {
+    fn mul(self, rhs: f32) -> Self {
         Vec3d(self.0 * rhs)
     }
 }
@@ -77,7 +77,7 @@ impl Point3d {
 
 impl std::ops::Sub for Point3d {
     type Output = Vec3d;
-    async fn sub(self, rhs: Self) -> Vec3d {
+    fn sub(self, rhs: Self) -> Vec3d {
         Vec3d(self.0 - rhs.0)
     }
 }
@@ -447,7 +447,7 @@ mod tests {
     use super::*;
     use crate::artifacts::puzzle3d::schema::testkit::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn world_volumes_contain_aabb_respects_oriented_box() {
         let volumes = vec![WorldVolumeProps { id: "v1".to_string(), origin: [0.0, 0.0, 0.0], orientation: None, scale: Some(dsl::DslValue::Array(vec![dsl::DslValue::Number(4.0), dsl::DslValue::Number(4.0), dsl::DslValue::Number(4.0)])) }];
         let min = Point3d::new(-1.0, -1.0, -1.0);
@@ -458,7 +458,7 @@ mod tests {
         assert!(!world_volumes_contain_aabb(&volumes, outside_min, outside_max));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn vec3d_and_point3d_basic_ops() {
         let a = Vec3d::new(1.0, 2.0, 3.0);
         let b = Vec3d::new(4.0, -1.0, 0.5);
@@ -480,7 +480,7 @@ mod tests {
         assert_eq!((back.x(), back.y(), back.z()), (3.0, -3.0, 5.0));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn rotation3d_identity_ijkw_roundtrip_and_apply() {
         let identity = Rotation3d::identity();
         assert_eq!(identity.to_ijkw(), (0.0, 0.0, 0.0, 1.0));
@@ -490,7 +490,7 @@ mod tests {
         assert_eq!((rotated.x(), rotated.y(), rotated.z()), (1.0, 0.0, 0.0));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn rotation3d_rotation_between_none_for_antiparallel() {
         let from = Vec3d::new(1.0, 0.0, 0.0);
         let to = Vec3d::new(-1.0, 0.0, 0.0);
@@ -499,7 +499,7 @@ mod tests {
         assert!(Rotation3d::rotation_between(from, to2).is_some());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn pose3d_compose_inverse_transform_point() {
         let rotation = Rotation3d::from_ijkw(0.0, 0.0, 0.0, 1.0);
         let translation = Vec3d::new(1.0, 2.0, 3.0);
@@ -514,14 +514,14 @@ mod tests {
         assert_eq!((composed_point.x(), composed_point.y(), composed_point.z()), (1.0, 2.0, 3.0));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn normalize_vec3_handles_zero_length() {
         assert_eq!(normalize_vec3([0.0, 0.0, 0.0]), [0.0, 0.0, -1.0]);
         let n = normalize_vec3([3.0, 0.0, 4.0]);
         assert!((n[0] - 0.6).abs() < 1e-9 && (n[2] - 0.8).abs() < 1e-9);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn vec3_math_helpers() {
         assert_eq!(vec3_dot([1.0, 2.0, 3.0], [4.0, 5.0, 6.0]), 32.0);
         assert_eq!(vec3_cross([1.0, 0.0, 0.0], [0.0, 1.0, 0.0]), [0.0, 0.0, 1.0]);
@@ -530,7 +530,7 @@ mod tests {
         assert_eq!(negate_vec3([1.0, -2.0, 3.0]), [-1.0, 2.0, -3.0]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn vec3_scale_variants() {
         assert_eq!(vec3_scale([1.0, 2.0, 3.0], &None), [1.0, 2.0, 3.0]);
         assert_eq!(vec3_scale([1.0, 2.0, 3.0], &Some(dsl::DslValue::Number(2.0))), [2.0, 4.0, 6.0]);
@@ -538,7 +538,7 @@ mod tests {
         assert_eq!(vec3_scale([1.0, 2.0, 3.0], &Some(dsl::DslValue::String("bogus".to_string()))), [1.0, 2.0, 3.0]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn quat_rotate_vec_and_180_degree_axis() {
         let identity: Quat = [0.0, 0.0, 0.0, 1.0];
         let rotated = quat_rotate_vec(identity, [1.0, 2.0, 3.0]);
@@ -547,7 +547,7 @@ mod tests {
         assert_eq!(q, [0.0, 0.0, 1.0, 0.0]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn anti_parallel_brush_orientation_branches() {
         let in_plane = anti_parallel_brush_orientation([1.0, 0.0, 0.0]);
         assert_eq!(in_plane, quaternion_from_180_degree_axis([0.0, 0.0, 1.0]), "near-planar target direction falls back to the z axis");
@@ -557,7 +557,7 @@ mod tests {
         assert_eq!(general, quaternion_from_180_degree_axis([-1.0, 0.0, 0.0]), "general case uses cross(z, target)");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn compute_brush_placement_pose_host_orientation_branch() {
         let host_orientation: Quat = [0.0, 0.0, 0.0, 1.0];
         let (origin, orientation) = compute_brush_placement_pose([1.0, 0.0, 0.0], [0.0, 0.0, -1.0], &None, [10.0, 0.0, 0.0], [0.0, 0.0, 1.0], Some(host_orientation), true);
@@ -565,14 +565,14 @@ mod tests {
         assert_eq!(origin, [9.0, 0.0, 0.0]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn compute_brush_placement_pose_falls_back_without_reference_orientation() {
         let (_, orientation) = compute_brush_placement_pose([0.0, 0.0, 0.0], [0.0, 0.0, -1.0], &None, [0.0, 0.0, 0.0], [0.0, 0.0, -1.0], None, true);
         let anti = anti_parallel_brush_orientation([0.0, 0.0, -1.0]);
         assert_eq!(orientation, anti, "use_host_orientation with no reference orientation must fall through to the general path");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn compute_brush_placement_pose_general_rotation_between() {
         let (origin, orientation) = compute_brush_placement_pose([0.0, 0.0, 0.0], [0.0, 0.0, -1.0], &None, [5.0, 0.0, 0.0], [1.0, 0.0, 0.0], None, false);
         let rotated = quat_rotate_vec(orientation, [0.0, 0.0, -1.0]);
@@ -580,7 +580,7 @@ mod tests {
         assert!((origin[0] - 5.0).abs() < 1e-6);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn collision_body_from_buffers_rejects_too_few_or_degenerate() {
         assert!(collision_body_from_buffers(&[0.0; 6], &[0, 1, 2]).is_none(), "fewer than 3 vertices must be rejected");
         assert!(collision_body_from_buffers(&[0.0; 9], &[0, 1]).is_none(), "fewer than one triangle's worth of indices must be rejected");
@@ -588,7 +588,7 @@ mod tests {
         assert!(collision_body_from_buffers(&tiny_positions, &[0, 1, 2]).is_none(), "extent below the minimum collision mesh extent must be rejected");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn collision_body_from_buffers_accepts_valid_mesh() {
         let (positions, indices) = unit_cube_mesh_buffers();
         let scaled: Vec<f32> = positions.iter().map(|c| c * 4.0).collect();
@@ -597,7 +597,7 @@ mod tests {
         assert_eq!((body.local_bounds_min.x(), body.local_bounds_max.x()), (-4.0, 4.0));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn world_bounds_transforms_local_aabb_corners() {
         let (positions, indices) = unit_cube_mesh_buffers();
         let body = collision_body_from_buffers(&positions, &indices).expect("body");
@@ -606,14 +606,14 @@ mod tests {
         assert_eq!((min.x(), max.x()), (9.0, 11.0));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn world_volumes_contain_aabb_empty_and_multi_volume() {
         assert!(world_volumes_contain_aabb(&[], Point3d::new(-1.0, -1.0, -1.0), Point3d::new(1.0, 1.0, 1.0)), "no target volumes means unconstrained");
         let volumes = vec![WorldVolumeProps { id: "far".into(), origin: [100.0, 0.0, 0.0], orientation: None, scale: None }, WorldVolumeProps { id: "near".into(), origin: [0.0, 0.0, 0.0], orientation: None, scale: Some(dsl::DslValue::Number(4.0)) }];
         assert!(world_volumes_contain_aabb(&volumes, Point3d::new(-1.0, -1.0, -1.0), Point3d::new(1.0, 1.0, 1.0)), "any single containing volume is enough");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn bodies_intersect_and_solid_overlap_volume_reject_disjoint_aabbs() {
         let (positions, indices) = unit_cube_mesh_buffers();
         let body = collision_body_from_buffers(&positions, &indices).expect("body");
@@ -623,7 +623,7 @@ mod tests {
         assert_eq!(solid_overlap_volume(&body, &pose_a, &body, &pose_b, 64, 0.02), 0.0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn solid_overlap_volume_reports_positive_overlap_for_coincident_bodies() {
         let (positions, indices) = outward_wound_unit_cube_mesh_buffers();
         let scaled: Vec<f32> = positions.iter().map(|c| c * 4.0).collect();

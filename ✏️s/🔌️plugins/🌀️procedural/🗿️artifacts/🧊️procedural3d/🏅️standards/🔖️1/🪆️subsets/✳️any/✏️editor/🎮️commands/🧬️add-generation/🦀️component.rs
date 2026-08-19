@@ -68,21 +68,21 @@ mod tests {
     use crate::editor::procedural3d::commands::select_generation;
     use semio_framework_plugin::testkit::assert_undo_redo_round_trip;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_generation_records_an_undoable_generation_operation() {
         let _serial = crate::editor::procedural3d::test_support::lock();
         let mut app = app();
         assert_undo_redo_round_trip(&mut app, Procedural3dCommand::AddGeneration(AddGeneration {}), |app| app.snapshot().expect("snapshot").generation.generations.len(), 0, 1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn generate_mode_renders_surfaces() {
         let _serial = crate::editor::procedural3d::test_support::lock();
         let mut app = app();
         assert!(crate::editor::procedural3d::testkit::render(&mut app, crate::editor::procedural3d::modes::generate::windows::generations::PROCEDURAL_3D_PLAY_BODY_GENERATIONS).contains("addGeneration"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn select_generation_does_not_mutate_the_document() {
         let _serial = crate::editor::procedural3d::test_support::lock();
         let mut app = app();

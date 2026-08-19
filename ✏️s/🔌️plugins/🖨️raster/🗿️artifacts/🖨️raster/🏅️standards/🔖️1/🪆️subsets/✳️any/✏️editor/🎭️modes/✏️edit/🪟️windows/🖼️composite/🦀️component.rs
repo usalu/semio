@@ -52,7 +52,7 @@ pub async fn render(document: &RasterDocument, config: &RasterConfig) -> UiNode 
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn definition_declares_the_paint2d_surface_and_body_key() {
         let definition = definition();
         assert_eq!(definition.body_key, RASTER_PLAY_BODY_COMPOSITE);
@@ -60,7 +60,7 @@ mod tests {
         assert!(definition.options.measures.is_empty(), "measures are config-derived per frame, never frozen into the manifest");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn window_measures_surface_brush_and_eraser_groups() {
         let config = RasterConfig::default();
         let measures = window_measures(&config);

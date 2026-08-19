@@ -75,7 +75,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn deserialize_exposes_real_sample_timing_as_a_step_scalar_channel() {
         let anim = semio_framework_plugin::resolve_ready(SemioAnimationFromMp4::deserialize(&real_world_mp4())).expect("deserialize");
         assert_eq!(anim.timelines.len(), 1);

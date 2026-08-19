@@ -38,7 +38,7 @@ pub async fn render(document: &BinarySnapshot) -> UiNode {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn definition_declares_a_read_only_text_window() {
         let def = definition();
         assert_eq!(def.id, WINDOW_KIND_ID);
@@ -46,7 +46,7 @@ mod tests {
         assert!(def.actions.is_empty(), "a viewer window kind declares no mutation-shaped actions");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn render_carries_the_bytes_as_read_only_hex() {
         let document = BinarySnapshot { bytes: vec![0xde, 0xad, 0xbe, 0xef], ..BinarySnapshot::default() };
         let UiNode::ComponentScene(node) = render(&document) else { panic!("expected ComponentScene") };

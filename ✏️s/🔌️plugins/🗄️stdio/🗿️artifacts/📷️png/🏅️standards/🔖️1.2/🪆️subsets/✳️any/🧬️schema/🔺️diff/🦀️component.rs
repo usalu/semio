@@ -2206,7 +2206,7 @@ mod handcrafted_diff_codec_tests {
     /// plus transitions to/from an all-defaults snapshot) — exercises every scalar field, every
     /// tri-state `Some(None)`/`Some(Some(_))` transition (incl. `plte`'s tri-state-wrapping-a-
     /// triple shape), and every collection triple's removed/modified/added arms.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn diff_codec_text_binary_roundtrip_law() {
         for d in demo_diff_cases() {
             let printed = d.print_diff();

@@ -52,13 +52,13 @@ pub async fn procedural3d_catalog_label(kind: &'static str, labels: &Procedural3
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn labels_resolve_native_english_and_german_from_the_config_locale() {
         assert_eq!(procedural3d_labels(&Procedural3dConfig::default()).widgets.as_str(), "Widgets");
         assert_eq!(procedural3d_labels(&Procedural3dConfig { locale: "de-DE".into(), ..Procedural3dConfig::default() }).widgets.as_str(), "Elemente");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn unknown_catalog_kind_falls_back_to_the_id_itself() {
         let labels = procedural3d_labels(&Procedural3dConfig::default());
         assert_eq!(procedural3d_catalog_label("bogusKind", labels), "bogusKind");

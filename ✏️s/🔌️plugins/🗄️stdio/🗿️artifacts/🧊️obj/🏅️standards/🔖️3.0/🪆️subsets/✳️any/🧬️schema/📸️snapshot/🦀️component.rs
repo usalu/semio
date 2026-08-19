@@ -170,7 +170,7 @@ pub struct ObjSnapshot {
 }
 
 impl Default for ObjSnapshot {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self {
             schema: STDIO_OBJ_DOCUMENT_SCHEMA.into(),
             vertices: Vec::new(),

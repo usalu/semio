@@ -94,14 +94,14 @@ impl MeterTable {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn meter_accumulates_energy() {
         let mut m = Meter { name: "test".into(), fuel: FuelType::Electricity, end_use: EndUse::Heating, energy_j: 0.0, peak_demand_w: 0.0, peak_demand_hour: 0.0 };
         m.accumulate(1000.0, 3600.0, 1.0);
         assert!((m.energy_kwh() - 1.0).abs() < 1e-6);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn meter_tracks_peak_demand_hour() {
         let mut m = Meter { name: "test".into(), fuel: FuelType::Electricity, end_use: EndUse::Cooling, energy_j: 0.0, peak_demand_w: 0.0, peak_demand_hour: 0.0 };
         m.accumulate(500.0, 3600.0, 1.0);
@@ -111,7 +111,7 @@ mod tests {
         assert!((m.peak_demand_hour - 2.0).abs() < 1e-9);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn store_get_or_create_is_idempotent_and_totals_by_fuel() {
         let mut store = MeterTable::default();
         store.get_or_create("Zone1 Heating", FuelType::Electricity, EndUse::Heating).accumulate(1000.0, 3600.0, 0.0);
@@ -123,7 +123,7 @@ mod tests {
         assert_eq!(store.facility_total_kwh(FuelType::Propane), 0.0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn end_use_breakdown_aggregates_by_category() {
         let mut store = MeterTable::default();
         store.get_or_create("Zone1 Heating", FuelType::Electricity, EndUse::Heating).accumulate(1000.0, 3600.0, 0.0);

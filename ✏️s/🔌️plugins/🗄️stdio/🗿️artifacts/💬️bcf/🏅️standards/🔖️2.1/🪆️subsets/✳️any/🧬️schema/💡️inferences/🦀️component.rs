@@ -32,7 +32,7 @@ impl protocol::Inference<BcfSnapshot> for BcfInference {
 /// 🌱 Defined in terms of `infer` (not derived) — keeps the law correct regardless of whether
 /// `BcfSnapshot::default()`'s `topics` ever stops being empty.
 impl Default for BcfInference {
-    async fn default() -> Self {
+    fn default() -> Self {
         <Self as protocol::Inference<BcfSnapshot>>::infer(&BcfSnapshot::default())
     }
 }
@@ -84,13 +84,13 @@ mod tests {
     use super::*;
     use protocol::Inference;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = BcfSnapshot::default();
         assert_eq!(BcfInference::infer(&snapshot), BcfInference::infer(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(BcfInference::infer(&BcfSnapshot::default()), BcfInference::default());
     }

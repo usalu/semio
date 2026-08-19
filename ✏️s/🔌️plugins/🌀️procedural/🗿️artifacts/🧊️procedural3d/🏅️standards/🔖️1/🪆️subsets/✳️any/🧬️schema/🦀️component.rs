@@ -54,7 +54,7 @@ pub struct Procedural3dPreviewCamera {
     pub fov: f64}
 
 impl Default for Procedural3dPreviewCamera {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self {
             position_x: 4.0,
             position_y: -4.0,
@@ -68,7 +68,7 @@ impl Default for Procedural3dPreviewCamera {
 //#endregion 🔖️PreviewCamera
 
 impl Default for Procedural3dArtifact {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self {
             fixture: FlowFixture::default(),
             generation: GenerationPlayState::default(),

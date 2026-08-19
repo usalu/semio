@@ -21,7 +21,7 @@ pub struct WiresPresence {
 }
 
 impl Default for WiresPresence {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { drag_node_id: None, drag_last_x: 0.0, drag_last_y: 0.0 }
     }
 }

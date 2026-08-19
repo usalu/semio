@@ -39,12 +39,12 @@ pub async fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyEr
 /// and both surfaces share one dialect coordinate.
 #[cfg(test)]
 mod surface_tests {
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn draw_viewer_never_mutates() {
         semio_framework_plugin::testkit::assert_viewer_never_mutates::<crate::viewer::draw::DrawViewer>();
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn draw_editor_and_viewer_share_dialect() {
         semio_framework_plugin::testkit::assert_editor_and_viewer_share_dialect::<crate::editor::draw::DrawPlayApp, crate::viewer::draw::DrawViewer>();
     }

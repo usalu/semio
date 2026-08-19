@@ -37,7 +37,7 @@ pub struct BeamConfig {
 }
 
 impl Default for BeamConfig {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { width: 4, max_steps: 100_000, heuristic: ObserveHeuristic::default() }
     }
 }
@@ -194,7 +194,7 @@ mod tests {
         (model, tb.build().unwrap(), arcs)
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn finds_a_valid_solution_on_a_satisfiable_instance() {
         let (model, topo, arcs) = checkerboard(8);
         let config = BeamConfig::default();
@@ -206,7 +206,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn finds_a_valid_solution_on_a_harder_coloring_instance() {
         let (model, topo, arcs) = k_graph(4, 4);
         let config = BeamConfig { width: 6, ..Default::default() };
@@ -216,7 +216,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn reports_contradiction_not_a_panic_on_an_unsatisfiable_instance() {
         // K5 needs 5 colors, only 4 available: genuinely unsatisfiable. Beam search must still
         // terminate cleanly and report Contradiction, never claim Solved or panic.
@@ -226,7 +226,7 @@ mod tests {
         assert!(matches!(outcome, SolveOutcome::Contradiction(_)), "expected Contradiction, got {outcome:?}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn width_one_still_finds_a_solution_when_no_backtrack_is_needed() {
         // A checkerboard path never needs more than one live branch at a time (propagation alone
         // forces every other node), so width=1 should still succeed here.
@@ -238,7 +238,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn respects_fixed_pins() {
         let (model, topo, _arcs) = checkerboard(4);
         let config = BeamConfig::default();
@@ -248,7 +248,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn contradictory_fixed_pins_report_contradiction_immediately() {
         let (model, topo, _arcs) = checkerboard(2);
         let config = BeamConfig::default();

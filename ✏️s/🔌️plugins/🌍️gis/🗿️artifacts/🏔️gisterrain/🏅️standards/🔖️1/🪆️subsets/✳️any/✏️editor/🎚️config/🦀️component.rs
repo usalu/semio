@@ -94,7 +94,7 @@ async fn default_gis3d_camera_json() -> String {
 }
 
 impl Default for Gis3dConfig {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { camera_json: default_gis3d_camera_json(), locale: "en-US".into() }
     }
 }
@@ -223,14 +223,14 @@ impl Mutation<Gis3dConfig> for Gis3dConfigMutation {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn gis3d_config_default_matches_the_pre_migration_view_defaults() {
         let config = Gis3dConfig::default();
         assert!(config.camera_json.contains("800"));
         assert_eq!(config.locale, "en-US");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn gis3d_config_dsl_round_trips_default_and_populated() {
         store::os_store::test_support::assert_dsl_round_trip(&Gis3dConfig::default());
         let populated = Gis3dConfig { locale: "de-DE".into(), ..Gis3dConfig::default() };
@@ -238,7 +238,7 @@ mod tests {
         store::os_store::test_support::assert_dsl_pack_equivalence(&populated);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn gis3d_config_operation_backwards_restores_the_pre_operation_snapshot() {
         let base = Gis3dConfig::default();
         let operation = Gis3dConfigMutation::SetCamera { camera_json: r#"{"position":[1.0,2.0,3.0]}"#.into() };
@@ -249,7 +249,7 @@ mod tests {
         assert_eq!(backwards[0].diff(&next).diff().clone(), base);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn gis3d_config_operation_lines_round_trip() {
         store::os_store::test_support::assert_op_line_round_trip(&Gis3dConfigMutation::SetCamera { camera_json: r#"{"position":[1.0,2.0,3.0]}"#.into() });
         store::os_store::test_support::assert_op_line_round_trip(&Gis3dConfigMutation::SetLocale { value: "de-DE".into() });

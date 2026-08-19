@@ -73,14 +73,14 @@ pub async fn render(document: &Procedural2dSnapshot) -> UiNode {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn definition_declares_the_canvas_2d_surface_and_body_key() {
         let def = definition();
         assert_eq!(def.body_key, BODY_KEY);
         assert!(matches!(def.surface_kind, SurfaceKind::Canvas2d));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn render_produces_a_scene_node_for_the_default_document() {
         let document = crate::artifacts::procedural2d::schema::default_snapshot();
         let json = serde_json::to_string(&render(&document)).expect("render json");

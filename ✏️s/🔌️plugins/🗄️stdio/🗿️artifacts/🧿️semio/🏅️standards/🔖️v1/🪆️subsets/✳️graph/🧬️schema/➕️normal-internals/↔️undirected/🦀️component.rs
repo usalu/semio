@@ -460,7 +460,7 @@ impl EdgeWeights for UndirectedGraph {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn crud_round_trip() {
         let mut g = UndirectedGraph::new();
         let a = g.add_node();
@@ -477,7 +477,7 @@ mod tests {
         assert!(!g.has_node(a));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_edge_upsert_semantics() {
         let mut g = UndirectedGraph::new();
         let a = g.add_node();
@@ -495,7 +495,7 @@ mod tests {
         assert_eq!(data.get("color").and_then(PropertyValue::as_str), Some("red"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn selfloop_counts_double_degree() {
         let mut g = UndirectedGraph::new();
         let a = g.add_node();
@@ -506,7 +506,7 @@ mod tests {
         assert_eq!(g.selfloop_edges().count(), 1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn density_edge_cases() {
         let empty = UndirectedGraph::new();
         assert_eq!(empty.density(), 0.0, "empty graph is a documented n < 2 case, not a panic");
@@ -525,7 +525,7 @@ mod tests {
         assert!((k4.density() - 1.0).abs() < 1e-9, "K4 is a complete graph, density == 1.0");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn is_empty_vs_number_of_nodes() {
         let mut g = UndirectedGraph::new();
         assert!(g.is_empty());
@@ -538,7 +538,7 @@ mod tests {
         assert!(!g.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn subgraph_and_edge_subgraph_are_independent_copies() {
         let mut g = UndirectedGraph::new();
         let a = g.add_node();
@@ -560,7 +560,7 @@ mod tests {
         assert_eq!(g.number_of_nodes(), 3, "mutating the edge_subgraph copy must not affect the original");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn to_directed_doubles_edge_count() {
         let mut g = UndirectedGraph::new();
         let a = g.add_node();
@@ -579,7 +579,7 @@ mod tests {
         assert_eq!(GraphView::edge_count(&looped_directed), 1, "a self-loop has only one direction, so it must not double");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn path_cycle_star_builders() {
         let mut g = UndirectedGraph::new();
         let nodes: Vec<NodeId> = (0..4).map(|_| g.add_node()).collect();
@@ -604,7 +604,7 @@ mod tests {
         assert_eq!(star.degree(center), 3);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn attributes_round_trip() {
         let mut g = UndirectedGraph::new();
         let a = g.add_node();
@@ -629,7 +629,7 @@ mod tests {
         assert_eq!(g.name().as_deref(), Some("test-graph"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn path_helpers() {
         let mut g = UndirectedGraph::new();
         let nodes: Vec<NodeId> = (0..4).map(|_| g.add_node()).collect();
@@ -642,7 +642,7 @@ mod tests {
         assert!(g.non_edges().any(|(u, v)| (u, v) == (nodes[0], nodes[2]) || (u, v) == (nodes[2], nodes[0])));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn weighted_degree_and_size() {
         let mut g = UndirectedGraph::new();
         let a = g.add_node();

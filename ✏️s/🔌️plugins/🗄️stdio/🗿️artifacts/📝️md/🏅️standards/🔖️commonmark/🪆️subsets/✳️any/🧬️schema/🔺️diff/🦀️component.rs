@@ -1739,7 +1739,7 @@ mod handcrafted_diff_codec_tests {
 
     /// 🧪️ F6/P2-FG1: `DiffCodec` round-trip laws over the hand-rolled `MdDiff` grammar — see
     /// `demo_diff_cases()`'s own doc comment for exactly what each case exercises.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn diff_codec_text_binary_roundtrip_law() {
         for d in demo_diff_cases() {
             let printed = d.print_diff();

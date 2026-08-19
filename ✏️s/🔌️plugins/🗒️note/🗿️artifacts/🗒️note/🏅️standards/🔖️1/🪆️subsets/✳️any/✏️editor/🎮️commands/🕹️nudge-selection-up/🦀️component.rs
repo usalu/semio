@@ -65,7 +65,7 @@ mod tests {
     /// the freshly added block (selection is framework-owned now) — `select_blocks` dispatches the
     /// injected `interactionSelect` verb against the "blocks" domain instead, requiring
     /// `note_app_with_registry()` (see that helper's own doc comment).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn nudge_direction_actions_move_selection_without_args() {
         for (command, expected_dx, expected_dy) in [
             (NoteCommand::NudgeSelectionUp(NudgeSelectionUp {}), 0.0, -1.0),
@@ -85,7 +85,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn nudge_fast_actions_use_ten_pixel_step() {
         let mut app = note_app_with_registry();
         dispatch(&mut app, NoteCommand::AddBlock(crate::editor::note::commands::add_block::AddBlock { kind: "text".into(), x: 0.0, y: 0.0 }));

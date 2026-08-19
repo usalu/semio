@@ -43,14 +43,14 @@ mod tests {
     use super::*;
     use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::demo_pdf17_snapshot;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn definition_declares_a_document_window() {
         let def = definition();
         assert_eq!(def.id, WINDOW_KIND_ID);
         assert_eq!(def.body_key, BODY_KEY);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn render_lists_one_line_per_page_with_media_box_and_text() {
         let document = demo_pdf17_snapshot();
         assert_eq!(document.pages.len(), 1);

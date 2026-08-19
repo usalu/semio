@@ -45,7 +45,7 @@ mod tests {
         TiffSnapshot { ifds: vec![TiffIfd { entries: tags }], ..TiffSnapshot::default() }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn derives_from_baseline_tags() {
         let snapshot = snapshot_with_tags(vec![
             TiffTag { tag: TAG_IMAGE_WIDTH, kind: TiffFieldType::Long, values: TiffValues::Long(vec![4]) },
@@ -57,7 +57,7 @@ mod tests {
         assert_eq!(dims, TiffDimensions { width: 4, height: 3, bit_depth: 8, has_alpha: false, pixel_count: 12 });
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn missing_bits_per_sample_falls_back_to_one() {
         assert_eq!(compute_tiff_dimensions(&TiffSnapshot::default()).bit_depth, 1);
     }

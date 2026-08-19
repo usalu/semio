@@ -17,7 +17,7 @@ pub struct CsvOutline {
 }
 
 impl Default for CsvOutline {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { record_count: 0, column_count: 0, has_header: true }
     }
 }
@@ -37,7 +37,7 @@ mod tests {
     use super::*;
     use crate::artifacts::csv::schema::snapshot::{CsvField, CsvRecord};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn reports_widest_record_as_column_count() {
         let snapshot = CsvSnapshot {
             schema: "stdio.csv".into(),
@@ -50,7 +50,7 @@ mod tests {
         assert!(outline.has_header);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn outline_is_deterministic() {
         let snapshot = CsvSnapshot::default();
         assert_eq!(CsvOutline::compute(&snapshot), CsvOutline::compute(&snapshot));

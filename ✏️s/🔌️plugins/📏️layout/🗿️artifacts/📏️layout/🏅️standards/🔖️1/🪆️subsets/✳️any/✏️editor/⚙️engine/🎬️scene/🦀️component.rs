@@ -129,7 +129,7 @@ pub struct LayoutEngine {
 }
 
 impl Default for LayoutEngine {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self::new()
     }
 }
@@ -589,7 +589,7 @@ mod tests {
         crate::artifacts::layout::dsl::parse_dsl(crate::artifacts::layout::dsl::LAYOUT_SAMPLE_TEXT).expect("sample fixture parses")
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn builds_scene_from_empty_document() {
         let json = r#"{"schema":"layout.layout","name":"t","grid":{"baselineGrid":12,"baselineOffset":0,"snapToBaseline":true},"paragraphStyles":[{"id":"paragraph.body","name":"Body","fontFamily":"Layout Sans","fontSize":12,"fontWeight":400,"leading":14.4,"tracking":0,"alignment":"left"}],"characterStyles":[],"stories":[],"links":[],"parentPages":[],"spreads":[],"pages":[{"id":"page-1","name":"P","spreadId":"s","width":200,"height":200,"margins":{"top":0,"right":0,"bottom":0,"left":0},"columns":{"count":1,"gutter":0},"guides":[],"layerIds":[],"layers":[],"frames":[],"overrides":[]}]}"#;
         let camera = Camera { x: 0.0, y: 0.0, zoom: 1.0 };
@@ -600,7 +600,7 @@ mod tests {
         let _ = scene;
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn hit_test_respects_camera_zoom() {
         let json = r#"{"schema":"layout.layout","name":"t","grid":{"baselineGrid":12,"baselineOffset":0,"snapToBaseline":true},"paragraphStyles":[{"id":"paragraph.body","name":"Body","fontFamily":"Layout Sans","fontSize":12,"fontWeight":400,"leading":14.4,"tracking":0,"alignment":"left"}],"characterStyles":[],"stories":[],"links":[],"parentPages":[],"spreads":[],"pages":[{"id":"page-1","name":"P","spreadId":"s","width":400,"height":400,"margins":{"top":0,"right":0,"bottom":0,"left":0},"columns":{"count":1,"gutter":0},"guides":[],"layerIds":["layer-1"],"layers":[{"id":"layer-1","name":"Content","visible":true,"locked":false,"objectIds":["frame-1"]}],"frames":[{"id":"frame-1","layerId":"layer-1","kind":"rect","bounds":{"x":10,"y":10,"w":40,"h":40,"rotation":0},"fill":[1,1,1,1]}],"overrides":[]}]}"#;
         let camera = Camera { x: 0.0, y: 0.0, zoom: 0.5 };
@@ -611,7 +611,7 @@ mod tests {
         assert_eq!(hit.as_deref(), Some("frame-1"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn marks_hovered_frame_rect() {
         let json = r#"{"schema":"layout.layout","name":"t","grid":{"baselineGrid":12,"baselineOffset":0,"snapToBaseline":true},"paragraphStyles":[{"id":"paragraph.body","name":"Body","fontFamily":"Layout Sans","fontSize":12,"fontWeight":400,"leading":14.4,"tracking":0,"alignment":"left"}],"characterStyles":[],"stories":[],"links":[],"parentPages":[],"spreads":[],"pages":[{"id":"page-1","name":"P","spreadId":"s","width":200,"height":200,"margins":{"top":0,"right":0,"bottom":0,"left":0},"columns":{"count":1,"gutter":0},"guides":[],"layerIds":["layer-1"],"layers":[{"id":"layer-1","name":"Content","visible":true,"locked":false,"objectIds":["frame-1"]}],"frames":[{"id":"frame-1","layerId":"layer-1","kind":"rect","bounds":{"x":10,"y":10,"w":40,"h":40,"rotation":0},"fill":[1,1,1,1]}],"overrides":[]}]}"#;
         let doc = parse_layout_document(json).expect("doc");
@@ -622,7 +622,7 @@ mod tests {
         assert!(list.rects.iter().all(|rect| rect.object_id != "frame-1" || rect.hovered));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn scene_and_hit_test_error_when_page_missing() {
         let json = r#"{"schema":"layout.layout","name":"t","grid":{"baselineGrid":12,"baselineOffset":0,"snapToBaseline":false},"paragraphStyles":[],"characterStyles":[],"stories":[],"links":[],"parentPages":[],"spreads":[],"pages":[{"id":"page-1","name":"P","spreadId":"s","width":100,"height":100,"margins":{"top":0,"right":0,"bottom":0,"left":0},"columns":{"count":1,"gutter":0},"guides":[],"layerIds":[],"layers":[],"frames":[],"overrides":[]}]}"#;
         let camera = Camera { x: 0.0, y: 0.0, zoom: 1.0 };
@@ -634,7 +634,7 @@ mod tests {
         assert!(matches!(hit, Err(LayoutError::PageNotFound(id)) if id == "missing-page"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn hit_test_returns_none_for_empty_space() {
         let json = r#"{"schema":"layout.layout","name":"t","grid":{"baselineGrid":12,"baselineOffset":0,"snapToBaseline":false},"paragraphStyles":[],"characterStyles":[],"stories":[],"links":[],"parentPages":[],"spreads":[],"pages":[{"id":"page-1","name":"P","spreadId":"s","width":400,"height":400,"margins":{"top":0,"right":0,"bottom":0,"left":0},"columns":{"count":1,"gutter":0},"guides":[],"layerIds":["layer-1"],"layers":[{"id":"layer-1","name":"Content","visible":true,"locked":false,"objectIds":["frame-1"]}],"frames":[{"id":"frame-1","layerId":"layer-1","kind":"rect","bounds":{"x":10,"y":10,"w":40,"h":40,"rotation":0},"fill":[1,1,1,1]}],"overrides":[]}]}"#;
         let camera = Camera { x: 0.0, y: 0.0, zoom: 1.0 };
@@ -645,7 +645,7 @@ mod tests {
         assert!(hit.is_none());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn display_list_hit_test_matches_image_bounds_and_misses_elsewhere() {
         let list = DisplayList {
             page_id: "page-1".into(),
@@ -660,7 +660,7 @@ mod tests {
         assert!(list.hit_test(90.0, 90.0).is_none());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn guides_omitted_for_non_active_page_even_with_chrome_blueprint() {
         let json = r#"{"schema":"layout.layout","name":"t","grid":{"baselineGrid":12,"baselineOffset":0,"snapToBaseline":true},"paragraphStyles":[],"characterStyles":[],"stories":[],"links":[],"parentPages":[],"spreads":[],"pages":[{"id":"page-1","name":"P","spreadId":"s","width":200,"height":200,"margins":{"top":10,"right":10,"bottom":10,"left":10},"columns":{"count":2,"gutter":4},"guides":[{"x":5,"y":5,"w":1,"h":1}],"layerIds":[],"layers":[],"frames":[],"overrides":[]}]}"#;
         let doc = parse_layout_document(json).expect("doc");
@@ -670,7 +670,7 @@ mod tests {
         assert!(list.guides.is_empty(), "guides must only render for the active blueprint page");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn baseline_guides_only_emitted_when_grid_snaps() {
         let json = r#"{"schema":"layout.layout","name":"t","grid":{"baselineGrid":12,"baselineOffset":0,"snapToBaseline":false},"paragraphStyles":[],"characterStyles":[],"stories":[],"links":[],"parentPages":[],"spreads":[],"pages":[{"id":"page-1","name":"P","spreadId":"s","width":200,"height":200,"margins":{"top":0,"right":0,"bottom":0,"left":0},"columns":{"count":1,"gutter":0},"guides":[],"layerIds":[],"layers":[],"frames":[],"overrides":[]}]}"#;
         let doc = parse_layout_document(json).expect("doc");
@@ -680,7 +680,7 @@ mod tests {
         assert!(list.guides.iter().all(|guide| guide.kind != "baseline"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn image_placeholder_reflects_link_lookup_and_state() {
         let json = r#"{"schema":"layout.layout","name":"t","grid":{"baselineGrid":12,"baselineOffset":0,"snapToBaseline":false},"paragraphStyles":[],"characterStyles":[],"stories":[],"links":[{"id":"link-missing","path":"a.png","hash":"h","width":1,"height":1,"dpi":72,"state":"missing"},{"id":"link-ready","path":"b.png","hash":"h","width":1,"height":1,"dpi":72,"state":"ready","proxyDataUrl":"data:image/png;base64,AA=="}],"parentPages":[],"spreads":[],"pages":[{"id":"page-1","name":"P","spreadId":"s","width":400,"height":400,"margins":{"top":0,"right":0,"bottom":0,"left":0},"columns":{"count":1,"gutter":0},"guides":[],"layerIds":["layer-1"],"layers":[{"id":"layer-1","name":"Content","visible":true,"locked":false,"objectIds":["img-missing","img-ready","img-unlinked"]}],"frames":[{"id":"img-missing","layerId":"layer-1","kind":"image","bounds":{"x":0,"y":0,"w":10,"h":10,"rotation":0},"linkId":"link-missing"},{"id":"img-ready","layerId":"layer-1","kind":"image","bounds":{"x":20,"y":0,"w":10,"h":10,"rotation":0},"linkId":"link-ready"},{"id":"img-unlinked","layerId":"layer-1","kind":"image","bounds":{"x":40,"y":0,"w":10,"h":10,"rotation":0},"linkId":"link-gone"}],"overrides":[]}]}"#;
         let doc = parse_layout_document(json).expect("doc");
@@ -693,7 +693,7 @@ mod tests {
         assert!(by_id("img-unlinked").placeholder, "unresolved link falls back to placeholder");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn layout_story_in_frame_resolves_alignment_variants_and_detects_overset() {
         let mut engine = LayoutEngine::new();
         let story = TextStory { id: "story-1".into(), content: "Hello layout engine, this line should wrap across several lines of text.".into(), style_runs: Vec::new() };
@@ -708,7 +708,7 @@ mod tests {
         assert!(!not_overset);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn display_list_to_scene_handles_drop_preview_variants_and_rect_styles() {
         let camera = Camera { x: 0.0, y: 0.0, zoom: 1.0 };
         let viewport = Viewport { width: 200, height: 200, dpr: 1.0 };
@@ -745,7 +745,7 @@ mod tests {
         let _ = scene;
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn screen_to_world_json_returns_a_point_object() {
         let camera = Camera { x: 100.0, y: 50.0, zoom: 2.0 };
         let viewport = Viewport { width: 400, height: 300, dpr: 1.0 };
@@ -755,21 +755,21 @@ mod tests {
         assert!(parsed["y"].is_number());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn png_cpu_export_writes_valid_rgba_png() {
         let doc = sample_document();
         let bytes = export_document_png_cpu(&doc, "page-1").expect("png export succeeds");
         assert!(bytes.starts_with(&[0x89, b'P', b'N', b'G']));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn pdf_export_writes_pdf_header() {
         let doc = sample_document();
         let bytes = export_document_pdf(&doc, "page-1").expect("pdf export succeeds");
         assert!(bytes.starts_with(b"%PDF-1.4"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn package_zip_bundles_document_and_preflight() {
         let doc = sample_document();
         let json = serde_json::to_string(&doc).expect("serialize sample document to json");
@@ -778,7 +778,7 @@ mod tests {
         assert!(bytes.starts_with(b"PK"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn svg_export_contains_path_and_wraps_a_valid_document() {
         crate::artifacts::layout::io::ensure_stdio_semio_drawing_registered();
         let doc = sample_document();
@@ -791,7 +791,7 @@ mod tests {
         assert!(svg.ends_with("</svg>"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn exports_error_when_page_missing() {
         let doc = sample_document();
         assert!(matches!(export_document_svg(&doc, "no-such-page"), Err(LayoutError::PageNotFound(id)) if id == "no-such-page"));
@@ -799,13 +799,13 @@ mod tests {
         assert!(matches!(export_document_png_cpu(&doc, "no-such-page"), Err(LayoutError::PageNotFound(_))));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn package_zip_rejects_invalid_document_json() {
         let error = export_package_zip("not json", "[]").expect_err("invalid json must fail");
         assert!(matches!(error, LayoutError::Json(_)));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn scene_png_from_display_list_writes_a_valid_png() {
         let doc = sample_document();
         let page = doc.pages.iter().find(|p| p.id == "page-1").expect("page-1");

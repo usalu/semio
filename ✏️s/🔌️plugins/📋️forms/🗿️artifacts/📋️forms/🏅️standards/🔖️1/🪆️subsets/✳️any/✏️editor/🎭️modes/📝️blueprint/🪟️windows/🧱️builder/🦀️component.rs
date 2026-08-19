@@ -58,7 +58,7 @@ mod tests {
     use crate::editor::forms::FORMS_PLAY_BODY_BLUEPRINT as BODY_BLUEPRINT;
     use crate::artifacts::forms::forms_steps;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn renders_blueprint_builder_cards() {
         let mut app = forms_app();
         let first_question_id = forms_steps(&app.snapshot().expect("projection"))[0].blocks[0].id.clone();
@@ -69,7 +69,7 @@ mod tests {
         assert!(json.contains(&first_question_id));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn definition_declares_the_block_list_surface_and_body_key() {
         let definition = definition();
         assert_eq!(definition.body_key, FORMS_PLAY_BODY_BLUEPRINT);

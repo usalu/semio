@@ -181,7 +181,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn topic_becomes_element_with_two_psets_and_reference_relations() {
         let model = model_from_bcf(&fixture());
         assert!(model.spatial.is_empty());

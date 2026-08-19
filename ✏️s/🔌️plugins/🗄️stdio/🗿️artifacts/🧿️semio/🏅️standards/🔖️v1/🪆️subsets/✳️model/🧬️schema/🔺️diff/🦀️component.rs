@@ -925,7 +925,7 @@ mod tests {
     /// collections (one removed, one modified-in-every-field, one added each), and exercise the
     /// `parent_id`/`spatial_id` tri-states in both directions (Some->None on spatial, None->Some
     /// on elements).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn field_sweep() {
         let a = sweep_a();
         let b = sweep_b();
@@ -956,7 +956,7 @@ mod tests {
     }
 
     /// 🧪️ between_roundtrip_law: `between(a,b).apply(a) == b` and the symmetric direction.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn between_roundtrip_law() {
         let a = sweep_a();
         let b = sweep_b();
@@ -965,7 +965,7 @@ mod tests {
     }
 
     /// 🧪️ inverse_law: `d.inverse(base).apply(&d.apply(base)) == base`.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inverse_law() {
         let a = sweep_a();
         let b = sweep_b();
@@ -977,7 +977,7 @@ mod tests {
 
     /// 🧪️ absorb_law: `absorb(d1,d2).apply(base) == d2.apply(&d1.apply(base))`, including the
     /// canonical add-then-remove-before / add-then-set-field cases from schema-design.md.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_law() {
         let base = sweep_a();
         let mid = sweep_b();
@@ -1019,7 +1019,7 @@ mod tests {
     }
 
     /// 🧪️ diff_codec_text_binary_roundtrip_law: hand-rolled `DiffCodec` text+binary round trip.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn diff_codec_text_binary_roundtrip_law() {
         let a = sweep_a();
         let b = sweep_b();

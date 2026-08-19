@@ -62,7 +62,7 @@ mod tests {
         SSpaceSnapshot { space_id: space_id.into(), ..Default::default() }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn folds_visibility_and_members_for_this_space_into_config() {
         let snapshot = view_for("space-1");
         let history = HistoryView::empty();
@@ -84,7 +84,7 @@ mod tests {
         assert_eq!(config.members[0].role, "author");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn folding_events_for_a_different_space_is_a_no_op() {
         let snapshot = view_for("space-1");
         let history = HistoryView::empty();

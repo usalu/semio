@@ -106,7 +106,7 @@ impl store::ArtifactPack for FormsConfig {
 
 
 impl Default for FormsConfig {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { current_step_index: 0, try_values_json: "{}".into(), locale: "en-US".into(), contributions_json: "[]".into() }
     }
 }
@@ -233,7 +233,7 @@ impl Mutation<FormsConfig> for FormsConfigMutation {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn forms_config_default_matches_the_existing_runtime_defaults() {
         let config = FormsConfig::default();
         assert_eq!(config.current_step_index, 0);
@@ -242,7 +242,7 @@ mod tests {
         assert_eq!(config.contributions_json, "[]");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn forms_config_dsl_and_pack_round_trip() {
         let config = FormsConfig { current_step_index: 2, try_values_json: r#"{"name":"Ada"}"#.into(), locale: "de-DE".into(), contributions_json: "[]".into() };
         store::os_store::test_support::assert_dsl_round_trip(&config);
@@ -260,7 +260,7 @@ mod tests {
         forward
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn config_mutations_apply_and_restore_every_field() {
         let base = FormsConfig::default();
         assert_eq!(config_round_trip(&base, &FormsConfigMutation::SetStepIndex { index: 2 }).current_step_index, 2);
@@ -269,7 +269,7 @@ mod tests {
         assert_eq!(config_round_trip(&base, &FormsConfigMutation::SetContributions { json: "[]".into() }).contributions_json, "[]");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn config_snapshot_op_text_round_trips() {
         let config = FormsConfig { current_step_index: 1, try_values_json: r#"{"name":"Ada"}"#.into(), locale: "de-DE".into(), contributions_json: "[]".into() };
         store::os_store::test_support::assert_op_line_round_trip(&FormsConfigMutation::Snapshot { config });

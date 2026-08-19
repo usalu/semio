@@ -22,14 +22,14 @@ mod tests {
     use crate::editor::vcs::testkit::{app, dispatch};
     use crate::editor::vcs::VcsCommand;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn vcs_demo_command_op_text_round_trips() {
         store::os_store::test_support::assert_op_line_round_trip(&VcsCommand::SetLocale(SetLocale { value: "de-DE".into() }));
     }
 
     /// 🗣️ B1: locale is now `cfg.locale`, set via the typed `SetLocale` config command — no more passing
     /// a `ViewModel` into `render`/`app_labels` for this purpose (mirrors `shooting_ui`'s identical test).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn vcs_labels_resolve_german_locale() {
         use crate::editor::vcs::{VCS_PLAY_BODY_DOCUMENT, VCS_PLAY_BODY_EDITOR, VCS_PLAY_BODY_INSPECTION};
         let mut instance = app();

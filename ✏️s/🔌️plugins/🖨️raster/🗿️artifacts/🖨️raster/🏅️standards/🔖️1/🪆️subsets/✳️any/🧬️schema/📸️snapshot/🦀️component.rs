@@ -498,7 +498,7 @@ impl store::ArtifactPack for RasterSnapshot {
 
 //#region 🔖️Defaults
 impl Default for RasterSnapshot {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self {
             schema: RASTER_DOCUMENT_SCHEMA.into(),
             id: String::new(),

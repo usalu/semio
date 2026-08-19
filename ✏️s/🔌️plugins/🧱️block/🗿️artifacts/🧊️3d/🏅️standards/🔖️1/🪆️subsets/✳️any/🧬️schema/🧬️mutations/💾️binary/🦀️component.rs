@@ -29,7 +29,7 @@ mod tests {
     use crate::artifacts::block3d::{Block3dSnapshot, BLOCK_3D_SCHEMA};
     use store::{create_document_envelope, ArtifactCommand};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn block3d_document_vcs_replays_granular_operations() {
         use crate::artifacts::block3d::schema::mutations::{self as m, Block3dStore};
 
@@ -41,7 +41,7 @@ mod tests {
         assert_eq!(projection.object_kind.name, "o1");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn block3d_operation_binary_round_trips() {
         let operation = crate::artifacts::block3d::schema::mutations::delete_vortex("v0".into());
         let bytes = encode_op(&operation).expect("encode");

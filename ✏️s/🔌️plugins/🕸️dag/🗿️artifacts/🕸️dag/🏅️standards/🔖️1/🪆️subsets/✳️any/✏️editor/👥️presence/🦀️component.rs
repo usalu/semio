@@ -19,7 +19,7 @@ pub struct DagPresence {
 }
 
 impl Default for DagPresence {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { camera_x: 0.0, camera_y: 0.0, camera_zoom: 1.0 }
     }
 }

@@ -211,7 +211,7 @@ mod tests {
     //#endregion 🔖️Fixture
 
     //#region 🔖️MutationLaws
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_delete_stream_inverse_law() {
         let base = populated_scene_fixture();
         let stream = MediaStream { id: "stream-99".into(), name: "extra".into(), ..MediaStream::default() };
@@ -219,13 +219,13 @@ mod tests {
         assert_mutation_inverse_law(&base, &delete_stream("stream-1".into()));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn change_stream_sync_inverse_law() {
         let base = populated_scene_fixture();
         assert_mutation_inverse_law(&base, &change_stream_sync("stream-1".into(), 99.0));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_remove_stream_frame_inverse_law() {
         let base = populated_scene_fixture();
         assert_mutation_inverse_law(&base, &add_stream_frame("stream-1".into(), FrameRef { index: 1, timestamp_ms: 33.0, asset_id: "asset-2".into() }, MediaKind::Video));
@@ -234,13 +234,13 @@ mod tests {
         assert_mutation_inverse_law(&base, &remove_stream_frame("stream-1".into(), 0));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn replace_stream_source_inverse_law() {
         let base = populated_scene_fixture();
         assert_mutation_inverse_law(&base, &replace_stream_source("stream-1".into(), None));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_delete_asset_inverse_law() {
         let base = populated_scene_fixture();
         let asset = ImageAsset { mime: "image/png".into(), data: "zzzz".into(), width: 2, height: 2 };
@@ -249,7 +249,7 @@ mod tests {
         assert_mutation_inverse_law(&base, &delete_asset("asset-1".into()));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn camera_calibration_inverse_law() {
         let base = populated_scene_fixture();
         let camera = CameraCalibration { id: "cam-99".into(), model: "pinhole".into(), ..CameraCalibration::default() };
@@ -259,7 +259,7 @@ mod tests {
         assert_mutation_inverse_law(&base, &delete_camera_calibration("cam-1".into()));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn rig_extrinsic_inverse_law() {
         let base = populated_scene_fixture();
         let extrinsic = RigExtrinsic { camera_id: "cam-99".into(), ..RigExtrinsic::default() };
@@ -269,7 +269,7 @@ mod tests {
         assert_mutation_inverse_law(&base, &delete_rig_extrinsic(base.calibration.rig[0].camera_id.clone()));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn gcp_inverse_law() {
         let base = populated_scene_fixture();
         let gcp = GroundControlPoint { id: "gcp-99".into(), name: "New".into(), ..GroundControlPoint::default() };
@@ -280,7 +280,7 @@ mod tests {
         assert_mutation_inverse_law(&base, &remove_gcp_observation("gcp-1".into(), 0));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn update_params_inverse_law() {
         let base = populated_scene_fixture();
         assert_mutation_inverse_law(&base, &update_ingest_params(crate::artifacts::remodel::IngestParams { min_sharpness: 0.9, ..base.params.ingest.clone() }));
@@ -293,7 +293,7 @@ mod tests {
         assert_mutation_inverse_law(&base, &update_geo_params(crate::artifacts::remodel::GeoParams { enabled: true, ..base.params.geo.clone() }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn replace_job_and_results_inverse_law() {
         let base = populated_scene_fixture();
         assert_mutation_inverse_law(&base, &replace_job(ReconstructionJob { stage: ReconstructionStage::Failed, ..base.job.clone() }));
@@ -306,7 +306,7 @@ mod tests {
         assert_mutation_inverse_law(&base, &replace_qc(None));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn move_step_style_diff_absorb_law() {
         let base = populated_scene_fixture();
         let d1 = change_stream_sync("stream-1".into(), 10.0).diff(&base);
@@ -315,7 +315,7 @@ mod tests {
         assert_mutation_diff_absorb_law(&base, d1, d2);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dispatch_registers_semantic_descriptors() {
         register_remodel_mutation_descriptors();
         for kind in RemodelMutation::kinds() {
@@ -330,7 +330,7 @@ mod tests {
     /// (`create-asset` on disjoint keys) must converge to an identical scene regardless of application
     /// order — the reason `create-asset` clones+inserts into `base.assets` rather than any whole-map
     /// replace that could drop a concurrent key.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn concurrent_create_asset_ops_converge_regardless_of_order() {
         let base = populated_scene_fixture();
         let asset_a = ImageAsset { mime: "image/jpeg".into(), data: "frame-one".into(), width: 8, height: 8 };
@@ -355,7 +355,7 @@ mod tests {
 
     /// 🔀️ Same convergence contract across two disjoint operation families (feature params tuning vs.
     /// adding a GCP) — proves field-granular application converges across the whole vocabulary.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn concurrent_edits_across_different_op_families_converge() {
         let base = populated_scene_fixture();
         let op_feature = update_feature_params(crate::artifacts::remodel::FeatureParams { target_count: 9000, ..base.params.feature.clone() });
@@ -375,7 +375,7 @@ mod tests {
 
     //#region 🔖️OpText
     /// ⚡️ One `assert_op_line_round_trip` per `RemodelMutation` variant, per the mechanism contract.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn every_mutation_variant_roundtrips_through_op_text() {
         let scene = populated_scene_fixture();
 

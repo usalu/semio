@@ -96,19 +96,19 @@ pub async fn render(document: &Puzzle2dSnapshot) -> UiNode {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn definition_declares_the_shared_mesh_window_kit() {
         let def = definition();
         assert_eq!(def.id, MeshWindowKit::KIND_ID);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn render_produces_a_scene_node_for_the_default_document() {
         let document = Puzzle2dSnapshot::default();
         let _node = render(&document);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn render_places_rectangle_and_circle_nodes_at_their_real_positions() {
         let mut document = Puzzle2dSnapshot::default();
         document.nodes.push(Puzzle2dNode { id: "n1".into(), shape: Some("circle".into()), x: 10.0, y: 20.0, radius: Some(5.0), ..Default::default() });

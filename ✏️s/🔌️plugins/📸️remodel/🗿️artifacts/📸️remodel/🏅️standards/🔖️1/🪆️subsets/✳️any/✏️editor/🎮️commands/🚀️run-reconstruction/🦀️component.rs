@@ -166,7 +166,7 @@ mod tests {
     /// 🚀️ The staged execution model is synchronous, end-to-end — `RunReconstruction` ingests two
     /// imported checker frames and runs the WHOLE pipeline to a terminal `Done`/`Failed` stage inside
     /// the ONE dispatch (no `advanceReconstruction` re-dispatch loop).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn run_reconstruction_runs_synchronously_to_a_terminal_stage() {
         let mut app = app();
         testkit_import_checker_stream(&mut app, 2);
@@ -184,7 +184,7 @@ mod tests {
 
     /// 🔁️ `retryStage` starts a fresh run (a new job id) even after a prior run already reached a
     /// terminal stage.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn retry_stage_starts_a_fresh_run_with_a_new_job_id() {
         let mut app = app();
         testkit_import_checker_stream(&mut app, 2);
@@ -200,7 +200,7 @@ mod tests {
     /// 📦️ The whole run collapses into exactly one undo step: undoing once after a run reaches
     /// `Done`/`Failed` must fully revert the job (and any published results) back to the pristine
     /// pre-run document.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn full_run_collapses_into_a_single_undo_step() {
         let mut app = app();
         testkit_import_checker_stream(&mut app, 2);

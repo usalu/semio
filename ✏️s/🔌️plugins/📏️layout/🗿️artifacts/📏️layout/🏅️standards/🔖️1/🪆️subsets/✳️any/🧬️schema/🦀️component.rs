@@ -74,7 +74,7 @@ pub struct LayoutArtifact {
 
 //#region 🔖️Conversions
 impl Default for LayoutArtifact {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self {
             schema: LAYOUT_DOCUMENT_SCHEMA.into(),
             name: String::new(),
@@ -530,7 +530,7 @@ mod document_tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn resolve_page_marks_overridden_parent_frames_and_ignores_missing_parent() {
         let mut doc = base_doc();
         doc.parent_pages.push(crate::artifacts::layout::ParentPage {
@@ -577,7 +577,7 @@ mod document_tests {
         assert!(!own_only[0].inherited);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn parse_layout_document_rejects_wrong_schema_and_invalid_json() {
         let wrong_schema = r#"{"schema":"other.schema","name":"t","grid":{"baselineGrid":12,"baselineOffset":0,"snapToBaseline":false},"paragraphStyles":[],"characterStyles":[],"stories":[],"links":[],"parentPages":[],"spreads":[],"pages":[]}"#;
         let error = parse_layout_document(wrong_schema).expect_err("wrong schema must fail");
@@ -588,7 +588,7 @@ mod document_tests {
         assert!(matches!(error, crate::artifacts::layout::io::LayoutError::Json(_)));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn rgba_text_round_trips() {
         assert_eq!(rgba_to_text(&Some([0.1, 0.2, 0.3, 1.0])), "0.1, 0.2, 0.3, 1");
         assert_eq!(rgba_to_text(&None), "");

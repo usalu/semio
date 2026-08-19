@@ -41,13 +41,13 @@ mod tests {
         ObjectKind { id: id.into(), name: id.into(), module_id: "beams".into(), typology_path: vec!["beams".into()], availability: 1, geometry: Box::new(GeometryRecipe::Box { width: 0.2, height: 0.4, depth: 6.0 }) }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn empty_snapshot_yields_a_zero_census() {
         let entries = compute_curate_entries(&CurateSnapshot::default());
         assert_eq!(entries, CurateEntries::default());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn stock_and_curated_lines_are_counted_exactly() {
         let snapshot = crate::artifacts::curate::curate_snapshot_from_stock(
             vec![object_kind("a"), object_kind("b"), object_kind("c")],
@@ -59,7 +59,7 @@ mod tests {
         assert_eq!(entries.total_count, 8);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn entries_is_deterministic() {
         let snapshot = crate::artifacts::curate::curate_snapshot_from_stock(Vec::new(), vec![CuratedItem { object_id: "a".into(), count: 1 }]);
         assert_eq!(compute_curate_entries(&snapshot), compute_curate_entries(&snapshot));

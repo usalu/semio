@@ -109,7 +109,7 @@ mod tests {
     /// dispatching them changes nothing about the persisted document; this asserts exactly that
     /// (the snapshot is unchanged before/after, and undo is a further no-op on an already-unchanged
     /// document) rather than the pre-migration "real content" assertions.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn step_mutations_dispatch_as_documented_no_ops() {
         let mut store = new_store();
         let before = store.snapshot().expect("snapshot");
@@ -127,7 +127,7 @@ mod tests {
         assert_eq!(store.snapshot().expect("snapshot"), before);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn moves_cursor_and_undo_restores_it() {
         let mut store = new_store();
         store.dispatch(ArtifactCommand::Apply { mutations: vec![Process3dMutation::ChangeCursor(ChangeCursor { new_resolved_up_to: Some(2) })], description: None }).expect("move cursor");
@@ -142,7 +142,7 @@ mod tests {
     /// now (`ReplaceStockSolid`/`ChangeStockLabel`/`MoveStock`), so these two tests compose the fields
     /// that actually change instead of replacing the whole `Stock` record. `ReplaceStockSolid` stays a
     /// real, fully-working mutation (a handle SWAP, never needing to read prior child content).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn sets_stock_and_backwards_restores() {
         let mut store = new_store();
         let original_solid = store.snapshot().expect("snapshot").stock_solid;
@@ -161,7 +161,7 @@ mod tests {
         assert_eq!(store.snapshot().expect("snapshot").stock_solid, original_solid);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn sets_stock_to_imported_solid_and_backwards_restores() {
         let mut store = new_store();
         let original_solid = store.snapshot().expect("snapshot").stock_solid;
@@ -181,7 +181,7 @@ mod tests {
     }
 
     //#region 🔖️DocumentTextTests
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn process3d_document_text_round_trips_after_apply_and_checkpoint() {
         let envelope = create_document_envelope(PROCESS_3D_SCHEMA, "process3d", empty_process3d_snapshot(), None);
         let mut store = Process3dStore::new(envelope);

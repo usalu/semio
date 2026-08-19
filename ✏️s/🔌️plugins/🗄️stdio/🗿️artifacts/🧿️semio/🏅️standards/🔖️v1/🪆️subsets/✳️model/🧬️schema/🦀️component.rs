@@ -23,7 +23,7 @@ pub struct SemioModelArtifact {
 }
 
 impl Default for SemioModelArtifact {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self::from_snapshot(SemioModelSnapshot::default())
     }
 }

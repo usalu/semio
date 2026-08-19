@@ -24,7 +24,7 @@ mod tests {
     use crate::editor::procedural2d::testkit::{app, dispatch};
     use crate::editor::procedural2d::Procedural2dCommand;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_eval_outputs_does_not_mutate_the_document() {
         let mut app = app();
         let before = app.snapshot().expect("snapshot");

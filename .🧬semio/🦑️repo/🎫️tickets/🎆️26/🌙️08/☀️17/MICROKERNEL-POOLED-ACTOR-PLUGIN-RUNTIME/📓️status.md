@@ -4348,3 +4348,761 @@ A flat repo-wide grep reports 391 "violations" that no human should ever fix by 
 exit gate red forever for the wrong reason — the same false-positive class as the `TransactionCoordinator::exchange`
 trap already recorded on this ticket. Generated output is cleared by regenerating it, and the real check on
 it is that the regenerator no longer *emits* the symbol.
+
+
+## 📊️ PROGRAM SNAPSHOT — measured, mid-flight (all static, no builds; 4 packets live)
+
+| area | .rs files | `async fn` | plain `fn` | async ratio | first-party `dyn` uses | `🚫️async:` tags |
+|---|---:|---:|---:|---:|---:|---:|
+| `🧰️framework` | 366 | 8,551 | 11,299 | **43.1%** | 331 | **102** |
+| `✏️s` fleet | 10,157 | 57,632 | **241** | **99.6%** | 302 | 0 |
+| `🌎️hub` | 6 | 224 | 87 | 72.0% | 8 | 0 |
+
+**Reading this honestly:**
+- **The fleet is 99.6% async and holding** — that conversion is committed, so the revert did not touch it.
+  Its 241 remaining plain `fn` are the same-line-brace declarations the line-anchored codemod could not
+  match, plus comments and one string literal. The fleet's problem is not async-ness; it is that it cannot
+  compile until the SDK lands.
+- **The framework is 43.1%**, which is the revert showing through, not lost work. Restoration is per-packet
+  (`sdk-dedyn` is doing its own file now) rather than one central sweep, precisely so it composes with the
+  de-dyn refactors already sitting in those files.
+- **102 exception tags exist in the framework and 0 in the fleet** — exactly as expected, since only the
+  framework has been through repair. The fleet's tags arrive with `fleet-codemods`.
+- **641 first-party `dyn` uses remain** (331 framework + 302 fleet + 8 hub). The fleet's 302 are dominated
+  by `Sobject` 131, `BrepKernel` 34, `Animation` 22 — all owned by fleet packets not yet dispatched.
+
+### `block_on`, reported the way R4 clause 5 now requires
+```
+production block_on : 239
+test       block_on : 595
+```
+**A blended total of 834 would be meaningless**, which is exactly why the clause exists. Test-context
+`block_on` is sanctioned (a `#[test] fn` is a `main`-equivalent thread root). The number the exit gate
+tracks is the **239 production** sites, minus the named R4 allow-list (binary/main entry points,
+dedicated-thread actor bridges such as the db postgres/neo4j pair, `StorageScheduler`, and shard thread
+roots for as long as a thread-loop backend exists).
+
+Note this supersedes the long-quoted "block_on 134 → 0" target, which counted the fleet only and was never
+the whole picture.
+
+
+## ✅️ `pack-finish` ACCEPTED — `semio-framework-pack` is GREEN, and it corrected my brief twice
+
+```
+cargo check -p semio-framework-pack --lib          EXIT=0   (independently re-verified by me)
+cargo check -p semio-framework-pack --all-targets  EXIT=0
+cargo test  -p semio-framework-pack                44 passed / 0 failed
+```
+**Both `pack-waker` regression tests survive by name** — the ≤4-poll assertions that fail if anyone
+reintroduces sleep-inside-`Future::poll`. That was the specific thing I asked it to check, because a
+later packet silently dropping an earlier packet's regression test is how this ticket loses ground.
+
+### 🎯 It corrected the brief twice, and both corrections were right
+1. **The "measurement oddity" was warnings, not errors.** I flagged that pack's build cited `📡️replication`
+   files and hypothesised feature unification. It checked and found replication compiles clean even under
+   pack's feature-unified build. No lease needed. **My hypothesis was wrong and it said so** rather than
+   constructing a story around it.
+2. **`🔌️io`'s errors were NOT `#[async_trait]`/R8.** I had diagnosed them as such from the error text.
+   It verified **zero `async_trait` usage in that file** — they were plain stale sync trait impls of
+   `PackSource`/`PackSink`. It fixed the real cause. (The 8 genuine R8 sites were elsewhere, in
+   `🎒️pack/⏳️async` and `🎒️pack/🌐️http`, and it removed those too after first verifying repo-wide that no
+   `dyn AsyncPackSource`/`dyn RangeTransport` existed to break.)
+
+**It also applied R9 in the correct direction** — rule 3 (make the consumer async), not rule 2
+(de-asyncify the helper): `📐️format`'s 26 fns became `async` because replication's `crc32c`/varint/
+`PackSource`/`PackSink` primitives are *genuinely* already async, so the CRC was not a "pure computation"
+after all. **My brief guessed rule 2 and it chose rule 3 on evidence.** This is exactly the guard R9 was
+written with — the packet showed both halves of the test instead of reaching for the convenient answer.
+Only 3 fns were kept sync and tagged. 24 tests moved to `#[async_test]`; `async-trait` dropped from the
+manifest; `#![allow(async_fn_in_trait)]` added per R7.
+
+### 🔎 And it caught a stale claim in my own brief
+I told it the SDK sat at "19 `async fn`". It re-verified and found that **stale — disk and index are now
+consistent at ~1,850**, i.e. `sdk-dedyn`'s re-asyncify step has already landed. Correct instinct: verify
+the coordinator's numbers too.
+
+## 🧱️ NEXT BLOCKER IDENTIFIED AND HALF-CLEARED: `semio-framework-os-kernel`, 1,072 errors
+
+With pack green, `cargo check -p semio-framework-plugin` advances and now stops at `semio-framework-os-kernel`.
+Profile: **E0277 364 · E0599 320 · E0308 289 · E0038 37** — i.e. ~91% missing-`.await`, 37 genuine de-dyn.
+
+### ⛔️ A REAL DEFECT IN MY OWN TOOL, found by measuring instead of trusting the pass
+I ran the await fixpoint on `📡️spr` (958 diagnostics, the biggest module). It applied **197 edits and the
+error count did not move.** Checking rather than moving on:
+
+> **E0599 fell by exactly 197. E0728 rose by exactly 197.** A perfectly conserved non-improvement.
+
+`E0728` is "`await` is only allowed inside `async` functions". **`📡️spr` had never been asyncified at all** —
+0 `async fn` / 622 plain `fn`, in the index too, so not a revert victim. Inserting `.await` into sync
+functions just trades one error class for another. **The tool cannot fix this**; the repair is to convert
+the enclosing signatures first.
+
+Correct sequence, now enforced in code rather than written in prose nobody reads:
+```
+asyncify-universal.py --apply <paths>     # signatures first
+insert-await.py --apply --scope <path>    # then call sites, to fixpoint
+```
+`insert-await.py` now **ABORTS on any E0728** and prints the codemod command to run instead. The incident
+is recorded in its own docstring so the reason survives.
+
+Done in the right order, the result: `📡️spr` asyncified (**606 converted**, 7 external-trait impls and
+2 `const fn` correctly skipped), then 11 await passes → **1,516 → 808 errors**.
+
+### That is the second tool defect this session, and the pattern is the point
+`--scope` was a substring (fixed: path segments + `--max-files` guard); now ordering was unguarded (fixed:
+E0728 abort). Both shipped on plausible reasoning and both were wrong on first real contact. **A tool used
+by many agents must fail loudly on misuse, because the misuse will happen and the operator will not be
+looking for it.**
+
+## ▶️ `kernel-ripple` DISPATCHED for the remaining 808
+Briefed with the per-module breakdown (`📡️spr` residue, `🏪️store` fallout, `🚪️io` holding **all 37 E0038**,
+and the `💻️os/🔨️modules/🎒️pack` module — explicitly flagged as a **different module from the now-green
+`🧰️framework/🔨️modules/🎒️pack` crate**, a name collision that has already confused one packet), with the
+asyncify-before-await ordering rule stated up front, and with `🔌️plugin/**` and `🛢️db/**` carved out as
+owned elsewhere.
+
+
+## ✅️ `web-bridges` ACCEPTED — the guest half of the web async path, proven in a real browser
+
+One file touched (`🌐plugin-web-materialize.ts`), and the evidence is behavioural rather than a compile:
+
+- **Real round trip against the jcoprobe fixture's actual jco-transpiled component**, using the *unmodified*
+  generated `shardWorkerSource()` output: an `effect-request`/`effect-complete` cycle (`awaitEcho` via the
+  `slow-echo` host import) and the stream adapter (`readBody` via `fetch-body`, 5 bytes) both returned
+  **PASS with correct values**.
+- **JSPI guard verified both ways** — Node with and without `--experimental-wasm-jspi`: fires a clear,
+  actionable diagnostic and halts when JSPI is absent, and is a correct no-op when present. Per the brief
+  this is a **diagnostic, not a fallback**: the spike proved no JSPI-free output exists, so a "graceful
+  degradation" path would have been dead code masquerading as a safety net.
+- `bun nx run @semio-tech/framework-os-dev:test --reporter=verbose` → **27/27**, including two tests that
+  call the live `hostShimSource()` and byte-compare, so they validated the new content automatically.
+
+It reused `shard-client.ts`'s exact envelope shape rather than inventing a second wire, and adapted
+`ReadableStream` into the per-byte async-generator shape the spike had already proven jco accepts.
+
+**It declared its limits honestly**: the full 24-function `host-async` surface and the 4-interface export
+shape are **written but unproven** against a real production component, and it did **not** regenerate the
+48 stale bridge artifacts (that needs a `wasm32-wasip2` fleet build, which cannot happen yet). Both stated
+plainly rather than glossed.
+
+## 🕳️ The gap it flagged was real, and I verified it before assigning work
+
+It reported that `🧵️shard-client.ts` has no responder for the effects its shim now posts. **Measured:**
+
+| file | `effect-request` | `effect-complete` | `effect-error` |
+|---|---:|---:|---:|
+| `🌐plugin-web-materialize.ts` (emits) | 6 | 9 | present |
+| `🧵️shard-client.ts` (must answer) | **0** | **0** | **0** |
+
+`shard-client.ts` is 1,196 lines and its `InboundMessage` union starts at `kind: "result"` — **there is no
+effect responder at all**. So today a guest awaiting any host import would post a request nothing answers
+and **its Promise would never settle**. The guest half works; the loop is open.
+
+### ▶️ `shard-effect-bridge` DISPATCHED to close it
+Owns `🎭️actor/📦️packages/🟦️typescript/**`. Beyond the obvious routing, briefed on four things that are
+easy to get wrong and expensive to debug later:
+- **An injectable handler seam, not a built-in implementation.** `ShardClient` must not implement
+  `http-fetch` itself; react, wgpu and tests each supply their own. `🎭️actor` staying free of host
+  assumptions is what keeps mobile open — a standing rule of this codebase, not a preference.
+- **No-handler default must be a fast typed `effect-error`, never a silent hang.** A hang here is
+  indistinguishable from a deadlock.
+- **Shard loss and actor disposal must settle every outstanding effect with an error**, not leak it —
+  losing a worker must not strand promises.
+- **Backpressure**: cap outstanding effects per actor, mirroring the existing `QuotaSchema.outstanding_requests`
+  vocabulary rather than inventing a parallel concept, so a guest cannot exhaust the host by spamming imports.
+
+Evidence bar set explicitly: wire the handler to the jcoprobe fixture and show a guest's `.await` resolving
+with a value that came from the handler, **plus a deliberate failure path** proving the guest sees an error
+instead of hanging.
+
+
+## ✅️ `shard-effect-bridge` ACCEPTED — the web host-import loop is CLOSED, proven end to end
+
+The decisive evidence, driven entirely through the Browser pane against a real jco-transpiled component,
+a real unmodified `shardWorkerSource()` output and the real bundled `ShardClient`:
+
+> the guest's `probe.awaitEcho(30, 777)` genuinely `.await`ed the host import and resolved with **777 —
+> the value returned by the injected `onHostEffect` handler**.
+
+That is a complete round trip across the guest/worker/host boundary, which is the thing this whole web
+path exists to do and which had never once been demonstrated before today.
+
+Delivered: `InboundMessage` extended with the generator's exact frame shape (byte-for-byte, no second
+protocol invented); routed **before** the generic pending-lookup path; an injectable
+`onHostEffect(actorId, effect, params, signal)` seam so `ShardClient` implements no effect itself — react,
+wgpu and tests each supply their own, keeping `🎭️actor` free of host assumptions; replies correlated by the
+guest's `requestId` and posted **directly to the worker**, deliberately not through `send()`, which would
+await a `"result"` that never arrives. Teardown aborts every outstanding effect on `failShard`/`terminate`/
+`dispose` so late settlements are recognised as stale; `maxOutstandingEffectsPerActor` (default 64) mirrors
+`QuotaSchema.outstanding_requests` rather than inventing a parallel concept. The options were threaded
+through `🧵️shard-runtime.ts` additively so both renderers can opt in.
+
+Tests **40 → 46**, all six new cases confirmed **by name** with `--reporter=verbose` (handler success,
+handler error, no-handler default, backpressure cap, shard-loss settlement, dispose) — which is exactly the
+discipline rule 13 demands, since a new test file that is not in the config silently does not run while the
+suite still reports green.
+
+## 🔬️ Its negative finding is the valuable part — and I checked it against the REAL schema
+
+Chasing the deliberate failure path, it proved everything on the ShardClient side works (handler rejection
+→ `effect-error` → worker → `__rejectEffect` → the guest shim's Promise genuinely rejects, confirmed by
+direct instrumentation) **but that the guest could not observe it**: jcoprobe's `slow-echo` is declared as a
+bare `u32` return, so jco's canonical-ABI glue has **no channel to surface a rejection** and substitutes a
+default value instead.
+
+**That is a silent-data-corruption shape**: a host-side failure arriving in the guest as a plausible default.
+It also resolves — negatively — the exact item `web-bridges` had honestly flagged as unproven.
+
+**Measured against the production schema before treating it as a risk**: `interface host-async`
+(`📜️component.wit:887–953`) has **26 functions — 24 return `result<...>`, 0 return a bare value**, and the
+only two without a return are `emit`/`emit-patch`, which are the deliberate one-way fire-and-forget doors.
+**The real interface is already safe.** The trap is real; our schema already avoids it.
+
+### 📌️ Recorded as a standing schema rule for `world-collapse` (my packet)
+**Every `host-async` function whose failure the guest must observe MUST return `result<T, …>`.** A bare
+return type is not a style choice there — it silently converts host errors into default values. `world-collapse`
+gains a schema-parity assertion for this so it cannot regress, alongside the "exactly one world" and
+"every func is async" assertions already planned.
+
+
+## 🟡️ `sdk-dedyn` — core DELIVERED, one large piece deliberately STOPPED (the guardrail working)
+
+Verified by me on disk, not from its report:
+
+| | |
+|---|---|
+| SDK `🦀️component.rs` | 20,825 lines · **1,473 `async fn`** / 131 plain · 18 E-tags |
+| `dyn PluginApp` live in the SDK core | **0** |
+| `PluginAppMediaFuture` | **deleted** |
+| `NoPluginApp` (uninhabited default) | present |
+| whole `🔌️plugin` crate | **72.5% async**, 31 E-tags |
+
+**Step 1 restored the reverted file exactly**: 19 → **1,489 `async fn`**, an exact match to the git index —
+which is the strongest possible evidence the codemod route reproduced the lost conversion faithfully,
+without the `git restore` that would have destroyed sibling packets' work.
+
+It fixed all three named E4 waker files **and found more of the same defect class on its own** — the
+`composer_entry_of` family, `check_non_negative`, and both `plugin_exports!`/`extension_exports!` bundle
+installers with their `OnceLock<fn()>` statics. That is the checklist paying off: handed a named pattern,
+it generalised it instead of stopping at the three files I listed. Also ran `async-test-attr.py` (293 sites,
+12 files) and collapsed the S4 double-futures on `ArtifactSerializer`/`ArtifactDeserializer`/`ArtifactComposer`.
+
+### ⏸️ The STOP — and why it was the right call
+It halted on two pieces and documented both rather than half-applying them:
+1. **`plugin_runtime`'s guest statics** (~4,300 lines, 56 fns built on **non-generic `thread_local!`s**).
+   A `thread_local!` cannot be generic, so `Plugin<PA>` cannot live in one. The design's answer (§1.5) is to
+   move `GuestHost<A>` **into the `plugin_exports!` macro expansion**, which is a substantial restructure of
+   the very file it had just rewritten.
+2. **The `SpaceMember`/children half of `store-dedyn`'s lease** — it found a genuine architectural mismatch
+   in `dispatch_group<M>`'s signature, i.e. a real cross-crate design question, not a mechanical edit.
+
+**This is exactly the STOP condition I wrote into its brief**, and it triggered on the right things.
+A 4,300-line restructure layered on top of an already-large uncompiled refactor is how you get a tree
+nobody can bisect.
+
+### 🧭 My decision: hold `sdk-guest-statics`, dispatch `host-dedyn`
+I am **not** dispatching the guest-statics restructure yet. It would be blind work stacked on blind work in
+the same file — the precise compounding risk I am already holding `db-dedyn` unaccepted over. It waits until
+`semio-framework-os-kernel` is green and the SDK can actually be compiled.
+
+**`host-dedyn` is dispatched instead**, because my measurement shows the remaining first-party `dyn` in this
+area is **not** in the SDK core at all — it is `GuestRuntime` 15 and `ShardTransport` 4 in `🖥️host/**`, a
+**separate crate** (`semio-framework-plugin-host`) that no packet owned, that `sdk-dedyn` was explicitly
+fenced out of, and that the async runtime depends on. Crisp closed set, low blind-work risk.
+
+Its brief also carries the **`poll_ready` removal**, with the reason stated rather than assumed: it polls
+once with a no-op waker and **panics on `Pending`**, which is harmless only while every runtime is eagerly
+ready — and becomes a live panic the moment the async runtime lands behind the same interface. It is told to
+leave `⏳️runtime.rs` alone (a later packet, needing the collapsed schema) and to keep the `AsyncActor`
+variant as a placeholder.
+
+Acceptance is pre-authorised as **UNRUN**: `semio-framework-os-kernel` is red at ~1,258 errors with
+`kernel-ripple` actively clearing it, and the brief explicitly forbids editing other crates to unblock
+itself — with grep-based invariants demanded in the meantime so the work is still evidenced.
+
+
+## ✅️ `math-dedyn` ACCEPTED — the shared macro's first real application works
+
+Verified by me on disk: `🧮️math` is **97.3% async (820 `async fn` / 23 plain)** with **zero first-party
+`dyn`** — the single remaining `dyn` is `dyn std::error::Error`, R1-permitted. Its own acceptance:
+`--lib` exit 0, `--all-targets` exit 0, **191 passed / 0 failed**.
+
+9 families, 96 dyn-uses, and it chose a *different mechanism per family* rather than forcing one shape:
+7 → `#[dyn_enum]`/`dyn_enum_close!`; `Collective` → **concrete type** (single impl — an enum of one is
+worse than none); `Denoiser` → **static generics** (a caller-supplied seam whose only impls are test mocks
+defined inside `#[test] fn` bodies, therefore unnameable at module scope). That per-family judgement is
+what the next ~49 packets should copy.
+
+It also **corrected the census**: `Constraint` is 10 uses, not the 20 my table said — the other 4 are an
+unrelated same-named trait in `🌀️procedural`. Checked rather than assumed.
+
+**Verification under a red dependency, done well**: `semio-framework-geometry` was red (146 pre-existing
+errors, not its), so it built a scratch mirror mounting the real math source via `#[path]` against a
+hand-written `.await`-complete stand-in for geometry's public surface — genuine rustc verification without
+touching a crate it did not own.
+
+## 🔴️ NEW RULING **R10** — never build a name-keyed `.await` inserter
+
+`math-dedyn`'s most valuable output is a **near-disaster it documented in full** instead of quietly
+repairing. Hitting residue after the shared tool reached fixpoint, it built a bulk "append `.await` to any
+call matching a locally-declared `async fn` name" tool. It **corrupted ~250 of its own 1,479 edits.**
+
+The cause is arithmetic, not carelessness: first-party async fns are named `len`, `new`, `get`, `fill`,
+`count`, `is_empty`, `clear`, `push`, `contains`, `split`, `as_str` — **names that also belong to `Vec`,
+`HashMap`, `str`, `u64`**. A name-keyed pass cannot distinguish them and awaits sync std methods.
+
+**This is rule 27 rediscovered the expensive way** ("span-keyed edits are safe; name-keyed edits hit
+production code that merely shares an identifier"). It was buried in a report instead of in the rules, so
+it did not reach the packet that needed it. That is my failure of routing, not theirs — and it is now
+**R10** in `📌️important.md`, stated as a prohibition, with the four residue shapes no tool can fix:
+`.await` in a sync closure; awaiting one future repeatedly; recursive async fns needing `Box::pin`;
+futures stored in structs. R10 also requires any recovery tool to be **diagnostic-driven, never
+name-driven**, and to be **saved into the ticket folder** — their `remove_bad_await.py` was not preserved,
+so the next packet would have rebuilt it.
+
+## 🧮 `📐️geometry` — I took it from 147 → 61 errors myself, and the new guard earned its keep
+
+Geometry was blocking `math` and no packet owned it. All-await-family, zero dyn, so I ran the tools:
+
+1. Await fixpoint: 146 → 108, then **the E0728 guard I added an hour ago ABORTED the run on its first
+   real use** — 3 × "`await` outside an async fn" — instead of grinding out another conserved
+   non-improvement. The guard worked exactly as designed.
+2. `asyncify-universal.py --scan` then reported **`converted: 0`, `external_trait: 29`** — every sync fn
+   was already a legitimate E1. So the E0728s were **not** an ordering problem after all; they were the
+   harder shape.
+3. Reading them: `sorted.sort_by(|a,b| a.x().await…)` and `(0..n).map(|_| table.await.sample(rng))` —
+   **`.await` inside sync closures**, R10's shape #1, and the second was also **awaiting one future n
+   times**, shape #2 — a latent bug the conversion exposed rather than caused.
+4. Fixes, each on evidence: `Point::x()`/`y()` are literally `self.0.x` field reads with **zero I/O markers
+   in the file**, consumed 30+ times inside `sort_by`/`dedup_by`/`map` closures — **both halves of the R9
+   test**, so they became sync and tagged. The `AliasTable` await was **hoisted out of the closure**,
+   which is both the compile fix and the correctness fix.
+5. Re-ran the fixpoint: **61 errors left**, 10 of them flagged ambiguous by the tool (rustc offering
+   multiple candidate positions) — i.e. exactly the hand-work residue R10 describes.
+
+Geometry's remaining 61 go to a packet; they are judgement calls, not tool work.
+
+
+## ✅️ `host-dedyn` — structurally COMPLETE, verified by me; acceptance UNRUN behind `os-kernel`
+
+Independently measured across the whole `🔌️plugin` tree (comments excluded):
+
+| symbol | live |
+|---|---:|
+| `dyn GuestRuntime` | **0** |
+| `dyn ShardTransport` | **0** |
+| `dyn PluginApp` | **0** |
+| **`poll_ready`** | **0 — removed entirely** |
+| `enum GuestRuntimes` | present |
+
+**`poll_ready` is gone.** That matters more than it looks: it polled a future **once** with a no-op waker
+and **panicked on `Pending`**, which was safe only while every runtime was eagerly ready. It would have
+become a live panic the moment the async runtime landed behind the same interface — a panic deep inside a
+turn rather than an error at wiring time. It is now `block_on` at the genuine **thread roots**
+(`ShardExecutor::spawn`, `semio-shard`'s `main`) with `.await` inside, plus two tagged **E5** sync-ABI
+bridges (`run_job_to_completion`, `ProcessTransport::Drop` — `Drop` is E1, it cannot be async).
+
+### 🕳️ It found the crate had never compiled
+`ShardTransport`'s methods were already `async fn` while **all four impls still had sync bodies** (E0053) —
+including a silently-**dropped-future** pattern in `executor.rs`'s tests, which is the kind of defect that
+produces "it passes but does nothing". Fixed. Nobody had noticed because the crate could not be built.
+
+### 🔧️ Two genuine limits of the shared macro, from real use
+Both enums were **hand-written, each for a distinct and legitimate reason** — this is the answer to the
+question I put in its brief, and it generalises:
+1. **`GuestRuntimes` has `#[cfg]`-gated variants** (`Mock`, `Recording`). Untested macro territory, so it
+   declined to be the first to try it under time pressure. Reasonable; worth a macro test later.
+2. **`ShardTransport` is declared in `semio_framework_actor`, a foreign crate.** `#[dyn_enum]` annotates the
+   **trait declaration**, so it **structurally cannot apply to a trait you do not own.** That is a hard
+   limitation, not a preference, and it will recur for every family whose trait lives upstream of its
+   consumer. Recorded so the next ~48 packets do not each rediscover it.
+
+It also wrapped the `Mock`/`Recording` variants in `Arc<..>` rather than bare values **so existing tests
+keep sharing mutable state with the driven handle** — a detail that would have silently broken the suite.
+
+### ❌ It corrected my census, and I verified the correction
+My brief claimed 11 host-side `dyn PluginApp` sites. Two independent full-text scans found **zero**, and my
+own re-measurement confirms **0 across the entire `🔌️plugin` tree**. My earlier figure was stale. Checked
+rather than argued.
+
+Acceptance **UNRUN**, blocked entirely by `semio-framework-os-kernel` (~1,050 errors, **zero attributable to
+plugin-host**, confirmed by grepping the build output for the crate name) — exactly as its brief anticipated,
+and it did not edit another crate to unblock itself.
+
+**Two lease-requests filed** for external holders of `Arc<dyn GuestRuntime>` that will now break:
+`🌉️mcp/🏠️workspace` and the renderer's wgpu glue/runtime. Both belong to `os-ripple`; recorded here so they
+cannot be lost.
+
+## ▶️ `geometry-residue` dispatched
+The last 61 errors in `📐️geometry`, including the 10 the tool flagged **ambiguous** (rustc offering multiple
+candidate positions, where it refuses to coin-flip). Briefed with R10's four hand-work shapes, with R9's
+both-halves requirement and an explicit warning not to reach for R9 merely because awaiting is inconvenient,
+and with the real point of the packet: **`semio-framework-math` has only ever been verified against a
+hand-written stand-in for geometry, never the real crate.** Finishing geometry is what lets math's
+191-passing baseline be confirmed for real.
+
+
+## 🟡️ `kernel-ripple` — real progress, NOT green, and it escalated the right things
+
+| stage | errors |
+|---|---:|
+| baseline handed over | 808 |
+| after asyncifying `pack`(os)/`store`/`dsl`/`directory`/`inference`/`vcs`/`extension` | **2,967** |
+| after scoped await-fixpoint + extensive manual repair | **1,021** |
+
+The 808 → 2,967 spike is the expected intermediate state of an atomic signature change, not a regression:
+each newly-async fn creates call sites that do not yet await. Net from a true like-for-like baseline the
+crate is far better off, but **it is not green and `semio-framework-plugin` is still fully blocked** — both
+stated with exit codes rather than spun.
+
+It fixed five recurring classes by hand — misplaced-await-on-reused-binding, invalid struct-literal
+shorthand (`{ id.await, .. }`), `.await` inside sync `Iterator`/`Option` closures (R10 shape 1), E4
+fn-pointer-slot violations (reverted the `DslIdiom`/`MacroMatcher` clusters to sync, bridging one genuine
+async call through the existing `resolve_ready`), and E1/R9 pure-accessor reversions (`Symbol` interner,
+`TouchedPaths`, 14 proc-macro-derive helpers) — plus cleared all 4 `E0733` recursive-async-fn-needs-`Box::pin`
+errors, which is R10 shape 3 in the wild.
+
+## 🐛 It found TWO MORE defects in my shared tool — both now fixed
+
+1. **The E0728 guard was a denial-of-service on its own workflow.** I counted E0728 across *all*
+   diagnostics, so an out-of-scope one — belonging to a different packet entirely — aborted the whole run.
+   The packet had to write `terra-scoped-await-loop.py` to get around me. **Fixed**: the guard now counts
+   only E0728 whose *primary span* is in scope.
+2. **The tool could apply a suggestion that did not actually add `.await`.** My filter accepted any
+   `suggested_replacement` from a diagnostic whose child message merely *mentioned* "await" — but such a
+   diagnostic can carry a suggestion that does something else (remove an await, annotate a type), and
+   applying it lands text on the wrong token. That is the "`.await` on the wrong token across ~10 files"
+   the packet had to write repair scripts for. **Fixed**: the replacement must itself contain `.await`.
+   **The message is a hint; the replacement is the contract.**
+
+That is four defects in this one tool today (substring `--scope`, missing ordering guard, over-broad abort,
+message-vs-replacement). Every one shipped on plausible reasoning and was found by real use. Its repair
+scripts are preserved in this folder rather than discarded.
+
+## ⛔️ The first genuine ARCHITECTURAL blocker — resolved as ruling **R11**
+
+It stopped on 37 `E0038` in `🚪️io` and reported that four traits there are **open host-extension points
+with no closed implementor set** — so `dyn_enum_close!` cannot apply, and **R1 bans the boxed-future
+alternative**. It asked instead of guessing, which is exactly right: this needed a decision, not effort.
+
+I read all 17 use sites before ruling. **They are two problems:**
+- **(a)** `&mut dyn PayloadSource`, `&dyn RandomAccessPayload`, `&'a mut dyn PayloadSink` at
+  `:387,:435,:479,:504,:545,:624,:2156` — parameters and borrows, **trivially generic**, no design question.
+- **(b)** the real one: `resolve_decode/resolve_encode` **return a runtime-chosen implementation**
+  (`CodecResult<Box<dyn PayloadSource>>`), so no enum in `🚪️io` can enumerate what third-party resolvers
+  will hand back.
+
+**R11: associated types push the choice to the implementor.** `ResourceResolver` gains
+`type Source: PayloadSource` / `type Sink: PayloadSink`; holders of `Arc<dyn ResourceResolver>` take a
+generic parameter. **The openness is real but it lives at the implementor, not the call site** — a resolver
+needing runtime variance declares its own enum over the kinds *it* supports (optionally via
+`dyn_enum_close!`), so erasure happens where the set is genuinely closed. That is precisely O1's principle,
+and nothing is boxed or `dyn`.
+
+Generalised for the remaining families: **open set ⇒ generics (+ associated types when a method returns an
+implementation) · closed set ⇒ `dyn_enum_close!` · exactly one impl ⇒ delete the trait object.** Never
+reintroduce a boxed trait object to avoid the work. Honest cost — monomorphisation threads a type parameter
+through the codec holders — carries the same **>10 public types ⇒ STOP and report** condition that
+`SpaceMember` had.
+
+`io-dedyn` dispatched with the diagnosis pre-done so it spends its budget on the sweep, not the analysis.
+Two lease-requests from `kernel-ripple` into `📡️replication` (`DictReader`/`DictBuilder`,
+`FrameCursor::prev_frame` — pure accessors wrongly asyncified, blocking `spr/history`) are recorded for the
+next kernel packet.
+
+
+## ⚡️ PARALLEL FAN-OUT — workflow `kernel-module-fanout` launched (5 repair agents + 1 verifier)
+
+User directive: use more parallel agents. The kernel's remaining errors sit in **independent modules**, so
+they fan out cleanly. I scouted the exact work-list first rather than having five agents each rediscover it:
+
+`cargo check -p semio-framework-os-kernel --lib --message-format=short` → **1,000 errors**, bucketed by the
+`🔨️modules/<name>` path segment:
+
+| module | errors | dominant codes |
+|---|---:|---|
+| `🗣️dsl` | **316** | E0609:182, E0277:65, E0308:31, E0600:19 |
+| `📡️spr` | **295** | E0308:153, E0277:72, E0369:26, E0605:20 |
+| `🏪️store` | **233** | E0277:73, E0308:71, E0599:45 |
+| `🎒️pack` (os) | 82 | E0277:27, E0605:25, E0308:19 |
+| `🚪️io` | 48 | **E0038:31** — owned by the live `io-dedyn` packet, excluded from the fan-out |
+| long tail (`🌿️vcs` 9, `📇️directory` 7, `💡️inference` 6, `🧩️extension` 4) | 26 | mixed |
+
+Each bucket's exact errors were written to `sol-fanout-<bucket>.txt` and handed to its agent, **so budget
+goes on fixing rather than discovering**. Each brief carries the full rulings preamble (E1–E5 tags, R3, R7,
+R9's both-halves test, R10's prohibition and its four hand-work shapes) plus module-specific intelligence:
+
+- **dsl**: its E0609×182 is *not* a normal async shape — a sibling found the cause is bad bulk edits
+  producing invalid struct-literal shorthand (`Foo { id.await, name }`), so one mechanical sweep likely
+  clears most of it.
+- **spr**: was never asyncified until today; its residue is the hard tail, incl. E0605 futures being *cast*.
+- **store**: already de-dyn'd — told explicitly not to undo `Backbones`/`SpaceHost<M>`/`space_members!`.
+- **os-pack**: 🚩 warned twice about the `🎒️pack` **name collision** with the already-green separate crate.
+- **long-tail**: its E0382 and E0311 are genuine logic errors the conversion exposed, not await gaps.
+
+Build discipline is the interesting constraint: five agents on **one crate**. They share a single
+`CARGO_TARGET_DIR` so builds serialise on cargo's own lock instead of each rebuilding all dependencies, and
+each is capped at ~2–3 crate checks. A verifier phase then measures independently — because an executor's
+own figure has never been accepted as evidence on this ticket.
+
+## ✅️ `semio-framework-replication` FULLY GREEN — `--lib` **and** `--all-targets` both exit 0
+
+## ❌️ …but first I got a call WRONG, and reverting was the right move
+
+`kernel-ripple` left a lease claiming `DictReader`/`DictBuilder`/`FrameCursor::prev_frame` in replication
+were "pure accessors wrongly asyncified, blocking spr/history". The evidence looked perfect: **10 async fns,
+zero `.await`, zero I/O markers** — textbook R9.
+
+I applied it. **It broke the crate**: `prev_frame` calls `decode_frame_in_slice(..).await`, which is *also*
+pure but awaits `read_varint_u64` and `malformed`, which are pure too. **The R9 chain runs through the whole
+codec subtree**, not the two accessors the lease named.
+
+**Reverted both changes.** Two reasons, and the second is the one that matters:
+1. Replication was **already green**. De-asyncifying a whole pure-codec subtree to satisfy one consumer is
+   reshaping a working crate on an unverified premise.
+2. **R9 rule 3 says so**: if the consumer *can* be async, make the consumer async. Nobody had shown the
+   `spr/history` consumer is language-barred — the lease asserted it. The fix belongs in `spr`, and the spr
+   fan-out agent can make its own consumers async within its own scope.
+
+This is R9's misuse guard catching me, one hour after I wrote it. Recorded because the temptation — "the
+accessor looks pure, de-asyncify it" — will recur in every remaining packet.
+
+### 🕳️ And the `--all-targets` failure was a GOOD signal, not a regression
+After reverting, `--lib` was 0 but `--all-targets` was 101. Not my doing: `spine-upstream` had restored the
+`#[cfg(test)] mod tests {}` wrappers that had gone **missing** in two files — so that test code was
+previously compiling into the plain `--lib` build and had *never been type-checked as tests*. Fixing the
+wrappers made real, long-hidden breakage visible for the first time.
+
+Six sites, all `cursor.prev_frame().unwrap()` in tests. The shared tool correctly **declined** them (rustc
+offers no `.await` suggestion for that shape, and the tool refuses to invent one), so I fixed them
+span-scoped by hand. Safe under **R10** specifically because `prev_frame` is a distinctive name — R10's
+danger is generic names like `len`/`get`/`push` that collide with std, which is exactly why the rule is
+about *name collision risk* and not about pattern edits per se.
+
+
+## ✅️ `geometry-residue` ACCEPTED — and `semio-framework-math` is now verified for REAL
+
+Coordinator-run, freshly measured:
+```
+cargo check -p semio-framework-geometry --lib          EXIT=0   (0 warnings)
+cargo check -p semio-framework-geometry --all-targets  EXIT=0   (0 warnings)
+cargo test  -p semio-framework-geometry                EXIT=0   57 passed / 0 failed
+cargo check -p semio-framework-math     --all-targets  EXIT=0
+cargo test  -p semio-framework-math                    EXIT=0   191 passed / 0 failed
+```
+**191 is exactly the number `math-dedyn` predicted** — but that packet could only verify it against a
+hand-written stand-in for geometry, never the real crate. It is now confirmed against the genuine article,
+which is precisely what this packet existed to make possible.
+
+**Geometry's 57 tests are a NEW baseline: the crate previously had ZERO runnable tests.** Its `--all-targets`
+had 201 hidden errors because every `#[test] async fn` is illegal Rust, so the test modules had never
+compiled. That is the *third* instance today of "tests silently not running" (the two missing
+`#[cfg(test)] mod tests {}` wrappers in `📡️replication`, and the vitest `include`/`includeSource` traps).
+**A suite reporting green because it is not compiled is the most expensive kind of false comfort**, and this
+program keeps turning it up.
+
+Its judgement was good in the one case that could have gone wrong: `impl From<(f64,f64)> for Vec2` cannot be
+async (trait-fixed), but `Vec2::new` has legitimate async callers elsewhere — so it **inlined the sync body
+in the `From` impl rather than de-asyncifying the constructor**, and tagged it **E1, explicitly not R9**,
+noting R9 did not apply because the signature was already forced sync by the trait independent of any
+consumer. That is exactly the distinction R9's misuse guard is meant to protect.
+
+## 🔧️ It corrected my TOOL'S FOUNDING ASSUMPTION — now fixed
+
+Its most valuable finding: **9 of the 10 diagnostics my tool flagged "ambiguous" were not either/or forks at
+all.** rustc offered N candidates because **N sibling arguments in one call were each an un-awaited future**
+— `lerp_point(p0, p1, t)` with both `p0` and `p1` needing `.await`. Every candidate was correct; they had to
+be applied *together*.
+
+**That invalidates the reasoning I built the tool on.** Its docstring's motivating example was
+`compare_exchange(Park.to_u8(), Live.to_u8(), ..)`, which I described as "applying both is wrong; applying
+an arbitrary one is a coin flip." **Both arguments were futures. Applying both was the correct fix.** I had
+been refusing the common case for a year-old-textbook reason that did not apply.
+
+Fixed: the discriminator is **span overlap, not candidate count**.
+- candidates at **disjoint** spans ⇒ independent futures in one expression ⇒ **apply them all**
+- candidates at **overlapping** spans ⇒ genuinely alternative rewrites of the same text ⇒ refuse, record
+  as ambiguous, leave for a human
+
+The docstring now carries the corrected reasoning and the evidence. This should materially reduce the
+hand-work residue for the five in-flight fan-out agents and the ~48 families after them.
+
+**Running score on this tool: five defects, all found by real use** — substring `--scope`, missing
+asyncify-before-await ordering guard, over-broad E0728 abort, message-vs-replacement confusion, and now the
+ambiguity misdiagnosis. Every one shipped on plausible reasoning. The pattern is not carelessness; it is
+that **a tool's correctness is a claim about the world, and claims about the world have to be measured.**
+
+
+## ✅️ `io-dedyn` ACCEPTED — R11 validated, and it GENERALISES
+
+Verified by me statically (two independent methods, per rule 21): of the **9 traits declared in
+`🚪️io/🦀️component.rs`**, **zero** are used as `dyn` anywhere in the file. The only `dyn` left is one
+`dyn Future` — R1-legal. Associated types are in place (`type Source` ×3, `type Sink` ×3,
+`type RandomAccess` ×2), `DecodeContext<R>`/`EncodeContext<R>` are generic, and 15 exception tags are
+present. Its own build evidence: **37/37 E0038 → 0**.
+
+### 🎯 The number I actually wanted: **3**
+R11's honest cost was monomorphisation, with a **>10 public types ⇒ STOP** condition. The packet kept it to
+**three** — `DecodeContext<R>`, `EncodeContext<R>`, and `ArtifactCodec::{decode,encode}_artifact<R>` — by
+splitting the `Bounded*`/`Resolved*` wrappers' back-reference into `&mut CodecBudget` + `&DecodePolicy`
+instead of threading the whole generic context through them. **No coordinator decision was needed, and R11
+now generalises to every remaining open family** with evidence rather than hope.
+
+It also cleared the file's non-dyn residue (~20 missing awaits, 7 sync-closure `.await` bugs rewritten as
+match/if-let, 3 sort/min-over-async-closure bugs bridged through the file's own `resolve_ready` idiom, one
+E0507) and made **one** R9 de-asyncification — `CancellationToken::new()`, tagged, consumed by
+`Default::default` impls — which is R9 used exactly as intended.
+
+## 🔧️ I fixed the structural blocker it found — os-kernel could never have gone green without it
+
+Its most consequential finding was a **cross-crate macro-resolution failure**, and it correctly refused to
+fix it (the file is outside its scope). The shared io file is `#[path]`-mounted into **two** crates, and its
+thunk macros refer to `$crate::io`, `$crate::io_schema`, `$crate::ErasedComposeSource`,
+`$crate::ComposeFuture`. `$crate` expands to whichever crate is compiling the file:
+
+| name | in `semio-framework` | in `semio-framework-os-kernel` |
+|---|---|---|
+| `io_schema` | ✅ root | ✅ root (deliberately mounted there for this exact reason) |
+| `io` | ✅ root | ❌ **absent** — its `pub use pack::io` is nested inside `os_pack` |
+| `ErasedComposeSource` / `ComposeFuture` | ✅ root | ❌ **absent** — mounted as `os_io`, never re-exported |
+
+So **every `compose_thunk!`-using row failed to compile in os-kernel** — and `compose_thunk` appears 8 times
+in that file. The five fan-out agents could have driven their module counts to zero and the crate would
+still never have built.
+
+Fixed in `💻️os/📦️packages/🦀️rust/📦️glue.rs` (registrar file, mine) with two additive lines:
+`pub use crate::os_io as io;` and `pub use crate::os_io::{ComposeFuture, ErasedComposeSource};`.
+Collision-free by inspection — the root `io` name was genuinely free. This **completes the existing
+`io_schema` contract** ("resolves correctly whichever crate compiles that shared file") rather than
+inventing a new mechanism; the double-mount itself remains recorded debt D2, to be removed wholesale later.
+
+**This is why "zero errors in my module" is not the same as "the crate compiles."** A blocker that belongs
+to no module can survive a perfectly executed fan-out.
+
+### 📌️ Second finding, routed not lost
+**769 `#[test] async fn` remain repo-wide** — not io-specific, and the ticket's own `async-test-attr.py`
+defers the repo-wide `--apply` to a later packet by design. Recorded as the standing input for
+`fleet-codemods`.
+
+
+## 🏁 FAN-OUT RESULT: `semio-framework-os-kernel` **1,000 → 34 errors** (now 34, via 46 → 68 → 34)
+
+The parallel workflow completed: **6 agents, 0 failures**. Coordinator-measured, per module:
+
+| module | before | after fan-out | delta |
+|---|---:|---:|---:|
+| `🗣️dsl` | 316 | **0** | −316 |
+| `📡️spr` | 295 | **2** | −293 |
+| `🏪️store` | 233 | 42 | −191 |
+| `🎒️pack` (os) | 82 | **0** | −82 |
+| `🚪️io` | 48 | 2 | −46 |
+| `🌿️vcs` / `📇️directory` / `💡️inference` / `🧩️extension` | 26 | **0** | −26 |
+| **total** | **1,000** | **46** | **−954** |
+
+Then my own follow-up work took it to **34** (see below), with the residue reduced to three named causes.
+
+### 🎯 Agents corrected the briefs I gave them — twice, and both mattered
+- **dsl**: my "invalid struct-literal shorthand" hint for its 182 E0609s was **wrong**. It checked with a
+  regex sweep first (zero hits) instead of trusting me, and found the real cause: hand-rolled
+  recursive-descent `Cursor` types blindly asyncified with only a minority of call sites awaited. It then
+  discovered a **fifth residue shape not in R10**: `E0609` on future field access where rustc emits *zero*
+  diagnostic children — confirmed via raw JSON — so `insert-await.py` correctly declines. It wrote a
+  diagnostic-driven fixer for exactly that (82 edits across 3 files) and **saved it to the ticket folder**,
+  as R10 requires.
+- **spr**: found a **sixth shape** — an earlier pass left `let mut input = Type::new(..)` un-awaited and
+  then wrote every later use as `input.await.method()`, i.e. **awaiting the binding repeatedly instead of
+  the constructor once**. That was ~150 of its 295 errors. It fixed them with per-call-verified scripts,
+  reading each function's definition to confirm async-ness rather than keying on names (R10 honoured).
+- **store** found several **silent dropped-future bugs that compile clean and no-op at runtime** — most
+  seriously **14 of 17 byte-writer calls in `ArtifactCommand::encode_op` were missing `.await`**, so the
+  binary command encoder would have written almost no bytes for most variants. That is a data-corruption
+  bug the conversion exposed, invisible to any test that was not already running.
+- **dsl** also cross-checked the repo for external callers of the 5 functions it reverted to sync and found
+  every one already calls them without `.await` — so those reversions **fix** code the blind codemod broke
+  elsewhere, outside this ticket's tracking.
+
+## 🔧️ My follow-up: the `os_dsl` spec-builder cascade, and a new shared tool
+
+`store`'s residual 41 errors were one cause: `os_dsl::{FieldSpec::{new,positional,optional,flatten,defines},
+RecordSpec::{new,new_owned}}` were `async` but feed `Shape::Record(fn() -> RecordSpec)` **E4 fn-pointer
+slots** and derive-macro output. Verified both R9 halves — **zero `.await` in those impl blocks, zero I/O
+markers in the file** — then de-asyncified all 8 and tagged them.
+
+**That briefly made things worse (46 → 68)**, because my regex for stripping the now-orphaned `.await` at
+call sites missed shapes it could not match — precisely the R10 trap, in my own hands. The fix was to stop
+pattern-matching and build the missing tool:
+
+### 🆕 `remove-bad-await.py` — the inverse of `insert-await.py`, now shared
+After any R9 reversion every call site reads `not_a_future.await` → `E0277: X is not a future`. rustc's
+**primary span for that error is exactly the `await` token**, so the tool deletes that span plus the `.`
+before it — and **refuses** if the bytes are not literally `b"await"` preceded by `.`. Span-keyed,
+descending-offset, guard-set, path-segment `--scope`, `--max-files`, fixpoint. It took the crate **68 → 34**
+in two passes (34 removals, then fixpoint).
+
+This closes a real gap: the program had a tool for adding awaits and none for removing them, so every R9
+reversion generated hand-work. It is saved in the ticket folder per R10.
+
+## ▶️ `kernel-finish` dispatched for the last 34
+Characterised, not guessed: **30 in `🏪️store`** (mostly `expected fn pointer, found fn item` — E4 async-fn
+in a fn-pointer slot, resolvable either by R9 reversion or by the repo's existing `compose_thunk!` pattern,
+with the choice to be made per site on evidence), **2 in `📡️spr`** (the cross-crate `scalar::read_id/write_id`
+lease — **granted**, with an explicit warning that `📡️replication` is currently GREEN and that I already
+tried and reverted the de-asyncify-the-codec route), and **2 in `🚪️io`** (a future under unary `!` and one
+under `Display`).
+
+
+## 🚀 MAX FAN-OUT — 19-agent workflow `dedyn-max-fanout` (18 de-dyn + 1 census)
+
+User directive: maximum parallel agents. Two things had to happen first, in order.
+
+### 1️⃣ The fleet-wide codemods ran CENTRALLY — because parallelising them would have raced
+Both touch **shared per-crate manifests**, so 33 agents doing them concurrently would corrupt `Cargo.toml`
+files. Done once, by me, correctly:
+
+| codemod | result |
+|---|---|
+| **S1** de-asyncify external-trait impls | **892 reverted across 627 files** — `Default` 571, serde `Deserializer`/`Serializer` 59+59, `From` 53, `Display` 43, `Visitor` 13, plus operator traits |
+| **S3** `#[test] async fn` → `#[async_test]` | **11,737 sites across 2,671 files**, **63 Cargo.toml dev-dependencies added** |
+
+Verified after: **2** bare `#[test] async fn` remain in the whole fleet. That is ~12,600 mechanical repairs
+that would otherwise have been smeared across every downstream packet, and it is exactly the work that
+*should not* be parallelised — the parallel-friendly work is the part requiring judgement.
+
+### 2️⃣ Scouted the real work-list before fanning out
+`sol-fleet-inventory.json` + a framework sweep. The shape is much more concentrated than expected:
+
+| area | first-party `dyn` | spread |
+|---|---:|---|
+| **fleet** | **282** | only **11 of 33 plugins** — 22 have ZERO |
+| **framework + hub** | **294** | 8 areas |
+
+Fleet: `🎞️animate` **155** (`Sobject` 131 @ 37 methods, `Animation` 22 @ **43 impls**), `📕️norm` 26,
+`📐️cad` 24 (`BrepKernel`, **92 methods, single impl**), `🖍️draw` 18, `🏭️process` 15, `🌀️procedural` 12,
+`🪐️space` 11, `🗄️stdio` 7, `🌊️flow` 6 (`Operator`, **138 impls**), `📜️imperative` 4, `🪵️sourcing` 4.
+Framework: `💻️os` 225 (HostAsyncRuntime 33, ErasedProjection 22, GuestRuntime 16, SpaceMember 15),
+`🖥️server` 26, `🕸️graph` 20, `🌎️hub` 8, `🔄️machine` 7, `🦑️repo` 5, `🎯️action-bus` 2, `🖱️ui` 1.
+
+### 3️⃣ The fan-out: 18 buckets, each briefed with the R11 decision it actually faces
+Every brief carries the full rulings preamble and the macro's **four production-learned limits**. The
+per-bucket intelligence is where the leverage is — each agent is told the answer it is likely to need:
+- **cad**: `BrepKernel` has **exactly one impl** ⇒ R11 says *delete the trait object*, not a 92-arm enum.
+- **flow/imperative**: `Operator` has **138 impls** but only 1 method ⇒ generics, not an enum; and the two
+  agents are told to **coordinate**, since it is the same trait.
+- **draw** + **machine-bus-ui**: `CommandSink` is *declared* in `🔄️machine` and *consumed* in `🖍️draw`, so the
+  macro cannot annotate it from the fleet side (limit 4) — whichever shape the framework agent picks
+  determines the fleet agent's, and both are told so.
+- **space** and **os-spacemember**: pointed at the completed `store-dedyn` shapes to follow rather than
+  invent a parallel mechanism.
+- **procedural**: warned that its `Constraint` is a **different trait sharing a name** with `🧮️math`'s.
+- **os-hostasync**: told *why* it is generics and not an enum — impls live in crates above the trait, so an
+  enum would drag tokio downward, which the architecture forbids.
+- **hub-repo**: carries 4 of the repo's 12 remaining **R8 `#[async_trait]`** sites.
+
+Every brief also states the **compile reality** honestly: the SDK is still gated behind `os-kernel`, so a
+fleet `cargo check` will likely fail before reaching their source. They are told to try once anyway (the
+gate may clear), otherwise report **UNRUN** with the blocker named and verify structurally with two
+differently-implemented searches — and **never** to edit another crate to unblock themselves.
+
+A 19th agent then runs an **independent repo-wide census**: first-party dyn by trait, std/lang residue
+reported separately as the R1-legal baseline, async-literal ratio and tag counts, real compile state with
+exit codes, and — most valuable — **every discrepancy between what an agent claimed and what it measures.**

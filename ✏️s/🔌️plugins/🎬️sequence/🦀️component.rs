@@ -32,12 +32,12 @@ pub async fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyEr
 /// (`📓️w0-f-report.md`), used directly rather than a local stand-in.
 #[cfg(test)]
 mod surface_tests {
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn sequence_viewer_never_mutates() {
         semio_framework_plugin::testkit::assert_viewer_never_mutates::<crate::viewer::sequence::SequenceViewer>();
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn sequence_editor_and_viewer_share_dialect() {
         semio_framework_plugin::testkit::assert_editor_and_viewer_share_dialect::<crate::editor::sequence::SequencePlayApp, crate::viewer::sequence::SequenceViewer>();
     }

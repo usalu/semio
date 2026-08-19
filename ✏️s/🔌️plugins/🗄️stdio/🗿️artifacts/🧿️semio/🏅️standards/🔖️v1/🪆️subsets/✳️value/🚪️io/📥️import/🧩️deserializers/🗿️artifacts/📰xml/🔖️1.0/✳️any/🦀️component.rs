@@ -106,7 +106,7 @@ mod tests {
     use super::*;
     use crate::artifacts::xml::schema::snapshot::XmlAttr;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn element_with_attrs_and_children_maps_to_a_kind_tagged_structure() {
         let doc = XmlDocument {
             root: Some(XmlNode::Element { name: "svg".into(), attrs: vec![XmlAttr { name: "viewBox".into(), value: "0 0 10 10".into() }], children: vec![XmlNode::Text { text: "hi".into() }, XmlNode::Comment { text: "note".into() }] }),
@@ -135,7 +135,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn empty_document_still_produces_a_document_shaped_map() {
         let value = semio_value_from_xml_document(&XmlDocument::default());
         match value {

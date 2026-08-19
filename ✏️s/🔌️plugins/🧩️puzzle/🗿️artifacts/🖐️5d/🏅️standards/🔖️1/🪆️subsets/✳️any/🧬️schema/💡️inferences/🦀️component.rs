@@ -111,18 +111,18 @@ mod tests {
     //#endregion 🧸️Fixtures
 
     //#region 🧪️InferenceLaws
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = chain_snapshot();
         assert_eq!(Puzzle5dInference::infer(&snapshot), Puzzle5dInference::infer(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(Puzzle5dInference::infer(&Puzzle5dSnapshot::default()), Puzzle5dInference::default());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_matches_flatten_snapshot_directly() {
         let snapshot = chain_snapshot();
         let inferred = Puzzle5dInference::infer(&snapshot);

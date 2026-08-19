@@ -61,23 +61,23 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn shooting_dsl_round_trips_representative_fixture() {
         store::os_store::test_support::assert_dsl_round_trip(&representative_snapshot());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn shooting_dsl_round_trips_empty_fixture() {
         store::os_store::test_support::assert_dsl_round_trip(&crate::artifacts::shooting::empty_shooting_snapshot());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn shooting_dsl_round_trips_base_icon_example() {
         let snapshot = parse_dsl(SHOOTING_EXAMPLE_TEXT).expect("base-icon example parses");
         store::os_store::test_support::assert_dsl_round_trip(&snapshot);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn shooting_dsl_angle_deg_field_round_trips_bit_exactly() {
         let mut snapshot = representative_snapshot();
         snapshot.saved_cameras[0].camera.fov = 30.0;

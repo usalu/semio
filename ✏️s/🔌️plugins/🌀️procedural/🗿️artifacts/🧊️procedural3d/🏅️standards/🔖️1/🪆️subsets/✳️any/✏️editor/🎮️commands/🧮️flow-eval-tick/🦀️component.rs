@@ -46,7 +46,7 @@ mod tests {
     use crate::editor::procedural3d::testkit::{app, dispatch};
     use crate::editor::procedural3d::Procedural3dCommand;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn flow_eval_tick_does_not_panic_with_nothing_pending() {
         let _serial = crate::editor::procedural3d::test_support::lock();
         let mut app = app();

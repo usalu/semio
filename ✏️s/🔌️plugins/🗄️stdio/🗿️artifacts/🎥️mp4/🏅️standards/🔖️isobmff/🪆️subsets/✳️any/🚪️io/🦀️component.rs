@@ -952,7 +952,7 @@ mod codec_tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn sniff_recognizes_real_ftyp_magic_only() {
         let bytes = encode_mp4(&synthetic_snapshot());
         assert!(sniff_real_bytes(&bytes));
@@ -960,7 +960,7 @@ mod codec_tests {
         assert!(!sniff_real_bytes(&[0u8, 0, 0, 8, b'f', b'r', b'e', b'e']));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn decode_encode_decode_round_trips_synthetic_snapshot() {
         let snap = synthetic_snapshot();
         let bytes = encode_mp4(&snap);
@@ -975,7 +975,7 @@ mod codec_tests {
     /// nal_length_size=4, extradata_size=46`).
     const REAL_LOGO_MP4: &[u8] = include_bytes!("../📚️examples/🎬️demo/🖼️assets/🎥️example.mp4");
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn codec_retention_law_decodes_the_real_fixture_with_expected_shape() {
         let snap = decode_mp4(REAL_LOGO_MP4).expect("decode the real 43KB fixture");
         assert_eq!(snap.ftyp.major_brand, "isom");
@@ -991,7 +991,7 @@ mod codec_tests {
         assert!(track.samples.iter().any(|s| !s.data.is_empty()), "sample payload bytes must be real, not fabricated");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn codec_retention_law_round_trips_the_real_fixture_snapshot_exactly() {
         // 🧪️ Strongest provable claim within this codec's documented normal-form scope (see this
         // module's doc comment): decode -> encode -> re-decode reproduces the EXACT same
@@ -1012,7 +1012,7 @@ mod codec_tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn exact_bauen_mit_bestand_fixture_round_trips_byte_for_byte() {
         use crate::artifacts::mp4::standards::isobmff::subsets::any::schema::{
             diff::Mp4Diff,

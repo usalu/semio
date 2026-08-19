@@ -17,7 +17,7 @@ pub struct Gis3dPresence {
 }
 
 impl Default for Gis3dPresence {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self {
             camera_json: serde_json::json!({
                 "position": [800.0, -800.0, 600.0],

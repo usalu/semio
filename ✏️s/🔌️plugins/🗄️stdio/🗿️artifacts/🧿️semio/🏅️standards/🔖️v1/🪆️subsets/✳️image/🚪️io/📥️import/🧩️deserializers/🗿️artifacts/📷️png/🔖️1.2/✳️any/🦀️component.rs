@@ -86,7 +86,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn maps_pixels_and_metadata() {
         let semio = semio_framework_plugin::resolve_ready(SemioImageFromPng::deserialize(&sample_png())).expect("deserialize");
         assert_eq!(semio.width, 2);
@@ -100,7 +100,7 @@ mod tests {
         assert_eq!(semio.metadata[0].value, "semio fixture");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn rejects_pixel_length_mismatch() {
         let mut bad = sample_png();
         bad.pixels.pop();

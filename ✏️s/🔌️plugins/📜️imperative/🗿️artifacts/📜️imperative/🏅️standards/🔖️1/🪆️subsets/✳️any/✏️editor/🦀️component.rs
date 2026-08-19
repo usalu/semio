@@ -324,14 +324,14 @@ mod tests {
     use semio_framework_plugin::testkit::{assert_undo_redo_round_trip, meta};
     use std::collections::BTreeMap;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn app_definition_builds_without_panicking() {
         let app = create_imperative_app();
         assert_eq!(app.id, semio_framework::surface_app_id(&crate::artifacts::imperative::IMPERATIVE_DIALECT.into(), semio_framework::AppRole::Editor));
         assert!(app.keybindings.iter().any(|binding| binding.action.action == "undo"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn imperative_io_is_declared_on_the_manifest() {
         let app = create_imperative_app();
         assert_eq!(app.io.artifact.id, "computation.imperative");
@@ -342,7 +342,7 @@ mod tests {
     //#region 🔖️CommandSurface
     /// 🏷️ Every declared manifest action id must be reachable as exactly one command row, and every row's
     /// wire keyword must be distinct — the cross-cutting invariant `app_commands!` is there to hold.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn command_ids_are_unique_and_match_the_declared_manifest_actions() {
         let commands = every_command();
         let ids: Vec<&str> = commands.iter().map(|command| command.command_id()).collect();
@@ -354,7 +354,7 @@ mod tests {
     }
 
     /// ⚖️ LAW: text and binary are two projections of the same command, for every single row.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn every_command_round_trips_through_text_and_binary() {
         for command in every_command() {
             store::os_store::test_support::assert_op_text_binary_equivalence(&command);
@@ -365,7 +365,7 @@ mod tests {
     /// kebab-cased command id, except for the one documented divergence (`setLocale` → `locale`, an
     /// undeclared host-pushed command). This is what a missing `#[dsl(keyword = ..)]` on a payload struct
     /// silently breaks (the record prints with no keyword at all and no longer parses).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
         for command in every_command() {
             let id = command.command_id();
@@ -383,7 +383,7 @@ mod tests {
     /// captured from the pre-merge `semio-s-app-imperative-protocol` crate (ticket
     /// `🧪️wire-baseline-before.txt`). A regression here is a real format break, not a test-fixture
     /// mismatch.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn optional_field_rows_keep_their_pre_migration_bytes() {
         let cases: [(ImperativeCommand, &str, &str); 2] = [
             (ImperativeCommand::AddStep(add_step::AddStep { kind: "log.print".into(), index: Some(1) }), "add-step add-step kind=log.print index=1", "010001096c6f672e7072696e7402000600010401"),
@@ -416,7 +416,7 @@ mod tests {
     //#endregion 🔖️CommandSurface
 
     //#region 🔖️ManifestSanity
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn the_manifest_stitches_every_taxonomy_node() {
         let json = serde_json::to_string(&create_imperative_app()).expect("app definition json");
         for id in [IMPERATIVE_PLAY_WINDOW_MAIN, script::IMPERATIVE_PLAY_WINDOW_SCRIPT] {
@@ -434,7 +434,7 @@ mod tests {
     /// 🕹️ The `steps` domain is declared `HierarchyProvider::Topology`, transitive on both hover and
     /// selection, and scoped to the main window kind — the manifest side of ticket
     /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn steps_interaction_domain_is_declared_topology_and_transitive_on_the_main_window() {
         let definition = create_imperative_app();
         let steps = definition.interactions.iter().find(|interaction| interaction.id == IMPERATIVE_INTERACTION_STEPS).expect("steps interaction domain declared");
@@ -448,7 +448,7 @@ mod tests {
     /// 🌳️ `interaction_topology` walks a `control.if` step's `bodies["then"]` nesting into
     /// `TopologyNode.parent` links — the owner step has no parent, the nested step's parent is the
     /// owner's own row id.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn interaction_topology_walks_nested_control_bodies_into_parent_links() {
         let mut app = imperative_app();
         dispatch(&mut app, ImperativeCommand::AddStep(add_step::AddStep { kind: "control.if".into(), index: None }));
@@ -470,7 +470,7 @@ mod tests {
 
     /// 🌱️ A document with no steps has an empty `steps` topology — every stale `steps` selection id
     /// gets pruned.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn interaction_topology_is_empty_for_a_document_with_no_steps() {
         let document = ImperativeSnapshot::default();
         let config = ImperativeConfig::default();
@@ -483,7 +483,7 @@ mod tests {
     //#endregion 🔖️Interaction
 
     //#region 🔖️CrossCutting
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_step_materializes_kind_default_and_run_emits_no_artifact_mutations() {
         let mut app = imperative_app_with_registry();
         // AddStep fired with no explicit kind: the declared `kind` default ("log.print") must be
@@ -497,14 +497,14 @@ mod tests {
         assert!(result.mutations.is_empty(), "run evaluates into config, never the document");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn default_snapshot_has_steps() {
         let app = imperative_app();
         let path = crate::artifacts::imperative::imperative_working_scene(&app.snapshot().expect("projection")).path;
         assert_eq!(path.steps.len(), 2);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_step_command_appends_step() {
         let mut app = imperative_app();
         dispatch(&mut app, ImperativeCommand::AddStep(add_step::AddStep { kind: "log.print".into(), index: None }));
@@ -512,7 +512,7 @@ mod tests {
         assert!(path.steps.len() > 2);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_step_at_owner_slot_nests_into_control_body() {
         let mut app = imperative_app();
         dispatch(&mut app, ImperativeCommand::AddStep(add_step::AddStep { kind: "control.if".into(), index: None }));
@@ -526,7 +526,7 @@ mod tests {
         assert_eq!(path.steps.len(), root_len, "nested step lives in the slot, not the root path");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_step_at_falls_back_to_root_for_unknown_owner() {
         let mut app = imperative_app();
         dispatch(&mut app, ImperativeCommand::AddStepAt(add_step_at::AddStepAt { kind: "log.print".into(), index: None, owner: Some("missing-step".into()), slot: Some("then".into()) }));
@@ -536,7 +536,7 @@ mod tests {
         assert!(path.steps.iter().any(|step| step.id == added_id));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn undo_after_add_step_restores_original_document_exactly() {
         let mut app = imperative_app();
         let base = default_snapshot();
@@ -546,7 +546,7 @@ mod tests {
         assert_undo_redo_round_trip(&mut app, ImperativeCommand::AddStep(add_step::AddStep { kind: "log.print".into(), index: None }), |app| app.snapshot().expect("projection"), default_snapshot(), expected_after);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn remove_step_command_is_exact_inverse_of_add() {
         let mut app = imperative_app();
         let original = app.snapshot().expect("projection");
@@ -560,7 +560,7 @@ mod tests {
     /// apply DISJOINT edits (A appends a root step, B patches an existing step's params), and exchanging
     /// operations over a `MemoryBackbone` converges both sides onto an identical projection — impossible
     /// under whole-document `setDocument` snapshots, which would clobber one side's write.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn two_instances_converge_disjoint_edits_via_backbone() {
         let mut params = BTreeMap::new();
         params.insert("key".to_string(), crate::artifacts::imperative::dsl::value_to_value_dsl(&neural_engine::Value::Atom(neural_engine::Atom::String("renamed".into()))));
@@ -572,14 +572,14 @@ mod tests {
         );
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn ingest_operations_is_idempotent_for_imperative() {
         semio_framework_plugin::testkit::assert_ingest_idempotent::<semio_framework_plugin::EditorApp<ImperativePlayApp>, _>(ImperativeCommand::AddStep(add_step::AddStep { kind: "math.add".into(), index: None }), |app| {
             crate::artifacts::imperative::imperative_working_scene(&app.snapshot().expect("projection")).path.steps.len()
         });
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
         let mut app = imperative_app();
         assert!(render(&mut app, "imperative.play.nope").contains("Unknown body"));

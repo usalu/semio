@@ -36,7 +36,7 @@ mod tests {
     use super::*;
     use crate::artifacts::mathematical::MathematicalSnapshot;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_binary_round_trips_and_agrees_with_text() {
         use crate::artifacts::mathematical::mutations::change_graph_directed::mutation::ChangeGraphDirected;
         let operation = MathematicalMutation::ChangeGraphDirected(ChangeGraphDirected { new_directed: false });
@@ -45,7 +45,7 @@ mod tests {
         assert_eq!(decode_op(&bytes).expect("decode"), operation);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn math_document_text_round_trips_through_store() {
         use crate::artifacts::mathematical::mutations::update_graph_algorithm::mutation::UpdateGraphAlgorithm;
         let initial = MathematicalSnapshot::default();

@@ -26,7 +26,7 @@ pub struct PdfSnapshot {
 }
 
 impl Default for PdfSnapshot {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { schema: STDIO_PDF_DOCUMENT_SCHEMA.into(), page: PageDoc { width: 612.0, height: 792.0, text: String::new() } }
     }
 }

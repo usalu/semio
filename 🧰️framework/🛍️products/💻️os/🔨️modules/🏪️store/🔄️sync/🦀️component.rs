@@ -38,7 +38,7 @@ mod envelope_serde {
     use serde::ser::SerializeSeq;
     use serde::{Deserializer, Serializer};
 
-    pub fn serialize<S>(envelopes: &[MutationEnvelope], serializer: S) -> Result<S::Ok, S::Error>
+    pub async fn serialize<S>(envelopes: &[MutationEnvelope], serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
     {
@@ -50,7 +50,7 @@ mod envelope_serde {
         seq.end()
     }
 
-    pub fn deserialize<'de, D>(deserializer: D) -> Result<Vec<MutationEnvelope>, D::Error>
+    pub async fn deserialize<'de, D>(deserializer: D) -> Result<Vec<MutationEnvelope>, D::Error>
     where
         D: Deserializer<'de>,
     {
@@ -256,7 +256,7 @@ pub mod backbone_worker_wire {
     }
 
     impl BackboneWorkerRequest {
-        pub fn actor_config(&self) -> Option<ArtifactActorConfig> {
+        pub async fn actor_config(&self) -> Option<ArtifactActorConfig> {
             let Self::Open { document_id, schema, bindings, watch_external, actor } = self else {
                 return None;
             };
@@ -264,14 +264,14 @@ pub mod backbone_worker_wire {
         }
     }
 
-    pub fn encode_request(request: &BackboneWorkerRequest) -> Result<Vec<u8>, String> {
+    pub async fn encode_request(request: &BackboneWorkerRequest) -> Result<Vec<u8>, String> {
         let dsl = to_dsl_value(request)?;
         let mut bytes = vec![MAGIC];
         bytes.extend(crate::os_store::pack_rt::encode_wire_value(&dsl));
         Ok(bytes)
     }
 
-    pub fn decode_request(bytes: &[u8]) -> Result<BackboneWorkerRequest, String> {
+    pub async fn decode_request(bytes: &[u8]) -> Result<BackboneWorkerRequest, String> {
         let (magic, payload) = bytes.split_first().ok_or_else(|| "backbone worker wire: empty".to_string())?;
         if *magic != MAGIC {
             return Err(format!("backbone worker wire: unknown magic {magic}"));
@@ -280,14 +280,14 @@ pub mod backbone_worker_wire {
         from_dsl_value(dsl)
     }
 
-    pub fn encode_response(response: &BackboneWorkerResponse) -> Result<Vec<u8>, String> {
+    pub async fn encode_response(response: &BackboneWorkerResponse) -> Result<Vec<u8>, String> {
         let dsl = to_dsl_value(response)?;
         let mut bytes = vec![MAGIC];
         bytes.extend(crate::os_store::pack_rt::encode_wire_value(&dsl));
         Ok(bytes)
     }
 
-    pub fn decode_response(bytes: &[u8]) -> Result<BackboneWorkerResponse, String> {
+    pub async fn decode_response(bytes: &[u8]) -> Result<BackboneWorkerResponse, String> {
         let (magic, payload) = bytes.split_first().ok_or_else(|| "backbone worker wire: empty".to_string())?;
         if *magic != MAGIC {
             return Err(format!("backbone worker wire: unknown magic {magic}"));
@@ -312,7 +312,7 @@ use crate::os_spr::ArtifactId;
 /// and the envelope built from re-reading that same spr always agree, fixing the actor's old
 /// self-re-ingest bug (mixing envelope op ids with raw JSON edit ids) by construction.
 #[cfg(not(target_arch = "wasm32"))]
-fn op_ids_of(edit: &crate::os_spr::HistoryEdit) -> Vec<String> {
+async fn op_ids_of(edit: &crate::os_spr::HistoryEdit) -> Vec<String> {
     match &edit.meta {
         Some(metas) if metas.len() == edit.ops.len() => metas.iter().enumerate().map(|(index, meta)| meta.op_id.clone().unwrap_or_else(|| format!("{}#{index}", edit.id))).collect(),
         _ => (0..edit.ops.len()).map(|index| format!("{}#{index}", edit.id)).collect(),
@@ -322,7 +322,7 @@ fn op_ids_of(edit: &crate::os_spr::HistoryEdit) -> Vec<String> {
 /// @emoji #⃣ Content hash over the concatenated pack+spr bytes, for the actor's self-write
 /// suppression check (was a hash over the JSON envelope string; same purpose, real bytes now).
 #[cfg(not(target_arch = "wasm32"))]
-fn backbone_pack_hash(pack: &[u8], spr: &[u8]) -> String {
+async fn backbone_pack_hash(pack: &[u8], spr: &[u8]) -> String {
     let mut combined = Vec::with_capacity(pack.len() + spr.len());
     combined.extend_from_slice(pack);
     combined.extend_from_slice(spr);
@@ -333,7 +333,7 @@ fn backbone_pack_hash(pack: &[u8], spr: &[u8]) -> String {
 /// read directly off the binary history (NEVER via `parse_document_spr`, whose meta-absent branch
 /// mints fresh random ids on every read and would make dedup unstable across reads).
 #[cfg(not(target_arch = "wasm32"))]
-fn spr_op_ids(spr: &[u8]) -> Result<std::collections::HashSet<String>, String> {
+async fn spr_op_ids(spr: &[u8]) -> Result<std::collections::HashSet<String>, String> {
     let reader = crate::os_spr::HistoryReader::open(spr, &crate::os_spr::DecodeOptions::default()).map_err(|error| error.to_string())?;
     let mut ids = std::collections::HashSet::new();
     for edit in reader.edits() {
@@ -349,7 +349,7 @@ fn spr_op_ids(spr: &[u8]) -> Result<std::collections::HashSet<String>, String> {
 /// store's causal DAG (`ingest_remote` → `edit_from_operation_envelope`). A binary-less op payload
 /// is a hard error — `.spr` is binary-only since B1, so every real op has one.
 #[cfg(not(target_arch = "wasm32"))]
-fn envelopes_from_history_edit(edit: &crate::os_spr::HistoryEdit, document_id: &str, schema: &str) -> Result<Vec<MutationEnvelope>, String> {
+async fn envelopes_from_history_edit(edit: &crate::os_spr::HistoryEdit, document_id: &str, schema: &str) -> Result<Vec<MutationEnvelope>, String> {
     let op_ids = op_ids_of(edit);
     let mut envelopes = Vec::with_capacity(edit.ops.len());
     for (index, op) in edit.ops.iter().enumerate() {
@@ -380,7 +380,7 @@ fn envelopes_from_history_edit(edit: &crate::os_spr::HistoryEdit, document_id: &
 /// id, so a later `op_ids_of` re-read agrees) — the byte-level twin of
 /// `crate::os_store::edit_from_operation_envelope`, for appending a locally-flushed envelope to the spr log.
 #[cfg(not(target_arch = "wasm32"))]
-fn history_edit_from_envelope(envelope: &MutationEnvelope) -> crate::os_spr::HistoryEdit {
+async fn history_edit_from_envelope(envelope: &MutationEnvelope) -> crate::os_spr::HistoryEdit {
     crate::os_spr::HistoryEdit {
         id: envelope.mutation_id.0.clone(),
         actor: Some(envelope.actor.0.clone()),
@@ -418,7 +418,7 @@ fn history_edit_from_envelope(envelope: &MutationEnvelope) -> crate::os_spr::His
 /// `?surface=` appended when the binding carries one (contract §C0's presence scope, ticket
 /// 26/08/16/HUB-SPACES-…: `(space_id, document_id, surface)` — `surface` rides outside the wire
 /// protocol rather than widening `PresencePeer`'s already-full flag byte).
-fn hub_ws_url(base_url: &str, space_id: &str, document_id: &str, surface: Option<&str>) -> String {
+async fn hub_ws_url(base_url: &str, space_id: &str, document_id: &str, surface: Option<&str>) -> String {
     let secure = base_url.starts_with("https://") || base_url.starts_with("wss://");
     let authority = base_url.split_once("://").map(|(_, rest)| rest).unwrap_or(base_url).split('/').next().unwrap_or(base_url);
     let scheme = if secure { "wss" } else { "ws" };
@@ -451,7 +451,7 @@ fn hub_ws_url(base_url: &str, space_id: &str, document_id: &str, surface: Option
 /// original forward diff (inverse-of-inverse) — `crate::os_spr::causal::InverseMutation` carries no
 /// `target_mutation`/`base_version`/`dependencies`/`undo_policy` (a deliberately simpler shape
 /// than the old kernel-local one), so those are gone, not defaulted.
-fn rollback_envelope(envelope: &MutationEnvelope) -> MutationEnvelope {
+async fn rollback_envelope(envelope: &MutationEnvelope) -> MutationEnvelope {
     let undo_id = MutationId(format!("{}~undo", envelope.mutation_id.0));
     MutationEnvelope {
         mutation_id: undo_id.clone(),
@@ -467,12 +467,12 @@ fn rollback_envelope(envelope: &MutationEnvelope) -> MutationEnvelope {
 /// @emoji 📡️ `PresencePeer` -> the binary blob `crate::os_spr::wire::ClientFrame::Presence` carries
 /// opaquely (`crate::os_spr::encode_presence_peer` — `protocol_wire` has no dependency on
 /// this crate's `PresencePeer` type, so the frame only ever moves the pre-encoded bytes).
-fn presence_to_bytes(peer: &PresencePeer) -> Vec<u8> {
+async fn presence_to_bytes(peer: &PresencePeer) -> Vec<u8> {
     crate::os_spr::encode_presence_peer(peer)
 }
 
 /// @emoji 📡️ The inverse of {@link presence_to_bytes}, for `ServerFrame::Presence`'s peer roster.
-fn presence_from_bytes(bytes: &[u8]) -> Option<PresencePeer> {
+async fn presence_from_bytes(bytes: &[u8]) -> Option<PresencePeer> {
     crate::os_spr::decode_presence_peer(bytes).ok()
 }
 
@@ -488,7 +488,7 @@ fn presence_from_bytes(bytes: &[u8]) -> Option<PresencePeer> {
 /// `PresencePeer` right before {@link presence_to_bytes} — the ONE place either field is ever
 /// filled; shells never set `peer.color`/`peer.surface` themselves (contract-freeze §C7.4). Pure so
 /// both the native and wasm actors (and their tests) can share it.
-fn stamp_session(peer: &mut PresencePeer, session_color: Option<u8>, surface: Option<&str>) {
+async fn stamp_session(peer: &mut PresencePeer, session_color: Option<u8>, surface: Option<&str>) {
     peer.color = session_color;
     peer.surface = surface.map(str::to_string);
 }
@@ -496,19 +496,19 @@ fn stamp_session(peer: &mut PresencePeer, session_color: Option<u8>, surface: Op
 /// @emoji ⏰️ Millisecond wall-clock reads for {@link next_timestamp}: `SystemTime` natively,
 /// `js_sys::Date` in the browser wasm build (no `SystemTime` there).
 #[cfg(not(target_arch = "wasm32"))]
-fn now_ms() -> u64 {
+async fn now_ms() -> u64 {
     std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0, |duration| duration.as_millis() as u64)
 }
 
 #[cfg(target_arch = "wasm32")]
-fn now_ms() -> u64 {
+async fn now_ms() -> u64 {
     js_sys::Date::now() as u64
 }
 
 /// @emoji 🧮️ A stable, deterministic `u64` seed for an actor id string, for
 /// `crate::os_spr::HybridLogicalTimestamp::actor` (which is `u64`-shaped; this actor's own id is a
 /// free-form `String`).
-fn actor_seed(actor: &str) -> u64 {
+async fn actor_seed(actor: &str) -> u64 {
     use std::hash::{Hash, Hasher};
     let mut hasher = std::collections::hash_map::DefaultHasher::new();
     actor.hash(&mut hasher);
@@ -519,7 +519,7 @@ fn actor_seed(actor: &str) -> u64 {
 /// outbound envelope — freshly stamped on every send (this actor never round-trips a locally-
 /// authored envelope's own timestamp back in; a remote-delivered envelope's `timestamp` is simply
 /// carried through unchanged).
-fn next_timestamp(seed: u64, counter: &mut u64) -> crate::os_spr::HybridLogicalTimestamp {
+async fn next_timestamp(seed: u64, counter: &mut u64) -> crate::os_spr::HybridLogicalTimestamp {
     *counter = counter.wrapping_add(1);
     crate::os_spr::HybridLogicalTimestamp { actor: seed, physical_ms: now_ms(), logical: *counter }
 }
@@ -545,13 +545,13 @@ where
     P: Clone + Serialize + serde::de::DeserializeOwned + crate::os_store::ArtifactPack,
     Mutation: Clone + Serialize + serde::de::DeserializeOwned + crate::os_spr::Mutation<P> + crate::os_spr::OpBinary + crate::os_spr::OpText,
 {
-    pub fn new(store: ArtifactStore<P, Mutation>) -> Self {
+    pub async fn new(store: ArtifactStore<P, Mutation>) -> Self {
         Self { store, cmd_tx: None, events: None, status: ArtifactSyncStatus::default() }
     }
 
     /// @emoji 🔌️ Attaches this session's store to a document actor: the actor's `ChannelBackbone` end
     /// is wired into the store, and the command/event channels are retained for wake + status.
-    pub fn attach(&mut self, channels: ArtifactChannels, events: broadcast::Receiver<ArtifactEvent>) -> Result<(), SyncError> {
+    pub async fn attach(&mut self, channels: ArtifactChannels, events: broadcast::Receiver<ArtifactEvent>) -> Result<(), SyncError> {
         self.store.attach_backbone(Box::new(channels.channel_backbone)).map_err(|error| SyncError::Vcs(error.to_string()))?;
         self.cmd_tx = Some(channels.cmd_tx);
         self.events = Some(events);
@@ -559,7 +559,7 @@ where
     }
 
     /// @emoji ✂️ Detaches from the actor (asking it to flush + stop) and unbinds the store's backbone.
-    pub fn detach(&mut self) {
+    pub async fn detach(&mut self) {
         if let Some(cmd_tx) = &self.cmd_tx {
             let _ = cmd_tx.send(ArtifactActorMsg::Detach);
         }
@@ -569,7 +569,7 @@ where
     }
 
     /// @emoji 🔔️ Nudges the actor to drain the store's outbound queue without waiting for its poll tick.
-    pub fn wake(&self) {
+    pub async fn wake(&self) {
         if let Some(cmd_tx) = &self.cmd_tx {
             let _ = cmd_tx.send(ArtifactActorMsg::LocalMutations { envelopes: Vec::new() });
         }
@@ -577,7 +577,7 @@ where
 
     /// @emoji 👻️ Publishes an ephemeral preview blob on the semio_hub's preview lane. See
     /// {@link ArtifactActorMsg::PublishPreview}.
-    pub fn publish_preview(&self, key: String, seq: u64, payload: Vec<u8>) {
+    pub async fn publish_preview(&self, key: String, seq: u64, payload: Vec<u8>) {
         if let Some(cmd_tx) = &self.cmd_tx {
             let _ = cmd_tx.send(ArtifactActorMsg::PublishPreview { key, seq, payload });
         }
@@ -585,7 +585,7 @@ where
 
     /// @emoji 📥️ Drains any buffered sync status, then pumps the store's inbound backbone queue into
     /// the edit timeline (delegating to `store.tick()`/`pump()`).
-    pub fn tick(&mut self) -> Result<bool, SyncError> {
+    pub async fn tick(&mut self) -> Result<bool, SyncError> {
         if let Some(events) = &mut self.events {
             while let Ok(event) = events.try_recv() {
                 if let ArtifactEvent::Status(status) = &event {
@@ -597,17 +597,17 @@ where
     }
 
     /// @emoji 🚦️ The latest sync status seen on the event stream (updated by {@link SyncSession::tick}).
-    pub fn status(&self) -> ArtifactSyncStatus {
+    pub async fn status(&self) -> ArtifactSyncStatus {
         self.status.clone()
     }
 
     /// @emoji 🕸️ Feeds a remote envelope through the store's causal DAG, materializing it (and any
     /// now-unblocked dependents) into the edit timeline. Kept for direct/test injection.
-    pub fn receive(&mut self, envelope: MutationEnvelope) -> Result<(), SyncError> {
+    pub async fn receive(&mut self, envelope: MutationEnvelope) -> Result<(), SyncError> {
         self.store.dispatch(crate::os_store::ArtifactCommand::IngestRemote { envelope }).map(|_| ()).map_err(|error| SyncError::Vcs(error.to_string()))
     }
 
-    pub fn reconcile_branch(&mut self, alternative_name: &str, message: Option<String>, authors: Vec<vcs::Author>) -> Result<String, SyncError> {
+    pub async fn reconcile_branch(&mut self, alternative_name: &str, message: Option<String>, authors: Vec<vcs::Author>) -> Result<String, SyncError> {
         let mut envelope = self.store.envelope().clone();
         let alternative_id = reconcile_alternative(&mut envelope, alternative_name, message, authors).map_err(|error| SyncError::Vcs(error.to_string()))?;
         let applied = self.store.applied_edit_ids().to_vec();
@@ -641,13 +641,13 @@ impl Default for PresenceHeartbeatProducer {
 }
 
 impl PresenceHeartbeatProducer {
-    pub fn new(interval_ms: u64) -> Self {
+    pub async fn new(interval_ms: u64) -> Self {
         Self { interval_ms: interval_ms.max(1), last_sent_at_ms: None, pending: None }
     }
 
     /// @emoji 📡️ Offers the newest whole peer snapshot and returns it only when this document's
     /// cadence permits a publish. A backward-moving clock conservatively waits for the next interval.
-    pub fn offer(&mut self, now_ms: u64, peer: PresencePeer) -> Option<PresencePeer> {
+    pub async fn offer(&mut self, now_ms: u64, peer: PresencePeer) -> Option<PresencePeer> {
         self.pending = Some(peer);
         let due = self.last_sent_at_ms.is_none_or(|last| now_ms.saturating_sub(last) >= self.interval_ms);
         if !due {
@@ -657,7 +657,7 @@ impl PresenceHeartbeatProducer {
         self.pending.take()
     }
 
-    pub fn pending(&self) -> Option<&PresencePeer> {
+    pub async fn pending(&self) -> Option<&PresencePeer> {
         self.pending.as_ref()
     }
 }
@@ -687,13 +687,13 @@ pub struct ArtifactHost {
 }
 
 impl ArtifactHost {
-    pub fn new() -> Self {
+    pub async fn new() -> Self {
         Self::default()
     }
 
     /// @emoji 🚀️ Spawns (or replaces) the actor for `config.document_id` and returns the channels the
     /// caller wires into its store. Idempotent per id: opening an already-open id closes the old actor.
-    pub fn open(&self, config: ArtifactActorConfig) -> ArtifactChannels {
+    pub async fn open(&self, config: ArtifactActorConfig) -> ArtifactChannels {
         let document_id = config.document_id.clone();
         self.close(&document_id);
         let (channel_backbone, remote) = ChannelBackbone::pair(&format!("actor://{document_id}"));
@@ -716,7 +716,7 @@ impl ArtifactHost {
 
     /// @emoji 📬️ A fresh event receiver for `document_id`. If the document is not open the receiver's
     /// sender is dropped, so it simply reports closed.
-    pub fn subscribe(&self, document_id: &str) -> broadcast::Receiver<ArtifactEvent> {
+    pub async fn subscribe(&self, document_id: &str) -> broadcast::Receiver<ArtifactEvent> {
         let guard = self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         match guard.get(document_id) {
             Some(document) => document.events.subscribe(),
@@ -728,7 +728,7 @@ impl ArtifactHost {
     }
 
     /// @emoji 🔔️ Sends a control message to a document's actor (e.g. a presence heartbeat or a wake).
-    pub fn send(&self, document_id: &str, message: ArtifactActorMsg) {
+    pub async fn send(&self, document_id: &str, message: ArtifactActorMsg) {
         if let Some(document) = self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner).get(document_id) {
             let _ = document.cmd_tx.send(message);
         }
@@ -737,7 +737,7 @@ impl ArtifactHost {
     /// @emoji 💓️ Offers a generic cursor/viewport/app-presence heartbeat for one open document.
     /// Returns `true` only when the host actually queued a publish; faster offers are coalesced onto
     /// the document's producer and cannot flood the preview lane.
-    pub fn presence_heartbeat(&self, document_id: &str, now_ms: u64, peer: PresencePeer) -> bool {
+    pub async fn presence_heartbeat(&self, document_id: &str, now_ms: u64, peer: PresencePeer) -> bool {
         let mut documents = self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         let Some(document) = documents.get_mut(document_id) else { return false };
         let Some(peer) = document.presence.offer(now_ms, peer) else { return false };
@@ -746,7 +746,7 @@ impl ArtifactHost {
 
     /// @emoji ✂️ Stops a document's actor (flushing pending outbound operations first) and, on native, joins
     /// its thread.
-    pub fn close(&self, document_id: &str) {
+    pub async fn close(&self, document_id: &str) {
         let document = self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner).remove(document_id);
         if let Some(document) = document {
             let _ = document.cmd_tx.send(ArtifactActorMsg::Detach);
@@ -758,7 +758,7 @@ impl ArtifactHost {
     }
 
     /// @emoji 🧹️ Ids of every currently-open document.
-    pub fn open_artifacts(&self) -> Vec<String> {
+    pub async fn open_artifacts(&self) -> Vec<String> {
         self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner).keys().cloned().collect()
     }
 }
@@ -810,7 +810,7 @@ mod native_actor {
         /// binary pair, resolved pack-first (falling back to compiling the DSL mirror for
         /// hand-authored/imported documents with no `.pack` file yet — `Sqlite` has no such
         /// fallback, a row is always written pack+spr together); `Err` = a real storage failure.
-        fn read(&self) -> Result<Option<(Vec<u8>, Vec<u8>)>, String> {
+        async fn read(&self) -> Result<Option<(Vec<u8>, Vec<u8>)>, String> {
             match self {
                 FolderEndpoint::Sqlite { storage, document_id, .. } => storage.read(document_id).map_err(|error| error.to_string()),
                 FolderEndpoint::Pack { storage, document_id, extension, schema } => {
@@ -832,7 +832,7 @@ mod native_actor {
         /// @emoji ✍️ Persists the authoritative `pack`+`spr` pair. `Sqlite` needs no codec at all;
         /// `Pack` additionally writes the `.dsl`/`.ops` logging mirrors when a codec is registered
         /// and schema codec; a missing or unavailable codec aborts the write before storage changes.
-        fn write(&self, pack: &[u8], spr: &[u8]) -> Result<(), String> {
+        async fn write(&self, pack: &[u8], spr: &[u8]) -> Result<(), String> {
             match self {
                 FolderEndpoint::Sqlite { storage, document_id, schema } => storage.write(document_id, schema, pack, spr).map_err(|error| error.to_string()),
                 FolderEndpoint::Pack { storage, document_id, extension, schema } => {
@@ -896,7 +896,7 @@ mod native_actor {
     }
 
     impl ArtifactActor {
-        pub(super) fn new(config: ArtifactActorConfig, remote: ChannelBackboneRemote, cmd_rx: mpsc::UnboundedReceiver<ArtifactActorMsg>, events: broadcast::Sender<ArtifactEvent>) -> Self {
+        pub(super) async fn new(config: ArtifactActorConfig, remote: ChannelBackboneRemote, cmd_rx: mpsc::UnboundedReceiver<ArtifactActorMsg>, events: broadcast::Sender<ArtifactEvent>) -> Self {
             let mut folder = None;
             let mut folder_watch_path = None;
             let mut hub_base_url = None;
@@ -1003,7 +1003,7 @@ mod native_actor {
         }
 
         /// @emoji 🌱️ Seeds persistence state from any already-stored pack+spr and installs the file watcher.
-        fn setup(&mut self) {
+        async fn setup(&mut self) {
             if let Some((pack, spr)) = self.folder.as_ref().and_then(|folder| folder.read().ok().flatten()) {
                 if let Ok(op_ids) = spr_op_ids(&spr) {
                     self.known_op_ids = op_ids;
@@ -1089,7 +1089,7 @@ mod native_actor {
         /// deliberately does NOT record `last_written_hash` on failure — a false "persisted" mark
         /// would make `handle_external_change` mistake the still-stale on-disk content for a
         /// self-write and ignore a real external change.
-        fn persist_write(&mut self, pack: &[u8], spr: &[u8]) {
+        async fn persist_write(&mut self, pack: &[u8], spr: &[u8]) {
             let Some(folder) = self.folder.as_ref() else { return };
             if folder.write(pack, spr).is_ok() {
                 self.last_written_hash = Some(backbone_pack_hash(pack, spr));
@@ -1097,7 +1097,7 @@ mod native_actor {
         }
 
         /// @emoji 📸️ Records a full pack+spr snapshot as the canonical persisted state.
-        fn persist_snapshot(&mut self, pack: Vec<u8>, spr: Vec<u8>) {
+        async fn persist_snapshot(&mut self, pack: Vec<u8>, spr: Vec<u8>) {
             if self.folder.is_none() {
                 return;
             }
@@ -1111,7 +1111,7 @@ mod native_actor {
 
         /// @emoji ➕️ Appends locally-applied operations to the persisted spr log (append-only),
         /// keeping the on-disk copy coherent so self-writes are never mistaken for external edits.
-        fn persist_operations(&mut self, envelopes: &[MutationEnvelope]) {
+        async fn persist_operations(&mut self, envelopes: &[MutationEnvelope]) {
             if self.folder.is_none() {
                 return;
             }
@@ -1129,7 +1129,7 @@ mod native_actor {
         /// @emoji 👁️ Re-reads the folder binding and classifies the change: append-only → `RemoteMutations`,
         /// divergence → `SnapshotReplaced`, divergence with local pending operations → `Conflict`. Self-writes
         /// (content hash match) are ignored.
-        fn handle_external_change(&mut self) {
+        async fn handle_external_change(&mut self) {
             let Some((pack, spr)) = self.folder.as_ref().and_then(|folder| folder.read().ok().flatten()) else { return };
             let hash = backbone_pack_hash(&pack, &spr);
             if self.last_written_hash.as_deref() == Some(hash.as_str()) {
@@ -1208,7 +1208,7 @@ mod native_actor {
             }
         }
 
-        fn schedule_reconnect(&mut self) {
+        async fn schedule_reconnect(&mut self) {
             let retry = self.backoff_ms;
             self.set_remote_state(RemoteState::Backoff { retry_in_ms: retry });
             self.reconnect_at = Some(Instant::now() + Duration::from_millis(retry));
@@ -1233,7 +1233,7 @@ mod native_actor {
             }
         }
 
-        fn on_hub_frame(&mut self, frame: ServerFrame) {
+        async fn on_hub_frame(&mut self, frame: ServerFrame) {
             match frame {
                 ServerFrame::Welcome { session_id: _, resume_token, server_frontier, bootstrap } => {
                     self.resume_token = Some(resume_token);
@@ -1301,7 +1301,7 @@ mod native_actor {
         /// just clears the pending batch; `Transformed`/`Rejected` both roll back the speculative
         /// local head first (via {@link rollback_envelope}, replayed as remote operations), and
         /// `Transformed` then delivers the semio_hub's replacement envelope the same way.
-        fn handle_ack(&mut self, batch_id: u64, stages: Vec<AckStage>) {
+        async fn handle_ack(&mut self, batch_id: u64, stages: Vec<AckStage>) {
             for stage in stages {
                 let AckStage::Applied { outcome } = stage else { continue };
                 let Some(sent) = self.pending_batches.remove(&batch_id) else { continue };
@@ -1362,7 +1362,7 @@ mod native_actor {
 
         //#region 🔖️Deliver
         /// @emoji 🕸️ Pushes remote operations into the store's inbound queue and notifies subscribers.
-        fn deliver_remote_operations(&mut self, envelopes: Vec<MutationEnvelope>) {
+        async fn deliver_remote_operations(&mut self, envelopes: Vec<MutationEnvelope>) {
             if envelopes.is_empty() {
                 return;
             }
@@ -1371,25 +1371,25 @@ mod native_actor {
         }
 
         /// @emoji 📸️ Pushes a full pack+spr snapshot into the store's inbound queue and notifies subscribers.
-        fn deliver_snapshot(&mut self, pack: Vec<u8>, spr: Vec<u8>) {
+        async fn deliver_snapshot(&mut self, pack: Vec<u8>, spr: Vec<u8>) {
             let _ = self.remote.push(BackboneMessage::Snapshot { pack: pack.clone(), spr: spr.clone() });
             self.emit(ArtifactEvent::SnapshotReplaced { pack, spr });
         }
 
-        fn emit(&self, event: ArtifactEvent) {
+        async fn emit(&self, event: ArtifactEvent) {
             let _ = self.events.send(event);
         }
 
-        fn status(&self) -> ArtifactSyncStatus {
+        async fn status(&self) -> ArtifactSyncStatus {
             ArtifactSyncStatus { persisted: self.last_written_hash.is_some() || self.server_frontier.is_some(), pending_mutations: self.pending_batches.values().map(Vec::len).sum(), remote: self.remote_state.clone() }
         }
 
-        fn set_remote_state(&mut self, state: RemoteState) {
+        async fn set_remote_state(&mut self, state: RemoteState) {
             self.remote_state = state;
             self.emit_status_if_changed();
         }
 
-        fn emit_status_if_changed(&mut self) {
+        async fn emit_status_if_changed(&mut self) {
             let status = self.status();
             if self.last_status.as_ref() != Some(&status) {
                 self.last_status = Some(status.clone());
@@ -1402,7 +1402,7 @@ mod native_actor {
     /// @emoji 🔀️ A binding path with a file extension addresses one document's text blob directly
     /// (`Text`, generalizing the deleted single-file `FileJsonStorage` beyond `.json`); an extensionless
     /// directory path is the canonical multi-document sqlite store (`Sqlite`).
-    fn build_folder_endpoint(path: &Path, document_id: &str, schema: &str) -> FolderEndpoint {
+    async fn build_folder_endpoint(path: &Path, document_id: &str, schema: &str) -> FolderEndpoint {
         match path.extension().and_then(|ext| ext.to_str()) {
             Some(extension) => {
                 let folder = path.parent().map(|parent| parent.to_path_buf()).unwrap_or_else(|| PathBuf::from("."));
@@ -1414,7 +1414,7 @@ mod native_actor {
 
     /// @emoji 📍️ The on-disk path a folder binding writes to: the `<document_id>.<extension>` text blob
     /// itself, or the multi-document sqlite db under `<folder>/.semio/documents.db`.
-    fn folder_watch_path_for(path: &Path) -> PathBuf {
+    async fn folder_watch_path_for(path: &Path) -> PathBuf {
         if path.extension().is_some() {
             path.to_path_buf()
         } else {
@@ -1424,7 +1424,7 @@ mod native_actor {
 
     /// @emoji 👁️ Installs a `notify` watcher over the binding's on-disk directory, forwarding raw
     /// change events into an async channel (debounced by the actor's 200ms deadline).
-    fn install_watcher(watch_path: &Path) -> Option<(notify::RecommendedWatcher, mpsc::UnboundedReceiver<()>)> {
+    async fn install_watcher(watch_path: &Path) -> Option<(notify::RecommendedWatcher, mpsc::UnboundedReceiver<()>)> {
         use notify::Watcher;
         let watch_root = watch_path.parent().map(|parent| parent.to_path_buf()).unwrap_or_else(|| watch_path.to_path_buf());
         let _ = std::fs::create_dir_all(&watch_root);
@@ -1461,7 +1461,7 @@ mod native_actor {
     }
 
     /// @emoji 🚀️ Spawns a dedicated OS thread running a current-thread tokio runtime that drives the actor.
-    pub(super) fn spawn_actor(config: ArtifactActorConfig, remote: ChannelBackboneRemote, cmd_rx: mpsc::UnboundedReceiver<ArtifactActorMsg>, events: broadcast::Sender<ArtifactEvent>) -> Option<std::thread::JoinHandle<()>> {
+    pub(super) async fn spawn_actor(config: ArtifactActorConfig, remote: ChannelBackboneRemote, cmd_rx: mpsc::UnboundedReceiver<ArtifactActorMsg>, events: broadcast::Sender<ArtifactEvent>) -> Option<std::thread::JoinHandle<()>> {
         let runtime = tokio::runtime::Builder::new_current_thread().enable_all().build().ok()?;
         std::thread::Builder::new()
             .name(format!("sync-actor-{}", config.document_id))
@@ -1513,7 +1513,7 @@ mod wasm_actor {
     }
 
     impl WasmActor {
-        fn connect(&mut self) {
+        async fn connect(&mut self) {
             let Some(base_url) = self.hub_base_url.clone() else { return };
             let space_id = self.hub_space_id.clone().unwrap_or_default();
             let url = hub_ws_url(&base_url, &space_id, &self.document_id, self.hub_surface.as_deref());
@@ -1552,7 +1552,7 @@ mod wasm_actor {
             self.ws = Some(ws);
         }
 
-        fn send_frame(&self, frame: &ClientFrame, lane: Lane) {
+        async fn send_frame(&self, frame: &ClientFrame, lane: Lane) {
             if let Some(ws) = &self.ws {
                 let mut bytes = encode_client_frame(frame, lane);
                 let _ = ws.send_with_u8_array(&mut bytes);
@@ -1561,7 +1561,7 @@ mod wasm_actor {
 
         /// @emoji 🧺️ Builds + sends one `Commands` batch, tracking it in `pending_batches` for
         /// {@link WasmActor::handle_ack}. Mirrors the native actor's `relay_operations_to_hub`.
-        fn relay_operations(&mut self, envelopes: &[MutationEnvelope]) {
+        async fn relay_operations(&mut self, envelopes: &[MutationEnvelope]) {
             if envelopes.is_empty() {
                 return;
             }
@@ -1572,7 +1572,7 @@ mod wasm_actor {
             self.send_frame(&ClientFrame::Commands { batch_id, envelopes: wire_envelopes }, Lane::Command);
         }
 
-        fn drain_and_relay(&mut self) -> bool {
+        async fn drain_and_relay(&mut self) -> bool {
             let messages = self.remote.drain().unwrap_or_default();
             let drained = !messages.is_empty();
             for message in messages {
@@ -1591,7 +1591,7 @@ mod wasm_actor {
             drained
         }
 
-        fn handle_cmd(&mut self, message: ArtifactActorMsg) {
+        async fn handle_cmd(&mut self, message: ArtifactActorMsg) {
             match message {
                 ArtifactActorMsg::LocalMutations { envelopes } => {
                     let drained = self.drain_and_relay();
@@ -1610,7 +1610,7 @@ mod wasm_actor {
             }
         }
 
-        fn on_binary(&mut self, bytes: &[u8]) {
+        async fn on_binary(&mut self, bytes: &[u8]) {
             let Ok((_lane, frame)) = decode_server_frame(bytes) else { return };
             match frame {
                 ServerFrame::Welcome { session_id: _, resume_token, server_frontier, bootstrap } => {
@@ -1662,7 +1662,7 @@ mod wasm_actor {
         }
 
         /// @emoji 📮️ Mirrors the native actor's `handle_ack` — see its doc comment.
-        fn handle_ack(&mut self, batch_id: u64, stages: Vec<AckStage>) {
+        async fn handle_ack(&mut self, batch_id: u64, stages: Vec<AckStage>) {
             for stage in stages {
                 let AckStage::Applied { outcome } = stage else { continue };
                 let Some(sent) = self.pending_batches.remove(&batch_id) else { continue };
@@ -1686,7 +1686,7 @@ mod wasm_actor {
             }
         }
 
-        fn deliver_remote_operations(&self, envelopes: Vec<MutationEnvelope>) {
+        async fn deliver_remote_operations(&self, envelopes: Vec<MutationEnvelope>) {
             if envelopes.is_empty() {
                 return;
             }
@@ -1695,7 +1695,7 @@ mod wasm_actor {
         }
     }
 
-    pub(super) fn spawn_actor(config: ArtifactActorConfig, remote: ChannelBackboneRemote, mut cmd_rx: mpsc::UnboundedReceiver<ArtifactActorMsg>, events: broadcast::Sender<ArtifactEvent>) {
+    pub(super) async fn spawn_actor(config: ArtifactActorConfig, remote: ChannelBackboneRemote, mut cmd_rx: mpsc::UnboundedReceiver<ArtifactActorMsg>, events: broadcast::Sender<ArtifactEvent>) {
         let (incoming_tx, mut incoming_rx) = mpsc::unbounded_channel::<Vec<u8>>();
         let mut hub_base_url = None;
         let mut hub_space_id = None;
@@ -1821,7 +1821,7 @@ struct FixtureManifest {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-fn parse_fixture_dsl_manifest(text: &str) -> Option<FixtureManifest> {
+async fn parse_fixture_dsl_manifest(text: &str) -> Option<FixtureManifest> {
     use std::collections::BTreeMap;
 
     let mut name = None;
@@ -1887,7 +1887,7 @@ fn parse_fixture_dsl_manifest(text: &str) -> Option<FixtureManifest> {
 /// content-bearing inbound entry against its sibling text file. A fixture whose manifest or
 /// any referenced file is missing/unreadable is skipped (never a partial/silently-wrong fixture).
 #[cfg(not(target_arch = "wasm32"))]
-pub fn load_fixtures(dir: &std::path::Path) -> Vec<ActorFixture> {
+pub async fn load_fixtures(dir: &std::path::Path) -> Vec<ActorFixture> {
     let mut fixtures = Vec::new();
     let Ok(entries) = std::fs::read_dir(dir) else { return fixtures };
     let mut fixture_dirs: Vec<std::path::PathBuf> = entries.filter_map(|entry| entry.ok().map(|entry| entry.path())).filter(|path| path.is_dir()).collect();
@@ -1937,15 +1937,15 @@ pub struct FolderSqliteStorage {
 
 #[cfg(not(target_arch = "wasm32"))]
 impl FolderSqliteStorage {
-    pub fn new(folder: std::path::PathBuf) -> Self {
+    pub async fn new(folder: std::path::PathBuf) -> Self {
         Self { folder }
     }
 
-    fn db_path(&self) -> std::path::PathBuf {
+    async fn db_path(&self) -> std::path::PathBuf {
         self.folder.join(".semio").join("documents.db")
     }
 
-    fn connection(&self) -> Result<rusqlite::Connection, vcs::VcsError> {
+    async fn connection(&self) -> Result<rusqlite::Connection, vcs::VcsError> {
         let semio_dir = self.folder.join(".semio");
         std::fs::create_dir_all(&semio_dir).map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
         let conn = rusqlite::Connection::open(self.db_path()).map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
@@ -1953,7 +1953,7 @@ impl FolderSqliteStorage {
         Ok(conn)
     }
 
-    fn ensure_schema(conn: &rusqlite::Connection) -> Result<(), vcs::VcsError> {
+    async fn ensure_schema(conn: &rusqlite::Connection) -> Result<(), vcs::VcsError> {
         conn.execute_batch(
             "CREATE TABLE IF NOT EXISTS document (\
                  id TEXT PRIMARY KEY,\
@@ -1973,7 +1973,7 @@ impl FolderSqliteStorage {
     }
 
     /// @emoji 📖️ Reads the stored `(pack, spr)` bytes for `document_id`, or `None` if no row exists.
-    pub fn read(&self, document_id: &str) -> Result<Option<(Vec<u8>, Vec<u8>)>, vcs::VcsError> {
+    pub async fn read(&self, document_id: &str) -> Result<Option<(Vec<u8>, Vec<u8>)>, vcs::VcsError> {
         use rusqlite::OptionalExtension;
         let conn = self.connection()?;
         conn.query_row("SELECT pack, spr FROM document WHERE id = ?1", [document_id], |row| Ok((row.get::<_, Vec<u8>>(0)?, row.get::<_, Vec<u8>>(1)?))).optional().map_err(|e| vcs::VcsError::Backbone(e.to_string()))
@@ -1981,7 +1981,7 @@ impl FolderSqliteStorage {
 
     /// @emoji ✍️ Upserts `document_id`'s `(pack, spr)` bytes together (schema id, `updated_at` stamp)
     /// — both are written in the same statement, never independently.
-    pub fn write(&self, document_id: &str, schema: &str, pack: &[u8], spr: &[u8]) -> Result<(), vcs::VcsError> {
+    pub async fn write(&self, document_id: &str, schema: &str, pack: &[u8], spr: &[u8]) -> Result<(), vcs::VcsError> {
         let conn = self.connection()?;
         conn.execute(
             "INSERT INTO document (id, schema, pack, spr, updated_at) VALUES (?1, ?2, ?3, ?4, ?5) \
@@ -1993,7 +1993,7 @@ impl FolderSqliteStorage {
     }
 
     /// @emoji 📇️ Lists every stored document id (newest write first), for a folder-wide index.
-    pub fn document_ids(&self) -> Result<Vec<String>, vcs::VcsError> {
+    pub async fn document_ids(&self) -> Result<Vec<String>, vcs::VcsError> {
         let conn = self.connection()?;
         let mut statement = conn.prepare("SELECT id FROM document ORDER BY updated_at DESC").map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
         let ids = statement.query_map([], |row| row.get::<_, String>(0)).map_err(|e| vcs::VcsError::Backbone(e.to_string()))?.collect::<Result<Vec<_>, _>>().map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
@@ -2015,34 +2015,34 @@ pub struct FolderTextStorage {
 
 #[cfg(not(target_arch = "wasm32"))]
 impl FolderTextStorage {
-    pub fn new(folder: std::path::PathBuf) -> Self {
+    pub async fn new(folder: std::path::PathBuf) -> Self {
         Self { folder }
     }
 
-    fn dsl_path(&self, document_id: &str, envelope_id: &str) -> std::path::PathBuf {
+    async fn dsl_path(&self, document_id: &str, envelope_id: &str) -> std::path::PathBuf {
         self.folder
             .join(crate::os_store::semio_format::semio_filename(document_id, envelope_id, crate::os_store::semio_format::Component::Dsl))
     }
 
-    fn ops_path(&self, document_id: &str, envelope_id: &str) -> std::path::PathBuf {
+    async fn ops_path(&self, document_id: &str, envelope_id: &str) -> std::path::PathBuf {
         self.folder
             .join(crate::os_store::semio_format::semio_filename(document_id, envelope_id, crate::os_store::semio_format::Component::Op))
     }
 
     /// @emoji 🏷️ Path of the authoritative binary pack file.
-    pub fn pack_path(&self, document_id: &str, envelope_id: &str) -> std::path::PathBuf {
+    pub async fn pack_path(&self, document_id: &str, envelope_id: &str) -> std::path::PathBuf {
         self.folder
             .join(crate::os_store::semio_format::semio_filename(document_id, envelope_id, crate::os_store::semio_format::Component::Pack))
     }
 
     /// @emoji 🏷️ Path of the authoritative binary op-log file.
-    pub fn spr_path(&self, document_id: &str, envelope_id: &str) -> std::path::PathBuf {
+    pub async fn spr_path(&self, document_id: &str, envelope_id: &str) -> std::path::PathBuf {
         self.folder
             .join(crate::os_store::semio_format::semio_filename(document_id, envelope_id, crate::os_store::semio_format::Component::Spr))
     }
 
     /// @emoji 📖️ Reads both files for `document_id`, or `None` if the DSL file does not exist yet.
-    pub fn read(&self, document_id: &str, envelope_id: &str) -> Result<Option<ArtifactTextFiles>, vcs::VcsError> {
+    pub async fn read(&self, document_id: &str, envelope_id: &str) -> Result<Option<ArtifactTextFiles>, vcs::VcsError> {
         let dsl = match std::fs::read_to_string(self.dsl_path(document_id, envelope_id)) {
             Ok(text) => text,
             Err(err) if err.kind() == std::io::ErrorKind::NotFound => return Ok(None),
@@ -2058,7 +2058,7 @@ impl FolderTextStorage {
 
     /// @emoji ✍️ Overwrites both files wholesale — the structural-command cold path (undo/redo/
     /// checkpoint/alternative).
-    pub fn write(&self, document_id: &str, envelope_id: &str, files: &ArtifactTextFiles) -> Result<(), vcs::VcsError> {
+    pub async fn write(&self, document_id: &str, envelope_id: &str, files: &ArtifactTextFiles) -> Result<(), vcs::VcsError> {
         std::fs::create_dir_all(&self.folder).map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
         std::fs::write(self.dsl_path(document_id, envelope_id), &files.dsl).map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
         std::fs::write(self.ops_path(document_id, envelope_id), &files.ops).map_err(|e| vcs::VcsError::Backbone(e.to_string()))
@@ -2070,7 +2070,7 @@ impl FolderTextStorage {
     /// import-only). A present `.pack` with a missing `.spr` is a hard error — no legacy: they are
     /// always written together (see `write_pack`), so a missing `.spr` means corruption or a
     /// manual edit, never a valid state to silently recover from.
-    pub fn read_pack(&self, document_id: &str, envelope_id: &str) -> Result<Option<ArtifactPackFiles>, vcs::VcsError> {
+    pub async fn read_pack(&self, document_id: &str, envelope_id: &str) -> Result<Option<ArtifactPackFiles>, vcs::VcsError> {
         let pack = match std::fs::read(self.pack_path(document_id, envelope_id)) {
             Ok(bytes) => bytes,
             Err(err) if err.kind() == std::io::ErrorKind::NotFound => return Ok(None),
@@ -2096,7 +2096,7 @@ impl FolderTextStorage {
     /// @emoji ✍️ Overwrites all four files: the AUTHORITATIVE `.pack` + `.spr` pair, the shared
     /// `.ops` text mirror, and the always-written DSL mirror `dsl_mirror` (`print_dsl` on the
     /// initial snapshot) — the pack-aware sibling of `write`.
-    pub fn write_pack(&self, document_id: &str, envelope_id: &str, files: &ArtifactPackFiles, dsl_mirror: &str) -> Result<(), vcs::VcsError> {
+    pub async fn write_pack(&self, document_id: &str, envelope_id: &str, files: &ArtifactPackFiles, dsl_mirror: &str) -> Result<(), vcs::VcsError> {
         std::fs::create_dir_all(&self.folder).map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
         std::fs::write(self.pack_path(document_id, envelope_id), &files.pack).map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
         std::fs::write(self.spr_path(document_id, envelope_id), &files.spr).map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
@@ -2106,7 +2106,7 @@ impl FolderTextStorage {
 
     /// @emoji ➕️ Appends already-printed op-log lines (one {@link print_edit_lines} block) to the `.ops`
     /// file without rewriting it — the hot-path append unit, O(new edit) instead of O(whole history).
-    pub fn append_ops(&self, document_id: &str, envelope_id: &str, lines: &str) -> Result<(), vcs::VcsError> {
+    pub async fn append_ops(&self, document_id: &str, envelope_id: &str, lines: &str) -> Result<(), vcs::VcsError> {
         use std::io::Write;
         std::fs::create_dir_all(&self.folder).map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
         let mut file = std::fs::OpenOptions::new().create(true).append(true).open(self.ops_path(document_id, envelope_id)).map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
@@ -2114,7 +2114,7 @@ impl FolderTextStorage {
     }
 
     /// @emoji 📇️ Lists every stored document id (by DSL `.semio` file stem) for a given envelope id.
-    pub fn document_ids(&self, envelope_id: &str) -> Result<Vec<String>, vcs::VcsError> {
+    pub async fn document_ids(&self, envelope_id: &str) -> Result<Vec<String>, vcs::VcsError> {
         let suffix = format!(".{envelope_id}.dsl.semio");
         let entries = match std::fs::read_dir(&self.folder) {
             Ok(entries) => entries,
@@ -2143,26 +2143,26 @@ impl FolderTextStorage {
 /// whole-blob regardless of how a given backend chooses to store the bytes internally.
 #[cfg(not(target_arch = "wasm32"))]
 impl crate::os_store::BlobStore for FolderSqliteStorage {
-    fn put(&self, bytes: &[u8], media_type: &str) -> Result<crate::os_store::BlobRef, vcs::VcsError> {
+    async fn put(&self, bytes: &[u8], media_type: &str) -> Result<crate::os_store::BlobRef, vcs::VcsError> {
         let hash = semio_framework_hash::hash_bytes(bytes);
         let conn = self.connection()?;
         conn.execute("INSERT OR IGNORE INTO blobs (hash, media_type, size, bytes) VALUES (?1, ?2, ?3, ?4)", rusqlite::params![hash, media_type, bytes.len() as i64, bytes]).map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
         Ok(crate::os_store::BlobRef { hash, size: bytes.len() as u64, media_type: media_type.to_string() })
     }
 
-    fn get(&self, hash: &str) -> Result<Option<Vec<u8>>, vcs::VcsError> {
+    async fn get(&self, hash: &str) -> Result<Option<Vec<u8>>, vcs::VcsError> {
         use rusqlite::OptionalExtension;
         let conn = self.connection()?;
         conn.query_row("SELECT bytes FROM blobs WHERE hash = ?1", [hash], |row| row.get(0)).optional().map_err(|e| vcs::VcsError::Backbone(e.to_string()))
     }
 
-    fn has(&self, hash: &str) -> Result<bool, vcs::VcsError> {
+    async fn has(&self, hash: &str) -> Result<bool, vcs::VcsError> {
         let conn = self.connection()?;
         let count: i64 = conn.query_row("SELECT COUNT(*) FROM blobs WHERE hash = ?1", [hash], |row| row.get(0)).map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
         Ok(count > 0)
     }
 
-    fn delete(&self, hash: &str) -> Result<(), vcs::VcsError> {
+    async fn delete(&self, hash: &str) -> Result<(), vcs::VcsError> {
         let conn = self.connection()?;
         conn.execute("DELETE FROM blobs WHERE hash = ?1", [hash]).map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
         Ok(())
@@ -2185,13 +2185,13 @@ mod tests {
 
     impl ArtifactDsl for DemoSnapshot {
         const EXTENSION: &'static str = Self::__DSL_EXTENSION;
-        fn envelope_id() -> &'static str { Self::__DSL_ENVELOPE_ID }
-        fn parse_dsl(text: &str) -> Result<Self, crate::os_dsl::TextError> {
+        async fn envelope_id() -> &'static str { Self::__DSL_ENVELOPE_ID }
+        async fn parse_dsl(text: &str) -> Result<Self, crate::os_dsl::TextError> {
             let body = match semio_format::split_text_preamble(text) { Ok((_, rest)) => rest, Err(_) => text };
             let record = crate::os_dsl::parse(body, &Self::__dsl_spec(), &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Document })?;
             Self::__dsl_from_record(&record)
         }
-        fn print_dsl(&self) -> String {
+        async fn print_dsl(&self) -> String {
             let body = crate::os_dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), crate::os_dsl::JoinMode::Document);
             let envelope = semio_format::SemioEnvelope::from_envelope_id(<Self as ArtifactDsl>::envelope_id(), semio_format::Component::Dsl, 1).expect("valid envelope_id");
             semio_format::wrap_text(&envelope, &body)
@@ -2199,12 +2199,12 @@ mod tests {
     }
 
     impl ArtifactPack for DemoSnapshot {
-        fn encode_pack_with(&self, options: &PackEncodeOptions) -> Result<Vec<u8>, PackError> {
+        async fn encode_pack_with(&self, options: &PackEncodeOptions) -> Result<Vec<u8>, PackError> {
             let inner = pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
             let envelope = semio_format::SemioEnvelope::from_envelope_id(<Self as ArtifactDsl>::envelope_id(), semio_format::Component::Pack, 1).map_err(|e| PackError::Schema(e.to_string()))?;
             Ok(semio_format::wrap_binary(&envelope, &inner))
         }
-        fn decode_pack_with(bytes: &[u8], options: &PackDecodeOptions) -> Result<Self, PackError> {
+        async fn decode_pack_with(bytes: &[u8], options: &PackDecodeOptions) -> Result<Self, PackError> {
             let (envelope, inner) = semio_format::unwrap_binary(bytes).map_err(|e| PackError::Schema(e.to_string()))?;
             if envelope.envelope_id() != <Self as ArtifactDsl>::envelope_id() {
                 return Err(PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as ArtifactDsl>::envelope_id(), envelope.envelope_id())));
@@ -2212,7 +2212,7 @@ mod tests {
             let (record, _report) = pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
             Self::__dsl_from_record(&record).map_err(|err| PackError::Schema(err.to_string()))
         }
-        fn record_spec() -> Option<crate::os_dsl::RecordSpec> { Some(Self::__dsl_spec()) }
+        async fn record_spec() -> Option<crate::os_dsl::RecordSpec> { Some(Self::__dsl_spec()) }
     }
 
     #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -2221,11 +2221,11 @@ mod tests {
     }
 
     impl MutationDiff<DemoSnapshot> for DemoDiff {
-        fn apply(&self, snapshot: &DemoSnapshot) -> crate::os_spr::MutationApplyResult<DemoSnapshot> {
+        async fn apply(&self, snapshot: &DemoSnapshot) -> crate::os_spr::MutationApplyResult<DemoSnapshot> {
             Ok(DemoSnapshot { n: self.n.unwrap_or(snapshot.n) })
         }
 
-        fn absorb(&mut self, other: Self) {
+        async fn absorb(&mut self, other: Self) {
             if other.n.is_some() {
                 self.n = other.n;
             }
@@ -2240,7 +2240,7 @@ mod tests {
     }
 
     impl OpText for DemoMutation {
-        fn parse_op(line: &str) -> Result<Self, crate::os_dsl::TextError> {
+        async fn parse_op(line: &str) -> Result<Self, crate::os_dsl::TextError> {
             let variants = <Self as crate::os_dsl::DslVariants>::variants();
             for (keyword, spec_fn) in &variants {
                 let probe = format!("{} ", keyword);
@@ -2255,7 +2255,7 @@ mod tests {
             }
             Err(crate::os_dsl::__rt::field_error(format!("unknown operation line '{line}'")))
         }
-        fn print_op(&self) -> String {
+        async fn print_op(&self) -> String {
             let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
             let variants = <Self as crate::os_dsl::DslVariants>::variants();
             let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
@@ -2264,7 +2264,7 @@ mod tests {
     }
 
     impl OpBinary for DemoMutation {
-        fn encode_op(&self) -> Result<Vec<u8>, crate::os_spr::ProtocolError> {
+        async fn encode_op(&self) -> Result<Vec<u8>, crate::os_spr::ProtocolError> {
             let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
             let variants = <Self as crate::os_dsl::DslVariants>::variants();
             let (idx, (_, spec_fn)) = variants.iter().enumerate().find(|(_, (k, _))| k == &keyword).expect("variant spec must exist");
@@ -2275,7 +2275,7 @@ mod tests {
             out.extend_from_slice(&body);
             Ok(out)
         }
-        fn decode_op(bytes: &[u8]) -> Result<Self, crate::os_spr::ProtocolError> {
+        async fn decode_op(bytes: &[u8]) -> Result<Self, crate::os_spr::ProtocolError> {
             let mut reader = crate::os_pack::ByteReader::new(bytes);
             let format = reader.read_u8().map_err(|e| crate::os_spr::ProtocolError::Malformed { what: "op format", offset: 0, detail: e.to_string() })?;
             if format != pack_rt::OP_BINARY_FORMAT {
@@ -2302,13 +2302,13 @@ mod tests {
     impl Mutation<DemoSnapshot> for DemoMutation {
         type Diff = DemoDiff;
 
-        fn diff(&self, _snapshot: &DemoSnapshot) -> crate::os_spr::MutationOutcome<DemoDiff> {
+        async fn diff(&self, _snapshot: &DemoSnapshot) -> crate::os_spr::MutationOutcome<DemoDiff> {
             crate::os_spr::MutationOutcome::new(match self {
                 DemoMutation::SetN { n } => DemoDiff { n: Some(*n) },
             })
         }
 
-        fn inverse(&self, snapshot: &DemoSnapshot) -> Vec<Self> {
+        async fn inverse(&self, snapshot: &DemoSnapshot) -> Vec<Self> {
             vec![DemoMutation::SetN { n: snapshot.n }]
         }
     }
@@ -2317,14 +2317,14 @@ mod tests {
     /// shared across every test in this binary) — needed by any test exercising `FolderEndpoint`
     /// end-to-end (both `Sqlite` and `Pack` now go through `document_codec` per the pack+spr flip),
     /// mirroring a real app's program-init-time `register_document_codec_for_app` call.
-    fn ensure_demo_codec_registered() {
+    async fn ensure_demo_codec_registered() {
         static ONCE: std::sync::Once = std::sync::Once::new();
         ONCE.call_once(|| {
             let _ = register_document_codec(ArtifactCodec::of::<DemoSnapshot, DemoMutation>("demo/v1")).expect("register demo codec");
         });
     }
 
-    fn sample_operation_envelope(edit_id: &str, n: i32) -> MutationEnvelope {
+    async fn sample_operation_envelope(edit_id: &str, n: i32) -> MutationEnvelope {
         let edit = Edit {
             id: edit_id.into(),
             actor: None,
@@ -2345,7 +2345,7 @@ mod tests {
 
     //#region 🧪️SyncSession
     #[test]
-    fn receive_materializes_remote_envelope_into_the_edit_timeline() {
+    async fn receive_materializes_remote_envelope_into_the_edit_timeline() {
         let envelope: crate::os_store::ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
         let store = ArtifactStore::new(envelope).expect("valid receive fixture");
         let mut session = SyncSession::new(store);
@@ -2355,7 +2355,7 @@ mod tests {
     }
 
     #[test]
-    fn receive_buffers_out_of_order_envelopes_until_dependencies_arrive() {
+    async fn receive_buffers_out_of_order_envelopes_until_dependencies_arrive() {
         let envelope: crate::os_store::ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
         let store = ArtifactStore::new(envelope).expect("valid out-of-order fixture");
         let mut session = SyncSession::new(store);
@@ -2372,7 +2372,7 @@ mod tests {
 
     //#region 🧪️Helpers
     #[test]
-    fn hub_ws_url_derives_ws_endpoint_from_remote_uri() {
+    async fn hub_ws_url_derives_ws_endpoint_from_remote_uri() {
         assert_eq!(hub_ws_url("remote://host:6070", "studio-1", "doc-1", None), "ws://host:6070/spaces/studio-1/documents/doc-1/ws");
         assert_eq!(hub_ws_url("https://semio_hub.example.com", "studio-1", "doc-2", None), "wss://semio_hub.example.com/spaces/studio-1/documents/doc-2/ws");
         assert_eq!(hub_ws_url("ws://127.0.0.1:5000/prefix", "studio-1", "d", None), "ws://127.0.0.1:5000/spaces/studio-1/documents/d/ws");
@@ -2390,7 +2390,7 @@ mod tests {
     /// state, overwriting whatever the shell handed in, and clears `surface` to `None` when the
     /// document has no hub binding (folder-only) even if `session_color` is somehow set.
     #[test]
-    fn actor_stamps_session_color_and_surface_on_outbound_heartbeat() {
+    async fn actor_stamps_session_color_and_surface_on_outbound_heartbeat() {
         let mut peer = PresencePeer { actor: "actor-1".into(), connected_at_ms: 1000, label: None, presence_pack: None, user_id: None, role: None, drag_ghost_json: None, interaction: None, color: Some(99), surface: Some("shell-should-never-set-this".into()), views: Vec::new(), ui: None };
         stamp_session(&mut peer, Some(7), Some("s.space.home@1/*#editor"));
         assert_eq!(peer.color, Some(7));
@@ -2408,7 +2408,7 @@ mod tests {
     // and wire envelopes are the same `crate::os_spr::MutationEnvelope` type now, an identity the type
     // system enforces, not something a round-trip test needs to prove.
     #[test]
-    fn rollback_envelope_synthesizes_an_undo_from_the_original_inverse() {
+    async fn rollback_envelope_synthesizes_an_undo_from_the_original_inverse() {
         let envelope = sample_operation_envelope("edit-1", 5);
         let rollback = rollback_envelope(&envelope);
         assert_eq!(rollback.dependencies, vec![envelope.mutation_id.clone()], "the undo depends on the operation it undoes");
@@ -2433,14 +2433,14 @@ mod tests {
     /// `server-presence.bin` regenerate off `sample_presence_peer_with_interaction`'s v3 shape
     /// (`color`/`surface`/`views`/`ui`, no more `cursor`/`viewport`).
     #[test]
-    fn wire_fixtures_stay_byte_identical_across_rust_and_ts() {
+    async fn wire_fixtures_stay_byte_identical_across_rust_and_ts() {
         let fixtures_dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../fixtures/wire");
         std::fs::create_dir_all(&fixtures_dir).expect("fixtures dir");
         for stale in ["server-welcome.bin", "server-ack.bin"] {
             let _ = std::fs::remove_file(fixtures_dir.join(stale));
         }
 
-        fn write_client(dir: &std::path::Path, name: &str, frame: &ClientFrame, lane: Lane) {
+        async fn write_client(dir: &std::path::Path, name: &str, frame: &ClientFrame, lane: Lane) {
             let bytes = encode_client_frame(frame, lane);
             std::fs::write(dir.join(name), &bytes).unwrap_or_else(|error| panic!("write {name}: {error}"));
             let (decoded_lane, decoded) = crate::os_spr::decode_client_frame(&bytes).unwrap_or_else(|error| panic!("decode {name}: {error}"));
@@ -2448,7 +2448,7 @@ mod tests {
             assert_eq!(&decoded, frame, "{name} frame round trip");
         }
 
-        fn write_server(dir: &std::path::Path, name: &str, frame: &ServerFrame, lane: Lane) {
+        async fn write_server(dir: &std::path::Path, name: &str, frame: &ServerFrame, lane: Lane) {
             let bytes = crate::os_spr::encode_server_frame(frame, lane);
             std::fs::write(dir.join(name), &bytes).unwrap_or_else(|error| panic!("write {name}: {error}"));
             let (decoded_lane, decoded) = decode_server_frame(&bytes).unwrap_or_else(|error| panic!("decode {name}: {error}"));
@@ -2535,7 +2535,7 @@ mod tests {
     /// @emoji 🧸️ A second, distinct `MutationEnvelope` for `📦️server-ack-transformed.bin`'s
     /// `ApplyOutcome::Transformed` payload — must differ from the primary `wire_envelope` fixture so
     /// the vitest canary can assert it decodes as its own value, not an accidental copy.
-    fn sample_wire_envelope_for_fixtures() -> MutationEnvelope {
+    async fn sample_wire_envelope_for_fixtures() -> MutationEnvelope {
         MutationEnvelope {
             mutation_id: MutationId("op-2".to_string()),
             document_id: ArtifactId("doc-1".to_string()),
@@ -2551,7 +2551,7 @@ mod tests {
     /// hover-only, one with both), TWO `views` (one Orbit with a pointer, one Canvas), a `color` +
     /// `surface`, and a `ui` — `📦️client-presence.bin`/`📦️server-presence.bin` regenerate off this so
     /// the TS vitest twin exercises every `PresencePeer` v3 flag bit (§C7.1) with a realistic payload.
-    fn sample_presence_peer_with_interaction() -> PresencePeer {
+    async fn sample_presence_peer_with_interaction() -> PresencePeer {
         PresencePeer {
             actor: "actor-1".to_string(),
             connected_at_ms: 1_700_000_000_000,
@@ -2599,7 +2599,7 @@ mod tests {
 
     //#region 🧪️PresenceInteraction
     #[test]
-    fn presence_heartbeat_producer_publishes_immediately_then_coalesces_to_latest() {
+    async fn presence_heartbeat_producer_publishes_immediately_then_coalesces_to_latest() {
         let mut producer = PresenceHeartbeatProducer::new(100);
         let mut first = sample_presence_peer_with_interaction();
         first.views = vec![crate::os_spr::PresenceWindowView { window_id: "w1".into(), space: "canvas".into(), kind: crate::os_spr::PresenceViewKind::Canvas { x: 1.0, y: 2.0, zoom: 1.0 }, size: [800.0, 600.0], pointer: None }];
@@ -2618,7 +2618,7 @@ mod tests {
     }
 
     #[test]
-    fn artifact_host_presence_heartbeat_owns_cadence_per_document() {
+    async fn artifact_host_presence_heartbeat_owns_cadence_per_document() {
         let host = ArtifactHost::new();
         let (cmd_tx, mut cmd_rx) = mpsc::unbounded_channel();
         let (events, _) = broadcast::channel(1);
@@ -2651,7 +2651,7 @@ mod tests {
 
     #[cfg(not(target_arch = "wasm32"))]
     #[test]
-    fn op_envelope_from_stored_edit_round_trips_through_ingest() {
+    async fn op_envelope_from_stored_edit_round_trips_through_ingest() {
         let edit = crate::os_spr::HistoryEdit {
             id: "ext-1".into(),
             actor: Some("peer".into()),
@@ -2682,7 +2682,7 @@ mod tests {
         use tokio::sync::{broadcast as tokio_broadcast, Mutex};
         use tokio_tungstenite::tungstenite::Message as WsMessage;
 
-        fn demo_envelope(document_id: &str) -> crate::os_store::ArtifactEnvelope<DemoSnapshot, DemoMutation> {
+        async fn demo_envelope(document_id: &str) -> crate::os_store::ArtifactEnvelope<DemoSnapshot, DemoMutation> {
             create_document_envelope("demo/v1", document_id, DemoSnapshot { n: 0 }, None)
         }
 
@@ -2798,7 +2798,7 @@ mod tests {
             broadcast: tokio_broadcast::Sender<ServerFrame>,
         }
 
-        fn mock_frontier(ordinal: u64) -> crate::os_spr::RuntimeFrontierSummary {
+        async fn mock_frontier(ordinal: u64) -> crate::os_spr::RuntimeFrontierSummary {
             crate::os_spr::RuntimeFrontierSummary { document_id: ArtifactId("mock".to_string()), head_edit_ordinal: ordinal, head_edit_id: format!("edit-{ordinal}"), last_commit_seq: ordinal, chain_hash: [0u8; 32] }
         }
 
@@ -3171,7 +3171,7 @@ mod tests {
             host.close(&fixture.document_id);
         }
 
-        fn document_event_tag(event: &ArtifactEvent) -> &'static str {
+        async fn document_event_tag(event: &ArtifactEvent) -> &'static str {
             match event {
                 ArtifactEvent::RemoteMutations { .. } => "remoteMutations",
                 ArtifactEvent::SnapshotReplaced { .. } => "snapshotReplaced",
@@ -3191,7 +3191,7 @@ mod tests {
     /// via `folder_external_edit_delivers_remote_operations`). This test exercises exactly the
     /// storage mechanics: per-id keying, upsert-in-place, and the folder-wide index.
     #[test]
-    fn folder_sqlite_storage_round_trips_by_document_id() {
+    async fn folder_sqlite_storage_round_trips_by_document_id() {
         let dir = tempfile::tempdir().expect("tempdir");
         let storage = FolderSqliteStorage::new(dir.path().to_path_buf());
         assert_eq!(storage.read("doc-a").expect("read empty"), None, "absent document reads as None");
@@ -3214,7 +3214,7 @@ mod tests {
     /// `save_load_undo_proof_pack_spr_round_trip_preserves_undo_redo_position` proves the pure
     /// in-memory pack/spr encoding; this proves the folder persistence layer built on top of it).
     #[test]
-    fn folder_sqlite_storage_round_trips_undo_position_through_pack_spr() {
+    async fn folder_sqlite_storage_round_trips_undo_position_through_pack_spr() {
         let dir = tempfile::tempdir().expect("tempdir");
         let storage = FolderSqliteStorage::new(dir.path().to_path_buf());
 
@@ -3245,7 +3245,7 @@ mod tests {
     /// edit (see `document_text_round_trips_a_cursor_after_undo_then_apply_interleaving` in
     /// `store`'s own test suite for that law, exercised correctly there).
     #[test]
-    fn folder_text_storage_round_trips_dsl_and_appends_ops() {
+    async fn folder_text_storage_round_trips_dsl_and_appends_ops() {
         let dir = tempfile::tempdir().expect("tempdir");
         let storage = FolderTextStorage::new(dir.path().to_path_buf());
         assert_eq!(storage.read("demo", "demo").expect("read empty"), None, "absent document reads as None");
@@ -3280,7 +3280,7 @@ mod tests {
     /// without an accompanying `write_pack`, does NOT change what `read_pack`/`parse_document_pack`
     /// reconstructs, because pack+spr (not ops text) are authoritative for that path.
     #[test]
-    fn folder_text_storage_round_trips_pack() {
+    async fn folder_text_storage_round_trips_pack() {
         let dir = tempfile::tempdir().expect("tempdir");
         let storage = FolderTextStorage::new(dir.path().to_path_buf());
         assert_eq!(storage.read_pack("demo", "demo").expect("read empty"), None, "absent pack reads as None");
@@ -3325,7 +3325,7 @@ mod tests {
     }
 
     #[test]
-    fn blob_store_put_get_dedupes_idempotently() {
+    async fn blob_store_put_get_dedupes_idempotently() {
         let dir = tempfile::tempdir().expect("tempdir");
         let storage = FolderSqliteStorage::new(dir.path().to_path_buf());
         let bytes = b"hello content-addressed world";

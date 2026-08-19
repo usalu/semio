@@ -27,7 +27,7 @@ pub struct ImperativeSnapshot {
 }
 
 impl Default for ImperativeSnapshot {
-    async fn default() -> Self {
+    fn default() -> Self {
         crate::artifacts::imperative::imperative_snapshot_with_content("imperative.document", &crate::artifacts::imperative::Path::new(), &std::collections::BTreeMap::new())
     }
 }

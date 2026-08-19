@@ -34,7 +34,7 @@ pub struct JackSnapshot {
 //#endregion 🔖️Snapshot
 
 impl Default for JackSnapshot {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self {
             schema: crate::artifacts::jack::TRINITY_GRAPH_SCHEMA.into(),
             name: String::new(),

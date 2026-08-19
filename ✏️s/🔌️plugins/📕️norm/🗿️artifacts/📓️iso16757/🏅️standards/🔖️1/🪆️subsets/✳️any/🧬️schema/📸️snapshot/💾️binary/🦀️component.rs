@@ -34,7 +34,7 @@ mod tests {
         store::os_store::test_support::assert_dsl_pack_equivalence(&Iso16757Snapshot::reference_fixture());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn pack_round_trips_the_reference_fixture() {
         let document = Iso16757Snapshot::reference_fixture();
         let bytes = encode(&document);

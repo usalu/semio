@@ -224,7 +224,7 @@ mod tests {
     /// ✅️ §C2/fan-out-recipe laws (`26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS`):
     /// one `assert_missing_target_is_error`/Fatal check per verb family this facet implements
     /// (create/delete/connect/disconnect/move/replace/reorder/update).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_widget_duplicate_id_is_fatal() {
         let base = base_with_two_widgets();
         let outcome = FlowMutation::CreateWidget(CreateWidget { index: 0, widget: widget_note("w1") }).diff(&base);
@@ -232,13 +232,13 @@ mod tests {
         assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn delete_widget_missing_target_is_error() {
         let base = FlowSnapshot::default();
         assert_missing_target_is_error(&base, &FlowMutation::DeleteWidget(DeleteWidget { id: "ghost".into() }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn delete_widget_cascades_severed_synapses() {
         let base = base_with_synapse();
         let outcome = FlowMutation::DeleteWidget(DeleteWidget { id: "w1".into() }).diff(&base);
@@ -246,13 +246,13 @@ mod tests {
         assert!(outcome.diff().apply(&base).is_ok());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn connect_widgets_missing_endpoint_is_error() {
         let base = base_with_two_widgets();
         assert_missing_target_is_error(&base, &FlowMutation::ConnectWidgets(ConnectWidgets { index: 0, id: "edge-99".into(), from: "ghost".into(), from_port: "out".into(), to: "w2".into(), to_port: "in".into() }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn connect_widgets_duplicate_id_is_fatal() {
         let base = base_with_synapse();
         let outcome = FlowMutation::ConnectWidgets(ConnectWidgets { index: 0, id: "s1".into(), from: "w2".into(), from_port: "out".into(), to: "w1".into(), to_port: "in".into() }).diff(&base);
@@ -260,7 +260,7 @@ mod tests {
         assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn connect_widgets_parallel_is_no_op() {
         let base = base_with_synapse();
         let outcome = FlowMutation::ConnectWidgets(ConnectWidgets { index: 1, id: "s2".into(), from: "w1".into(), from_port: "out".into(), to: "w2".into(), to_port: "in".into() }).diff(&base);
@@ -269,19 +269,19 @@ mod tests {
         assert_eq!(outcome.diff(), &FlowDiff::default());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn disconnect_widgets_missing_target_is_error() {
         let base = base_with_two_widgets();
         assert_missing_target_is_error(&base, &FlowMutation::DisconnectWidgets(DisconnectWidgets { id: "ghost".into() }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn move_widgets_missing_target_is_error() {
         let base = base_with_two_widgets();
         assert_missing_target_is_error(&base, &FlowMutation::MoveWidgets(MoveWidgets { entries: vec![FlowLayoutEntry { id: "ghost".into(), layout: Some(WidgetLayout { x: 1.0, y: 1.0 }) }] }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn move_widgets_non_finite_is_fatal() {
         let base = base_with_two_widgets();
         let outcome = FlowMutation::MoveWidgets(MoveWidgets { entries: vec![FlowLayoutEntry { id: "w1".into(), layout: Some(WidgetLayout { x: f64::NAN, y: 0.0 }) }] }).diff(&base);
@@ -289,7 +289,7 @@ mod tests {
         assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn move_widgets_unchanged_is_no_op() {
         let base = base_with_two_widgets();
         let moved = apply(&base, &FlowMutation::MoveWidgets(MoveWidgets { entries: vec![FlowLayoutEntry { id: "w1".into(), layout: Some(WidgetLayout { x: 5.0, y: 5.0 }) }] }));
@@ -298,13 +298,13 @@ mod tests {
         assert!(outcome.messages().iter().any(|message| message.code.0 == "mutation.no-op"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn replace_widget_missing_target_is_error() {
         let base = base_with_two_widgets();
         assert_missing_target_is_error(&base, &FlowMutation::ReplaceWidget(ReplaceWidget { id: "ghost".into(), widget: widget_note("ghost") }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn replace_widget_unchanged_is_no_op() {
         let base = base_with_two_widgets();
         let outcome = FlowMutation::ReplaceWidget(ReplaceWidget { id: "w1".into(), widget: widget_note("w1") }).diff(&base);
@@ -312,13 +312,13 @@ mod tests {
         assert!(outcome.messages().iter().any(|message| message.code.0 == "mutation.no-op"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn reorder_widgets_missing_target_is_error() {
         let base = base_with_two_widgets();
         assert_missing_target_is_error(&base, &FlowMutation::ReorderWidgets(ReorderWidgets { id: "ghost".into(), to_index: 0 }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn reorder_widgets_already_current_is_no_op() {
         let base = base_with_two_widgets();
         let outcome = FlowMutation::ReorderWidgets(ReorderWidgets { id: "w1".into(), to_index: 0 }).diff(&base);
@@ -326,13 +326,13 @@ mod tests {
         assert!(outcome.messages().iter().any(|message| message.code.0 == "mutation.no-op"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn reorder_synapses_missing_target_is_error() {
         let base = base_with_synapse();
         assert_missing_target_is_error(&base, &FlowMutation::ReorderSynapses(ReorderSynapses { id: "ghost".into(), to_index: 0 }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn reorder_synapses_already_current_is_no_op() {
         let base = base_with_synapse();
         let outcome = FlowMutation::ReorderSynapses(ReorderSynapses { id: "s1".into(), to_index: 0 }).diff(&base);
@@ -340,19 +340,19 @@ mod tests {
         assert!(outcome.messages().iter().any(|message| message.code.0 == "mutation.no-op"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn update_synapse_endpoints_missing_target_is_error() {
         let base = base_with_synapse();
         assert_missing_target_is_error(&base, &FlowMutation::UpdateSynapseEndpoints(UpdateSynapseEndpoints { id: "ghost".into(), from: "w1".into(), from_port: "out".into(), to: "w2".into(), to_port: "in".into() }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn update_synapse_endpoints_missing_endpoint_is_error() {
         let base = base_with_synapse();
         assert_missing_target_is_error(&base, &FlowMutation::UpdateSynapseEndpoints(UpdateSynapseEndpoints { id: "s1".into(), from: "ghost".into(), from_port: "out".into(), to: "w2".into(), to_port: "in".into() }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn update_synapse_endpoints_unchanged_is_no_op() {
         let base = base_with_synapse();
         let outcome = FlowMutation::UpdateSynapseEndpoints(UpdateSynapseEndpoints { id: "s1".into(), from: "w1".into(), from_port: "out".into(), to: "w2".into(), to_port: "in".into() }).diff(&base);

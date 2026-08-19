@@ -80,7 +80,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn deserialize_maps_real_track_metadata_and_derives_pts_from_duration_plus_cts_offset() {
         let video = semio_framework_plugin::resolve_ready(SemioVideoFromMp4::deserialize(&real_world_mp4())).expect("deserialize");
         assert_eq!(video.streams.len(), 1);
@@ -100,7 +100,7 @@ mod tests {
         assert_eq!(stream.samples[2].data, vec![0xDD, 0xEE, 0xFF]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn deserialize_of_track_with_no_samples_falls_back_to_unit_rate_denominator() {
         let mut mp4 = real_world_mp4();
         mp4.tracks[0].samples.clear();

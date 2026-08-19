@@ -15,7 +15,7 @@ pub struct SvgIntoPresent;
 impl Deserializer<PresentSnapshot> for SvgIntoPresent {
     const FROM: Dialect = SVG_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    async fn deserialize(payload: &IoPayload) -> IoResult<PresentSnapshot> {
+    fn deserialize(payload: &IoPayload) -> IoResult<PresentSnapshot> {
         let IoPayload::Binary(bytes) = payload else {
             return Err(IoError { message: "SvgIntoPresent: expected a binary svg payload".to_string(), diagnostics: Vec::new() });
         };

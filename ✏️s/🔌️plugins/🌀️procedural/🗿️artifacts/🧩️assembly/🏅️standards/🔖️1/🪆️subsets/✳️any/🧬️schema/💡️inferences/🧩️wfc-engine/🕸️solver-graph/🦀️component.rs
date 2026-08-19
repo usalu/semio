@@ -4,7 +4,7 @@
 
 use crate::wfc_engine::beam::{self, BeamConfig};
 use crate::wfc_engine::bitset::PatternSet;
-use crate::wfc_engine::constraint::{build_adjacency_view, AdjacencyView, Constraint, ConstraintSet};
+use crate::wfc_engine::constraint::{build_adjacency_view, AdjacencyView, ConstraintSet, Constraints};
 use crate::wfc_engine::error::SolveError;
 use crate::wfc_engine::ids::{NodeId, PatternId};
 use crate::wfc_engine::model::CompiledModel;
@@ -23,7 +23,7 @@ pub struct GraphSolverBuilder {
     init_domains: Option<Vec<PatternSet>>,
     fixed: Vec<(NodeId, PatternId)>,
     config: SearchConfig,
-    constraints: Vec<Box<dyn Constraint>>,
+    constraints: Vec<Constraints>,
 }
 
 impl GraphSolverBuilder {
@@ -52,7 +52,7 @@ impl GraphSolverBuilder {
 
     /// 🏗️ Adds a global constraint. See [`crate::wfc_engine::constraint::Constraint`]'s docs for exactly when
     /// it runs (initial restriction + complete-assignment validation, not incremental mid-search).
-    pub async fn constraint(mut self, c: Box<dyn Constraint>) -> Self {
+    pub async fn constraint(mut self, c: Constraints) -> Self {
         self.constraints.push(c);
         self
     }
@@ -77,7 +77,7 @@ pub struct GraphSolver {
     init_domains: Option<Vec<PatternSet>>,
     fixed: Vec<(NodeId, PatternId)>,
     config: SearchConfig,
-    constraints: Vec<Box<dyn Constraint>>,
+    constraints: Vec<Constraints>,
     adjacency: AdjacencyView,
 }
 
@@ -181,7 +181,7 @@ mod tests {
         (model, tb.build().unwrap())
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn builds_and_solves() {
         let (model, topo) = checkerboard(5);
         let mut solver = GraphSolverBuilder::new(model, topo).build().unwrap();
@@ -189,7 +189,7 @@ mod tests {
         assert!(matches!(outcome, SolveOutcome::Solved(_)));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fix_pins_a_node() {
         let (model, topo) = checkerboard(4);
         let mut solver = GraphSolverBuilder::new(model, topo).fix(NodeId(0), PatternId(0)).build().unwrap();
@@ -199,14 +199,14 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fix_on_unknown_node_is_rejected() {
         let (model, topo) = checkerboard(2);
         let result = GraphSolverBuilder::new(model, topo).fix(NodeId(99), PatternId(0)).build();
         assert!(result.is_err());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn domain_override_restricts_a_node() {
         let (model, topo) = checkerboard(3);
         let mut allowed = PatternSet::new_empty(2);
@@ -218,7 +218,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn solve_all_finds_both_checkerboard_colorings() {
         let (model, topo) = checkerboard(4);
         let mut solver = GraphSolverBuilder::new(model, topo).build().unwrap();
@@ -227,7 +227,7 @@ mod tests {
         assert_eq!(solutions.len(), 2);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn solve_cancellable_reports_cancelled_when_pre_cancelled() {
         let (model, topo) = checkerboard(5);
         let mut solver = GraphSolverBuilder::new(model, topo).build().unwrap();
@@ -237,7 +237,7 @@ mod tests {
         assert!(matches!(outcome, SolveOutcome::Cancelled { .. }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn resume_from_checkpoint_completes_the_solve() {
         let (model, topo) = checkerboard(5);
         let fingerprint = model.fingerprint();
@@ -255,7 +255,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn resume_rejects_mismatched_fingerprint() {
         let (model, topo) = checkerboard(3);
         let mut solver = GraphSolverBuilder::new(model, topo).build().unwrap();
@@ -264,7 +264,7 @@ mod tests {
         assert!(solver.resume(&checkpoint).is_err());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn repair_reopens_only_the_requested_halo() {
         let (model, topo) = checkerboard(6);
         let mut solver = GraphSolverBuilder::new(model, topo).build().unwrap();
@@ -283,7 +283,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn solve_beam_finds_a_valid_solution_and_respects_fixed_pins() {
         use crate::wfc_engine::beam::BeamConfig;
         let (model, topo) = checkerboard(6);
@@ -294,7 +294,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn solve_multi_start_finds_a_valid_solution_and_respects_fixed_pins() {
         let (model, topo) = checkerboard(10);
         let solver = GraphSolverBuilder::new(model, topo).fix(NodeId(0), PatternId(0)).build().unwrap();
@@ -309,7 +309,7 @@ mod tests {
     // `GraphSolverBuilder::constraint(...)` through `solve()`, proving the `search::solve_with_constraints`
     // path — initial restriction, per-complete-assignment rejection, and backtrack-and-retry on
     // rejection — actually wires together end to end.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn cardinality_constraint_forces_the_unique_matching_checkerboard_coloring() {
         use crate::wfc_engine::constraint::PatternSelector;
         use crate::wfc_engine::constraints_card::{CardinalityConstraint, Scope};
@@ -323,7 +323,7 @@ mod tests {
         let (model, topo) = checkerboard(5);
         let black = PatternId(0);
         let constraint = CardinalityConstraint::new(model.clone(), PatternSelector::Pattern(black), Scope::All, 3, 3).unwrap();
-        let mut solver = GraphSolverBuilder::new(model, topo).constraint(Box::new(constraint)).build().unwrap();
+        let mut solver = GraphSolverBuilder::new(model, topo).constraint(constraint.into()).build().unwrap();
         match solver.solve(1) {
             SolveOutcome::Solved(sol) => {
                 assert_eq!(sol.assignment, vec![PatternId(0), PatternId(1), PatternId(0), PatternId(1), PatternId(0)]);
@@ -333,7 +333,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn cardinality_constraint_beyond_both_colorings_is_unsatisfiable() {
         use crate::wfc_engine::constraint::PatternSelector;
         use crate::wfc_engine::constraints_card::{CardinalityConstraint, Scope};
@@ -344,14 +344,14 @@ mod tests {
         let (model, topo) = checkerboard(5);
         let black = PatternId(0);
         let constraint = CardinalityConstraint::new(model.clone(), PatternSelector::Pattern(black), Scope::All, 4, 5).unwrap();
-        let mut solver = GraphSolverBuilder::new(model, topo).constraint(Box::new(constraint)).build().unwrap();
+        let mut solver = GraphSolverBuilder::new(model, topo).constraint(constraint.into()).build().unwrap();
         match solver.solve(1) {
             SolveOutcome::Unsatisfiable(report) => assert!(report.proven),
             other => panic!("expected Unsatisfiable, got {other:?}"),
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn flow_constraint_end_to_end_forces_a_connected_path_through_a_real_solve() {
         use crate::wfc_engine::constraint::PatternSelector;
         use crate::wfc_engine::flow::FlowConstraint;
@@ -378,7 +378,7 @@ mod tests {
         let topo = tb.build().unwrap();
 
         let constraint = FlowConstraint::new(model.clone(), PatternSelector::Pattern(floor), vec![NodeId(0)], vec![NodeId(3)], 1);
-        let mut solver = GraphSolverBuilder::new(model, topo).constraint(Box::new(constraint)).build().unwrap();
+        let mut solver = GraphSolverBuilder::new(model, topo).constraint(constraint.into()).build().unwrap();
         match solver.solve(1) {
             SolveOutcome::Solved(sol) => assert!(sol.assignment.iter().all(|&p| p == floor)),
             other => panic!("expected Solved, got {other:?}"),

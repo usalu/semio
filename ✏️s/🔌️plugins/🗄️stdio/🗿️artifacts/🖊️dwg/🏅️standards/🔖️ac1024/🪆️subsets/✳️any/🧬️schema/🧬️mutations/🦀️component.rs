@@ -100,7 +100,7 @@ mod tests {
     use protocol::command::DiffAlgebra;
     use protocol::MutationDiff;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn logical_mutations_obey_diff_and_inverse_laws() {
         let base = DwgSnapshot { version: "AC1024".into(), maintenance_version: 2, codepage: 30, ..Default::default() };
         for mutation in demo_mutation_cases() {
@@ -115,7 +115,7 @@ mod tests {
         assert!(DwgDiff::between(&base, &base).is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn operation_codecs_retain_logical_mutations() {
         for mutation in demo_mutation_cases() {
             assert_eq!(DwgMutation::parse_op(&mutation.print_op()).expect("text mutation"), mutation);

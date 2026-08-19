@@ -174,7 +174,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn maps_layers_blocks_and_entities() {
         let cad = semio_framework_plugin::resolve_ready(SemioCadFromDxf::deserialize(&sample_dxf())).expect("deserialize");
         assert_eq!(cad.layers.len(), 1);

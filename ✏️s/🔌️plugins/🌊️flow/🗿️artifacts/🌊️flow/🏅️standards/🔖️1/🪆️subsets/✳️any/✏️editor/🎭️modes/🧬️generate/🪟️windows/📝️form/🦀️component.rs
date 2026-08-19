@@ -51,7 +51,7 @@ mod tests {
     use super::*;
     use crate::editor::flow::testkit::{flow_app, render as render_body};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn without_a_generation_the_form_shows_the_placeholder_copy() {
         let mut app = flow_app();
         assert!(render_body(&mut app, FLOW_PLAY_BODY_GENERATE_FORM).contains("Add a generation"));

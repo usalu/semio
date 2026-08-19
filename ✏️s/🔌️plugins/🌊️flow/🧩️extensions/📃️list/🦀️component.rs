@@ -207,16 +207,16 @@ async fn info(id: &str, name: &str, summary: &str, inputs: Vec<ChannelSpec>, out
     OperatorInfo { id: id.into(), extension: "list".into(), name: name.into(), abbreviation: name.into(), icon: "emoji:📋️".into(), summary: summary.into(), inputs, outputs: vec![output], ..Default::default() }
 }
 
-async fn register_simple(registry: &mut Registry, info: OperatorInfo, operation: Box<dyn Operator>, schemas: Vec<&str>, produces: &[&str]) {
-    registry.register_operator(info, vec![OperatorImpl { schemas: schemas.into_iter().map(str::to_string).collect(), operator: operation }], produces);
+async fn register_simple<O: Operator + 'static>(registry: &mut Registry, info: OperatorInfo, operation: O, schemas: Vec<&str>, produces: &[&str]) {
+    registry.register_operator(info, vec![OperatorImpl { schemas: schemas.into_iter().map(str::to_string).collect(), operator: Box::new(operation) }], produces);
 }
 
 // #endregion 🔖️Helpers
 
 /// 📦️ Registers all list operators.
 pub async fn register(registry: &mut Registry) {
-    register_simple(registry, info("list.empty", "Empty", "Creates an empty list", vec![], list_output_channel("L", "Lst", "list", "EmptyList")), Box::new(Empty), vec![], &["list"]);
-    register_simple(registry, info("list.pack", "Pack", "Wraps input as a list dictionary", vec![ChannelSpec::wildcard()], list_output_channel("L", "Lst", "list", "PackedList")), Box::new(Pack), vec![], &["list"]);
+    register_simple(registry, info("list.empty", "Empty", "Creates an empty list", vec![], list_output_channel("L", "Lst", "list", "EmptyList")), Empty, vec![], &["list"]);
+    register_simple(registry, info("list.pack", "Pack", "Wraps input as a list dictionary", vec![ChannelSpec::wildcard()], list_output_channel("L", "Lst", "list", "PackedList")), Pack, vec![], &["list"]);
     registry.register_operator(
         OperatorInfo {
             variadic_output: Some(VariadicSpec { slot_key: "value".into(), min: 1, max: None }),
@@ -234,22 +234,22 @@ pub async fn register(registry: &mut Registry) {
     register_simple(
         registry,
         info("list.set", "Set", "Replaces a value at an index", vec![list_channel("list", "list.set"), number_channel("index", "list.set"), ChannelSpec::any("value")], list_output_channel("L", "Lst", "list", "UpdatedList")),
-        Box::new(Set),
+        Set,
         vec![],
         &["list"],
     );
     register_simple(
         registry,
         info("list.append", "Append", "Appends a value at the next index", vec![list_channel("list", "list.append"), ChannelSpec::any("value")], list_output_channel("L", "Lst", "list", "AppendedList")),
-        Box::new(Append),
+        Append,
         vec![],
         &["list"],
     );
-    register_simple(registry, info("list.size", "Size", "Reports the number of indexed elements", vec![list_channel("list", "list.size")], ChannelSpec::named("C", "Cnt", "count", "ListCount")), Box::new(Size), vec!["list"], &["number"]);
+    register_simple(registry, info("list.size", "Size", "Reports the number of indexed elements", vec![list_channel("list", "list.size")], ChannelSpec::named("C", "Cnt", "count", "ListCount")), Size, vec!["list"], &["number"]);
     register_simple(
         registry,
         info("list.remove", "Remove", "Removes an index and reindexes", vec![list_channel("list", "list.remove"), number_channel("index", "list.remove")], list_output_channel("L", "Lst", "list", "ReducedList")),
-        Box::new(Remove),
+        Remove,
         vec!["list", "number"],
         &["list"],
     );
@@ -262,11 +262,11 @@ pub async fn register(registry: &mut Registry) {
             vec![number_channel("start", "list.range"), ChannelSpec::number_default("step", 1.0, &["list.range"]), ChannelSpec::number_default("count", 1.0, &["list.range"])],
             list_output_channel("R", "Rng", "range", "RangeList"),
         ),
-        Box::new(Range),
+        Range,
         vec!["number", "number", "number"],
         &["list"],
     );
-    register_simple(registry, info("list.reverse", "Reverse", "Reverses indexed list elements", vec![list_channel("list", "list.reverse")], list_output_channel("R", "Rev", "reversed", "ReversedList")), Box::new(Reverse), vec!["list"], &["list"]);
+    register_simple(registry, info("list.reverse", "Reverse", "Reverses indexed list elements", vec![list_channel("list", "list.reverse")], list_output_channel("R", "Rev", "reversed", "ReversedList")), Reverse, vec!["list"], &["list"]);
     registry.finalize();
 }
 
@@ -296,7 +296,7 @@ mod tests {
         Dictionary::with_schema("list").insert("0", Value::Dictionary(number_dictionary(1.0))).insert("1", Value::Dictionary(number_dictionary(2.0))).insert("2", Value::Dictionary(number_dictionary(3.0)))
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn empty_creates_list() {
         let mut reg = Registry::new();
         register(&mut reg);
@@ -305,7 +305,7 @@ mod tests {
         assert_eq!(list.schema(), Some("list"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn get_reads_index() {
         let mut reg = Registry::new();
         register(&mut reg);
@@ -318,7 +318,7 @@ mod tests {
         assert_eq!(value.get("value").and_then(|v| v.as_atom()).and_then(|a| a.as_f64()), Some(2.0));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn get_reads_consecutive_outputs() {
         let mut reg = Registry::new();
         register(&mut reg);
@@ -334,7 +334,7 @@ mod tests {
         assert_eq!(second.get("value").and_then(|v| v.as_atom()).and_then(|a| a.as_f64()), Some(2.0));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn get_wraps_consecutive_outputs() {
         let mut reg = Registry::new();
         register(&mut reg);
@@ -350,7 +350,7 @@ mod tests {
         assert_eq!(second.get("value").and_then(|v| v.as_atom()).and_then(|a| a.as_f64()), Some(1.0));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn append_adds_next_index() {
         let mut reg = Registry::new();
         register(&mut reg);
@@ -360,7 +360,7 @@ mod tests {
         assert_eq!(list.get("3").and_then(|v| v.as_dictionary()).and_then(|d| d.get("value")).and_then(|v| v.as_atom()).and_then(|a| a.as_f64()), Some(4.0));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn heterogeneous_list_input_rejected_at_evaluate() {
         let mut reg = Registry::new();
         register(&mut reg);
@@ -372,7 +372,7 @@ mod tests {
         assert!(matches!(err, EvalError::HeterogeneousList(_)));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn manifest_lists_operators() {
         let mut reg = Registry::new();
         register(&mut reg);
@@ -381,7 +381,7 @@ mod tests {
         assert!(json.contains("operators"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn evaluate_json_round_trips() {
         let reg = module_registry();
         let input = Dictionary::new().insert("list", Value::Dictionary(sample_list()));

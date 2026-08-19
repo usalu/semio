@@ -56,7 +56,7 @@ pub struct EnergyModelArtifact {
 
 //#region 🔖️Conversions
 impl Default for EnergyModelArtifact {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self::from_snapshot(EnergyModelSnapshot::default())
     }
 }
@@ -247,7 +247,7 @@ semio_framework_plugin::derive_artifact_facets!(
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn empty_snapshot_matches_schema() {
         let snapshot = empty_energy_model_snapshot();
         assert_eq!(snapshot.schema, ENERGY_MODEL_DOCUMENT_SCHEMA);
@@ -257,7 +257,7 @@ mod tests {
     /// `EnergyModelEngine` dependency, so it survives that struct's deletion. Ticket
     /// 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM: `model_json` is gone — asserts the composed
     /// `structure`/`zones` child handles are real (non-empty ids) instead.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn example_fixture_parses() {
         let document = crate::artifacts::model::dsl::parse_dsl(
             crate::artifacts::model::dsl::SEMIO_ENERGY_MODEL_EXAMPLE_TEXT,

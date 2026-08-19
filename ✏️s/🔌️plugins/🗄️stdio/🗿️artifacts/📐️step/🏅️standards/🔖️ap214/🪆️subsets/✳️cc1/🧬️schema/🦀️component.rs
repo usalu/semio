@@ -85,13 +85,13 @@ pub mod derived_construction {
             })
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn conforming_construction_builds() {
             let snapshot = StepCc1BuilderConstruction::from_snapshot(conforming_snapshot()).build().expect("conforming construction must build");
             assert!(crate::artifacts::step::standards::v_ap214::engine::ladder::has_product_definition_chain(&snapshot.to_part21_document()));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn hard_violation_injected_via_raw_mutate_still_fails_build() {
             let mut snapshot = conforming_snapshot();
             let mut doc = snapshot.to_part21_document();
@@ -204,14 +204,14 @@ pub mod derived_analysis {
             }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn conforming_config_only_document_reports_no_diagnostics() {
             let snapshot = StepSnapshot::from_part21_document(base_doc());
             let diagnostics = check_cc1_conformance(&snapshot);
             assert!(diagnostics.is_empty(), "got {diagnostics:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn missing_file_schema_is_hard() {
             let mut doc = base_doc();
             doc.header.file_schema = vec![];
@@ -220,7 +220,7 @@ pub mod derived_analysis {
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_FILE_SCHEMA && d.severity == Severity::Error), "got {diagnostics:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn missing_product_chain_is_soft() {
             let mut doc = base_doc();
             doc.instances.clear();
@@ -229,7 +229,7 @@ pub mod derived_analysis {
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_PRODUCT_CHAIN && d.severity == Severity::Warning), "got {diagnostics:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn any_named_shape_representation_subtype_is_hard() {
             let mut doc = base_doc();
             doc.instances.push(Part21Instance { id: 4, entities: vec![("GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION".into(), vec![])] });
@@ -238,7 +238,7 @@ pub mod derived_analysis {
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_SHAPE_REPRESENTATION_PRESENT && d.severity == Severity::Error), "got {diagnostics:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn bare_shape_representation_base_type_is_also_hard() {
             // Suffix match catches the un-subtyped base type too -- CC1 allows NO representation.
             let mut doc = base_doc();

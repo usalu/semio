@@ -54,25 +54,25 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn derives_from_header_fields() {
         let dimensions = compute_semio_image_dimensions(&snapshot(4, 3, SemioColorspace::Rgba, 8, 2));
         assert_eq!(dimensions, SemioImageDimensions { width: 4, height: 3, bit_depth: 8, has_alpha: true, pixel_count: 12, frame_count: 2 });
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn rgb_has_no_alpha() {
         let dimensions = compute_semio_image_dimensions(&snapshot(2, 2, SemioColorspace::Rgb, 8, 1));
         assert!(!dimensions.has_alpha);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = snapshot(5, 5, SemioColorspace::Grayscale, 8, 3);
         assert_eq!(compute_semio_image_dimensions(&snapshot), compute_semio_image_dimensions(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(compute_semio_image_dimensions(&SemioImageSnapshot::default()), SemioImageDimensions::default());
     }

@@ -345,7 +345,7 @@ mod tests {
         assert_eq!(expected_diff.diff().apply(base).expect("valid mutation diff"), applied_snapshot, "diff.diff().apply(base) must equal the imperative mutation result for {mutation:?}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mutation_diff_law() {
         let base = base_snapshot();
         assert_mutation_diff_law(&base, StlMutation::NoMutation);
@@ -361,7 +361,7 @@ mod tests {
     //#endregion 🔖️mutation_diff_law
 
     //#region 🔖️inverse_law
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inverse_law() {
         let base = base_snapshot();
         let variants = vec![
@@ -402,7 +402,7 @@ mod tests {
         assert_eq!(merged.apply(base).expect("valid absorbed diff"), sequential, "absorb(d1,d2).apply(base) must equal sequential application for {m1:?} + {m2:?}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_law() {
         let base = base_snapshot();
 
@@ -429,7 +429,7 @@ mod tests {
         assert_absorb_law(&base, StlMutation::SetTriangleNormal { index: 1, normal: [1.0, 0.0, 0.0] }, StlMutation::SetTriangleVertices { index: 1, vertices: [[1.0, 1.0, 1.0], [2.0, 2.0, 2.0], [3.0, 3.0, 3.0]] });
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_law_associativity() {
         let base = base_snapshot();
         let d1 = StlMutation::SetSolidName { name: "one".into() }.diff(&base);
@@ -455,7 +455,7 @@ mod tests {
     //#endregion 🔖️absorb_law
 
     //#region 🔖️between_roundtrip_law
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn between_roundtrip_law() {
         let a = base_snapshot();
         let mut b = base_snapshot();
@@ -473,7 +473,7 @@ mod tests {
     //#endregion 🔖️between_roundtrip_law
 
     //#region 🔖️codec_retention_law
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn codec_retention_law() {
         let bytes = std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🗿️artifacts/🟪️stl/📚️examples/🎬️demo/🖼️assets/🟪️example.stl"));
         let decoded = bytes
@@ -514,7 +514,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn field_sweep_covers_every_mutable_field() {
         let a = sweep_a();
         let b = sweep_b();
@@ -554,7 +554,7 @@ mod tests {
     /// 🎯 The recipe's own canonical absorb shapes, asserted structurally (not just via
     /// `assert_absorb_law`'s apply-equivalence) — `Insert(2)+Remove(0)` and
     /// `Insert(2,f)+Insert(2,g)`.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn insert_then_remove_before_matches_canonical_shape() {
         let d1 = StlDiff { solid_name: None, triangles: Some(StlTrianglesDiff { removed: vec![], modified: vec![], added: vec![StlTriangleAdded { index: 2, triangle: tri(1.0, 0.0, 0.0, 1.0) }] }) };
         let d2 = StlDiff { solid_name: None, triangles: Some(StlTrianglesDiff { removed: vec![0], modified: vec![], added: vec![] }) };
@@ -573,7 +573,7 @@ mod tests {
         assert_eq!(merged.apply(&base).expect("valid absorbed diff"), sequential);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn insert_insert_same_index_both_survive() {
         let d1 = StlDiff { solid_name: None, triangles: Some(StlTrianglesDiff { removed: vec![], modified: vec![], added: vec![StlTriangleAdded { index: 2, triangle: tri(1.0, 0.0, 0.0, 1.0) }] }) };
         let d2 = StlDiff { solid_name: None, triangles: Some(StlTrianglesDiff { removed: vec![], modified: vec![], added: vec![StlTriangleAdded { index: 2, triangle: tri(0.0, 1.0, 0.0, 2.0) }] }) };
@@ -588,7 +588,7 @@ mod tests {
         assert_eq!(sequential.triangles.len(), base.triangles.len() + 2);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_then_set_field_patches_into_added() {
         let d1 = StlDiff { solid_name: None, triangles: Some(StlTrianglesDiff { removed: vec![], modified: vec![], added: vec![StlTriangleAdded { index: 1, triangle: tri(1.0, 0.0, 0.0, 1.0) }] }) };
         let d2 = StlDiff { solid_name: None, triangles: Some(StlTrianglesDiff { removed: vec![], modified: vec![StlTriangleModified { index: 1, diff: StlTriangleDiff { normal: Some([0.0, 1.0, 0.0]), vertices: None } }], added: vec![] }) };
@@ -608,7 +608,7 @@ mod tests {
     }
     //#endregion 🔖️CanonicalCases
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn out_of_range_triangle_mutation_is_rejected_without_mutating() {
         let base = base_snapshot();
         let mut snap = base.clone();
@@ -626,7 +626,7 @@ mod tests {
     /// `InsertTriangle`) and the fixed-size-array payloads (`SetTriangleNormal`,
     /// `SetTriangleVertices`) that carry the doubly-nested `[[f64; 3]; 3]` the `dsl`-derive bug
     /// blocks.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_text_binary_roundtrip_law() {
         // FG1: reuses `demo_mutation_cases()` (this file's own `DemoCases` region, above), the
         // single source of truth also exercised by `⚙️engine::conformance_laws`'s `ops_grammar_
@@ -647,7 +647,7 @@ mod tests {
     /// `HandcraftedDiffCodec` region) — exercises `solid_name` plus every triangle-triple section
     /// (`removed`/`modified`/`added`), incl. the doubly-nested `vertices` field, simultaneously via
     /// real `between()` results in both directions.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn diff_codec_text_binary_roundtrip_law() {
         // FG1: reuses `diff::demo_diff_cases()` (this artifact's `🔺️diff::component`'s own
         // `DemoCases` region), the single source of truth also exercised by `⚙️engine::

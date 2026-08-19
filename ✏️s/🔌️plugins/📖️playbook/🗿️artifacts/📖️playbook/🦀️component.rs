@@ -413,13 +413,13 @@ pub async fn artifact_kind() -> ArtifactKindSpec {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn artifact_kind_uses_the_playbook_media_kind_as_both_id_and_schema() {
         assert_eq!(artifact_kind().id, "text.playbook");
         assert_eq!(artifact_kind().schema, PLAYBOOK_DOCUMENT_SCHEMA);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn block_fields_roundtrip() {
         let json = r#"{
             "id":"b1",
@@ -474,7 +474,7 @@ mod tests {
     /// ⚖️ LAW: `flow` is the LOSSLESS source of truth — every step field (including nested
     /// `condition` trees) round-trips through `flow_content_snapshot_from_steps`/
     /// `steps_from_flow_content` exactly.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn flow_content_round_trips_every_step_field_losslessly() {
         let steps = sample_steps();
         let content = crate::artifacts::playbook::flow_content_snapshot_from_steps(&steps);
@@ -487,7 +487,7 @@ mod tests {
     /// ⚖️ LAW: `document` is an HONEST narrative projection — `steps -> document` preserves every
     /// title/description, and `document -> steps` recovers exactly that title/description skeleton
     /// (never `blocks`/`condition`, which prose carries none of — documented lossy by design).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn document_projection_round_trips_titles_and_descriptions_only() {
         let steps = sample_steps();
         let content = crate::artifacts::playbook::document_snapshot_from_steps(Some("My Playbook"), &steps);

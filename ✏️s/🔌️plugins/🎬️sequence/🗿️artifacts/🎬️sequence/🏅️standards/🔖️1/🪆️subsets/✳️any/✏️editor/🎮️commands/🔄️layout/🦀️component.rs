@@ -79,7 +79,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_orientation_command_changes_reorganize_layout_axis() {
         let mut app = new_app();
         dispatch(&mut app, SequenceCommand::SetOrientation(SetOrientation { value: "topBottom".into() }));
@@ -89,7 +89,7 @@ mod tests {
         assert!(ys.iter().any(|y| *y != 0.0), "topBottom orientation should spread steps vertically, got {ys:?}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn reorganize_command_spreads_step_positions_apart() {
         let mut app = new_app();
         move_all_steps_to_origin(&mut app);

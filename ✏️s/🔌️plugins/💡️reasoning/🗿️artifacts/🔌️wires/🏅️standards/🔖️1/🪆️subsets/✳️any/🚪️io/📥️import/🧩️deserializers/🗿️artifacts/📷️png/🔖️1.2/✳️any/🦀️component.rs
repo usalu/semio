@@ -19,7 +19,7 @@ pub struct PngIntoWires;
 impl Deserializer<WiresSnapshot> for PngIntoWires {
     const FROM: Dialect = PNG_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    async fn deserialize(_payload: &IoPayload) -> IoResult<WiresSnapshot> {
+    fn deserialize(_payload: &IoPayload) -> IoResult<WiresSnapshot> {
         Err(IoError { message: "png import not yet implemented".to_string(), diagnostics: Vec::new() })
     }
 }

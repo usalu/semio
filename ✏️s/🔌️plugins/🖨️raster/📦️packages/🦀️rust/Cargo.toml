@@ -39,3 +39,4 @@ base64 = "0.22"
 wasm-bindgen.workspace = true
 
 [dev-dependencies]
+semio-framework-async-macros = { path = "../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }

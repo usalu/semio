@@ -99,7 +99,7 @@ mod tests {
     }
 
     /// 🧪️ Real round trip through step's own real Part-21 text codec.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn real_text_round_trip_through_step_codec() {
         let cad = sample_cad();
         let step = semio_framework_plugin::resolve_ready(SemioCadToStep::serialize(&cad)).expect("serialize");

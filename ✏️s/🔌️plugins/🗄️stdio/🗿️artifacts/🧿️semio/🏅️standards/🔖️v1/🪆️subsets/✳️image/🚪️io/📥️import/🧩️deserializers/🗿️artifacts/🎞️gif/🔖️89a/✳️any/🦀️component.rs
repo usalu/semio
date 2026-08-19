@@ -60,7 +60,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn decodes_indices_through_gct_and_maps_comments() {
         let semio = semio_framework_plugin::resolve_ready(SemioImageFromGif::deserialize(&sample_gif())).expect("deserialize");
         assert_eq!(semio.width, 2);

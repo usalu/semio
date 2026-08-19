@@ -230,7 +230,7 @@ mod tests {
 
     /// 🧪️ Real round trip through dxf's own real ASCII writer/reader; a genuine circle round
     /// trips EXACTLY (not flattened), a straight-line path becomes a real POLYLINE.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn real_text_round_trip_through_dxf_codec() {
         let drawing = sample_drawing();
         let dxf = semio_framework_plugin::resolve_ready(SemioDrawingToDxf::serialize(&drawing)).expect("serialize");

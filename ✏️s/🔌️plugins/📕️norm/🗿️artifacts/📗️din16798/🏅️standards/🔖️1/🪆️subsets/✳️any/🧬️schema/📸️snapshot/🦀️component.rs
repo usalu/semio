@@ -168,7 +168,7 @@ crate::impl_norm_artifact_record!(Din16798Snapshot, extension = "din16798", enve
 //#endregion 🔖️HandcraftedArtifactCodecs
 
 impl Default for Din16798Snapshot {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self {
             annex: AnnexChoice::De,
             occupancy: "residential".into(),

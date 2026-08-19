@@ -33,7 +33,7 @@ impl protocol::Inference<SemioDocumentSnapshot> for SemioDocumentInference {
 /// 🌱 Defined in terms of `infer` (not derived) — keeps the law correct regardless of whether
 /// `SemioDocumentSnapshot::default()`'s `blocks` ever stops being empty.
 impl Default for SemioDocumentInference {
-    async fn default() -> Self {
+    fn default() -> Self {
         <Self as protocol::Inference<SemioDocumentSnapshot>>::infer(&SemioDocumentSnapshot::default())
     }
 }
@@ -85,13 +85,13 @@ mod tests {
     use super::*;
     use protocol::Inference;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = SemioDocumentSnapshot::default();
         assert_eq!(SemioDocumentInference::infer(&snapshot), SemioDocumentInference::infer(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(SemioDocumentInference::infer(&SemioDocumentSnapshot::default()), SemioDocumentInference::default());
     }

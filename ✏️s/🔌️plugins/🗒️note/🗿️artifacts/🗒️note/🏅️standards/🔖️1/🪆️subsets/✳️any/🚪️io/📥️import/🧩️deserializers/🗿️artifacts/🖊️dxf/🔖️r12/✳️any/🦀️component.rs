@@ -16,7 +16,7 @@ pub struct DxfIntoNote;
 impl Deserializer<NoteSnapshot> for DxfIntoNote {
     const FROM: Dialect = DXF_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    async fn deserialize(payload: &IoPayload) -> IoResult<NoteSnapshot> {
+    fn deserialize(payload: &IoPayload) -> IoResult<NoteSnapshot> {
         let IoPayload::Text(text) = payload else {
             return Err(IoError { message: "DxfIntoNote: expected a text dxf payload".to_string(), diagnostics: Vec::new() });
         };

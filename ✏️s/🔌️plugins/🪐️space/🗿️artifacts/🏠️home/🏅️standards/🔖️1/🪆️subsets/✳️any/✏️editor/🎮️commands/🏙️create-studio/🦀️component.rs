@@ -75,7 +75,7 @@ mod tests {
     use semio_framework_os::list_os_space_catalog_entries;
     use semio_framework_plugin::{testkit, EditorApp, HistoryView, VcsArtifactApp};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn home_command_op_text_round_trips_every_variant() {
         use crate::editor::home::HomeCommand;
         store::os_store::test_support::assert_op_line_round_trip(&HomeCommand::CreateStudio(CreateStudio { name: "Untitled".into(), kind: "catalog".into(), folder_path: None }));
@@ -86,7 +86,7 @@ mod tests {
         store::os_store::test_support::assert_op_line_round_trip(&HomeCommand::OpenSpace(crate::editor::home::commands::open_space::OpenSpace { space_id: "s1".into() }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn creates_studio_via_home_action() {
         let port = crate::catalog_port();
         let before = list_os_space_catalog_entries(port.clone()).expect("list").len();
@@ -96,7 +96,7 @@ mod tests {
         assert!(after >= before);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn temporary_studio_uses_ephemeral_registry_not_catalog() {
         let projection = SHomeSnapshot { schema: "s.home".into(), catalog_generation: 0 };
         let history = HistoryView::empty();

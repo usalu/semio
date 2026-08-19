@@ -46,7 +46,7 @@ pub async fn reconstruct(payload: &GltfChangeMaterialDoubleSidedPayload, base: &
 #[cfg(test)]
 mod tests {
     use super::*;
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inverse_restores_prior_value_and_rejects_stale_state() {
         let mut base = GltfSnapshot::default();
         base.document.materials.push(Default::default());

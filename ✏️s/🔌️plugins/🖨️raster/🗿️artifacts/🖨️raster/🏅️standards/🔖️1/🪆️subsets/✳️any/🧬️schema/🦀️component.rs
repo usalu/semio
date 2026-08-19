@@ -32,7 +32,7 @@ pub struct RasterArtifact {
 
 //#region 🔖️Conversions
 impl Default for RasterArtifact {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self {
             schema: RASTER_DOCUMENT_SCHEMA.into(),
             id: String::new(),
@@ -485,7 +485,7 @@ pub async fn clone_layer(layer: &RasterLayerNode) -> RasterLayerNode {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn imports_dwg_polyline_into_raster_document() {
         let mut drawing = semio_s_plugin_stdio::artifacts::dwg::DwgDrawing::default();
         let layer = drawing.ensure_layer("0");
@@ -509,7 +509,7 @@ mod tests {
         assert!(!asset.data.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn imports_empty_dwg_into_blank_raster_document() {
         let drawing = semio_s_plugin_stdio::artifacts::dwg::DwgDrawing::default();
         let value = crate::artifacts::raster::io::raster_document_json_from_dwg(&drawing).expect("empty dwg import");

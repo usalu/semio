@@ -265,7 +265,7 @@ impl SymmetryGroup3d {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn identity_matrix_is_neutral() {
         for &t in &Transform2d::ALL {
             assert_eq!(t.semio_compose_rs(Transform2d::Identity), t);
@@ -273,7 +273,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inverse_composes_to_identity() {
         for &t in &Transform2d::ALL {
             assert_eq!(t.semio_compose_rs(t.inverse()), Transform2d::Identity);
@@ -281,7 +281,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn four_quarter_rotations_is_identity() {
         let mut t = Transform2d::Identity;
         for _ in 0..4 {
@@ -290,14 +290,14 @@ mod tests {
         assert_eq!(t, Transform2d::Identity);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn two_flips_is_identity() {
         for &t in &[Transform2d::FlipH, Transform2d::FlipV, Transform2d::FlipDiag, Transform2d::FlipAntiDiag] {
             assert_eq!(t.semio_compose_rs(t), Transform2d::Identity);
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn group_closure_every_composition_stays_in_d4() {
         for &a in &Transform2d::ALL {
             for &b in &Transform2d::ALL {
@@ -307,7 +307,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn apply_offset_matches_apply_window_orientation() {
         // Rotating the offset (1,0) ("east") by Rot90 should match where the tile that was at the
         // window's east edge ends up after rotating the window itself.
@@ -326,7 +326,7 @@ mod tests {
         assert_eq!(sorted, expected);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn apply_window_round_trips_through_inverse() {
         let w = 3usize;
         let h = 2usize;
@@ -339,7 +339,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn d4_group_has_eight_elements() {
         assert_eq!(SymmetryGroup2d::D4.elements().len(), 8);
         assert_eq!(SymmetryGroup2d::C4.elements().len(), 4);
@@ -347,14 +347,14 @@ mod tests {
         assert_eq!(SymmetryGroup2d::None.elements().len(), 1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn cube_rotation_group_has_exactly_24_elements() {
         let rots = cube_rotations_24();
         assert_eq!(rots.len(), 24);
         assert!(rots.iter().all(|t| t.determinant() == 1), "every proper rotation must have determinant +1");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn cube_full_symmetry_group_has_exactly_48_elements() {
         let full = cube_symmetries_48();
         assert_eq!(full.len(), 48);
@@ -364,7 +364,7 @@ mod tests {
         assert_eq!(improper, 24);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn cube_rotations_are_closed_under_composition() {
         let rots = cube_rotations_24();
         for &a in &rots {
@@ -375,7 +375,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn cube_rotation_inverse_composes_to_identity() {
         let rots = cube_rotations_24();
         let id = Transform3d::identity();
@@ -385,7 +385,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn cube_offset_transform_preserves_unit_offset_length() {
         let rots = cube_rotations_24();
         for &t in &rots {
@@ -396,7 +396,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn z_rot4_is_four_distinct_quarter_turns_returning_to_identity() {
         let elements = SymmetryGroup3d::ZRot4.elements();
         assert_eq!(elements.len(), 4);

@@ -79,7 +79,7 @@ mod tests {
     use crate::editor::flow::testkit::{dispatch, flow_app, render};
     use crate::editor::flow::FlowCommand;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn adding_a_generation_populates_the_form_and_emits_no_artifact_mutations() {
         let mut app = flow_app();
         assert!(render(&mut app, form::FLOW_PLAY_BODY_GENERATE_FORM).contains("Add a generation"), "the form starts empty");
@@ -88,7 +88,7 @@ mod tests {
         assert!(render(&mut app, generations::FLOW_PLAY_BODY_GENERATIONS).contains("selectGeneration"), "the new generation lands in the list");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn removing_an_unknown_generation_is_a_no_operation() {
         let mut app = flow_app();
         let result = dispatch(&mut app, FlowCommand::RemoveGeneration(crate::editor::flow::modes::generate::commands::remove_generation::RemoveGeneration { id: "nope".into() }));

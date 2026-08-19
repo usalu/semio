@@ -60,7 +60,7 @@ pub struct DwgArtifact {
 
 //#region 🔖️Conversions
 impl Default for DwgArtifact {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self::from_snapshot(DwgSnapshot::default())
     }
 }

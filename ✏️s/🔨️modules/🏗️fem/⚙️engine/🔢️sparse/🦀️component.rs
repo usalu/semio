@@ -709,7 +709,7 @@ mod tests {
         coo
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn ldlt_matches_dense_lu_on_random_spd() {
         let n = 8;
         let edges = [(0, 1), (1, 2), (2, 3), (3, 4), (4, 5), (5, 6), (6, 7), (7, 0), (0, 4), (2, 6)];
@@ -726,7 +726,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn ldlt_matches_dense_lu_on_1d_laplacian() {
         let n = 20;
         let mut coo = Coo::new(n);
@@ -748,7 +748,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn ldlt_solve_many_matches_solve_per_column() {
         let n = 8;
         let edges = [(0, 1), (1, 2), (2, 3), (3, 4), (4, 5), (5, 6), (6, 7), (7, 0), (0, 4), (2, 6)];
@@ -770,7 +770,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn ldlt_reports_zero_pivot_on_singular_matrix() {
         let n = 5;
         let edges = [(0, 1), (1, 2), (2, 3)];
@@ -793,7 +793,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn pcg_matches_ldlt_and_dense_lu() {
         let n = 8;
         let edges = [(0, 1), (1, 2), (2, 3), (3, 4), (4, 5), (5, 6), (6, 7), (7, 0), (0, 4), (2, 6)];
@@ -811,7 +811,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn rcm_reduces_bandwidth_on_scattered_path_graph() {
         let shuffle = [9usize, 0, 8, 1, 7, 2, 6, 3, 5, 4];
         let mut adjacency: Vec<Vec<usize>> = vec![Vec::new(); 10];
@@ -833,7 +833,7 @@ mod tests {
         assert!(after <= before);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dense_symmetric_eigen_jacobi_matches_known_eigenvalues() {
         let mut a = MatD::zeros(3, 3);
         a.set(0, 0, 3.0);
@@ -845,7 +845,7 @@ mod tests {
         assert!((vals[2] - 3.0).abs() < 1e-9);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn subspace_iteration_matches_diagonal_analytic_case() {
         let n = 10;
         let mut k_coo = Coo::new(n);
@@ -863,7 +863,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn subspace_iteration_matches_dense_jacobi_on_small_nondiagonal_case() {
         let n = 7;
         let edges = [(0, 1), (1, 2), (2, 3), (3, 4), (4, 5), (5, 6), (6, 0), (0, 3)];
@@ -887,7 +887,7 @@ mod tests {
     /// 🔍️ `CscSym::get` reads back every entry of a symmetric matrix (both `row<=col` and `row>col`
     /// orderings resolve to the same stored upper-triangle slot) and returns `0.0` for an absent entry;
     /// `to_csr_full` mirrors the SAME matrix into a full (both triangles materialized) `Csr`.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn csc_sym_get_and_to_csr_full_match_dense() {
         let mut coo = Coo::new(3);
         coo.add(0, 0, 4.0);
@@ -918,7 +918,7 @@ mod tests {
 
     /// 🔢️ `negative_pivot_count` counts `D[j] < 0` — a diagonal (already-factored-trivially) indefinite
     /// matrix with one negative entry must report exactly one negative pivot.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn negative_pivot_count_counts_negative_diagonal_entries() {
         let mut coo = Coo::new(3);
         coo.add(0, 0, 1.0);
@@ -930,7 +930,7 @@ mod tests {
 
     /// ⏱️ `pcg` returns immediately (zero iterations, `converged: true`) when the initial guess `x0`
     /// already satisfies the residual tolerance.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn pcg_converges_immediately_when_initial_guess_is_already_exact() {
         let mut coo = Coo::new(3);
         coo.add(0, 0, 2.0);
@@ -945,7 +945,7 @@ mod tests {
     }
 
     /// ⏱️ `pcg` with `max_iter: 0` never enters its iteration loop and reports `converged: false`.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn pcg_reports_not_converged_when_max_iter_is_zero() {
         let mut coo = Coo::new(3);
         coo.add(0, 0, 2.0);
@@ -962,7 +962,7 @@ mod tests {
     /// ⏱️ `pcg` against an all-zero operator has zero search-direction curvature (`pᵀAp = 0`) on its
     /// very first step, hitting the early `break` guard against dividing by zero — reported as
     /// `converged: false` after exactly 1 iteration.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn pcg_breaks_on_zero_curvature_direction() {
         let coo = Coo::new(3); // no entries added: A is the zero operator
         let csr = coo.to_csr();
@@ -976,7 +976,7 @@ mod tests {
     /// 🎯️ `dense_symmetric_eigen_jacobi` on a 0x0 matrix returns empty eigenvalues/eigenvectors instead
     /// of looping — the degenerate size `subspace_iteration`'s own `.max(1)` guard against normally
     /// avoids, but the helper itself must still handle directly.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dense_symmetric_eigen_jacobi_handles_zero_size_matrix() {
         let a = MatD::zeros(0, 0);
         let (vals, vecs) = dense_symmetric_eigen_jacobi(&a);

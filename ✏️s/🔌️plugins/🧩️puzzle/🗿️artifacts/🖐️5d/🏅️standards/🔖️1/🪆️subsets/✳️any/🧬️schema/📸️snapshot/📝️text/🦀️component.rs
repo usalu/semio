@@ -33,7 +33,7 @@ mod tests {
     use super::*;
     use crate::artifacts::puzzle5d::{Puzzle5dFastener, Puzzle5dGrip, Puzzle5dGrip2d, Puzzle5dGrip3d, Puzzle5dKindCompatibility, Puzzle5dMeta, Puzzle5dPart, Puzzle5dPart2d, Puzzle5dPart3d, Puzzle5dScale, Puzzle5dPartAnchor, Puzzle5dCompatSpecificity};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn puzzle5d_projection_dsl_round_trips() {
         let empty = Puzzle5dSnapshot::default();
         semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&empty);
@@ -83,7 +83,7 @@ mod tests {
     /// 📜️ Both real example fixtures (migrated from the legacy `.5d.json` shape — see ticket
     /// 🎫️convertpuzzle2d3d5dtotypeddslderiveengine) parse as `.puzzle5d` DSL text and round-trip
     /// through `print_dsl`/`parse_dsl` exactly.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn puzzle5d_example_fixtures_parse_and_round_trip_as_dsl() {
         for (name, dsl_text) in [("forest", PUZZLE5D_CONCRETE_FOREST_EXAMPLE_TEXT), ("tower", PUZZLE5D_NAKAGIN_EXAMPLE_TEXT)] {
             let projection = parse_dsl(dsl_text).unwrap_or_else(|error| panic!("{name} example fixture parses as dsl: {error}"));
@@ -101,7 +101,7 @@ mod tests {
     /// `command_envelope_round_trip_holds_for_an_applied_operation`). Uses a single `#[dsl(block)]`
     /// `SetPart` operation (not a `#[dsl(table)]` collection), so this is unaffected by the
     /// known table-column pack bug noted above.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn command_envelope_round_trip_holds_for_an_applied_operation() {
         use crate::artifacts::puzzle5d::op::Puzzle5dMutation;
         use crate::artifacts::puzzle5d::spr::Puzzle5dStore;

@@ -52,19 +52,19 @@ pub(crate) async fn lon_lat_bounds(positions: &[(f64, f64)]) -> Option<GisTerrai
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn empty_overlay_has_no_bounds() {
         let snapshot = GisTerrainSnapshot::default();
         assert!(lon_lat_bounds(&imported_lon_lat_positions(&snapshot)).is_none());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn malformed_overlay_json_contributes_no_positions() {
         let snapshot = GisTerrainSnapshot { exaggeration: 0.0, imported_features_json: "not json".into(), ..Default::default() };
         assert!(imported_lon_lat_positions(&snapshot).is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn two_positions_produce_their_enclosing_box() {
         let snapshot = GisTerrainSnapshot {
             exaggeration: 1.0,

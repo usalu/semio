@@ -21,7 +21,7 @@ pub struct CsvIntoSequence;
 impl Deserializer<SequenceSnapshot> for CsvIntoSequence {
     const FROM: Dialect = CSV_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    async fn deserialize(payload: &IoPayload) -> IoResult<SequenceSnapshot> {
+    fn deserialize(payload: &IoPayload) -> IoResult<SequenceSnapshot> {
         let IoPayload::Binary(bytes) = payload else {
             return Err(IoError { message: "CsvIntoSequence: expected a binary csv payload".to_string(), diagnostics: Vec::new() });
         };

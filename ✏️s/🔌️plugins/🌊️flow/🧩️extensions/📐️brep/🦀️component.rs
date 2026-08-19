@@ -1511,7 +1511,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn box_emits_geometry_handle() {
         let _serial = test_serial();
         reset_test_kernel();
@@ -1525,7 +1525,7 @@ mod tests {
         assert_eq!(solid.get("kind").and_then(|v| v.as_atom()).and_then(|a| a.as_str()), Some("solid"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn line_curve_emits_curve_handle() {
         let _serial = test_serial();
         reset_test_kernel();
@@ -1538,7 +1538,7 @@ mod tests {
         assert_eq!(curve.get("kind").and_then(|v| v.as_atom()).and_then(|a| a.as_str()), Some("curve"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dwg_export_import_round_trips_a_box() {
         let _serial = test_serial();
         reset_test_kernel();
@@ -1567,7 +1567,7 @@ mod tests {
         solid.get("handle").and_then(|value| value.as_atom()).and_then(|atom| atom.as_str()).expect("box handle").to_string()
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn step_export_import_round_trips_a_box() {
         let _serial = test_serial();
         reset_test_kernel();
@@ -1584,7 +1584,7 @@ mod tests {
         assert_eq!(imported.get("handles").and_then(|value| value.as_array()).map(|handles| handles.len()), Some(1));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn obj_export_import_round_trips_a_box() {
         let _serial = test_serial();
         reset_test_kernel();
@@ -1600,7 +1600,7 @@ mod tests {
         assert_eq!(imported.get("handles").and_then(|value| value.as_array()).map(|handles| handles.len()), Some(1));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn stl_export_import_round_trips_a_box() {
         let _serial = test_serial();
         reset_test_kernel();
@@ -1617,7 +1617,7 @@ mod tests {
         assert_eq!(imported.get("handles").and_then(|value| value.as_array()).map(|handles| handles.len()), Some(1));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn glb_export_import_round_trips_a_box_through_the_mesh_bridge() {
         let _serial = test_serial();
         reset_test_kernel();
@@ -1634,7 +1634,7 @@ mod tests {
         assert_eq!(imported.get("handles").and_then(|value| value.as_array()).map(|handles| handles.len()), Some(1));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn export_solid_json_rejects_unsupported_format() {
         let _serial = test_serial();
         reset_test_kernel();
@@ -1645,7 +1645,7 @@ mod tests {
         assert!(exported.get("error").is_some());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn extrude_and_area() {
         let _serial = test_serial();
         reset_test_kernel();
@@ -1661,7 +1661,7 @@ mod tests {
         assert!(value > 0.0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn extrude_curve_wire_uses_vector_magnitude() {
         let _serial = test_serial();
         reset_test_kernel();
@@ -1675,7 +1675,7 @@ mod tests {
         assert!((value - 16.0).abs() < 1e-3);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fillet_translate_chain() {
         let _serial = test_serial();
         reset_test_kernel();
@@ -1691,7 +1691,7 @@ mod tests {
         assert_eq!(moved.schema(), Some("geometry"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn manifest_lists_brep_operators() {
         let _serial = test_serial();
         reset_test_kernel();
@@ -1708,7 +1708,7 @@ mod tests {
         assert!(json.contains("\"Schemas\""));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn evaluate_json_box() {
         let _serial = test_serial();
         reset_test_kernel();
@@ -1719,7 +1719,7 @@ mod tests {
         assert_eq!(channel_payload(&out, "solid").schema(), Some("geometry"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn retain_geometry_handles_sweeps_orphaned_shapes() {
         let _serial = test_serial();
         reset_test_kernel();
@@ -1743,7 +1743,7 @@ mod tests {
         assert!(tessellate_geometry(&orphan_handle, 0.1).is_err());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn tessellate_geometry_is_memoized() {
         let _serial = test_serial();
         reset_test_kernel();
@@ -1761,7 +1761,7 @@ mod tests {
         assert!(!first.positions.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn brep_component_deconstructs_solid_topology() {
         let _serial = test_serial();
         reset_test_kernel();
@@ -1781,7 +1781,7 @@ mod tests {
         assert_eq!(list_indices(faces).len(), 6);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn schema_component_deconstructs_geometry() {
         let mut reg = Registry::new();
         register(&mut reg);
@@ -1791,7 +1791,7 @@ mod tests {
         assert_eq!(out.get("kind").and_then(|value| value.as_dictionary()).and_then(|dictionary| dictionary.get("value")).and_then(|value| value.as_atom()).and_then(|atom| atom.as_str()), Some("solid"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn extension_bundle_extends_flow_and_evaluates_box() {
         use flow_extension_sdk::evaluate_json;
         use semio_framework_plugin::{extension_activate, extension_invoke, extension_manifest, install_extension_bundle, ExtensionBundle};

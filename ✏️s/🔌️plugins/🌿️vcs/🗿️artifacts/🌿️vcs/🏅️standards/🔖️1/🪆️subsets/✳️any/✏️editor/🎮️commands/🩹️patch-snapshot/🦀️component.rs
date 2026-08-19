@@ -52,19 +52,19 @@ mod tests {
     use crate::editor::vcs::testkit::{app, dispatch};
     use crate::editor::vcs::VcsCommand;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn vcs_demo_command_op_text_round_trips() {
         store::os_store::test_support::assert_op_line_round_trip(&VcsCommand::PatchSnapshot(PatchSnapshot { field: "title".into(), value: "Renamed".into() }));
         store::os_store::test_support::assert_op_line_round_trip(&VcsCommand::TextEdit(text_edit::TextEdit { text: "{}".into() }));
         store::os_store::test_support::assert_op_line_round_trip(&VcsCommand::Edit(edit::Edit { text: "{}".into() }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn vcs_demo_command_op_binary_agrees_with_text() {
         store::os_store::test_support::assert_op_text_binary_equivalence(&VcsCommand::PatchSnapshot(PatchSnapshot { field: "counter".into(), value: "3".into() }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn text_edit_action_persists_projection_changes() {
         let mut instance = app();
         let before = instance.snapshot().expect("materialize snapshot");
@@ -81,7 +81,7 @@ mod tests {
         assert!(after.tags.contains(&"edited-in-place".to_string()));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn edit_action_is_alias_for_text_edit() {
         let mut instance = app();
         let before = instance.snapshot().expect("materialize snapshot");

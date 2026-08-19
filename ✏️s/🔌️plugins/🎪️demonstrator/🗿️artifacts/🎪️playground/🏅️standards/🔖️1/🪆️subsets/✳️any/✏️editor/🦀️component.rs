@@ -122,19 +122,19 @@ mod tests {
     use super::*;
     use semio_framework_plugin::{EditorApp, HistoryView};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_playground_editor_builds_a_definition_for_the_editor_role() {
         let def = create_playground_editor();
         assert_eq!(def.role, semio_framework_plugin::AppRole::Editor);
         assert_eq!(def.dialect, PLAYGROUND_DIALECT.into());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn editor_dialect_matches_the_artifact_coordinate() {
         assert_eq!(<PlaygroundEditor as ArtifactEditor>::DIALECT, PLAYGROUND_DIALECT);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn change_schema_command_mutates_the_schema_field() {
         let document = empty_playground_snapshot();
         let history = HistoryView::empty();
@@ -146,7 +146,7 @@ mod tests {
         assert_eq!(emit.artifact_mutations, vec![PlaygroundMutation::ChangeSchema(crate::artifacts::playground::standards::v1::subsets::any::schema::mutations::change_schema::mutation::ChangeSchema { new_schema: "playground.custom".into() })]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn command_from_action_covers_the_declared_action_and_rejects_unknown_ones() {
         semio_framework_plugin::testkit::assert_declared_actions_bridge_to_commands::<EditorApp<PlaygroundEditor>>(testkit::playground_editor_manifest_for_testkit);
         assert!(PlaygroundEditor::command_from_action("noSuchAction", None).is_err());

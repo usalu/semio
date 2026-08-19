@@ -121,7 +121,7 @@ crate::impl_norm_artifact_record!(En1998Snapshot, extension = "en1998", envelope
 //#endregion 🔖️HandcraftedArtifactCodecs
 
 impl Default for En1998Snapshot {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self {
             seismic_zone: 2,
             ground_type: "b".into(),

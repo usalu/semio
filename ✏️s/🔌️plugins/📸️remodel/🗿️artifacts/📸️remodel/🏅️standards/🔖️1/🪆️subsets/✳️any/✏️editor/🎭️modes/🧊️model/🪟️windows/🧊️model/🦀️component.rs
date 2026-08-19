@@ -159,7 +159,7 @@ mod tests {
     use crate::editor::remodel::testkit::{app, render as render_body};
     use crate::artifacts::remodel::default_remodel_scene;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn default_scene_seeds_the_world3d_mesh_json() {
         let scene = default_remodel_scene();
         assert!(world_meshes_json(&scene).contains(REMODEL_MESH_ID));
@@ -167,14 +167,14 @@ mod tests {
         assert!(world_instances_json(&config).contains(REMODEL_MESH_ID));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn hiding_the_mesh_layer_drops_the_instance() {
         let mut config = RemodelConfig::default();
         config.layers.mesh = false;
         assert_eq!(world_instances_json(&config), "[]");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn renders_a_world_3d_surface() {
         let mut app = app();
         assert!(render_body(&mut app, REMODEL_PLAY_BODY_MAIN).contains("world-3d"));

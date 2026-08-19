@@ -10,22 +10,22 @@ use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criteri
 use protocol_testkit::{GenProfile, HistoryLogGen, OpDagGen};
 
 //#region 🔖️Fixtures
-fn profile_for(edit_count: usize) -> GenProfile {
+async fn profile_for(edit_count: usize) -> GenProfile {
     GenProfile { edit_count, max_ops_per_edit: 4, checkpoint_every: 8, adversarial: false }
 }
 
-fn generated_log(seed: u64, edit_count: usize) -> protocol::HistoryLog {
+async fn generated_log(seed: u64, edit_count: usize) -> protocol::HistoryLog {
     HistoryLogGen::new(seed).generate(&profile_for(edit_count))
 }
 
-fn encoded_bytes(seed: u64, edit_count: usize) -> Vec<u8> {
+async fn encoded_bytes(seed: u64, edit_count: usize) -> Vec<u8> {
     let log = generated_log(seed, edit_count);
     protocol_history::encode_history(&log, &protocol_history::EncodeOptions::default()).expect("encode_history")
 }
 //#endregion 🔖️Fixtures
 
 //#region 🔖️Gen
-fn bench_history_log_gen(c: &mut Criterion) {
+async fn bench_history_log_gen(c: &mut Criterion) {
     let mut group = c.benchmark_group("history_log_gen");
     for &edit_count in &[8usize, 64, 256] {
         group.bench_with_input(BenchmarkId::new("generate", edit_count), &edit_count, |b, &edit_count| {
@@ -37,7 +37,7 @@ fn bench_history_log_gen(c: &mut Criterion) {
 //#endregion 🔖️Gen
 
 //#region 🔖️Codec
-fn bench_encode_decode_history(c: &mut Criterion) {
+async fn bench_encode_decode_history(c: &mut Criterion) {
     let mut group = c.benchmark_group("encode_decode_history");
     for &edit_count in &[8usize, 64, 256] {
         let log = generated_log(2, edit_count);
@@ -55,7 +55,7 @@ fn bench_encode_decode_history(c: &mut Criterion) {
 //#endregion 🔖️Codec
 
 //#region 🔖️Append
-fn bench_history_appender(c: &mut Criterion) {
+async fn bench_history_appender(c: &mut Criterion) {
     let mut group = c.benchmark_group("history_appender");
     for &edit_count in &[8usize, 64, 256] {
         let log = generated_log(3, edit_count);
@@ -76,7 +76,7 @@ fn bench_history_appender(c: &mut Criterion) {
 //#endregion 🔖️Append
 
 //#region 🔖️Recover
-fn bench_recover(c: &mut Criterion) {
+async fn bench_recover(c: &mut Criterion) {
     let mut group = c.benchmark_group("recover");
     for &edit_count in &[8usize, 64, 256] {
         let bytes = encoded_bytes(4, edit_count);
@@ -90,7 +90,7 @@ fn bench_recover(c: &mut Criterion) {
 //#endregion 🔖️Recover
 
 //#region 🔖️Wire
-fn bench_wire_frame_codec(c: &mut Criterion) {
+async fn bench_wire_frame_codec(c: &mut Criterion) {
     let mut group = c.benchmark_group("wire_frame_codec");
     for &envelope_count in &[1usize, 16, 64] {
         let envelopes: Vec<protocol::MutationEnvelope> = OpDagGen::new(5).generate(envelope_count);
@@ -109,7 +109,7 @@ fn bench_wire_frame_codec(c: &mut Criterion) {
 //#endregion 🔖️Wire
 
 //#region 🔖️MutationDag
-fn bench_op_dag_insert(c: &mut Criterion) {
+async fn bench_op_dag_insert(c: &mut Criterion) {
     let mut group = c.benchmark_group("op_dag_insert");
     for &node_count in &[8usize, 64, 256] {
         let envelopes = OpDagGen::new(6).generate(node_count);

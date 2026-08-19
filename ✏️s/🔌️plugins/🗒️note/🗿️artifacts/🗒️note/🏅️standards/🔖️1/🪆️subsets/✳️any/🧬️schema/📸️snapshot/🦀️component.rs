@@ -124,7 +124,7 @@ impl store::ArtifactPack for NoteSnapshot {
 //#endregion 🔖️HandcraftedArtifactCodecs
 
 impl Default for NoteSnapshot {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self {
             schema: NOTE_DOCUMENT_SCHEMA.into(),
             id: String::new(),
@@ -154,7 +154,7 @@ mod round_trip_tests {
     /// 🧪️ `linked_artifact` (the new `R:any` forward reference slot) and a text block's composed
     /// `content` child handle must both survive the hand-rolled text/binary codecs — codec
     /// completeness is not caught by `cargo check`, only a real round trip proves it.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn linked_artifact_and_text_content_round_trip_through_text_and_binary() {
         let mut snapshot = NoteSnapshot::default();
         snapshot.id = "doc-composed".into();
@@ -188,7 +188,7 @@ mod round_trip_tests {
         assert_eq!(from_binary, snapshot);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absent_linked_artifact_round_trips_as_none() {
         let snapshot = NoteSnapshot::default();
         let text = store::ArtifactDsl::print_dsl(&snapshot);

@@ -52,7 +52,7 @@ pub enum BrepCurve {
 /// SHARED `🧰️triples::NamedTripleDiff<K,D,T>`'s `added: Vec<T>` — see the "shared infra gaps" note
 /// in the wave report; never constructed as a meaningful default in real code paths.
 impl Default for BrepCurve {
-    async fn default() -> Self {
+    fn default() -> Self {
         BrepCurve::Line { origin: SemioPoint3::default(), direction: SemioPoint3::default() }
     }
 }
@@ -104,7 +104,7 @@ pub enum BrepSurface {
 
 /// 🩹️ See `BrepCurve`'s `Default` impl doc comment — same reason.
 impl Default for BrepSurface {
-    async fn default() -> Self {
+    fn default() -> Self {
         BrepSurface::Plane { origin: SemioPoint3::default(), normal: SemioPoint3::default() }
     }
 }
@@ -225,7 +225,7 @@ pub struct SemioBrepSnapshot {
 }
 
 impl Default for SemioBrepSnapshot {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { schema: STDIO_SEMIOBREP_DOCUMENT_SCHEMA.into(), vertices: Default::default(), edges: Default::default(), loops: Default::default(), faces: Default::default(), shells: Default::default(), solids: Default::default() }
     }
 }
@@ -1008,7 +1008,7 @@ mod tests {
         s
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn json_pack_round_trips() {
         let snap = SemioBrepSnapshot::default();
         let bytes = <SemioBrepSnapshot as store::ArtifactPack>::encode_pack(&snap);
@@ -1016,7 +1016,7 @@ mod tests {
         assert_eq!(snap, back);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dsl_text_round_trips() {
         let snap = SemioBrepSnapshot::default();
         let text = <SemioBrepSnapshot as store::ArtifactDsl>::print_dsl(&snap);
@@ -1028,7 +1028,7 @@ mod tests {
     /// `BrepSurface`/`BrepCurve` variant represented at least once) survives a pack AND a dsl
     /// round trip byte-for-byte (structurally — every field, incl. every `Nurbs` variant's
     /// `Vec<SemioPoint3>`/`Vec<f64>` runs, round-trips exactly).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn codec_retention_law_populated_snapshot_round_trips_pack_and_dsl() {
         let snap = populated_snapshot();
         let packed = <SemioBrepSnapshot as store::ArtifactPack>::encode_pack(&snap);
@@ -1040,7 +1040,7 @@ mod tests {
     /// 🧪️ Every `BrepCurve`/`BrepSurface` variant (incl. both `Nurbs` shapes) round-trips through
     /// both the pack binary and the dsl text codec — the demo fixture used by the fixture-honesty
     /// conformance law.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn demo_snapshot_round_trips_pack_and_dsl() {
         let demo = demo_brep_snapshot();
         let packed = <SemioBrepSnapshot as store::ArtifactPack>::encode_pack(&demo);

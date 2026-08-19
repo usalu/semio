@@ -98,7 +98,7 @@ mod tests {
     use super::super::part21::Part21Instance;
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn ladder_classifies_named_subtypes_and_defaults_others_to_rung_2() {
         assert_eq!(ladder_rung_of("GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION"), Some(2));
         assert_eq!(ladder_rung_of("GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION"), Some(3));
@@ -109,7 +109,7 @@ mod tests {
         assert_eq!(ladder_rung_of("PRODUCT"), None);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn ladder_violations_filters_by_max_rung() {
         let doc = Part21Document {
             instances: vec![Part21Instance { id: 1, entities: vec![("MANIFOLD_SURFACE_SHAPE_REPRESENTATION".into(), vec![])] }, Part21Instance { id: 2, entities: vec![("GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION".into(), vec![])] }],
@@ -120,7 +120,7 @@ mod tests {
         assert!(ladder_violations(&doc, 6).is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn file_schema_contains_walks_nested_list() {
         let mut doc = Part21Document::default();
         doc.header.file_schema = vec![Part21Value::List(vec![Part21Value::Str("AUTOMOTIVE_DESIGN".into())])];
@@ -128,7 +128,7 @@ mod tests {
         assert!(!file_schema_contains(&doc, "IFC4"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn ensure_file_schema_injects_only_when_absent() {
         let mut doc = Part21Document::default();
         ensure_file_schema(&mut doc, "AUTOMOTIVE_DESIGN");
@@ -138,7 +138,7 @@ mod tests {
         assert!(file_schema_contains(&doc, "OTHER_SCHEMA"), "no-op path must not clobber an already-matching schema");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn product_chain_requires_all_three_types() {
         let mut doc = Part21Document::default();
         assert!(!has_product_definition_chain(&doc));

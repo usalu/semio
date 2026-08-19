@@ -35,7 +35,7 @@ mod tests {
     /// 📜️ Both real example fixtures (migrated from the legacy `.2d.json` shape — see ticket
     /// 🎫️convertpuzzle2d3d5dtotypeddslderiveengine) parse as `.puzzle2d` DSL text and round-trip
     /// through `print_dsl`/`parse_dsl` exactly.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn puzzle2d_example_fixtures_parse_and_round_trip_as_dsl() {
         for dsl_text in [PUZZLE2D_CONCRETE_FOREST_EXAMPLE_TEXT, PUZZLE2D_NAKAGIN_EXAMPLE_TEXT] {
             let projection = parse_dsl(dsl_text).expect("example fixture parses as dsl");
@@ -44,7 +44,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn puzzle2d_projection_dsl_round_trips() {
         let empty = Puzzle2dSnapshot::default();
         semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&empty);
@@ -101,7 +101,7 @@ mod tests {
     /// `Puzzle2dMutation`'s `Edit` round-trips through `protocol::MutationEnvelope`s beside this
     /// file's existing dsl/pack round-trip laws (same pattern as `dag`'s own
     /// `command_envelope_round_trip_holds_for_an_applied_operation`).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn command_envelope_round_trip_holds_for_an_applied_operation() {
         use crate::artifacts::puzzle2d::op::Puzzle2dMutation;
         use crate::artifacts::puzzle2d::spr::Puzzle2dStore;
@@ -117,7 +117,7 @@ mod tests {
     }
     //#endregion 🔖️CommandEnvelopeTests
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn puzzle2d_dsl_parses_edge_with_all_connection_params() {
         use crate::artifacts::puzzle2d::{Puzzle2dEdge, Puzzle2dNode, Puzzle2dSnapshot};
         let snapshot = Puzzle2dSnapshot {

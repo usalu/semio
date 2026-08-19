@@ -680,11 +680,11 @@ mod tests {
         #[semio_framework_async_macros::async_test]
         async fn id_round_trips_via_edit_ordinal_tag() {
             let mut out = ByteWriter::new().await;
-            write_id(&mut out, "edit-7", |_| unreachable!("must not intern"), |id| (id == "edit-7").then_some(7)).await.unwrap();
+            write_id(&mut out, "edit-7", async |_| unreachable!("must not intern"), |id| (id == "edit-7").then_some(7)).await.unwrap();
             let bytes = out.into_bytes().await;
             assert_eq!(bytes[0], 3, "tag byte must be 3 (edit-ordinal)");
             let mut reader = ByteReader::new(&bytes).await;
-            let decoded = read_id(&mut reader, |_| unreachable!("must not resolve"), |ordinal| if ordinal == 7 { Ok("edit-7") } else { Err(crate::codec::PackError::Truncated(0)) }).await.unwrap();
+            let decoded = read_id(&mut reader, async |_| unreachable!("must not resolve"), |ordinal| if ordinal == 7 { Ok("edit-7") } else { Err(crate::codec::PackError::Truncated(0)) }).await.unwrap();
             assert_eq!(decoded, "edit-7");
         }
 
@@ -695,7 +695,7 @@ mod tests {
             write_id(
                 &mut out,
                 id,
-                |s| {
+                async |s| {
                     assert_eq!(s, "actor");
                     0
                 },
@@ -705,7 +705,7 @@ mod tests {
             let bytes = out.into_bytes().await;
             assert_eq!(bytes[0], 2, "tag byte must be 2 (prefix+uuid)");
             let mut reader = ByteReader::new(&bytes).await;
-            let decoded = read_id(&mut reader, |idx| if idx == 0 { Ok("actor") } else { Err(crate::codec::PackError::Truncated(0)) }, |_| unreachable!("must not resolve ordinal")).await.unwrap();
+            let decoded = read_id(&mut reader, async |idx| if idx == 0 { Ok("actor") } else { Err(crate::codec::PackError::Truncated(0)) }, |_| unreachable!("must not resolve ordinal")).await.unwrap();
             assert_eq!(decoded, id);
         }
 
@@ -715,7 +715,7 @@ mod tests {
             write_id(
                 &mut out,
                 "hello-world",
-                |s| {
+                async |s| {
                     assert_eq!(s, "hello-world");
                     42
                 },
@@ -725,7 +725,7 @@ mod tests {
             let bytes = out.into_bytes().await;
             assert_eq!(bytes[0], 1, "tag byte must be 1 (dictref)");
             let mut reader = ByteReader::new(&bytes).await;
-            let decoded = read_id(&mut reader, |idx| if idx == 42 { Ok("hello-world") } else { Err(crate::codec::PackError::Truncated(0)) }, |_| unreachable!("must not resolve ordinal")).await.unwrap();
+            let decoded = read_id(&mut reader, async |idx| if idx == 42 { Ok("hello-world") } else { Err(crate::codec::PackError::Truncated(0)) }, |_| unreachable!("must not resolve ordinal")).await.unwrap();
             assert_eq!(decoded, "hello-world");
         }
 
@@ -737,7 +737,7 @@ mod tests {
             out.write_bytes(b"hello").await;
             let bytes = out.into_bytes().await;
             let mut reader = ByteReader::new(&bytes).await;
-            let decoded = read_id(&mut reader, |_| unreachable!(), |_| unreachable!()).await.unwrap();
+            let decoded = read_id(&mut reader, async |_| unreachable!(), |_| unreachable!()).await.unwrap();
             assert_eq!(decoded, "hello");
         }
 
@@ -746,7 +746,7 @@ mod tests {
             let mut dict: Vec<String> = Vec::new();
             let mut out = ByteWriter::new().await;
             {
-                let mut intern = |s: &str| -> u32 {
+                let mut intern = async |s: &str| {
                     if let Some(pos) = dict.iter().position(|e| e == s) {
                         pos as u32
                     } else {

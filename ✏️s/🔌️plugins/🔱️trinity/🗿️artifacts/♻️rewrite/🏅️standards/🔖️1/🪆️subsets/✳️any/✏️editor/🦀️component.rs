@@ -786,7 +786,7 @@ mod tests {
 
     /// 🎫️ Permanent wire guard (TEMPLATE.md §7): every `TrinityRewriteCommand` variant round-trips
     /// through both its binary (`OpBinary`) and text (`OpText`) codecs.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn trinity_rewrite_command_text_and_binary_round_trip() {
         let commands = vec![
             TrinityRewriteCommand::NodeGraphEdit { surface_id: "trinity.rewrite.before".into(), operations_json: "[]".into() },
@@ -824,7 +824,7 @@ mod tests {
         app.handle_action("interactionSelect", Some(&args), &meta("local")).expect("interactionSelect");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn context_menu_grouped_disclosure_stays_within_budget_and_keeps_destructive_last() {
         let mut app = testkit::new_app_with_registry::<EditorApp<TrinityRewritePlayApp>>(trinity_rewrite_manifest_for_testkit);
         let request = ContextMenuRequest {
@@ -847,7 +847,7 @@ mod tests {
         assert!(last_is_destructive_leaf || last_is_group_ending_in_destructive, "known destructive delete-selection must be last: {menu:?}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn renders_before_and_after_graphs() {
         let mut app = new_app();
         let before = app.render(TRINITY_REWRITE_PLAY_BODY_BEFORE, None, &ViewModel::default()).expect("render");
@@ -856,7 +856,7 @@ mod tests {
         assert!(serde_json::to_string(&after).unwrap().contains("node-graph"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_viewport_writes_before_pane_config_camera_without_artifact_mutations() {
         let mut app = new_app();
         let before_state = app.snapshot().unwrap();
@@ -867,20 +867,20 @@ mod tests {
         assert!(serde_json::to_string(&before).unwrap().contains("2.5"), "render reads the live config camera");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn compiles_jack_query_from_rule() {
         let query = compiled_jack_query(&default_rule_state());
         assert!(query.contains("MATCH"));
         assert!(query.contains("SET"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn apply_rewrite_changes_after_fixture() {
         let state = default_rule_state();
         assert_ne!(state.before_fixture_json, after_fixture_json(&state));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn renders_lhs_rhs_graphs() {
         let mut app = new_app();
         let lhs_json = serde_json::to_string(&app.render(TRINITY_REWRITE_PLAY_BODY_LHS, None, &ViewModel::default()).expect("render")).unwrap();
@@ -891,7 +891,7 @@ mod tests {
         assert!(rhs_json.contains("\"editable\":true"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_parameter_emits_one_op_and_is_undoable() {
         let mut app = new_app();
         let result = app.dispatch_typed(TrinityRewriteCommand::SetParameter { name: "label".into(), value: "changed".into() }, &meta("local")).expect("set parameter");
@@ -901,7 +901,7 @@ mod tests {
         assert_eq!(app.snapshot().unwrap().parameter_bindings.get("label").cloned(), Some(PropertyValue::String("nakagin-core".into())));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_and_delete_rhs_set_clause() {
         let mut app = new_app();
         app.dispatch_typed(TrinityRewriteCommand::AddRuleClause { kind: "set".into() }, &meta("local")).expect("add clause");
@@ -915,21 +915,21 @@ mod tests {
         assert_eq!(rhs.set.len(), 1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn jack_view_renders_compiled_query_tokens() {
         let mut app = new_app();
         let node = app.render(TRINITY_REWRITE_PLAY_BODY_JACK, None, &ViewModel::default()).expect("render");
         assert!(serde_json::to_string(&node).unwrap().contains("tokensJson"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn graph_scenes_have_lod_json() {
         let mut app = new_app();
         let before = app.render(TRINITY_REWRITE_PLAY_BODY_BEFORE, None, &ViewModel::default()).expect("render");
         assert!(serde_json::to_string(&before).unwrap().contains("lodJson"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn app_definition_declares_reorganize_and_history_actions() {
         let definition = create_rewrite_app();
         let action_ids: Vec<&str> = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).map(|action| action.id.as_str()).collect();
@@ -937,7 +937,7 @@ mod tests {
         assert!(action_ids.contains(&"reorganize"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn trinity_rewrite_labels_resolve_native_by_default() {
         let mut app = new_app();
         let json = serde_json::to_string(&app.render(TRINITY_REWRITE_PLAY_BODY_DOCUMENT, None, &ViewModel::default()).expect("render")).unwrap();
@@ -945,7 +945,7 @@ mod tests {
         assert!(!json.contains("Stücke"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn trinity_rewrite_labels_translate_panels_in_german() {
         let mut app = new_app();
         app.dispatch_typed(TrinityRewriteCommand::SetLocale { value: "de-DE".into() }, &meta("local")).expect("set locale");
@@ -963,7 +963,7 @@ mod tests {
         assert_eq!(reset_rule.label.resolve(Terminology::Native, Locale::De), "Regel zurücksetzen");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_lhs_json_undo_redo_round_trip() {
         let mut app = new_app();
         let original = app.snapshot().unwrap().lhs_json;
@@ -976,7 +976,7 @@ mod tests {
         assert_eq!(app.snapshot().unwrap().lhs_json, next_lhs);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn export_media_graph_out_reflects_rule_applied_fixture() {
         let mut app = new_app();
         let graph_out = semio_framework_plugin::resolve_ready(app.export_media("graph:out")).expect("graph:out export");
@@ -987,7 +987,7 @@ mod tests {
         assert_eq!(fixture.nodes().len(), expected.nodes().len());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn rewrite_io_declares_graph_in_and_graph_out_ports() {
         let io = rewrite_io();
         assert_eq!(io.document_schema, REWRITE_RULE_SCHEMA);

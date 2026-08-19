@@ -58,7 +58,7 @@ pub struct CsvSnapshot {
 }
 
 impl Default for CsvSnapshot {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { schema: STDIO_CSV_DOCUMENT_SCHEMA.into(), has_header: true, records: Vec::new() }
     }
 }
@@ -233,13 +233,13 @@ mod tests {
     use super::*;
     use crate::artifacts::csv::CsvMutation;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn empty_snapshot_matches_schema() {
         let snapshot = empty_csv_snapshot();
         assert_eq!(snapshot.schema, STDIO_CSV_DOCUMENT_SCHEMA);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn codec_round_trip() {
         let snap = empty_csv_snapshot();
         let text = store::ArtifactDsl::print_dsl(&snap);
@@ -254,7 +254,7 @@ mod tests {
         record.fields.iter().map(|f| f.value.clone()).collect()
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn quoted_field_with_embedded_comma_and_escaped_quote() {
         let text = "name,note\n\"Doe, John\",\"He said \"\"hi\"\"\"\n";
         let snap = decode_csv_with(text, true);
@@ -265,21 +265,21 @@ mod tests {
         assert!(!snap.records[0].fields[0].quoted, "unquoted header field stays unquoted");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn quoted_field_with_embedded_newline_spans_records() {
         let text = "a,b\n\"line1\nline2\",2\n";
         let snap = decode_csv_with(text, true);
         assert_eq!(field_values(&snap.records[1]), vec!["line1\nline2".to_string(), "2".to_string()]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn crlf_and_lf_both_parse_to_the_same_records() {
         let lf = "a,b\n1,2\n3,4\n";
         let crlf = "a,b\r\n1,2\r\n3,4\r\n";
         assert_eq!(decode_csv_with(lf, true), decode_csv_with(crlf, true));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn header_row_option_is_pure_metadata_first_record_always_decoded() {
         let text = "1,2\n3,4\n";
         let with_header = decode_csv_with(text, true);
@@ -293,7 +293,7 @@ mod tests {
         assert_eq!(without_header.records, with_header.records);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn quoted_flag_round_trips_even_when_not_structurally_required() {
         // 🔒 A field that didn't NEED quoting but WAS quoted in the source must re-encode
         // quoted (lossless retention, not a lossy structural-minimum normal form).
@@ -304,7 +304,7 @@ mod tests {
         assert_eq!(reparsed.records, snap.records);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn encode_with_crlf_round_trips() {
         let snap = decode_csv_with("a,b\n1,2\n", true);
         let crlf_text = encode_csv_with(&snap, "\r\n");
@@ -318,7 +318,7 @@ mod tests {
     /// case at once: unquoted fields, a field quoted only because it's structurally required
     /// (embedded comma), a field quoted despite NOT being structurally required (pure
     /// retention), an empty field, and an embedded-newline field spanning lines.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn codec_retention_law() {
         let fixture = "name,note,tag,blank\n\"Doe, John\",\"He said \"\"hi\"\"\",\"kept-quoted\",\n\"multi\nline\",x,y,z\n";
         let snap = decode_csv_with(fixture, true);
@@ -334,7 +334,7 @@ mod tests {
     /// 🧪️[DEBUG] one-shot scratch generator — writes real `encode_pack`/`encode_op` bytes to the
     /// committed fixture paths. Run once via `--ignored`, then this region is deleted (never a
     /// permanent side-effecting test; CLAUDE.md bans migration scripts left behind).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     #[ignore]
     async fn zzz_generate_p2p1_fixtures() {
         let repo_root = {

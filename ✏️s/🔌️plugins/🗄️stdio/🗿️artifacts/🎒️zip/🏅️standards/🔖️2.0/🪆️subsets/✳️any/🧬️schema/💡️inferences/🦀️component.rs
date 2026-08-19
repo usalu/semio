@@ -33,7 +33,7 @@ impl protocol::Inference<ZipSnapshot> for ZipInference {
 /// 🌱 Defined in terms of `infer` (not derived) — keeps the law correct regardless of whether
 /// `ZipSnapshot::default()`'s `entries` ever stop being empty.
 impl Default for ZipInference {
-    async fn default() -> Self {
+    fn default() -> Self {
         <Self as protocol::Inference<ZipSnapshot>>::infer(&ZipSnapshot::default())
     }
 }
@@ -86,13 +86,13 @@ mod tests {
     use crate::artifacts::zip::standards::v2_0::subsets::any::schema::demo_zip_snapshot;
     use protocol::Inference;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = ZipSnapshot::default();
         assert_eq!(ZipInference::infer(&snapshot), ZipInference::infer(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(ZipInference::infer(&ZipSnapshot::default()), ZipInference::default());
     }
@@ -111,7 +111,7 @@ mod tests {
         /// ✅️ "committed files parse": all 6 handcrafted `.grammar.semio`/`.protocol.semio` files
         /// parse under the real dialect — independent of, and cheaper than, the two `recognize`/
         /// `walk_protocol` laws below (a parse failure here fails fast with a clearer message).
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn committed_facet_files_parse() {
             for (label, text) in [("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO)] {
                 let grammar = dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
@@ -127,7 +127,7 @@ mod tests {
         /// preamble-stripped body reconstruction `m5_handcrafted_grammar_conformance`'s own
         /// `dsl_body_from_fixture` uses, so this is a direct proof this artifact will pass that
         /// harness once graduated, not merely an analogue.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn grammar_conformance_law() {
             let grammar = dsl::parse_grammar(snapshot::text::COMPONENT_GRAMMAR_SEMIO).expect("parse snapshot grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
@@ -143,7 +143,7 @@ mod tests {
         /// structured operation payloads, which the grammar honestly models via `REST` (see that file's own doc
         /// comment) — this law proves `REST` genuinely swallows their real nested-block/list output,
         /// not just that the simple scalar-only variants parse.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn ops_grammar_conformance_law() {
             let grammar = dsl::parse_grammar(mutations::text::COMPONENT_GRAMMAR_SEMIO).expect("parse mutations grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
@@ -157,7 +157,7 @@ mod tests {
         /// for every representative `ZipDiff` (`diff::demo_diff_cases()`), incl. the empty diff and
         /// a two-directional `between()` result exercising the full `entries` collection triple and
         /// the tri-state `unix_mtime`.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn diff_grammar_conformance_law() {
             let grammar = dsl::parse_grammar(diff::text::COMPONENT_GRAMMAR_SEMIO).expect("parse diff grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
@@ -181,7 +181,7 @@ mod tests {
         /// captured the EOCD's own fields before the final `central_directory` repeat's sentinel
         /// match re-touches its first 4 bytes only to terminate cleanly). The op/diff cases declare
         /// neither block, so the ordinary `consumed == bytes.len()` law holds for them exactly.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn protocol_walk_law() {
             let pack_spec = dsl::parse_protocol(snapshot::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
             let packed = store::ArtifactPack::encode_pack(&demo_zip_snapshot());
@@ -208,7 +208,7 @@ mod tests {
         /// `print_dsl`/`encode_pack` output of `demo_zip_snapshot()` — `parse_dsl(fixture) ==
         /// demo()`, `print_dsl(demo()) == fixture` (byte-for-byte), and the pack twin — so the
         /// fixtures can never silently drift back to a fake again.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn fixture_honesty_law() {
             const FIXTURE_DSL: &str = include_str!("../../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
             const FIXTURE_PACK: &[u8] = include_bytes!("../../📚️examples/🎬️demo/🖼️assets/🎒️example.pack.semio");

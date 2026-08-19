@@ -88,7 +88,7 @@ impl store::ArtifactPack for MathematicalConfig {
 
 
 impl Default for MathematicalConfig {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { camera: MathematicalCamera::default(), locale: "en-US".into() }
     }
 }
@@ -222,21 +222,21 @@ impl Mutation<MathematicalConfig> for MathematicalConfigMutation {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn math_config_default_is_the_identity_camera_and_english_locale() {
         let config = MathematicalConfig::default();
         assert_eq!(config.camera, MathematicalCamera::default());
         assert_eq!(config.locale, "en-US");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn math_config_dsl_round_trips() {
         let config = MathematicalConfig { camera: MathematicalCamera { x: 5.0, y: 6.0, zoom: 2.0 }, locale: "de-DE".into() };
         store::os_store::test_support::assert_dsl_round_trip(&config);
         store::os_store::test_support::assert_dsl_pack_equivalence(&config);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn config_operation_set_camera_diff_writes_the_targeted_field() {
         let base = MathematicalConfig::default();
         let camera = MathematicalCamera { x: 5.0, y: 6.0, zoom: 2.0 };
@@ -244,7 +244,7 @@ mod tests {
         assert_eq!(Mutation::diff(&operation, &base).diff().camera, camera);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn config_operation_set_camera_round_trips() {
         let base = MathematicalConfig::default();
         let camera = MathematicalCamera { x: 5.0, y: 6.0, zoom: 2.0 };
@@ -257,7 +257,7 @@ mod tests {
         store::os_store::test_support::assert_op_line_round_trip(&operation);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn config_operation_set_locale_round_trips() {
         store::os_store::test_support::assert_op_line_round_trip(&MathematicalConfigMutation::SetLocale { value: "de-DE".into() });
     }

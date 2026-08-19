@@ -99,7 +99,7 @@ pub async fn diff_set_snapshot(snapshot: &GisTerrainSnapshot) -> GisTerrainDiff 
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn field_diffs_absorb_last_writer_wins_and_apply_onto_the_snapshot() {
         let base = GisTerrainSnapshot { exaggeration: 1.0, imported_features_json: String::new(), ..Default::default() };
         let mut diff = GisTerrainDiff { exaggeration: Some(2.0), ..Default::default() };
@@ -109,7 +109,7 @@ mod tests {
         assert_eq!(next.imported_features_json, "null");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn a_whole_artifact_diff_wins_over_every_field_diff() {
         let base = GisTerrainSnapshot { exaggeration: 1.0, imported_features_json: String::new(), ..Default::default() };
         let replacement_exaggeration = 9.0;

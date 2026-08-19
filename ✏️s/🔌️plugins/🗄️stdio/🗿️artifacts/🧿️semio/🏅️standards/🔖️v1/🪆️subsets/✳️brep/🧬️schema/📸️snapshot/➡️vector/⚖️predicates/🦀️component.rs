@@ -26,7 +26,7 @@ pub enum Orient {
 }
 
 impl From<Ordering> for Orient {
-    async fn from(o: Ordering) -> Self {
+    fn from(o: Ordering) -> Self {
         match o {
             Ordering::Greater => Orient::Positive,
             Ordering::Less => Orient::Negative,
@@ -201,7 +201,7 @@ async fn sign_of_dot_exact(u: Vec3, v: Vec3) -> Orient {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn orient2d_detects_counterclockwise_and_clockwise() {
         let a = Pnt2::new(0.0, 0.0);
         let b = Pnt2::new(1.0, 0.0);
@@ -210,7 +210,7 @@ mod tests {
         assert_eq!(orient2d(a, c, b), Orient::Negative);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn orient2d_detects_exact_collinearity() {
         let a = Pnt2::new(0.0, 0.0);
         let b = Pnt2::new(1.0, 1.0);
@@ -228,7 +228,7 @@ mod tests {
         f64::from_bits(x.to_bits() - 1)
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn orient2d_resolves_near_degenerate_case_correctly() {
         // c sits exactly on line a->b->(2,2); perturbing it by a single ULP must still resolve
         // to the geometrically correct sign, which the interval filter alone cannot certify.
@@ -242,7 +242,7 @@ mod tests {
         assert_eq!(orient2d(a, b, c_right), Orient::Negative);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn orient3d_detects_right_handed_and_left_handed_tetrahedra() {
         let a = Pnt3::new(0.0, 0.0, 0.0);
         let b = Pnt3::new(1.0, 0.0, 0.0);
@@ -252,7 +252,7 @@ mod tests {
         assert_eq!(orient3d(a, c, b, d), Orient::Negative);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn orient3d_detects_exact_coplanarity() {
         let a = Pnt3::new(0.0, 0.0, 0.0);
         let b = Pnt3::new(1.0, 0.0, 0.0);
@@ -262,7 +262,7 @@ mod tests {
         assert!(coplanar3d(a, b, c, d));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn orient3d_resolves_near_degenerate_case_correctly() {
         let a = Pnt3::new(0.0, 0.0, 0.0);
         let b = Pnt3::new(1.0, 0.0, 0.0);
@@ -274,7 +274,7 @@ mod tests {
         assert_eq!(orient3d(a, b, c, d_below), Orient::Negative);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn in_circle2d_detects_inside_and_outside_unit_circle() {
         let a = Pnt2::new(1.0, 0.0);
         let b = Pnt2::new(0.0, 1.0);
@@ -287,7 +287,7 @@ mod tests {
         assert_eq!(in_circle2d(a, b, c, on), Orient::Zero);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn sign_of_dot_classifies_acute_right_obtuse() {
         assert_eq!(sign_of_dot(Vec3::X, Vec3::X), Orient::Positive);
         assert_eq!(sign_of_dot(Vec3::X, Vec3::Y), Orient::Zero);
@@ -297,7 +297,7 @@ mod tests {
     mod quick {
         use super::*;
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn orient2d_filtered_agrees_with_exact_on_random_and_near_degenerate_triples() {
             let mut rng = semio_framework_geometry::random::Rng::from_seed(11);
             for _ in 0..5000 {
@@ -316,7 +316,7 @@ mod tests {
             }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn orient3d_filtered_agrees_with_exact_on_random_and_near_degenerate_quadruples() {
             let mut rng = semio_framework_geometry::random::Rng::from_seed(13);
             for _ in 0..3000 {
@@ -335,7 +335,7 @@ mod tests {
             }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn in_circle2d_filtered_agrees_with_exact_on_random_configurations() {
             let mut rng = semio_framework_geometry::random::Rng::from_seed(17);
             for _ in 0..3000 {

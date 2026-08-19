@@ -17,7 +17,7 @@ pub async fn source() -> ExampleSource {
 #[cfg(test)]
 mod tests {
     use super::*;
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn demo_source_nonempty() {
         assert!(!PRIMARY_TEXT.is_empty());
         let _ = source();
@@ -26,7 +26,7 @@ mod tests {
     /// 🧪️ Ticket 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING's
     /// inference laws, exercised against this example's own real fixture (`PRIMARY_TEXT`,
     /// parsed through the real `ArtifactDsl` codec — not a hand-built stub).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         use crate::artifacts::tiff::standards::v6_0::subsets::any::schema::inferences::TiffInference;
         use crate::artifacts::tiff::TiffSnapshot;
@@ -35,7 +35,7 @@ mod tests {
         assert_eq!(TiffInference::infer(&snapshot), TiffInference::infer(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         use crate::artifacts::tiff::standards::v6_0::subsets::any::schema::inferences::TiffInference;
         use crate::artifacts::tiff::TiffSnapshot;
@@ -103,7 +103,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn demo_subset_integrated_roundtrip() {
         let asset = store::os_store::test_support::ExampleAsset { bytes: NATIVE_BYTES, text: None, provenance: "✳️any/📚️examples/🎬️demo/🖼️assets/🖼️example.tiff" };
         store::os_store::test_support::assert_subset_roundtrip::<TiffAnyRoundtrip>(&asset, None);

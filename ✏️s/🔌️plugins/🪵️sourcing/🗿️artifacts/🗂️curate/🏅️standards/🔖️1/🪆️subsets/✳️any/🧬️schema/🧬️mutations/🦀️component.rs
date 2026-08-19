@@ -91,7 +91,7 @@ mod tests {
         forward
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn every_variant_registers_an_approved_semantic_descriptor() {
         for mutation in every_mutation() {
             let descriptor = protocol::SemanticMutation::semantics(&mutation);
@@ -104,7 +104,7 @@ mod tests {
         );
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn every_variant_round_trips_via_inverse() {
         let base = sample_snapshot();
         for mutation in every_mutation() {
@@ -116,7 +116,7 @@ mod tests {
     /// ⚖️ Shared law helpers from
     /// `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️testkit/🦀️component.rs` (reachable here as
     /// `protocol::os_spr::testkit`), exercised against all three variants.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_curated_item_satisfies_the_inverse_and_absorb_laws() {
         let base = sample_snapshot();
         let mutation = SourcingMutation::CreateCuratedItem(CreateCuratedItem { item: CuratedItem { object_id: "beam-kvh-c24".into(), count: 2 } });
@@ -127,7 +127,7 @@ mod tests {
         protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn delete_curated_item_satisfies_the_inverse_and_absorb_laws() {
         let mut base = sample_snapshot();
         base.curated.push(CuratedItem { object_id: "beam-steel-ipe200".into(), count: 4 });
@@ -138,7 +138,7 @@ mod tests {
         protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn change_curated_item_count_satisfies_the_inverse_and_absorb_laws() {
         let base = sample_snapshot();
         let mutation = SourcingMutation::ChangeCuratedItemCount(ChangeCuratedItemCount { object_id: "beam-glulam-gl24h".into(), new_count: 6 });
@@ -156,21 +156,21 @@ mod tests {
     /// is not landed yet (checked at
     /// `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️testkit/🦀️component.rs`); TODO(1-D testkit
     /// laws pending): add a `MergePolicy` × `Severity` matrix test per verb family here once it lands.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn delete_curated_item_missing_target_is_an_error() {
         let base = sample_snapshot();
         let mutation = SourcingMutation::DeleteCuratedItem(DeleteCuratedItem { object_id: "beam-kvh-c24".into() });
         protocol::os_spr::testkit::assert_missing_target_is_error(&base, &mutation);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn change_curated_item_count_missing_target_is_an_error() {
         let base = sample_snapshot();
         let mutation = SourcingMutation::ChangeCuratedItemCount(ChangeCuratedItemCount { object_id: "beam-kvh-c24".into(), new_count: 9 });
         protocol::os_spr::testkit::assert_missing_target_is_error(&base, &mutation);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_curated_item_duplicate_id_is_fatal_and_never_applies() {
         let base = sample_snapshot();
         let mutation = SourcingMutation::CreateCuratedItem(CreateCuratedItem { item: CuratedItem { object_id: "beam-glulam-gl24h".into(), count: 1 } });

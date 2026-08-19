@@ -17,7 +17,7 @@ pub struct JsonIntoDraw;
 impl Deserializer<DrawSnapshot> for JsonIntoDraw {
     const FROM: Dialect = JSON_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Exact;
-    async fn deserialize(payload: &IoPayload) -> IoResult<DrawSnapshot> {
+    fn deserialize(payload: &IoPayload) -> IoResult<DrawSnapshot> {
         let text = match payload {
             IoPayload::Text(text) => text.clone(),
             IoPayload::Binary(bytes) => std::str::from_utf8(bytes).map_err(|error| IoError { message: format!("JsonIntoDraw: not valid utf-8: {error}"), diagnostics: Vec::new() })?.to_string(),

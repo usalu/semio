@@ -77,7 +77,7 @@ pub mod derived_construction {
             out
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn real_encoded_jpeg_builds_clean_via_from_binary() {
             let (w, h) = (24u32, 24u32);
             let snap = JpgSnapshot { width: w, height: h, pixels: gradient_image(w, h), ..JpgSnapshot::default() };
@@ -88,7 +88,7 @@ pub mod derived_construction {
             assert!(built.frame.is_some());
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn empty_snapshot_fails_build_with_no_frame() {
             let err = JpgBaselineBuilderConstruction::empty().build().expect_err("an empty snapshot has no SOF0 frame -- must fail build()");
             assert!(err.iter().any(|d| d.code.0 == crate::artifacts::jpg::standards::v_jfif_1_01::subsets::baseline::schema::CODE_NO_FRAME));
@@ -233,13 +233,13 @@ pub mod derived_analysis {
             }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn conforming_snapshot_has_no_diagnostics() {
             let diagnostics = check_baseline_conformance(&conforming_snapshot());
             assert!(diagnostics.is_empty(), "got {diagnostics:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn missing_frame_is_hard() {
             let snapshot = JpgSnapshot::default();
             let diagnostics = check_baseline_conformance(&snapshot);
@@ -248,7 +248,7 @@ pub mod derived_analysis {
             assert_eq!(diagnostics[0].severity, Severity::Error);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn non_sof0_marker_is_hard() {
             let mut snapshot = conforming_snapshot();
             snapshot.sof_marker = 0xC2; // SOF2 (progressive)
@@ -256,7 +256,7 @@ pub mod derived_analysis {
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_SOF_MARKER && d.severity == Severity::Error), "got {diagnostics:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn non_8bit_precision_is_hard() {
             let mut snapshot = conforming_snapshot();
             snapshot.frame.as_mut().unwrap().precision = 12;
@@ -264,7 +264,7 @@ pub mod derived_analysis {
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_PRECISION && d.severity == Severity::Error), "got {diagnostics:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn arithmetic_conditioning_present_is_hard() {
             let mut snapshot = conforming_snapshot();
             snapshot.arithmetic = true;
@@ -272,7 +272,7 @@ pub mod derived_analysis {
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_ARITHMETIC && d.severity == Severity::Error), "got {diagnostics:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn excess_huffman_tables_is_soft() {
             let mut snapshot = conforming_snapshot();
             snapshot.huffman_tables.push(JpgHuffmanTable { id: 2, class: JpgHuffmanClass::Dc, bits: [0; 16], values: vec![] });
@@ -280,7 +280,7 @@ pub mod derived_analysis {
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_HUFFMAN_TABLE_COUNT && d.severity == Severity::Warning), "got {diagnostics:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn excess_components_is_soft() {
             let mut snapshot = conforming_snapshot();
             let frame = snapshot.frame.as_mut().unwrap();
@@ -290,7 +290,7 @@ pub mod derived_analysis {
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_COMPONENT_SAMPLING && d.severity == Severity::Warning), "got {diagnostics:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn out_of_range_sampling_is_soft() {
             let mut snapshot = conforming_snapshot();
             snapshot.frame.as_mut().unwrap().components[0].h_sampling = 8;

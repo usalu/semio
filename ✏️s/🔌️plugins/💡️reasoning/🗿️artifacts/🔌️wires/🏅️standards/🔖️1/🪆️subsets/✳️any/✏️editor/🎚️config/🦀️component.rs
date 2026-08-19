@@ -93,7 +93,7 @@ impl store::ArtifactPack for WiresConfig {
 
 
 impl Default for WiresConfig {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { drag_node_id: None, drag_last_x: 0.0, drag_last_y: 0.0, locale: "en-US".into() }
     }
 }
@@ -222,7 +222,7 @@ mod tests {
     //#region 🔖️ConfigTests
     /// 🕹️ Selection lives in the framework-owned "graph" interaction domain now (ticket
     /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) — `WiresConfig` only carries drag/locale.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn wires_config_default_matches_no_drag_and_en_locale() {
         let config = WiresConfig::default();
         assert!(config.drag_node_id.is_none());
@@ -230,7 +230,7 @@ mod tests {
     }
 
     /// 🔁️ B1 dsl/pack round-trip law for `WiresConfig` — a non-default fixture exercising every field.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn wires_config_dsl_pack_round_trip() {
         let config = WiresConfig { drag_node_id: Some("node-1".into()), drag_last_x: 12.5, drag_last_y: -7.25, locale: "de-DE".into() };
         store::os_store::test_support::assert_dsl_pack_equivalence(&config);
@@ -238,20 +238,20 @@ mod tests {
     //#endregion 🔖️ConfigTests
 
     //#region 🔖️ConfigOperationTests
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn config_drag_op_text_round_trip() {
         store::os_store::test_support::assert_op_line_round_trip(&WiresConfigMutation::SetDrag { node_id: Some("node-1".into()), last_x: 12.5, last_y: -7.25 });
         store::os_store::test_support::assert_op_line_round_trip(&WiresConfigMutation::SetDrag { node_id: None, last_x: 0.0, last_y: 0.0 });
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn config_locale_op_text_round_trip() {
         store::os_store::test_support::assert_op_line_round_trip(&WiresConfigMutation::SetLocale { value: "de-DE".into() });
     }
 
     /// ⏪️ `backwards()` returns the SAME variant re-addressed at the pre-op field value — a targeted,
     /// in-kind inverse, not a whole-config replace.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn config_backwards_restores_the_same_field_from_base() {
         let base = WiresConfig { drag_node_id: Some("node-1".into()), drag_last_x: 1.0, drag_last_y: 2.0, ..Default::default() };
         let forward = WiresConfigMutation::SetDrag { node_id: Some("node-2".into()), last_x: 5.0, last_y: 6.0 };

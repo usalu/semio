@@ -13,6 +13,11 @@
 //! fail on it (see master ticket `26/08/05/CRATE-CONSOLIDATION-AND-PLUGIN-TAXONOMY-RESTRUCTURE`,
 //! Single-File-Repo hazard ruling).
 
+// 🔓️ R7 — `SourcingModule` (schema/🦀️component.rs) declares `async fn` methods and is `#[dyn_enum]`-closed
+// into `SourcingModules`; Send comes structurally from that concrete enum (R3), so this lint's suggested
+// `-> impl Future + Send` fix is never taken, and the method is never made sync to silence it.
+#![allow(async_fn_in_trait)]
+
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_os_kernel as protocol;

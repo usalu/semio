@@ -277,7 +277,7 @@ mod tests {
         MapFeature { id: id.into(), data: dsl::DslValue::String(id.into()) }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn a_whole_artifact_diff_wins_over_every_collection_diff() {
         let base = GisMapSnapshot { positions: vec![feature("p1")], ..Default::default() };
         let replacement = crate::artifacts::gismap::gis_map_snapshot_with_derived_children(GisMapSnapshot { routes: vec![feature("r1")], ..Default::default() });
@@ -289,7 +289,7 @@ mod tests {
         assert_eq!(diff.apply(&base).expect("valid mutation diff"), replacement);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn collection_diffs_absorb_and_apply_add_remove_patch() {
         let base = GisMapSnapshot { positions: vec![feature("p1")], ..Default::default() };
         let mut diff = GisMapDiff {

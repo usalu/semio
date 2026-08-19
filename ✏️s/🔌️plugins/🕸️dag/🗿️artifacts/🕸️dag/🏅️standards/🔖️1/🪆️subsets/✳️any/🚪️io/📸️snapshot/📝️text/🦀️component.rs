@@ -111,7 +111,7 @@ impl store::ArtifactDsl for DagSnapshot {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dump_example_dsl_when_requested() {
         if std::env::var("DUMP_DAG_EXAMPLE").is_ok() {
             use crate::artifacts::dag::snapshot::schema::DagSnapshot;
@@ -127,13 +127,13 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn example_fixture_dsl_round_trips() {
         let document = parse_dsl(DAG_EXAMPLE_TEXT).expect("parse default fixture");
         store::os_store::test_support::assert_dsl_round_trip(&document);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fused_edge_arrow_wire_parses_labeled_endpoints() {
         let parsed = dsl::parse_wire_text("a -e1:Connection> b:Node@out").expect("parse fused edge");
         assert_eq!(parsed.edge_label.id.as_deref(), Some("e1"));
@@ -148,7 +148,7 @@ mod tests {
 mod semio_grammar_conformance {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn component_grammar_semio_is_grammar_dialect() {
         let g = ::dsl::parse_grammar(COMPONENT_GRAMMAR_SEMIO).expect("parse grammar.semio");
         assert_eq!(g.dialect, ::dsl::SemioDialect::Grammar);

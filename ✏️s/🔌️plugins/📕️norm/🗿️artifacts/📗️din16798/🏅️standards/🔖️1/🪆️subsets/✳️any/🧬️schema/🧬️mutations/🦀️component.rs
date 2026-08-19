@@ -323,7 +323,7 @@ mod tests {
         forward
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn every_variant_registers_an_approved_semantic_descriptor() {
         for mutation in every_mutation() {
             let descriptor = protocol::SemanticMutation::semantics(&mutation);
@@ -332,7 +332,7 @@ mod tests {
         assert_eq!(<Din16798Mutation as protocol::SemanticMutation<Din16798Snapshot>>::kinds().len(), every_mutation().len(), "kinds() must register exactly one descriptor per dispatch variant");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn every_variant_round_trips_via_inverse() {
         let base = Din16798Snapshot::default();
         for mutation in every_mutation() {
@@ -346,7 +346,7 @@ mod tests {
     /// distinct variants: the repurposed enum-typed slot (`change-annex`), a typical `f64` scalar
     /// (`change-t-op-c`), and a `String` scalar (`change-occupancy`).
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn change_annex_satisfies_the_inverse_and_absorb_laws() {
         let base = Din16798Snapshot::default();
         let mutation = Din16798Mutation::ChangeAnnex(change_annex::mutation::ChangeAnnex { new_annex: crate::document::AnnexChoice::En });
@@ -355,7 +355,7 @@ mod tests {
         let d2 = Din16798Mutation::ChangeOccupancy(change_occupancy::mutation::ChangeOccupancy { new_occupancy: "office".to_string() }).diff(&base).diff().clone();
         protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn change_t_op_c_satisfies_the_inverse_and_absorb_laws() {
         let base = Din16798Snapshot::default();
         let mutation = Din16798Mutation::ChangeTOpC(change_t_op_c::mutation::ChangeTOpC { new_t_op_c: 24.5 });
@@ -364,7 +364,7 @@ mod tests {
         let d2 = Din16798Mutation::ChangeBedrooms(change_bedrooms::mutation::ChangeBedrooms { new_bedrooms: 4 }).diff(&base).diff().clone();
         protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn change_occupancy_satisfies_the_inverse_and_absorb_laws() {
         let base = Din16798Snapshot::default();
         let mutation = Din16798Mutation::ChangeOccupancy(change_occupancy::mutation::ChangeOccupancy { new_occupancy: "office".to_string() });

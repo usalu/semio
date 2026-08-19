@@ -36,7 +36,7 @@ pub async fn handle(payload: &FoldDirectoryEvents, _doc: &ArtifactView<'_, SHome
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn one_config_mutation_per_event() {
         let history = semio_framework_plugin::HistoryView::empty();
         let doc_snapshot = SHomeSnapshot::default();
@@ -56,7 +56,7 @@ mod tests {
         assert!(emit.effects.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn malformed_events_json_yields_no_mutations() {
         let history = semio_framework_plugin::HistoryView::empty();
         let doc_snapshot = SHomeSnapshot::default();

@@ -29,7 +29,7 @@ mod tests {
     use crate::artifacts::block5d::{Block5dSnapshot, BLOCK_5D_SCHEMA};
     use store::{create_document_envelope, ArtifactCommand};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn block5d_document_vcs_replays_granular_operations() {
         use crate::artifacts::block5d::schema::mutations::{self as m, Block5dStore};
 
@@ -39,7 +39,7 @@ mod tests {
         assert_eq!(projection.part_kind.name, "p1");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn block5d_operation_binary_round_trips() {
         let operation = crate::artifacts::block5d::schema::mutations::delete_grip("g0".into());
         let bytes = encode_op(&operation).expect("encode");

@@ -63,7 +63,7 @@ impl Inference<Process3dSnapshot> for Process3dInference {
 /// all-zero box, which disagrees with `infer(&Process3dSnapshot::default())`. Defining default as
 /// "infer the default snapshot" makes the two definitionally equal.
 impl Default for Process3dInference {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self::infer(&Process3dSnapshot::default())
     }
 }
@@ -111,12 +111,13 @@ async fn hash_value<T: Serialize>(value: &T) -> u64 {
 /// 🧠️ Kernel + prefix memo: `hash(stock, enabled steps[0..i])` → solid handle, so cursor scrubbing and
 /// step edits only recompute the suffix that actually changed.
 /// 🧊️ Concrete (not boxed-trait) so `SolidExporter`/`SolidImporter` (STEP/OBJ/STL/GLB import+export)
-/// can borrow `&Brep`/`&mut Brep` directly; `&mut Brep` still coerces to
-/// `&mut dyn BrepKernel` at every existing call site below, so the CSG replay path is unaffected.
+/// can borrow `&Brep`/`&mut Brep` directly; `solid_for_spec`/`tool_solid_for_measure` below take
+/// `&mut Brep` directly too (O1 — no `&mut dyn BrepKernel` anywhere in this crate).
 /// 🔓️ `pub` (not private): `🚪️io`'s `export_process3d_model`/`import_process3d_model` need the
 /// exact kernel + replayed handle (not just the tessellated `processed_mesh`/`processed_volume`
-/// projections) to drive the real `SolidExporter`/`SolidImporter` trait objects — a crate-internal
-/// seam, never re-exported past this crate.
+/// projections) to drive the real `SolidExporter`/`SolidImporter` codecs (dispatched through
+/// `🚪️io`'s `ProcessSolidExporter`/`ProcessSolidImporter`, never `Box<dyn>`) — a crate-internal seam,
+/// never re-exported past this crate.
 /// 🌱 `kernel: Brep` is owned directly, never behind `BrepEngineHost`/`Mutex` (ticket
 /// 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS wave G4): every caller already
 /// constructs a fresh `ProcessKernelReplay::new()` per call (verified — no call site anywhere in this
@@ -162,7 +163,12 @@ async fn prefix_signature(stock_signature: u64, steps: &[&ProcessStep]) -> u64 {
 }
 
 /// 📦️ Builds a posed kernel solid for a spec via `*_prim_sync` → `rotate_sync` → `translate_sync`.
-async fn solid_for_spec(kernel: &mut dyn BrepKernel, spec: &WorkingSolid, pose: &Pose) -> Option<GeometryHandle> {
+/// 🚫️ `kernel: &mut Brep` (not `&mut dyn BrepKernel`): `Brep` is the only `BrepKernel` implementor this
+/// crate ever constructs (`ProcessKernelReplay::kernel_mut`, the sole caller path below) — R11's
+/// "exactly one impl ⇒ delete the trait object, use the concrete type" — and `BrepKernel` is declared
+/// in `🗄️stdio`, a crate outside this packet's path scope, so it could not be `#[dyn_enum]`-closed here
+/// even if a second implementor existed.
+async fn solid_for_spec(kernel: &mut Brep, spec: &WorkingSolid, pose: &Pose) -> Option<GeometryHandle> {
     let base = match spec {
         WorkingSolid::Box { width, depth, height } => semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::block_on(kernel.box_prim(*width, *depth, *height)).ok()?,
         WorkingSolid::Cylinder { radius, height } => semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::block_on(kernel.cylinder_prim(*radius, *height)).ok()?,
@@ -184,7 +190,7 @@ async fn solid_for_spec(kernel: &mut dyn BrepKernel, spec: &WorkingSolid, pose: 
     }
 }
 
-async fn tool_solid_for_measure(kernel: &mut dyn BrepKernel, measure: &ProcessMeasure) -> Option<GeometryHandle> {
+async fn tool_solid_for_measure(kernel: &mut Brep, measure: &ProcessMeasure) -> Option<GeometryHandle> {
     match measure {
         ProcessMeasure::Cut { tool, pose } => solid_for_spec(kernel, tool, pose),
         ProcessMeasure::Drill { radius, depth, pose } => solid_for_spec(kernel, &WorkingSolid::Cylinder { radius: *radius, height: *depth }, pose),
@@ -425,20 +431,20 @@ mod tests {
     use crate::artifacts::process3d::{ProcessStep, StepOrigin};
 
     //#region 🧪️InferenceLaws
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = Process3dSnapshot::default();
         assert_eq!(Process3dInference::infer(&snapshot), Process3dInference::infer(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(Process3dInference::infer(&Process3dSnapshot::default()), Process3dInference::default());
     }
 
     /// 🌉️ Documented gap (see file doc comment): a plain snapshot can't see its composed `steps`
     /// child's content, so `step_count` is always 0 regardless of the working scene's real steps.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn step_count_is_zero_pending_a_resolver() {
         let snapshot = Process3dSnapshot::default();
         assert_eq!(Process3dInference::infer(&snapshot).step_count, 0);
@@ -455,7 +461,7 @@ mod tests {
         semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::block_on(session.kernel().volume(&handle)).expect("replayed volume")
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn drill_reduces_volume_below_stock() {
         let mut scene = ProcessWorkingScene { stock: Stock { id: "stock".into(), label: "Stock".into(), solid: WorkingSolid::Box { width: 1.0, depth: 1.0, height: 1.0 }, pose: Pose::default() }, steps: Vec::new() };
         let stock_volume = processed_volume(&scene, None).expect("stock volume");
@@ -470,7 +476,7 @@ mod tests {
         assert!(drilled_volume < stock_volume, "drilled volume {drilled_volume} should be less than stock volume {stock_volume}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn attach_increases_volume_above_stock() {
         for _ in 0..32 {
             let mut scene = ProcessWorkingScene { stock: Stock { id: "stock".into(), label: "Stock".into(), solid: WorkingSolid::Box { width: 1.0, depth: 1.0, height: 1.0 }, pose: Pose::default() }, steps: Vec::new() };
@@ -487,7 +493,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn disabled_step_is_skipped_on_replay() {
         let mut session = ProcessKernelReplay::new();
         let mut scene = ProcessWorkingScene { stock: Stock { id: "stock".into(), label: "Stock".into(), solid: WorkingSolid::Box { width: 1.0, depth: 1.0, height: 1.0 }, pose: Pose::default() }, steps: Vec::new() };
@@ -497,7 +503,7 @@ mod tests {
         assert!((volume_with_disabled_step - stock_volume).abs() < 1e-6);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn cursor_zero_yields_stock_volume() {
         let mut session = ProcessKernelReplay::new();
         let mut scene = ProcessWorkingScene { stock: Stock { id: "stock".into(), label: "Stock".into(), solid: WorkingSolid::Box { width: 1.0, depth: 1.0, height: 1.0 }, pose: Pose::default() }, steps: Vec::new() };
@@ -507,7 +513,7 @@ mod tests {
         assert!((volume_at_cursor_zero - stock_volume).abs() < 1e-6);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn box_primitive_spans_from_local_origin_corner() {
         let mut kernel = Brep::new();
         let handle = semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::block_on(kernel.box_prim(2.0, 3.0, 4.0)).expect("box prim");

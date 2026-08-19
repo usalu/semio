@@ -110,7 +110,7 @@ pub struct MdSnapshot {
 }
 
 impl Default for MdSnapshot {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { schema: STDIO_MD_DOCUMENT_SCHEMA.into(), blocks: Vec::new() }
     }
 }

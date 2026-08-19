@@ -212,7 +212,7 @@ pub async fn from_graph_view(view: &impl graph_core::GraphView, rel_of: impl Fn(
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn builder_produces_correct_out_and_in_arcs() {
         let mut b = GraphTopologyBuilder::new(3);
         b.arc(NodeId(0), NodeId(1), RelationId(0));
@@ -231,7 +231,7 @@ mod tests {
         assert_eq!(in2, vec![(NodeId(0), RelationId(1)), (NodeId(1), RelationId(0))]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn self_loops_and_multiedges_are_supported() {
         let mut b = GraphTopologyBuilder::new(2);
         b.arc(NodeId(0), NodeId(0), RelationId(0)); // self-loop
@@ -247,14 +247,14 @@ mod tests {
         assert!(out0.contains(&(NodeId(1), RelationId(1))));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dangling_arc_is_rejected() {
         let mut b = GraphTopologyBuilder::new(2);
         b.arc(NodeId(0), NodeId(5), RelationId(0));
         assert!(b.build().is_err());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn in_arc_slots_are_dense_and_unique_per_node() {
         let mut b = GraphTopologyBuilder::new(3);
         b.arc(NodeId(0), NodeId(2), RelationId(0));
@@ -271,7 +271,7 @@ mod tests {
         assert_eq!(topo.max_in_degree(), 2);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn regions_default_to_zero_and_are_settable() {
         let mut b = GraphTopologyBuilder::new(2);
         b.region(NodeId(1), RegionId(7));

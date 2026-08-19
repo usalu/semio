@@ -222,7 +222,7 @@ mod tests {
         crate::registry::imperative_module_registry()
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn executor_runs_steps_in_order() {
         let registry = test_registry();
         let executor = Executor::new(&registry);
@@ -240,7 +240,7 @@ mod tests {
         assert_eq!(counter, Some(3.0));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn executor_runs_control_if_then_branch() {
         let registry = test_registry();
         let executor = Executor::new(&registry);
@@ -262,7 +262,7 @@ mod tests {
         assert_eq!(value, Some("yes"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn executor_runs_control_repeat() {
         let registry = test_registry();
         let executor = Executor::new(&registry);

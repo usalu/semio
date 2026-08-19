@@ -677,7 +677,7 @@ mod tests {
     //#region 🔖️CommandSurface
     /// 🏷️ Every declared manifest action id must be reachable as exactly one command row, and every row's
     /// wire keyword must be distinct — the cross-cutting invariant `app_commands!` is there to hold.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn command_ids_are_unique() {
         let commands = every_command();
         let ids: Vec<&str> = commands.iter().map(|command| command.command_id()).collect();
@@ -689,7 +689,7 @@ mod tests {
     }
 
     /// ⚖️ LAW: text and binary are two projections of the same command, for every single row.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn every_command_round_trips_through_text_and_binary() {
         for command in every_command() {
             semio_framework_os_kernel::os_store::test_support::assert_op_text_binary_equivalence(&command);
@@ -697,7 +697,7 @@ mod tests {
     }
 
     /// ⚖️ LAW: the leading token of every printed op line is the row's `dsl` wire keyword.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
         for command in every_command() {
             let printed = protocol::OpText::print_op(&command);
@@ -761,7 +761,7 @@ mod tests {
     //#endregion 🔖️CommandSurface
 
     //#region 🔖️ManifestSanity
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn the_manifest_stitches_every_taxonomy_node() {
         let json = serde_json::to_string(&create_lowpoly_app()).expect("app definition json");
         for id in [edit::windows::model::LOWPOLY_PLAY_WINDOW_MAIN, paint_mode::windows::uv::LOWPOLY_PLAY_WINDOW_UV] {
@@ -778,7 +778,7 @@ mod tests {
 
     /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the "mesh" domain is declared and
     /// scoped to the Model window, and the framework auto-injects its six interaction actions.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn the_mesh_interaction_domain_is_declared_and_scoped_to_the_model_window() {
         let definition = create_lowpoly_app();
         let mesh = definition.interactions.iter().find(|interaction| interaction.id == MESH_INTERACTION_DOMAIN).expect("mesh domain declared");
@@ -796,7 +796,7 @@ mod tests {
     //#endregion 🔖️ManifestSanity
 
     //#region 🔖️CrossCutting
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn two_instances_converge_disjoint_edits_via_backbone() {
         testkit::assert_two_instances_converge::<EditorApp<LowpolyPlayApp>, _>(
             "mem://lowpoly-convergence",
@@ -806,12 +806,12 @@ mod tests {
         );
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn ingest_operations_is_idempotent() {
         testkit::assert_ingest_idempotent::<EditorApp<LowpolyPlayApp>, _>(LowpolyCommand::PatchObject(patch_object::PatchObject { object_id: "obj-1".into(), field: "name".into(), value_json: Some(serde_json::to_string("Hero").unwrap()) }), |app| app.snapshot().expect("projection"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
         use crate::editor::lowpoly::testkit::render;
         let mut a = app();
@@ -820,7 +820,7 @@ mod tests {
     //#endregion 🔖️CrossCutting
 
     //#region 🔖️MediaPorts
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn export_media_mesh_out_produces_mesh_document_payload() {
         let mut a: LowpolyApp = app();
         let media = semio_framework_plugin::resolve_ready(a.export_media("mesh:out")).expect("export mesh:out");
@@ -834,7 +834,7 @@ mod tests {
     /// 🧬️ `"mesh:in"` replaces the whole document via `reset_document_effect` (a
     /// `Effect::LoadDocument`, outside undo history) — whole-document replace has no replacement
     /// mutation per `📓️taxonomy.md`, so this is an effect, not an `artifact_mutations` entry.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn import_media_mesh_in_round_trips_into_a_reset_document_effect() {
         let mesh = semio_framework_plugin::mesh_from_kind("box");
         let mesh_document = crate::artifacts::lowpoly::schema::mesh_document_from_mesh(&mesh).expect("mesh document");
@@ -854,7 +854,7 @@ mod tests {
     //#endregion 🔖️MediaPorts
 
     //#region 🔖️ContextMenuRegistry
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn registry_wired_app_dispatches_add_primitive() {
         let mut a = app_with_registry();
         crate::editor::lowpoly::testkit::dispatch(&mut a, LowpolyCommand::AddPrimitive(add_primitive::AddPrimitive { kind: Some("plane".into()) }));

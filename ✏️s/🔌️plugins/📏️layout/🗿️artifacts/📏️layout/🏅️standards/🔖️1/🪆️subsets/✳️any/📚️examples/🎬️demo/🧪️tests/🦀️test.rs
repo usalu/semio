@@ -1,11 +1,11 @@
-#[test]
+#[semio_framework_async_macros::async_test]
 async fn primary_asset_is_nonempty() {
     let text = include_str!("../🖼️assets/🗣️example.dsl.semio");
     assert!(text.len() > 8);
 }
 
 //#region 💡️InferenceLaws
-#[test]
+#[semio_framework_async_macros::async_test]
 async fn inference_determinism_law() {
     use crate::artifacts::layout::LayoutSnapshot;
     use crate::artifacts::layout::standards::v1::subsets::any::schema::inferences::LayoutInference;
@@ -20,7 +20,7 @@ async fn inference_determinism_law() {
     assert_eq!(inference.topology.node_count, expected_nodes);
 }
 
-#[test]
+#[semio_framework_async_macros::async_test]
 async fn inference_default_law() {
     use crate::artifacts::layout::standards::v1::subsets::any::schema::inferences::LayoutInference;
 

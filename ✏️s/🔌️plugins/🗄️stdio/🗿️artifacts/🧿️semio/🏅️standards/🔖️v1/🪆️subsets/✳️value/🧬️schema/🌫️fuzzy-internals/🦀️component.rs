@@ -1772,26 +1772,26 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn triangular_membership_peaks_at_center() {
         let mf = MembershipFunction::triangular(0.0, 5.0, 10.0);
         assert!((mf.eval(5.0) - 1.0).abs() < 1e-9);
         assert_eq!(mf.eval(-1.0), 0.0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn tnorm_product_is_stricter_than_min() {
         assert!(TNorm::Product.apply(0.6, 0.6) < TNorm::Min.apply(0.6, 0.6));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fuzzy_number_alpha_cut_contains_peak() {
         let n = FuzzyNumber::triangular(1.0, 3.0, 5.0);
         let (lo, hi) = n.alpha_cut(1.0);
         assert!(lo <= 3.0 && hi >= 3.0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn relation_composition_max_min() {
         let mut r1 = FuzzyRelation::new(2, 2);
         r1.set(0, 0, 0.8);
@@ -1802,7 +1802,7 @@ mod tests {
         assert!(composed.get(0, 0) > 0.0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mamdani_high_temperature_yields_fast_fan() {
         let system = temp_speed_system();
         let (out, explanation) = system.infer(&[35.0]).unwrap();
@@ -1810,7 +1810,7 @@ mod tests {
         assert!(!explanation.traces.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn sugeno_inference_weighted_average() {
         let mut system = temp_speed_system();
         system.model = InferenceModel::Sugeno;
@@ -1822,7 +1822,7 @@ mod tests {
         assert!(out[0] > 70.0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn defuzzifier_centroid_on_triangle() {
         let univ = Universe::new(0.0, 10.0, 101).unwrap();
         let membership: Vec<f64> = univ.samples.iter().map(|x| MembershipFunction::triangular(0.0, 5.0, 10.0).eval(*x)).collect();
@@ -1830,7 +1830,7 @@ mod tests {
         assert!((c - 5.0).abs() < 0.2);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fuzzy_c_means_two_cluster_toy() {
         let data = vec![vec![0.0, 0.0], vec![0.1, 0.0], vec![5.0, 5.0], vec![5.1, 5.0]];
         let result = fuzzy_c_means(&data, 2, 2.0, 50, 1e-4).unwrap();
@@ -1838,14 +1838,14 @@ mod tests {
         assert_eq!(result.membership.len(), 4);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fuzzy_ahp_produces_normalized_weights() {
         let matrix = vec![vec![FuzzyNumber::triangular(1.0, 1.0, 1.0), FuzzyNumber::triangular(2.0, 3.0, 4.0)], vec![FuzzyNumber::triangular(0.25, 0.33, 0.5), FuzzyNumber::triangular(1.0, 1.0, 1.0)]];
         let weights = FuzzyAhp::new(matrix).weights();
         assert!((weights.iter().sum::<f64>() - 1.0).abs() < 1e-6);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fuzzy_topsis_ranks_better_alternative_first() {
         let topsis = FuzzyTopsis {
             alternatives: vec!["a".into(), "b".into()],
@@ -1858,14 +1858,14 @@ mod tests {
         assert_eq!(rank[0].0, 0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn interval_type2_centroid_between_bounds() {
         let it2 = IntervalType2Set::new("temp", MembershipFunction::gaussian(20.0, 1.0), MembershipFunction::gaussian(20.0, 3.0));
         let c = it2.type_reduced_centroid(&linspace(10.0, 30.0, 41));
         assert!((c - 20.0).abs() < 2.0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fan_controller_learns_from_sensor_data() {
         let temps: Vec<f64> = (0..20).map(|i| i as f64 * 2.0).collect();
         let speeds: Vec<f64> = temps.iter().map(|t| t * 2.5).collect();
@@ -1875,7 +1875,7 @@ mod tests {
         assert!(!explanation.rationale.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn trapezoidal_membership_flat_top_and_edges() {
         let mf = MembershipFunction::trapezoidal(0.0, 2.0, 6.0, 8.0);
         assert_eq!(mf.eval(-1.0), 0.0);
@@ -1886,7 +1886,7 @@ mod tests {
         assert_eq!(mf.eval(8.0), 0.0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn gaussian_membership_symmetric_and_peaks_at_mean() {
         let mf = MembershipFunction::gaussian(10.0, 2.0);
         assert_eq!(mf.eval(10.0), 1.0);
@@ -1894,7 +1894,7 @@ mod tests {
         assert!((mf.eval(12.0) - 0.6065306597126334).abs() < 1e-9);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn generalized_bell_membership_symmetric_peak() {
         let mf = MembershipFunction::generalized_bell(2.0, 4.0, 5.0);
         assert_eq!(mf.eval(5.0), 1.0);
@@ -1902,7 +1902,7 @@ mod tests {
         assert!((mf.eval(7.0) - 0.5).abs() < 1e-9);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn sigmoid_membership_is_monotonic_increasing() {
         let mf = MembershipFunction::sigmoid(1.0, 0.0);
         assert!((mf.eval(0.0) - 0.5).abs() < 1e-9);
@@ -1910,14 +1910,14 @@ mod tests {
         assert!(mf.eval(0.0) < mf.eval(1.0));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn singleton_membership_exact_match_only() {
         let mf = MembershipFunction::singleton(5.0);
         assert_eq!(mf.eval(5.0), 1.0);
         assert_eq!(mf.eval(5.001), 0.0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn piecewise_linear_membership_interpolates_and_edge_cases() {
         assert_eq!(MembershipFunction::piecewise_linear(vec![]).eval(0.0), 0.0);
         assert_eq!(MembershipFunction::piecewise_linear(vec![(2.0, 0.7)]).eval(99.0), 0.7);
@@ -1928,7 +1928,7 @@ mod tests {
         assert!((mf.eval(7.5) - 0.5).abs() < 1e-9);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn membership_function_parameters_roundtrip() {
         let mut tri = MembershipFunction::triangular(0.0, 1.0, 2.0);
         assert_eq!(tri.parameters(), vec![0.0, 1.0, 2.0]);
@@ -1967,7 +1967,7 @@ mod tests {
         assert!(pw.set_parameters(&[0.0, 0.0, 1.0]).is_err());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn membership_function_support_bounds() {
         assert_eq!(MembershipFunction::triangular(1.0, 2.0, 3.0).support_min(), 1.0);
         assert_eq!(MembershipFunction::triangular(1.0, 2.0, 3.0).support_max(), 3.0);
@@ -1991,13 +1991,13 @@ mod tests {
         assert_eq!(pw.support_max(), 9.0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn intuitionistic_set_grades_rejects_over_unity() {
         let set = IntuitionisticSet::new("x", MembershipFunction::triangular(0.0, 5.0, 10.0), MembershipFunction::triangular(0.0, 5.0, 10.0));
         assert_eq!(set.grades(5.0), Err(FuzzyError::InvalidIntuitionistic));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn intuitionistic_set_grades_computes_hesitation() {
         let set = IntuitionisticSet::new("x", MembershipFunction::triangular(0.0, 5.0, 10.0), MembershipFunction::singleton(100.0));
         let (mu, nu, hesitation) = set.grades(2.0).unwrap();
@@ -2006,7 +2006,7 @@ mod tests {
         assert!((hesitation - 0.6).abs() < 1e-9);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn tnorm_lukasiewicz_and_drastic_variants() {
         assert!((TNorm::Lukasiewicz.apply(0.6, 0.6) - 0.2).abs() < 1e-9);
         assert_eq!(TNorm::Lukasiewicz.apply(0.3, 0.3), 0.0);
@@ -2015,7 +2015,7 @@ mod tests {
         assert_eq!(TNorm::Drastic.apply(0.5, 0.5), 0.0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn tconorm_variants_apply_correctly() {
         assert_eq!(TConorm::Max.apply(0.3, 0.7), 0.7);
         assert!((TConorm::ProbSum.apply(0.5, 0.5) - 0.75).abs() < 1e-9);
@@ -2024,14 +2024,14 @@ mod tests {
         assert_eq!(TConorm::NilpotentMax.apply(0.6, 0.6), 0.6);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn tnorm_tconorm_fold_over_iterator() {
         let vals = [0.9, 0.8, 0.7];
         assert!((TNorm::Min.fold(vals.iter().copied()) - 0.7).abs() < 1e-9);
         assert!((TConorm::Max.fold(vals.iter().copied()) - 0.9).abs() < 1e-9);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn hedge_variants_apply() {
         assert!((Hedge::Very.apply(0.8) - 0.64).abs() < 1e-9);
         assert!((Hedge::Somewhat.apply(0.64) - 0.8).abs() < 1e-9);
@@ -2039,14 +2039,14 @@ mod tests {
         assert!((Hedge::MoreOrLess.apply(0.5) - 0.5).abs() < 1e-9);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn complement_concentration_dilation_basic() {
         assert!((complement(0.3) - 0.7).abs() < 1e-9);
         assert!((concentration(0.5) - 0.25).abs() < 1e-9);
         assert!((dilation(0.25) - 0.5).abs() < 1e-9);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fuzzy_number_sub_and_scale() {
         let n1 = FuzzyNumber::triangular(1.0, 3.0, 5.0);
         let n2 = FuzzyNumber::triangular(1.0, 2.0, 3.0);
@@ -2058,13 +2058,13 @@ mod tests {
         assert_eq!((scaled_pos.a, scaled_pos.b, scaled_pos.c), (2.0, 6.0, 10.0));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fuzzy_number_defuzzify_centroid_matches_peak() {
         let n = FuzzyNumber::triangular(0.0, 5.0, 10.0);
         assert!((n.defuzzify_centroid(101) - 5.0).abs() < 0.1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fuzzy_add_sums_components() {
         let a = FuzzyNumber::triangular(1.0, 2.0, 3.0);
         let b = FuzzyNumber::triangular(1.0, 1.0, 1.0);
@@ -2072,7 +2072,7 @@ mod tests {
         assert_eq!((sum.a, sum.b, sum.c), (2.0, 3.0, 4.0));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fuzzy_mul_interval_at_peak_alpha() {
         let a = FuzzyNumber::triangular(1.0, 2.0, 3.0);
         let b = FuzzyNumber::triangular(2.0, 3.0, 4.0);
@@ -2081,7 +2081,7 @@ mod tests {
         assert!((hi - 6.0).abs() < 1e-9);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn relation_composition_max_product() {
         let mut r1 = FuzzyRelation::new(2, 2);
         r1.set(0, 0, 0.5);
@@ -2092,7 +2092,7 @@ mod tests {
         assert!((composed.get(0, 0) - 0.25).abs() < 1e-9);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn relation_composition_dimension_mismatch_errors() {
         let r1 = FuzzyRelation::new(2, 3);
         let r2 = FuzzyRelation::new(2, 2);
@@ -2100,31 +2100,31 @@ mod tests {
         assert_eq!(r1.compose_max_product(&r2), Err(FuzzyError::DimensionMismatch("relation composition".into())));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn possibility_and_necessity_measures() {
         let pm = PossibilityMeasure::new(vec![1.0, 2.0, 3.0, 4.0, 5.0], vec![0.2, 0.5, 0.8, 0.3, 0.1]).unwrap();
         assert!((pm.possibility(|x| x >= 3.0) - 0.8).abs() < 1e-9);
         assert!((pm.necessity(|x| x >= 3.0) - 0.5).abs() < 1e-9);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn possibility_measure_from_scores_normalizes_by_max() {
         let pm = PossibilityMeasure::from_scores(vec![1.0, 2.0, 3.0], vec![2.0, 4.0, 1.0]).unwrap();
         assert_eq!(pm.membership, vec![0.5, 1.0, 0.25]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn possibility_measure_rejects_mismatched_lengths() {
         assert_eq!(PossibilityMeasure::new(vec![1.0, 2.0], vec![0.5]), Err(FuzzyError::InvalidDomain("possibility universe".into())));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn universe_rejects_invalid_bounds() {
         assert_eq!(Universe::new(5.0, 1.0, 10), Err(FuzzyError::InvalidDomain("universe bounds".into())));
         assert_eq!(Universe::new(0.0, 10.0, 0), Err(FuzzyError::InvalidDomain("universe bounds".into())));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn universe_len_sample_and_is_empty() {
         let u = Universe::new(0.0, 10.0, 5).unwrap();
         assert_eq!(u.len(), 5);
@@ -2133,7 +2133,7 @@ mod tests {
         assert_eq!(u.sample(4), 10.0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn linguistic_variable_fuzzify_and_term_index() {
         let univ = Universe::new(0.0, 10.0, 11).unwrap();
         let var = LinguisticVariable::new("x", univ, vec![FuzzySet::new("low", MembershipFunction::triangular(0.0, 0.0, 5.0)), FuzzySet::new("high", MembershipFunction::triangular(5.0, 10.0, 10.0))]);
@@ -2144,7 +2144,7 @@ mod tests {
         assert!(grades[0] > 0.0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn rule_firing_strength_applies_hedge() {
         let univ = Universe::new(0.0, 10.0, 11).unwrap();
         let var = LinguisticVariable::new("x", univ, vec![FuzzySet::new("mid", MembershipFunction::triangular(0.0, 5.0, 10.0))]);
@@ -2153,20 +2153,20 @@ mod tests {
         assert!((strength - 0.25).abs() < 1e-9);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn rule_base_is_empty_reports_correctly() {
         assert!(RuleBase::new(vec![]).is_empty());
         let rule = Rule { id: 0, antecedents: vec![], consequent: Consequent::SugenoConstant { output: 0, value: 1.0 }, weight: 1.0, confidence: 1.0 };
         assert!(!RuleBase::new(vec![rule]).is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn defuzzifier_empty_universe_errors() {
         let empty = Universe { min: 0.0, max: 1.0, samples: vec![] };
         assert_eq!(Defuzzifier::Centroid.apply(&empty, &[], None, None), Err(FuzzyError::EmptyUniverse));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn defuzzifier_weighted_average_and_height_match() {
         let univ = Universe::new(0.0, 1.0, 3).unwrap();
         let membership = vec![0.1, 0.1, 0.1];
@@ -2178,7 +2178,7 @@ mod tests {
         assert_eq!(wa, ht);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn defuzzifier_weighted_average_requires_heights_and_values() {
         let univ = Universe::new(0.0, 1.0, 3).unwrap();
         let membership = vec![0.1, 0.1, 0.1];
@@ -2186,7 +2186,7 @@ mod tests {
         assert!(Defuzzifier::Height.apply(&univ, &membership, None, None).is_err());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn defuzzifier_bisector_mom_som_lom() {
         let univ = Universe::new(0.0, 5.0, 6).unwrap();
         let membership = vec![0.0, 0.2, 0.9, 0.9, 0.9, 0.1];
@@ -2202,7 +2202,7 @@ mod tests {
         assert!((lom - 4.0).abs() < 1e-9);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mimo_infer_rejects_bad_input_and_empty_rules() {
         let system = temp_speed_system();
         assert_eq!(system.infer(&[1.0, 2.0]), Err(FuzzyError::DimensionMismatch("input count".into())));
@@ -2211,7 +2211,7 @@ mod tests {
         assert_eq!(empty_system.infer(&[20.0]), Err(FuzzyError::EmptyRuleBase));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn larsen_inference_model_produces_output() {
         let mut system = temp_speed_system();
         system.model = InferenceModel::Larsen;
@@ -2220,7 +2220,7 @@ mod tests {
         assert!(explanation.traces.iter().any(|t| t.description.contains("Larsen")));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn tsukamoto_inference_model_inverts_monotonic_consequent() {
         let temp_univ = Universe::new(0.0, 40.0, 41).unwrap();
         let temp_var = LinguisticVariable::new("temperature", temp_univ, vec![FuzzySet::new("high", MembershipFunction::triangular(0.0, 40.0, 40.0))]);
@@ -2239,7 +2239,7 @@ mod tests {
         assert!(out[0] > 0.0 && out[0] < 100.0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn soft_constraint_consequent_scales_by_preference() {
         let system = temp_speed_system();
         let mut soft_system = system;
@@ -2249,7 +2249,7 @@ mod tests {
         assert!(explanation.traces.iter().any(|t| t.description.contains("soft constraint")));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn tsukamoto_inverse_handles_zero_alpha_and_solves_monotonic() {
         let mf = MembershipFunction::sigmoid(1.0, 0.0);
         assert_eq!(tsukamoto_inverse(&mf, 0.0), mf.support_min());
@@ -2257,7 +2257,7 @@ mod tests {
         assert!((mf.eval(x) - 0.5).abs() < 1e-6);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn adaptive_membership_fit_updates_parameters() {
         let mf = MembershipFunction::triangular(0.0, 3.0, 10.0);
         let samples: Vec<(f64, f64)> = (0..10)
@@ -2273,14 +2273,14 @@ mod tests {
         assert_ne!(adaptive.mf.parameters(), initial_params);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn anfis_default_forward_and_rule_count() {
         let anfis = Anfis::new(2, 2, &[(0.0, 1.0), (0.0, 1.0)]);
         assert_eq!(anfis.rule_count(), 4);
         assert_eq!(anfis.forward(&[0.5, 0.5]), 0.0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn wang_mendel_rules_generates_one_rule_per_sample() {
         let univ = Universe::new(0.0, 10.0, 11).unwrap();
         let input_var = LinguisticVariable::new("x", univ.clone(), vec![FuzzySet::new("low", MembershipFunction::triangular(0.0, 0.0, 10.0)), FuzzySet::new("high", MembershipFunction::triangular(0.0, 10.0, 10.0))]);
@@ -2291,7 +2291,7 @@ mod tests {
         assert!(matches!(rules.rules[0].consequent, Consequent::Mamdani { .. }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn wang_mendel_rules_sugeno_uses_constant_consequent() {
         let univ = Universe::new(0.0, 10.0, 11).unwrap();
         let input_var = LinguisticVariable::new("x", univ.clone(), vec![FuzzySet::new("low", MembershipFunction::triangular(0.0, 0.0, 10.0))]);
@@ -2301,7 +2301,7 @@ mod tests {
         assert!(matches!(rules.rules[0].consequent, Consequent::SugenoConstant { value, .. } if (value - 3.5).abs() < 1e-9));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn prune_rules_filters_below_thresholds() {
         let rules = RuleBase::new(vec![
             Rule { id: 0, antecedents: vec![], consequent: Consequent::SugenoConstant { output: 0, value: 1.0 }, weight: 0.9, confidence: 0.9 },
@@ -2312,7 +2312,7 @@ mod tests {
         assert_eq!(pruned.rules[0].id, 0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn weight_rules_by_fit_updates_confidence_from_error() {
         let mut system = temp_speed_system();
         let data = vec![(vec![35.0], vec![90.0]), (vec![2.0], vec![5.0])];
@@ -2322,7 +2322,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn subtractive_cluster_centers_finds_clusters() {
         let data = vec![vec![0.0, 0.0], vec![0.2, 0.1], vec![10.0, 10.0], vec![10.1, 9.9]];
         let centers = subtractive_cluster_centers(&data, 1.0, 0.5, 0.15);
@@ -2330,12 +2330,12 @@ mod tests {
         assert!(centers.len() <= data.len());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn subtractive_cluster_centers_empty_data_returns_empty() {
         assert!(subtractive_cluster_centers(&[], 1.0, 0.5, 0.15).is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn gustafson_kessel_clusters_two_groups() {
         let data = vec![vec![0.0, 0.0], vec![0.1, 0.0], vec![5.0, 5.0], vec![5.1, 5.0]];
         let result = gustafson_kessel(&data, 2, 2.0, 5).unwrap();
@@ -2343,7 +2343,7 @@ mod tests {
         assert_eq!(result.membership.len(), 4);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fuzzy_vikor_ranks_compromise_solution() {
         let vikor = FuzzyVikor {
             alternatives: vec!["a".into(), "b".into()],
@@ -2357,7 +2357,7 @@ mod tests {
         assert_eq!(rank[0].0, 0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn temporal_evaluator_recently_and_frequently() {
         let eval = TemporalEvaluator { now: 100.0, recent_window: 10.0, frequent_window: 5.0 };
         assert!((eval.recently(100.0) - 1.0).abs() < 1e-9);
@@ -2365,7 +2365,7 @@ mod tests {
         assert!((eval.frequently(&[99.0, 98.0, 97.0]) - 0.6).abs() < 1e-9);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn spatial_evaluator_near_and_slowly() {
         let eval = SpatialEvaluator { anchor: vec![0.0, 0.0], near_radius: 10.0 };
         assert!((eval.near(&[0.0, 0.0]) - 1.0).abs() < 1e-9);
@@ -2374,19 +2374,19 @@ mod tests {
         assert_eq!(eval.slowly(10.0, 10.0), 0.0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn probabilistic_to_membership_blends_by_certainty() {
         assert!((probabilistic_to_membership(0.8, 1.0) - 0.8).abs() < 1e-9);
         assert!((probabilistic_to_membership(0.8, 0.0) - 0.5).abs() < 1e-9);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn possibility_to_membership_passes_through_values() {
         let pm = PossibilityMeasure::new(vec![1.0, 2.0], vec![0.3, 0.7]).unwrap();
         assert_eq!(possibility_to_membership(&pm), vec![0.3, 0.7]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn hybrid_fuse_weighted_combination() {
         assert!((hybrid_fuse(0.8, 0.2, 1.0) - 0.8).abs() < 1e-9);
         assert!((hybrid_fuse(0.8, 0.2, 0.0) - 0.2).abs() < 1e-9);
@@ -2396,7 +2396,7 @@ mod tests {
     mod long {
         use super::*;
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn anfis_learns_nonlinear_surface() {
             let data: Vec<(Vec<f64>, f64)> = (0..30)
                 .flat_map(|i| {
@@ -2414,7 +2414,7 @@ mod tests {
             assert!(pred.is_finite());
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn genetic_optimizer_improves_quadratic() {
             let opt = GeneticOptimizer { population_size: 20, generations: 30, mutation_rate: 0.2, crossover_rate: 0.7, bounds: vec![(-5.0, 5.0)], seed: 42 };
             let (best, fit) = opt.optimize(|x| (x[0] - 2.0).powi(2));
@@ -2422,7 +2422,7 @@ mod tests {
             assert!((best[0] - 2.0).abs() < 1.5);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn pso_optimizer_finds_minimum() {
             let opt = PsoOptimizer { swarm_size: 15, iterations: 40, inertia: 0.7, cognitive: 1.4, social: 1.4, bounds: vec![(-3.0, 3.0), (-3.0, 3.0)], seed: 7 };
             let (best, fit) = opt.optimize(|x| x[0] * x[0] + x[1] * x[1]);
@@ -2430,7 +2430,7 @@ mod tests {
             assert!(best[0].abs() < 1.0 && best[1].abs() < 1.0);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn hierarchical_system_chains_layers() {
             let layer1 = temp_speed_system();
             let layer2_univ = Universe::new(0.0, 100.0, 21).unwrap();
@@ -2449,7 +2449,7 @@ mod tests {
             assert_eq!(explanations.len(), 2);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn evolving_system_adapts_over_stream() {
             let system = temp_speed_system();
             let mut evolving = EvolvingFuzzySystem::new(system, 0.1, 0.05, 10);

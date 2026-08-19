@@ -332,7 +332,7 @@ mod tests {
         ]
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn command_ids_are_unique_and_cover_every_row() {
         let commands = every_command();
         let ids: Vec<&str> = commands.iter().map(Block5dCommand::command_id).collect();
@@ -343,7 +343,7 @@ mod tests {
         assert_eq!(ids.len(), 7, "every Block5dCommand row must be covered by every_command()");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn every_command_round_trips_text_and_binary_under_its_declared_wire_keyword() {
         for command in every_command() {
             store::os_store::test_support::assert_op_text_binary_equivalence(&command);
@@ -354,7 +354,7 @@ mod tests {
 
     /// 🧷️ Pins the exact pre-migration bytes for the rows the `app_commands!` decomposition could have
     /// silently rewritten — copied verbatim from the ticket's `🧪️wire-baseline-5d-before.txt`.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn optional_field_rows_keep_their_pre_migration_bytes() {
         let hex = |command: &Block5dCommand| protocol::OpBinary::encode_op(command).expect("encode").iter().map(|b| format!("{b:02x}")).collect::<String>();
         assert_eq!(hex(&Block5dCommand::AddGripKind(add_grip_kind::AddGripKind {})), "01010000");
@@ -363,7 +363,7 @@ mod tests {
 
     /// 🌉️ Every app-declared action must bridge through `command_from_action` and round-trip
     /// `command_id`.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn command_from_action_covers_every_declared_action_and_rejects_unknown_ones() {
         semio_framework_plugin::testkit::assert_declared_actions_bridge_to_commands::<semio_framework_plugin::EditorApp<Block5dPlayApp>>(testkit::block5d_app_manifest_for_testkit);
         assert!(<Block5dPlayApp as ArtifactEditor>::command_from_action("noSuchAction", None).is_err());
@@ -371,7 +371,7 @@ mod tests {
     //#endregion 🔖️CommandSurface
 
     //#region 🔖️Manifest
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn the_manifest_stitches_every_taxonomy_node() {
         let definition = create_block5d_app();
         assert_eq!(definition.modes.len(), 1);
@@ -384,7 +384,7 @@ mod tests {
 
     /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the `grip` domain is declared
     /// once, with both granularities, a `Topology` hierarchy, and scoped to both window kinds.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn declares_the_grip_interaction_domain_scoped_to_both_windows() {
         let definition = create_block5d_app();
         let interaction = definition.interactions.iter().find(|def| def.id == BLOCK5D_INTERACTION_GRIP).expect("grip domain declared");
@@ -398,7 +398,7 @@ mod tests {
 
     /// 🕹️ `interaction_topology` nests every grip under its own grip-kind, enabling both pruning
     /// (`removeGripKind`/`removeGrip`) and transitive hover from a kind to its grips.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn interaction_topology_nests_grips_under_their_grip_kind() {
         let mut app: Block5dApp = new_app();
         testkit::dispatch(&mut app, Block5dCommand::AddGripKind(add_grip_kind::AddGripKind {}));
@@ -416,7 +416,7 @@ mod tests {
         assert_eq!(grip_node.parent.as_deref(), Some(format!("gripKind:{kind_id}").as_str()));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn block5d_io_declares_the_catalog_out_port() {
         let io = block5d_io();
         assert_eq!(io.document_schema, BLOCK_5D_SCHEMA);
@@ -426,7 +426,7 @@ mod tests {
         assert_eq!(catalog.direction, semio_framework_plugin::MediaPortDirection::Out);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn an_unknown_body_key_falls_back_to_a_text_node() {
         let mut app = new_app();
         assert!(testkit::render(&mut app, "block5d.play.nope").contains("Unknown body"));
@@ -434,7 +434,7 @@ mod tests {
     //#endregion 🔖️Manifest
 
     //#region 🔖️Behavior
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn renders_document_tree_board_and_world() {
         let mut app: Block5dApp = new_app();
         assert!(testkit::render(&mut app, document_panel::BLOCK5D_BODY_DOCUMENT).contains("Grip Kinds"));
@@ -442,7 +442,7 @@ mod tests {
         assert!(testkit::render(&mut app, world::BLOCK5D_BODY_WORLD).contains("mesh:"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_grip_kind_then_add_grip_then_remove_round_trips() {
         let mut app: Block5dApp = new_app();
         testkit::dispatch(&mut app, Block5dCommand::AddGripKind(add_grip_kind::AddGripKind {}));
@@ -454,7 +454,7 @@ mod tests {
         assert_eq!(app.snapshot().expect("snapshot").grips.len(), 0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_active_example_loads_forest_left_fixture() {
         let mut app: Block5dApp = new_app();
         testkit::dispatch(&mut app, Block5dCommand::SetActiveExample(set_active_example::SetActiveExample { id: set_active_example::BLOCK5D_EXAMPLE_FOREST_LEFT.into() }));
@@ -463,7 +463,7 @@ mod tests {
         assert_eq!(projection.grips.len(), 1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn undo_redo_round_trips_through_the_wrapper() {
         let mut app: Block5dApp = new_app();
         testkit::dispatch(&mut app, Block5dCommand::AddGripKind(add_grip_kind::AddGripKind {}));
@@ -475,7 +475,7 @@ mod tests {
     }
 
     /// 🌉️ `puzzle5d_catalog_fragment`'s new caller round-trips through the `"catalog:out"` media port.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn export_media_catalog_out_wraps_the_puzzle5d_fragment() {
         let mut app: Block5dApp = new_app();
         testkit::dispatch(&mut app, Block5dCommand::SetActiveExample(set_active_example::SetActiveExample { id: set_active_example::BLOCK5D_EXAMPLE_FOREST_LEFT.into() }));
@@ -491,7 +491,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn command_from_action_bridges_set_active_example() {
         let _app = Block5dPlayApp;
         assert!(matches!(<Block5dPlayApp as ArtifactEditor>::command_from_action("setActiveExample", Some(&serde_json::json!({ "exampleId": "forest" }))), Ok(Block5dCommand::SetActiveExample(set_active_example::SetActiveExample { id })) if id == "forest"));
@@ -504,7 +504,7 @@ mod tests {
     /// `declares_the_grip_interaction_domain_scoped_to_both_windows` above). `app_with_registry`
     /// still earns its keep here: a genuine `Mutation`-kind command must still emit document
     /// operations under the real, kind-discipline-enforcing registry.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mutation_commands_still_emit_artifact_mutations_under_the_real_registry() {
         let mut app = testkit::app_with_registry();
         let result = testkit::dispatch(&mut app, Block5dCommand::AddGripKind(add_grip_kind::AddGripKind {}));

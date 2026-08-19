@@ -356,7 +356,7 @@ mod tests {
     use protocol::command::DiffAlgebra;
 
     //#region 🔖️MutationDiffLaw
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mutation_diff_law() {
         for mutation in demo_mutation_cases() {
             let base = fixture();
@@ -373,7 +373,7 @@ mod tests {
     //#endregion 🔖️MutationDiffLaw
 
     //#region 🔖️InverseLaw
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inverse_law() {
         for mutation in demo_mutation_cases() {
             let base = fixture();
@@ -395,7 +395,7 @@ mod tests {
     //#endregion 🔖️InverseLaw
 
     //#region 🔖️OpTextBinaryRoundtripLaw
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_text_binary_roundtrip_law() {
         for mutation in demo_mutation_cases() {
             let printed = mutation.print_op();
@@ -411,7 +411,7 @@ mod tests {
     //#endregion 🔖️OpTextBinaryRoundtripLaw
 
     //#region 🔖️VariantBehavior
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn insert_then_remove_node_apply_and_inverse() {
         let base = fixture();
         let insert = SemioFlowMutation::InsertNode { node: node("n3", "transform", "T", 5.0, 5.0) };
@@ -424,7 +424,7 @@ mod tests {
         assert_eq!(after, base);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn node_param_mutations_apply_and_inverse() {
         let base = fixture();
         let set = SemioFlowMutation::SetNodeParam { id: "n1".into(), key: "k".into(), value: "new".into() };
@@ -446,7 +446,7 @@ mod tests {
         assert_eq!(after2, base);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn edge_mutations_apply_and_inverse() {
         let base = fixture();
         let set = SemioFlowMutation::SetEdgeEndpoints { id: "e1".into(), from: PortRef { node: "n2".into(), port: "out".into() }, to: PortRef { node: "n1".into(), port: "in".into() } };

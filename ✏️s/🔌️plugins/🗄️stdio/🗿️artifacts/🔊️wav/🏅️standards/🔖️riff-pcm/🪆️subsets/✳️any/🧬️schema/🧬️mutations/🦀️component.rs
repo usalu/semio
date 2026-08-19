@@ -111,7 +111,7 @@ mod tests {
 
     //#region mutation_diff_law
     /// 🧪️ `mutation.diff(base).diff().apply(base) == apply_wav_mutation(base, mutation)`.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mutation_diff_law_every_variant() {
         let base = base_snapshot();
         for m in variants(&base) {
@@ -126,7 +126,7 @@ mod tests {
 
     //#region inverse_law
     /// 🧪️ Applying the inverse mutation restores base, at both the mutation and diff levels.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inverse_law_mutation_and_diff_level() {
         let base = base_snapshot();
         for m in variants(&base) {
@@ -146,7 +146,7 @@ mod tests {
     //#endregion inverse_law
 
     //#region op_text_binary_roundtrip_law
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_text_binary_roundtrip_law() {
         let base = base_snapshot();
         for m in variants(&base) {

@@ -25,13 +25,13 @@ pub async fn handle(payload: &PresenceHeartbeat, _doc: &ArtifactView<'_, Workflo
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn space_command_op_text_round_trips_every_variant() {
         use crate::engine::space::SpaceCommand;
         store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::PresenceHeartbeat(PresenceHeartbeat { client_id: "c1".into(), name: "Ada".into() }));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn presence_heartbeat_declares_none_ui_scope() {
         use crate::engine::space::testkit::studio_emit;
         use crate::engine::space::SpaceCommand;

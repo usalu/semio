@@ -61,7 +61,7 @@ mod tests {
     /// example document's pack bytes rather than an `artifact_mutations` entry — `dispatch`'s
     /// in-process harness never applies `effects` to its own store, so this asserts on the emitted
     /// effect directly (mirrors `🎮️commands/📚️example`-style facets elsewhere in this ticket).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_active_example_metabolism_loads_seven_nodes() {
         use semio_framework_plugin::Effect;
         let mut app = new_app();
@@ -74,7 +74,7 @@ mod tests {
         assert_eq!(fixture_nodes(&crate::artifacts::wires::wires_working_board(&document)).len(), 7);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_active_example_unknown_id_loads_empty_document() {
         use semio_framework_plugin::Effect;
         let mut app = metabolism_app();

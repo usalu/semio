@@ -26,7 +26,7 @@ pub async fn decode(bytes: &[u8]) -> Result<Block3dSnapshot, PackError> {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn pack_round_trips_representative_document() {
         let document = Block3dSnapshot::default();
         store::os_store::test_support::assert_dsl_pack_equivalence(&document);

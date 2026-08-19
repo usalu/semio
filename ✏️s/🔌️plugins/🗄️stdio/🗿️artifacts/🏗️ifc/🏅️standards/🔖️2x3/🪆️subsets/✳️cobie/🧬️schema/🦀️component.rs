@@ -61,7 +61,7 @@ pub mod derived_construction {
     }
 
     impl Default for Ifc2x3CobieBuilderConstruction {
-        async fn default() -> Self {
+        fn default() -> Self {
             Self::new()
         }
     }
@@ -107,13 +107,13 @@ pub mod derived_construction {
     mod tests {
         use super::*;
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn new_builds_clean() {
             let snapshot = Ifc2x3CobieBuilderConstruction::new().add_space("Room 101").build().expect("conforming construction must build");
             assert_eq!(snapshot.document.instances.len(), 5);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn wrong_schema_via_raw_mutate_still_fails_build() {
             let snapshot = Ifc2x3CobieBuilderConstruction::new().build().unwrap();
             let mut bad = snapshot.clone();
@@ -248,13 +248,13 @@ pub mod derived_analysis {
             Ifc2x3Snapshot { schema: "stdio.ifc.2x3".into(), document: Part21Document { header: header("FMHandOverView"), instances: vec![space, building, storey, door_type, rel] }, edm_preamble: None }
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn conforming_snapshot_has_no_hard_diagnostics() {
             let diagnostics = check_cobie_conformance(&conforming_snapshot());
             assert!(diagnostics.iter().all(|d| d.severity != Severity::Error), "got {diagnostics:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn wrong_view_definition_is_hard() {
             let mut snap = conforming_snapshot();
             snap.document.header = header("CoordinationView");
@@ -262,7 +262,7 @@ pub mod derived_analysis {
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_VIEW_DEFINITION && d.severity == Severity::Error), "got {diagnostics:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn unnamed_space_is_soft() {
             let mut snap = conforming_snapshot();
             for (name, args) in snap.document.instances[0].entities.iter_mut() {
@@ -274,7 +274,7 @@ pub mod derived_analysis {
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_SPACE_NAME && d.severity == Severity::Warning), "got {diagnostics:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn missing_storey_is_soft() {
             let mut snap = conforming_snapshot();
             snap.document.instances.retain(|i| !i.is_type("IFCBUILDINGSTOREY"));
@@ -282,7 +282,7 @@ pub mod derived_analysis {
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_BUILDING_STOREY && d.severity == Severity::Warning), "got {diagnostics:?}");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn missing_type_assignment_is_soft() {
             let mut snap = conforming_snapshot();
             snap.document.instances.retain(|i| !i.is_type("IFCRELDEFINESBYTYPE"));

@@ -67,7 +67,7 @@ mod tests {
     use crate::artifacts::semio::standards::v1::subsets::object::schema::mutations::text::demo_mutation_cases;
     use protocol::OpBinary;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_binary_roundtrip_law() {
         for m in demo_mutation_cases() {
             let encoded = m.encode_op().unwrap_or_else(|e| panic!("encode_op({m:?}) failed: {e}"));

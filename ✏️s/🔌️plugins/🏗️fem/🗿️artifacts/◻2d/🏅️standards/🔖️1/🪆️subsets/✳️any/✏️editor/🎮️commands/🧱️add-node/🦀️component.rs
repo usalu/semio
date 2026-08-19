@@ -50,7 +50,7 @@ mod tests {
     use crate::editor::fem2d::testkit::{dispatch, fem2d_app};
     use crate::editor::fem2d::Fem2dCommand;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_node_action_emits_op_2d() {
         let mut app = fem2d_app();
         let result = dispatch(&mut app, Fem2dCommand::AddNode(AddNode { x: 1.0, y: 2.0 }));
@@ -58,7 +58,7 @@ mod tests {
         assert_eq!(app.snapshot().expect("snapshot").nodes.last().expect("node added").x, 1.0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_bar_and_add_beam_actions_emit_ops_2d() {
         let mut app = fem2d_app();
         dispatch(&mut app, Fem2dCommand::AddBar(add_bar::AddBar { start: "n1".into(), end: "n2".into(), material_id: "m1".into(), section_id: "s1".into() }));
@@ -67,7 +67,7 @@ mod tests {
         assert!(matches!(app.snapshot().expect("snapshot").elements.last(), Some(FemElement::Beam { .. })));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_material_action_emits_op_2d() {
         let mut app = fem2d_app();
         dispatch(&mut app, Fem2dCommand::AddMaterial(add_material::AddMaterial { name: "Steel".into(), e: 2.1e11 }));
@@ -76,21 +76,21 @@ mod tests {
         assert_eq!(material.e, 2.1e11);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_section_action_emits_op_2d() {
         let mut app = fem2d_app();
         dispatch(&mut app, Fem2dCommand::AddSection(add_section::AddSection { name: "HEA200".into(), area: 0.00538, iy: 0.0000369 }));
         assert_eq!(app.snapshot().expect("snapshot").sections.last().expect("section added").name, "HEA200");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_support_action_emits_op_with_fixed_dofs_2d() {
         let mut app = fem2d_app();
         dispatch(&mut app, Fem2dCommand::AddSupport(add_support::AddSupport { node_id: "n1".into(), fixed: vec![FemDof::Tx, FemDof::Ty] }));
         assert_eq!(app.snapshot().expect("snapshot").supports.last().expect("support added").fixed, vec![FemDof::Tx, FemDof::Ty]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn add_region_action_emits_set_region_2d() {
         let mut app = fem2d_app();
         dispatch(&mut app, Fem2dCommand::AddRegion(add_region::AddRegion { x: 0.0, y: 0.0, width: 4.0, height: 2.0, material_id: "steel".into(), thickness: None, mesh_size: None }));

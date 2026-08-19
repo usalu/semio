@@ -158,7 +158,7 @@ mod tests {
     use super::*;
     use crate::editor::gis2d::testkit::{app, render as render_body};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn the_inspector_always_summarises_the_schema_and_visible_count() {
         let mut app = app();
         let json = render_body(&mut app, GIS2D_PLAY_BODY_INSPECTION);
@@ -166,7 +166,7 @@ mod tests {
         assert!(json.contains(&format!("{}/{}", GIS_MAP_LAYER_IDS.len(), GIS_MAP_LAYER_IDS.len())));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn the_definition_binds_the_framework_inspection_tab_to_this_body() {
         let definition = definition();
         assert!(matches!(definition.group, PanelGroup::Details));

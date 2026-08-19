@@ -395,7 +395,7 @@ mod tests {
     //#region 🔖️CommandSurface
     /// 🏷️ Every declared manifest action id must be reachable as exactly one command row, and every row's
     /// wire keyword must be distinct — the cross-cutting invariant `app_commands!` is there to hold.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn command_ids_are_unique_and_the_full_row_set_is_covered() {
         let commands = every_command();
         let ids: Vec<&str> = commands.iter().map(|command| command.command_id()).collect();
@@ -407,7 +407,7 @@ mod tests {
     }
 
     /// ⚖️ LAW: text and binary are two projections of the same command, for every single row.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn every_command_round_trips_through_text_and_binary() {
         for command in every_command() {
             store::os_store::test_support::assert_op_text_binary_equivalence(&command);
@@ -424,7 +424,7 @@ mod tests {
     /// own edits to this file (which only touched `render`/`export_media`); this test's hardcoded
     /// exception list simply never accounted for the second declared divergence. Fixed outright
     /// per this ticket's own "trivial, safe, unambiguous" guidance rather than left unresolved.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
         for command in every_command() {
             let id = command.command_id();
@@ -454,7 +454,7 @@ mod tests {
     /// ⚖️ The row whose `Option` field makes `None`/`Some` distinct wire cases, pinned to the exact bytes
     /// captured from the pre-merge `mathematical_protocol` crate (see the ticket's
     /// `🧪️wire-baseline-before.txt`).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn optional_field_rows_keep_their_pre_migration_bytes() {
         let cases: [(MathematicalCommand, &str, &str); 2] = [
             (MathematicalCommand::SetAlgorithm(set_algorithm::SetAlgorithm { algorithm: "topo".into(), seed: None }), "set-algorithm algorithm=topo", "01010104746f706f01000600"),
@@ -469,7 +469,7 @@ mod tests {
     //#endregion 🔖️CommandSurface
 
     //#region 🔖️ManifestSanity
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn the_manifest_stitches_every_taxonomy_node() {
         let json = serde_json::to_string(&create_mathematical_app()).expect("app definition json");
         for id in [graph_window::MATH_PLAY_WINDOW_GRAPH, geometry_window::MATH_PLAY_WINDOW_GEOMETRY] {
@@ -479,7 +479,7 @@ mod tests {
         assert!(json.contains("computation.mathematical"), "artifact kind missing from the manifest");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mathematical_io_is_declared_on_the_manifest() {
         let app = create_mathematical_app();
         assert_eq!(app.io.artifact.id, "computation.mathematical");
@@ -487,35 +487,35 @@ mod tests {
         assert_eq!(app.io.ports[0].id, "result:out");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_mathematical_app_builds_a_definition_for_the_editor_role() {
         let def = create_mathematical_app();
         assert_eq!(def.role, semio_framework::AppRole::Editor);
         assert_eq!(def.dialect, MATHEMATICAL_DIALECT.into());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn editor_dialect_matches_the_artifact_coordinate() {
         assert_eq!(<MathematicalPlayApp as ArtifactEditor>::DIALECT, MATHEMATICAL_DIALECT);
     }
     //#endregion 🔖️ManifestSanity
 
     //#region 🔖️CrossCutting
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
         use crate::editor::mathematical::testkit::render;
         let mut app = math_app();
         assert!(render(&mut app, "mathematical.play.nope").contains("Unknown body"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn command_surface_is_registry_clean() {
         let _app = math_app_with_registry();
     }
     //#endregion 🔖️CrossCutting
 
     //#region 🔖️MathematicalIo
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mathematical_io_declares_result_out_with_the_computation_mathematical_kind() {
         let io = mathematical_io();
         assert_eq!(io.document_schema, "semio.mathematical/v1");
@@ -531,7 +531,7 @@ mod tests {
     //#endregion 🔖️MathematicalIo
 
     //#region 🔖️GraphAlgorithms
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn topo_algorithm_overlay_orders_dag_nodes() {
         let graph = MathematicalGraph::default();
         let overlay = algorithm_overlay(&graph);
@@ -539,7 +539,7 @@ mod tests {
         assert!(overlay.get("d").unwrap().starts_with(" #"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn components_algorithm_overlay_groups_disconnected_node() {
         use crate::artifacts::mathematical::MathematicalNode;
         let mut graph = MathematicalGraph { algorithm: "components".into(), ..MathematicalGraph::default() };
@@ -548,7 +548,7 @@ mod tests {
         assert_ne!(overlay.get("a"), overlay.get("z"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn bfs_algorithm_overlay_reports_hop_distance() {
         let graph = MathematicalGraph { algorithm: "bfs".into(), algorithm_seed: Some("a".into()), ..MathematicalGraph::default() };
         let overlay = algorithm_overlay(&graph);
@@ -556,7 +556,7 @@ mod tests {
         assert_eq!(overlay.get("b").unwrap(), " d1");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn workflow_json_round_trips_node_count() {
         let graph = MathematicalGraph::default();
         let (nodes, edges) = workflow_json(&graph);
@@ -566,7 +566,7 @@ mod tests {
     //#endregion 🔖️GraphAlgorithms
 
     //#region 🔖️Geometry
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn geometry_layers_include_hull_and_centroid() {
         let geometry = MathematicalGeometry::default();
         let layers_json = geometry_layers_json(&geometry);

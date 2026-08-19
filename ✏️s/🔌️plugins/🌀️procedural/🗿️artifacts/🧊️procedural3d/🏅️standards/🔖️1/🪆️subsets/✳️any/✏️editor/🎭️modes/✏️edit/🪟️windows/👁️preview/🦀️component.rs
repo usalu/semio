@@ -94,7 +94,7 @@ mod tests {
     use super::*;
     use crate::editor::procedural3d::testkit::{app, render as render_body};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn renders_world_preview_scene() {
         // 🧵️ Rendering the preview body tessellates BRep geometry through the same process-wide cache
         // `apps::procedural3d`'s own tests serialize on — see that module's `test_support`.

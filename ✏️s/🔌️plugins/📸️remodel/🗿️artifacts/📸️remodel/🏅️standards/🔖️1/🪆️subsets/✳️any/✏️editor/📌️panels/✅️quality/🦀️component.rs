@@ -53,7 +53,7 @@ mod tests {
     use super::*;
     use crate::editor::remodel::testkit::{app, render as render_body};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn a_document_without_a_report_renders_the_empty_state() {
         let mut app = app();
         assert!(render_body(&mut app, REMODEL_PLAY_BODY_QC).contains("No quality report yet"));

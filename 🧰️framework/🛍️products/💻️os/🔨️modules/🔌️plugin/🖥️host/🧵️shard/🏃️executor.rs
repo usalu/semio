@@ -13,8 +13,8 @@
 //! a REAL OS thread, which is exactly the kind of transport/thread-owning glue that rule pushes out
 //! of `🎭️actor` and into this crate.
 
-use super::ShardLoop;
-use crate::{GuestInstance, GuestRuntime};
+use super::{ShardLoop, ShardTransports};
+use crate::{GuestInstance, GuestRuntimes};
 use semio_framework_actor::{ActorId, ShardTransport, ThreadTransport};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::mpsc;
@@ -37,26 +37,26 @@ const PARK_TIMEOUT: Duration = Duration::from_millis(5);
 /// longest a healthy executor ever takes to notice a fresh request) so a live shard never times out.
 const REGISTER_ACK_TIMEOUT: Duration = Duration::from_secs(5);
 
-/// 🔌️ Local newtype so [`ShardExecutor::spawn`] can hand [`ShardLoop::new`] an
-/// `Arc<ThreadTransport>` as a `Box<dyn ShardTransport>` while ALSO keeping its own `Arc` clone to
+/// 🔌️ Local newtype so [`ShardExecutor::spawn`] can hand [`ShardLoop::new`] an `Arc<ThreadTransport>`
+/// as a [`super::ShardTransports::SharedThread`] variant while ALSO keeping its own `Arc` clone to
 /// call the concrete, trait-external [`ThreadTransport::recv_deadline`] on the exact same channel
 /// for parking — `impl ShardTransport for Arc<ThreadTransport>` directly would hit `E0117`
 /// (neither type is local to this crate; `🧵️shard/🦀️component.rs`'s own `LoopbackProbe` doc
 /// comment already names this same orphan-rule constraint for `Arc<LoopbackTransport>`).
-struct SharedThreadTransport(Arc<ThreadTransport>);
+pub(crate) struct SharedThreadTransport(Arc<ThreadTransport>);
 
 impl ShardTransport for SharedThreadTransport {
-    fn send(&self, bytes: &[u8]) {
-        self.0.send(bytes);
+    async fn send(&self, bytes: &[u8]) {
+        self.0.send(bytes).await;
     }
-    fn recv(&self) -> Option<Vec<u8>> {
-        self.0.recv()
+    async fn recv(&self) -> Option<Vec<u8>> {
+        self.0.recv().await
     }
-    fn heartbeat(&self) -> u64 {
-        self.0.heartbeat()
+    async fn heartbeat(&self) -> u64 {
+        self.0.heartbeat().await
     }
-    fn kill(&self) {
-        self.0.kill();
+    async fn kill(&self) {
+        self.0.kill().await;
     }
 }
 
@@ -99,7 +99,7 @@ impl ShardExecutor {
     /// design — also only ever calls `ShardLoop::register` from the SAME thread that owns the
     /// loop), so any actor this executor must serve is instantiated by the caller and handed in
     /// here, up front. For actors activated LATER, see [`Self::register`].
-    pub fn spawn(runtime: Arc<dyn GuestRuntime>, transport: ThreadTransport, initial: Vec<(ActorId, GuestInstance)>) -> Self {
+    pub fn spawn(runtime: Arc<GuestRuntimes>, transport: ThreadTransport, initial: Vec<(ActorId, GuestInstance)>) -> Self {
         let transport = Arc::new(transport);
         let park = transport.clone();
         let stop = Arc::new(AtomicBool::new(false));
@@ -108,36 +108,44 @@ impl ShardExecutor {
         let handle = std::thread::Builder::new()
             .name("semio-shard-executor".to_string())
             .spawn(move || {
-                let mut shard = ShardLoop::new(runtime, Box::new(SharedThreadTransport(transport)));
+                let mut shard = ShardLoop::new(runtime, ShardTransports::SharedThread(SharedThreadTransport(transport)));
                 for (actor, instance) in initial {
                     shard.register(actor, instance);
                 }
-                while !stop_loop.load(Ordering::SeqCst) {
-                    // 🐛️ terra-shard-routing: drains every pending `register()` request BEFORE this
-                    // iteration's park/pump, applying it AND acking it — this alone does NOT make a
-                    // `ShardFrame::Grant` sent right after `register()` returns safe (the bug this
-                    // packet fixed): `register_tx`/`register_rx` and the `ShardFrame` transport are
-                    // two INDEPENDENT channels, so a request queued here while THIS thread is
-                    // already parked at `park.recv_deadline` below sits undrained until the NEXT
-                    // iteration — but a `ShardFrame::Grant` for that same actor, sent moments later,
-                    // wakes that SAME park call immediately and reaches `pump_primed` first. The ack
-                    // in `Self::register` is what actually closes the race: it makes the caller BLOCK
-                    // until this drain has run and applied the request, so any frame the caller sends
-                    // afterward is real program-order-after the registration, not merely queued
-                    // "before" it on an unrelated channel.
-                    while let Ok(RegisterRequest { actor, instance, ack }) = register_rx.try_recv() {
-                        shard.register(actor, instance);
-                        let _ = ack.send(());
+                // 👶️ host-dedyn: ONE `block_on` at the thread root — this whole closure body IS
+                // the thread's own executor from here down (R4 clause 4: "shard/actor thread roots
+                // for as long as a thread-loop backend exists"). `park.recv_deadline` below is a
+                // genuinely blocking `mpsc` call, sound to run inside a `block_on`'d future because
+                // nothing else needs to make progress on this thread while it waits.
+                semio_framework_async::block_on(async {
+                    while !stop_loop.load(Ordering::SeqCst) {
+                        // 🐛️ terra-shard-routing: drains every pending `register()` request BEFORE
+                        // this iteration's park/pump, applying it AND acking it — this alone does
+                        // NOT make a `ShardFrame::Grant` sent right after `register()` returns safe
+                        // (the bug this packet fixed): `register_tx`/`register_rx` and the
+                        // `ShardFrame` transport are two INDEPENDENT channels, so a request queued
+                        // here while THIS thread is already parked at `park.recv_deadline` below
+                        // sits undrained until the NEXT iteration — but a `ShardFrame::Grant` for
+                        // that same actor, sent moments later, wakes that SAME park call immediately
+                        // and reaches `pump_primed` first. The ack in `Self::register` is what
+                        // actually closes the race: it makes the caller BLOCK until this drain has
+                        // run and applied the request, so any frame the caller sends afterward is
+                        // real program-order-after the registration, not merely queued "before" it
+                        // on an unrelated channel.
+                        while let Ok(RegisterRequest { actor, instance, ack }) = register_rx.try_recv() {
+                            shard.register(actor, instance);
+                            let _ = ack.send(());
+                        }
+                        // 🅿️ Park until a frame arrives or `PARK_TIMEOUT` elapses — `pump_primed`
+                        // never blocks on its own (its own drain loop only reads what is ALREADY
+                        // buffered), so without this the loop would busy-spin exactly like the
+                        // `semio-shard` `[[bin]]`'s own `sleep(5ms)` loop does today.
+                        let primed = park.recv_deadline(PARK_TIMEOUT);
+                        if let Err(error) = shard.pump_primed(primed).await {
+                            eprintln!("[shard-executor] pump error: {error}");
+                        }
                     }
-                    // 🅿️ Park until a frame arrives or `PARK_TIMEOUT` elapses — `pump_primed`
-                    // never blocks on its own (its own drain loop only reads what is ALREADY
-                    // buffered), so without this the loop would busy-spin exactly like the
-                    // `semio-shard` `[[bin]]`'s own `sleep(5ms)` loop does today.
-                    let primed = park.recv_deadline(PARK_TIMEOUT);
-                    if let Err(error) = shard.pump_primed(primed) {
-                        eprintln!("[shard-executor] pump error: {error}");
-                    }
-                }
+                });
             })
             .expect("spawn shard executor thread");
         Self { stop, handle: Some(handle), register_tx }
@@ -218,12 +226,12 @@ mod tests {
         mock.script_turn(actor, scripted);
 
         let (kernel_side, shard_side) = ThreadTransport::new_pair();
-        let executor = ShardExecutor::spawn(mock.clone(), shard_side, vec![(actor, instance)]);
+        let executor = ShardExecutor::spawn(Arc::new(GuestRuntimes::Mock(mock.clone())), shard_side, vec![(actor, instance)]);
         assert!(executor.is_running());
 
         let envelope = Envelope { to: actor, from: semio_framework_actor::Origin::Kernel, lane: semio_framework_actor::Lane::Interactive, seq: 1, deadline_ms: None, coalesce: None, cancel_of: None, payload: Payload::Event { bytes: serde_json::to_vec(&semio_framework::kernel::Event::InstanceClose).unwrap() } };
         let budget = semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Interactive);
-        kernel_side.send(&encode_frame(super::super::ShardFrame::Grant { actor, budget, envelopes: vec![envelope] }));
+        semio_framework_async::block_on(kernel_side.send(&encode_frame(super::super::ShardFrame::Grant { actor, budget, envelopes: vec![envelope] })));
 
         let outcome_bytes = recv_with_retries(&kernel_side, 200);
         let outcome: super::super::ShardOutcome = serde_json::from_slice(&outcome_bytes).expect("decode outcome");
@@ -268,7 +276,7 @@ mod tests {
         let mut executors = Vec::new();
         for _ in 0..SHARDS {
             let (kernel_side, shard_side) = ThreadTransport::new_pair();
-            executors.push(ShardExecutor::spawn(mock.clone(), shard_side, Vec::new()));
+            executors.push(ShardExecutor::spawn(Arc::new(GuestRuntimes::Mock(mock.clone())), shard_side, Vec::new()));
             kernel_sides.push(kernel_side);
         }
         let mut shards = ShardTable::new(ShardKind::Thread, SHARDS, 0);
@@ -288,7 +296,7 @@ mod tests {
             // retry, matching real production ordering exactly.
             executors[shard_id.0 as usize].register(actor, instance);
             let envelope = Envelope { to: actor, from: semio_framework_actor::Origin::Kernel, lane: semio_framework_actor::Lane::Interactive, seq: i as u64 + 1, deadline_ms: None, coalesce: None, cancel_of: None, payload: Payload::Event { bytes: serde_json::to_vec(&semio_framework::kernel::Event::InstanceClose).unwrap() } };
-            kernel_sides[shard_id.0 as usize].send(&encode_frame(super::super::ShardFrame::Grant { actor, budget: grant_budget, envelopes: vec![envelope] }));
+            semio_framework_async::block_on(kernel_sides[shard_id.0 as usize].send(&encode_frame(super::super::ShardFrame::Grant { actor, budget: grant_budget, envelopes: vec![envelope] })));
         }
 
         for (i, shard_id) in expected_shard.into_iter().enumerate() {
@@ -319,7 +327,7 @@ mod tests {
         let mut executors = Vec::new();
         for _ in 0..SHARDS {
             let (kernel_side, shard_side) = ThreadTransport::new_pair();
-            executors.push(ShardExecutor::spawn(mock.clone(), shard_side, Vec::new()));
+            executors.push(ShardExecutor::spawn(Arc::new(GuestRuntimes::Mock(mock.clone())), shard_side, Vec::new()));
             kernel_sides.push(kernel_side);
         }
         let mut shards = ShardTable::new(ShardKind::Thread, SHARDS, 0);
@@ -335,7 +343,7 @@ mod tests {
             executors[shard_id.0 as usize].register(actor, instance);
 
             let suspend = Envelope { to: actor, from: semio_framework_actor::Origin::Kernel, lane: semio_framework_actor::Lane::Background, seq: 1, deadline_ms: None, coalesce: None, cancel_of: None, payload: Payload::Suspend { checkpoint: true } };
-            kernel_side.send(&encode_frame(super::super::ShardFrame::Envelope(suspend)));
+            semio_framework_async::block_on(kernel_side.send(&encode_frame(super::super::ShardFrame::Envelope(suspend))));
             let outcome: super::super::ShardOutcome = serde_json::from_slice(&recv_with_retries(kernel_side, 200)).expect("decode outcome");
             let state = match outcome {
                 super::super::ShardOutcome::Checkpoint { actor: reported, state } => {
@@ -350,7 +358,7 @@ mod tests {
             let fresh_instance = mock.instantiate(&compiled, actor, &[], &instantiate_budget).expect("mock instantiate (fresh)");
             executors[shard_id.0 as usize].register(actor, fresh_instance);
             let resume = Envelope { to: actor, from: semio_framework_actor::Origin::Kernel, lane: semio_framework_actor::Lane::Background, seq: 2, deadline_ms: None, coalesce: None, cancel_of: None, payload: Payload::Resume { checkpoint: Some(state) } };
-            kernel_side.send(&encode_frame(super::super::ShardFrame::Envelope(resume)));
+            semio_framework_async::block_on(kernel_side.send(&encode_frame(super::super::ShardFrame::Envelope(resume))));
             let outcome: super::super::ShardOutcome = serde_json::from_slice(&recv_with_retries(kernel_side, 200)).expect("decode outcome");
             match outcome {
                 super::super::ShardOutcome::Resumed { actor: reported } => assert_eq!(reported, actor.0),
@@ -363,7 +371,7 @@ mod tests {
     fn stop_joins_the_thread_and_is_idempotent_with_drop() {
         let mock = Arc::new(MockGuestRuntime::new());
         let (_kernel_side, shard_side) = ThreadTransport::new_pair();
-        let mut executor = ShardExecutor::spawn(mock, shard_side, vec![]);
+        let mut executor = ShardExecutor::spawn(Arc::new(GuestRuntimes::Mock(mock)), shard_side, vec![]);
         assert!(executor.is_running());
         executor.stop();
         assert!(!executor.is_running(), "stop() must join the thread");

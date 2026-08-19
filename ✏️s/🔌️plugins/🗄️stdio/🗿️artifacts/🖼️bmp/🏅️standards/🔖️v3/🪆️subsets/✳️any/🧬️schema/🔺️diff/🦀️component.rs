@@ -558,7 +558,7 @@ mod tests {
     /// 🧪️ F6: `diff_codec_text_binary_roundtrip_law` — exercises every scalar field plus all
     /// three sections (`removed`/`modified`/`added`) of the `palette` collection triple, via a
     /// real `between()` result (`f6-recon-report.md` §9 STEP-3's mandated shape).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn diff_codec_text_binary_roundtrip_law() {
         use protocol::DiffCodec;
 

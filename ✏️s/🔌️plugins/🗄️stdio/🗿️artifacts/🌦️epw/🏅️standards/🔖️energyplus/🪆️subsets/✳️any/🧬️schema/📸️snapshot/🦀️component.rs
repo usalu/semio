@@ -325,7 +325,7 @@ pub struct EpwSnapshot {
 }
 
 impl Default for EpwSnapshot {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self {
             schema: STDIO_EPW_DOCUMENT_SCHEMA.into(),
             location: EpwLocation::default(),

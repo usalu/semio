@@ -25,7 +25,7 @@ mod tests {
     use super::*;
     use crate::artifacts::model::mutations::replace_model;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn op_binary_round_trips_and_agrees_with_text() {
         let operation = EnergyModelMutation::ReplaceModel(replace_model::mutation::ReplaceModel { new_model_json: "{}".to_string() });
         store::os_store::test_support::assert_op_text_binary_equivalence(&operation);
@@ -33,7 +33,7 @@ mod tests {
         assert_eq!(decode_op(&bytes).expect("decode"), operation);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn replace_model_round_trips() {
         let operation = EnergyModelMutation::ReplaceModel(replace_model::mutation::ReplaceModel { new_model_json: r#"{"name":"demo"}"#.to_string() });
         store::os_store::test_support::assert_op_text_binary_equivalence(&operation);

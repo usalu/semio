@@ -38,13 +38,13 @@ pub async fn render(document: &Iso16757Snapshot) -> UiNode {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn definition_declares_the_shared_table_window_kind() {
         let def = definition();
         assert_eq!(def.id, TableWindowKit::KIND_ID);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn render_produces_a_node_for_the_default_document() {
         let document = Iso16757Snapshot::default();
         let _node = render(&document);

@@ -345,7 +345,7 @@ mod tests {
         edges.len()
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn sew_two_adjacent_quads_shares_one_edge() {
         let mut body = Body::new();
         let f0 = make_loose_quad(&mut body, Pnt3::new(0.0, 0.0, 0.0), Pnt3::new(1.0, 0.0, 0.0), Pnt3::new(1.0, 1.0, 0.0), Pnt3::new(0.0, 1.0, 0.0), Vec3::Z);
@@ -356,7 +356,7 @@ mod tests {
         assert_eq!(unique_edges_on_solid(&body, solid), 7);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn sew_six_box_faces_into_solid() {
         let mut body = Body::new();
         let bottom = make_loose_quad(&mut body, Pnt3::new(0.0, 0.0, 0.0), Pnt3::new(1.0, 0.0, 0.0), Pnt3::new(1.0, 1.0, 0.0), Pnt3::new(0.0, 1.0, 0.0), -Vec3::Z);
@@ -371,7 +371,7 @@ mod tests {
         assert_eq!(unique_edges_on_solid(&body, solid), 12);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn sew_single_face_rejects() {
         let mut body = Body::new();
         let f = make_loose_quad(&mut body, Pnt3::new(0.0, 0.0, 0.0), Pnt3::new(1.0, 0.0, 0.0), Pnt3::new(1.0, 1.0, 0.0), Pnt3::new(0.0, 1.0, 0.0), Vec3::Z);
@@ -390,7 +390,7 @@ mod heal_tests {
     use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primitives::make_box;
     use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::Curve3;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn heal_solid_noop_on_valid_box() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
@@ -399,7 +399,7 @@ mod heal_tests {
         assert_eq!(report.total_repairs(), 0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn defeature_removes_one_box_face() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
@@ -410,7 +410,7 @@ mod heal_tests {
         assert_eq!(body.shell_faces(body.solids.get(solid).unwrap().outer).len(), 5);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn defeature_rejects_empty_selection() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
@@ -418,7 +418,7 @@ mod heal_tests {
         assert!(defeature(&mut body, solid, &[], &mut rec).is_err());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn defeature_rejects_removing_too_many_faces() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
@@ -427,7 +427,7 @@ mod heal_tests {
         assert!(defeature(&mut body, solid, &faces[0..3], &mut rec).is_err());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn convert_to_nurbs_upgrades_box_planes_and_edges() {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();

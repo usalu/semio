@@ -29,7 +29,7 @@ mod tests {
     /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM): remodel's selection now lives in the
     /// framework-owned "assets" interaction domain, not app config — this asserts the surviving
     /// View-kind commands still emit config-only mutations.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn view_actions_emit_config_mutations_not_artifact_mutations() {
         let mut app = app();
         let result = dispatch(&mut app, RemodelCommand::SetCamera(SetCamera { camera: RemodelWorldCamera { position: [1.0, 2.0, 3.0], target: [0.0, 0.0, 0.0], fov: 60.0 } }));
@@ -42,7 +42,7 @@ mod tests {
         assert!(result.mutations.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_active_utility_switches_host_view_state_without_ops_or_history() {
         let mut app = app();
         let result = dispatch(&mut app, RemodelCommand::SetActiveUtility(set_active_utility::SetActiveUtility { utility_id: "measure".into() }));
@@ -51,7 +51,7 @@ mod tests {
 
     /// 🗣️ `setLocale` rewrites the config's locale tag, which is what every panel's label resolution
     /// reads — asserted through rendered output, since `VcsArtifactApp` exposes no config accessor.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_locale_switches_the_rendered_label_language() {
         let mut app = app();
         assert!(render(&mut app, crate::editor::remodel::panels::quality::REMODEL_PLAY_BODY_QC).contains("No quality report yet"));

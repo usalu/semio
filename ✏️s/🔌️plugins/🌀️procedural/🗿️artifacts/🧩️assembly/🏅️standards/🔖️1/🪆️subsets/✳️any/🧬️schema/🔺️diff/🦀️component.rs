@@ -275,7 +275,7 @@ mod tests {
         snapshot
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn upsert_by_id_replaces_in_place_never_duplicates() {
         let diff = AssemblyDiff { slots_upserted: vec![(0, AssemblySlot { id: "s1".into(), x: 9.0, y: 9.0, z: 0.0, pinned_module_id: None })], ..Default::default() };
         let after = diff.apply(&base()).expect("valid mutation diff");
@@ -283,7 +283,7 @@ mod tests {
         assert_eq!(after.slots[0].x, 9.0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn insert_at_index_for_a_new_id() {
         let diff = AssemblyDiff { slots_upserted: vec![(1, AssemblySlot { id: "s2".into(), x: 1.0, y: 1.0, z: 0.0, pinned_module_id: None })], ..Default::default() };
         let after = diff.apply(&base()).expect("valid mutation diff");
@@ -291,7 +291,7 @@ mod tests {
         assert_eq!(after.slots[1].id, "s2");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn malformed_indexed_diff_rejects_without_changing_the_base() {
         let base = base();
         let diff = AssemblyDiff {
@@ -305,14 +305,14 @@ mod tests {
         assert_eq!(base.slots[0].id, "s1");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn remove_drops_the_matching_id_only() {
         let diff = AssemblyDiff { slots_removed: vec!["s1".into()], ..Default::default() };
         let after = diff.apply(&base()).expect("valid mutation diff");
         assert!(after.slots.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_a_later_remove_wins_over_an_earlier_upsert_of_the_same_id() {
         let mut d1 = AssemblyDiff { slots_upserted: vec![(0, AssemblySlot { id: "s2".into(), ..Default::default() })], ..Default::default() };
         let d2 = AssemblyDiff { slots_removed: vec!["s2".into()], ..Default::default() };
@@ -321,7 +321,7 @@ mod tests {
         assert_eq!(d1.slots_removed, vec!["s2".to_string()]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_a_later_upsert_clears_an_earlier_remove_of_the_same_id() {
         let mut d1 = AssemblyDiff { slots_removed: vec!["s1".into()], ..Default::default() };
         let d2 = AssemblyDiff { slots_upserted: vec![(0, AssemblySlot { id: "s1".into(), x: 5.0, ..Default::default() })], ..Default::default() };
@@ -331,7 +331,7 @@ mod tests {
         assert_eq!(d1.slots_upserted[0].1.x, 5.0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absorb_composes_to_the_same_result_as_applying_sequentially() {
         let start = base();
         let d1 = AssemblyDiff { seed: Some(7), ..Default::default() };

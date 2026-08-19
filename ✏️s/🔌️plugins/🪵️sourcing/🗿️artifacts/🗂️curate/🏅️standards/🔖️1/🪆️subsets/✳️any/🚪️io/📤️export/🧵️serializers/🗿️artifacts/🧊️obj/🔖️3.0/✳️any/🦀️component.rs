@@ -26,7 +26,7 @@ pub struct CurateIntoObj;
 impl Serializer<CurateSnapshot> for CurateIntoObj {
     const INTO: Dialect = OBJ_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    async fn serialize(from: &CurateSnapshot) -> IoResult<IoPayload> {
+    fn serialize(from: &CurateSnapshot) -> IoResult<IoPayload> {
         serialize_bytes(from).map(|bytes| IoOutcome::clean(IoPayload::Binary(bytes))).map_err(|error| IoError { message: format!("CurateIntoObj: {error}"), diagnostics: Vec::new() })
     }
 }

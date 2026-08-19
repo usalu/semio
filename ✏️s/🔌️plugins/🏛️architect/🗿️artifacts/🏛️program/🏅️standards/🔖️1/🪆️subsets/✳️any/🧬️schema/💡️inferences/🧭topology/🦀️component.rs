@@ -25,7 +25,7 @@ pub struct ProgramTopology {
 impl Default for ProgramTopology {
     /// 🌉️ Zero elements: 0 nodes, 0 roots, depth 0, vacuously cycle-free, empty order — matches
     /// `compute_topology(&[])` exactly, so no hand-fixup is needed for the zero-element case.
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { node_count: 0, root_count: 0, max_depth: 0, cycle_free: true, topo_order: Vec::new() }
     }
 }
@@ -197,12 +197,12 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn empty_elements_yield_default_topology() {
         assert_eq!(compute_topology(&[]), ProgramTopology::default());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn linear_chain_has_matching_depth_and_order() {
         let elements = vec![element("a", None), element("b", Some("a")), element("c", Some("b"))];
         let topology = compute_topology(&elements);
@@ -213,7 +213,7 @@ mod tests {
         assert_eq!(topology.topo_order, vec!["a".to_string(), "b".to_string(), "c".to_string()]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn a_cycle_is_detected_and_still_yields_a_total_order() {
         let elements = vec![element("a", Some("b")), element("b", Some("a"))];
         let topology = compute_topology(&elements);
@@ -223,7 +223,7 @@ mod tests {
         assert_eq!(topology.topo_order.len(), 2);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn a_dangling_parent_id_is_treated_as_a_root() {
         let elements = vec![element("a", Some("nonexistent"))];
         let topology = compute_topology(&elements);

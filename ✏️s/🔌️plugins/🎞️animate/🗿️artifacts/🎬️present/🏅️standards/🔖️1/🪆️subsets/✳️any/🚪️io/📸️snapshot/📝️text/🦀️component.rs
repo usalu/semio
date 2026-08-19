@@ -130,13 +130,13 @@ mod tests {
     use crate::artifacts::present::schema::{populate_tile_drafts_from_grid, FigureTileGridSeedSpec};
     use store::os_store::test_support;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dsl_round_trip_default_present_snapshot() {
         test_support::assert_dsl_round_trip(&default_present_snapshot());
         test_support::assert_dsl_pack_equivalence(&default_present_snapshot());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dsl_round_trip_present_deck_with_tiles() {
         let deck = default_present_snapshot();
         let (source, _) = crate::artifacts::present::present_working_scene(&deck);
@@ -146,7 +146,7 @@ mod tests {
         test_support::assert_dsl_pack_equivalence(&deck);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn present_dsl_round_trips_bundled_default_example() {
         let deck = parse_dsl(PRESENT_EXAMPLE_TEXT).expect("🎞️default.present must parse");
         test_support::assert_dsl_round_trip(&deck);

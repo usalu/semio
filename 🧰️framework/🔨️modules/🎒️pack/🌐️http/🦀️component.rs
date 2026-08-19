@@ -32,7 +32,9 @@ pub struct RangeResponse {
 /// @emoji 🔌️ The injection seam: no concrete HTTP client type may appear in any public
 /// signature outside an implementor of this trait. Browser `fetch`, native `ureq`, or a test
 /// double all implement this identically.
-#[async_trait::async_trait]
+// 🚪️ R8: plain AFIT — single genuinely-`async fn` method, zero `dyn RangeTransport` anywhere in
+// the repo (verified repo-wide across `🧰️framework`, `🛍️products`, `✏️s`), so no dyn-erasure
+// concern; `#[async_trait]` bought nothing here but a banned `Pin<Box<dyn Future>>` desugar.
 pub trait RangeTransport: Send + Sync {
     async fn fetch_range(&self, request: RangeRequest) -> Result<RangeResponse, PackError>;
 }
@@ -202,7 +204,6 @@ async fn sleep(duration: Duration) {
     Sleep { deadline: std::time::Instant::now() + duration, state: Arc::new(Mutex::new(SleepState { woken: false, waker: None, spawned: false })) }.await;
 }
 
-#[async_trait::async_trait]
 impl<T: RangeTransport> AsyncPackSource for InnerSource<T> {
     // 🚫️async: `AsyncPackSource::len` is declared sync by contract (see
     // `⏳️async/🦀️component.rs`); this impl just mirrors that.
@@ -247,7 +248,6 @@ impl<T: RangeTransport> HttpPackSource<T> {
     }
 }
 
-#[async_trait::async_trait]
 impl<T: RangeTransport> AsyncPackSource for HttpPackSource<T> {
     // 🚫️async: `AsyncPackSource::len` is declared sync by contract (see
     // `⏳️async/🦀️component.rs`); this impl just mirrors that.
@@ -297,7 +297,6 @@ mod ureq_transport {
         }
     }
 
-    #[async_trait::async_trait]
     impl RangeTransport for UreqRangeTransport {
         async fn fetch_range(&self, request: RangeRequest) -> Result<RangeResponse, PackError> {
             let agent = self.agent.clone();
@@ -362,7 +361,6 @@ mod tests {
         }
     }
 
-    #[async_trait::async_trait]
     impl RangeTransport for FakeTransport {
         async fn fetch_range(&self, request: RangeRequest) -> Result<RangeResponse, PackError> {
             self.call_count.fetch_add(1, Ordering::SeqCst);

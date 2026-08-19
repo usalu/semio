@@ -137,7 +137,7 @@ mod tests {
     use crate::editor::shooting::testkit::{dispatch, shooting_app};
     use crate::editor::shooting::ShootingCommand;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_active_asset_emits_both_a_document_and_a_fit_revision_config_operation() {
         let mut app = shooting_app();
         let asset_id = app.snapshot().expect("snapshot").assets[0].id.clone();
@@ -146,7 +146,7 @@ mod tests {
         assert_eq!(app.snapshot().expect("snapshot").active_asset_id, asset_id);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn import_asset_names_and_activates_the_new_asset() {
         let mut app = shooting_app();
         dispatch(&mut app, ShootingCommand::ImportAsset(import_asset::ImportAsset { payload: "data:model/gltf-binary;base64,AAAA".into(), name: Some("chair.glb".into()) }));
@@ -157,7 +157,7 @@ mod tests {
         assert_eq!(snapshot.active_asset_id, imported.id);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn import_asset_request_declares_the_glb_accept_filter() {
         use semio_framework_plugin::Effect;
         let mut app = shooting_app();

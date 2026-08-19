@@ -130,7 +130,7 @@ pub struct HtmlSnapshot {
 }
 
 impl Default for HtmlSnapshot {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { schema: STDIO_HTML_DOCUMENT_SCHEMA.into(), doctype: Some("DOCTYPE html".into()), root: HtmlNode::element("html") }
     }
 }
@@ -703,7 +703,7 @@ mod tests {
         HtmlNode::Text { text: s.into() }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn parses_void_elements_without_children_or_close_tag() {
         let snap = parse_html_document("<html><br><img src=\"x.png\"></html>").unwrap();
         match &snap.root {
@@ -716,7 +716,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn parses_valueless_boolean_attribute() {
         let snap = parse_html_document("<html><p disabled>hi</p></html>").unwrap();
         match &snap.root {
@@ -732,7 +732,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn parses_comment_and_script_style_rawtext() {
         let snap = parse_html_document("<html><!-- hi --><style>.a { color: red; }</style><script>if (1 < 2) { console.log(\"</not-a-tag>\"); }</script></html>").unwrap();
         match &snap.root {
@@ -757,17 +757,17 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn rejects_mismatched_close_tag() {
         assert!(parse_html_document("<html><div></span></html>").is_err());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn rejects_self_closing_syntax_on_non_void_element() {
         assert!(parse_html_document("<html><div/></html>").is_err());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn accepts_self_closing_syntax_on_void_element() {
         let snap = parse_html_document("<html><br/></html>").unwrap();
         match &snap.root {
@@ -776,7 +776,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn decodes_and_encodes_small_entity_subset_only() {
         let snap = parse_html_document("<html><p>a &amp; b &lt;3 &#65; &#x42; &nbsp;</p></html>").unwrap();
         match &snap.root {
@@ -790,13 +790,13 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn empty_default_snapshot_has_html_root() {
         let snap = HtmlSnapshot::default();
         assert!(matches!(&snap.root, HtmlNode::Element { name, .. } if name == "html"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn nested_structure_round_trips_synthetic() {
         let snap = HtmlSnapshot {
             schema: STDIO_HTML_DOCUMENT_SCHEMA.into(),
@@ -814,7 +814,7 @@ mod tests {
     /// canonical top-level-whitespace convention (single `\n` after the doctype, single trailing
     /// `\n` at EOF), and every attribute value is already double-quoted, so `decode -> re-encode`
     /// matches the source byte-for-byte.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn codec_retention_law() {
         let snap = parse_html_document(FIXTURE).expect("fixture parses");
         let re_encoded = write_html_document(&snap);
@@ -826,7 +826,7 @@ mod tests {
     }
     //#endregion 🔖️CodecRetentionLaw
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn snapshot_dsl_and_pack_round_trip() {
         let snap = parse_html_document(FIXTURE).expect("fixture parses");
         let text = store::ArtifactDsl::print_dsl(&snap);

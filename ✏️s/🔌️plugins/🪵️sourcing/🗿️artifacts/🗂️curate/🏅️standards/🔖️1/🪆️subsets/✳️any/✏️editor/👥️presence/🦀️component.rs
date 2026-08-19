@@ -19,7 +19,7 @@ pub struct SourcingCuratePresence {
 }
 
 impl Default for SourcingCuratePresence {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self {
             world_camera_position: [2.5, 2.0, 2.5],
             world_camera_target: [0.0, 0.0, 0.0],

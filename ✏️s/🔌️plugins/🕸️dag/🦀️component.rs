@@ -37,12 +37,12 @@ mod surface_tests {
     //! predated their landing.
     use semio_framework_plugin::testkit::{assert_editor_and_viewer_share_dialect, assert_viewer_never_mutates};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dag_viewer_never_mutates() {
         assert_viewer_never_mutates::<crate::viewer::dag::DagViewer>();
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dag_editor_and_viewer_share_dialect() {
         assert_editor_and_viewer_share_dialect::<crate::editor::dag::DagPlayApp, crate::viewer::dag::DagViewer>();
     }

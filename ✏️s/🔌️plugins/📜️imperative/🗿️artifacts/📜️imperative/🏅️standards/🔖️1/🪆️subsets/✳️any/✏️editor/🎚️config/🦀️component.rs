@@ -94,7 +94,7 @@ async fn default_contributions_json() -> String {
 }
 
 impl Default for ImperativeConfig {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { run_output_json: String::new(), locale: "en-US".into(), contributions_json: default_contributions_json() }
     }
 }
@@ -242,21 +242,21 @@ impl protocol::Mutation<ImperativeConfig> for ImperativeConfigMutation {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn imperative_config_default_is_empty_english() {
         let config = ImperativeConfig::default();
         assert!(config.run_output_json.is_empty());
         assert_eq!(config.locale, "en-US");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn imperative_config_dsl_round_trips() {
         let config = ImperativeConfig { run_output_json: r#"{"counter":1}"#.into(), locale: "de-DE".into(), contributions_json: "[]".into() };
         store::os_store::test_support::assert_dsl_round_trip(&config);
         store::os_store::test_support::assert_dsl_pack_equivalence(&config);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn config_operation_snapshot_diff_ignores_base() {
         let base = ImperativeConfig::default();
         let mut snapshot = base.clone();
@@ -265,7 +265,7 @@ mod tests {
         assert_eq!(protocol::Mutation::diff(&operation, &base).diff(), &snapshot);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn config_operation_set_run_output_and_locale_round_trip() {
         store::os_store::test_support::assert_op_line_round_trip(&ImperativeConfigMutation::SetRunOutput { json: r#"{"counter":1}"#.into() });
         store::os_store::test_support::assert_op_line_round_trip(&ImperativeConfigMutation::SetLocale { value: "de-DE".into() });

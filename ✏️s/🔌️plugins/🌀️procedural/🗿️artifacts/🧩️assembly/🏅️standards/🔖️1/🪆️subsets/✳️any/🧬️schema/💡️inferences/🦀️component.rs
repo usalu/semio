@@ -220,7 +220,7 @@ mod tests {
         snapshot
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn solve_over_an_always_allowed_pair_finds_an_assignment_for_every_slot() {
         let snapshot = two_slot_two_module_snapshot();
         let values = store::infer_field::<AssemblySnapshot, AssemblySolve>(&snapshot, None);
@@ -230,14 +230,14 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn contradiction_field_agrees_with_solve_field_on_a_satisfiable_spec() {
         let snapshot = two_slot_two_module_snapshot();
         let satisfiable = store::infer_field::<AssemblySnapshot, AssemblyContradiction>(&snapshot, None);
         assert_eq!(satisfiable["assembly"], true);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn an_unsatisfiable_spec_is_reported_as_a_contradiction_not_a_panic() {
         let mut snapshot = two_slot_two_module_snapshot();
         // 🚫 No rule allows "a" next to "a" or "b" next to "b" AND no rule allows "a"-"b" either
@@ -249,7 +249,7 @@ mod tests {
         assert_eq!(solved["assembly"], AssemblySolveResult::Unsolved);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn pinned_slot_always_resolves_to_its_pinned_module() {
         let mut snapshot = two_slot_two_module_snapshot();
         snapshot.slots[0].pinned_module_id = Some("a".into());
@@ -264,14 +264,14 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn empty_assembly_solves_trivially_with_no_assignments() {
         let snapshot = AssemblySnapshot::default();
         let values = store::infer_field::<AssemblySnapshot, AssemblySolve>(&snapshot, None);
         assert_eq!(values["assembly"], AssemblySolveResult::Solved { assignments: BTreeMap::new() });
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn pinned_slot_has_zero_entropy_unpinned_slot_does_not() {
         let mut snapshot = two_slot_two_module_snapshot();
         snapshot.slots[0].pinned_module_id = Some("a".into());
@@ -280,14 +280,14 @@ mod tests {
         assert!(entropy["s2"] > 0.0, "an unpinned slot over two equally-weighted modules must have positive entropy");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn uniform_weights_over_two_modules_yield_ln2_entropy() {
         let snapshot = two_slot_two_module_snapshot();
         let entropy = store::infer_field::<AssemblySnapshot, AssemblyEntropy>(&snapshot, None);
         assert!((entropy["s1"] - std::f64::consts::LN_2).abs() < 1e-9);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn skewed_weights_lower_entropy_than_uniform() {
         let mut snapshot = two_slot_two_module_snapshot();
         snapshot.weights = vec![AssemblyModuleWeight { module_id: "a".into(), weight: 100.0 }, AssemblyModuleWeight { module_id: "b".into(), weight: 0.01 }];
@@ -298,7 +298,7 @@ mod tests {
     /// 🔁 Determinism law: identical snapshots (same seed) must produce byte-identical solve
     /// results — `InferredField::compute` must be a pure function of `snapshot`, WFC's internal
     /// randomness notwithstanding, since the seed itself lives in the snapshot.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn identical_seed_and_spec_always_produce_the_same_solution() {
         let snapshot = two_slot_two_module_snapshot();
         let first = store::infer_field::<AssemblySnapshot, AssemblySolve>(&snapshot, None);
@@ -306,7 +306,7 @@ mod tests {
         assert_eq!(first, second);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn changing_only_the_seed_still_solves_a_trivially_satisfiable_spec() {
         let mut snapshot = two_slot_two_module_snapshot();
         snapshot.seed = 999;

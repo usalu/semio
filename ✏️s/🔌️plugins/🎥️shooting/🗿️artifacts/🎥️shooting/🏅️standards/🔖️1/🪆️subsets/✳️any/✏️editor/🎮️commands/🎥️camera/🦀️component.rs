@@ -117,7 +117,7 @@ mod tests {
     use crate::editor::shooting::testkit::{dispatch, shooting_app};
     use crate::editor::shooting::ShootingCommand;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn save_and_load_camera_round_trip() {
         let mut app = shooting_app();
         dispatch(&mut app, ShootingCommand::SetCameraDraftLabel(set_camera_draft_label::SetCameraDraftLabel { value: "Hero".into() }));
@@ -125,7 +125,7 @@ mod tests {
         assert_eq!(result.mutations.len(), 1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_camera_never_touches_the_document() {
         let mut app = shooting_app();
         let result = dispatch(&mut app, ShootingCommand::SetCamera(set_camera::SetCamera { camera: ShootingCamera { position: [1.0, 2.0, 3.0], ..ShootingCamera::default() } }));

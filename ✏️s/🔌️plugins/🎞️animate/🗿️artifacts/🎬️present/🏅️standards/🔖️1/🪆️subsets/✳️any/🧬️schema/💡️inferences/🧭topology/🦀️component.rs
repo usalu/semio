@@ -43,7 +43,7 @@ mod tests {
         FigureTileDraft { id: id.into(), name: id.into(), crop: FigureTileFrame { x: 0.0, y: 0.0, width: 1.0, height: 1.0 } }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn empty_tiles_is_the_vacuous_topology() {
         let snapshot = PresentSnapshot::default();
         let topology = compute_present_topology(&snapshot);
@@ -53,7 +53,7 @@ mod tests {
         assert_eq!(topology.node_count, 0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn depth_matches_persisted_index() {
         let (source, _) = crate::artifacts::present::present_working_scene(&PresentSnapshot::default());
         let snapshot = crate::artifacts::present::present_snapshot_with_tiles(&source, &[tile("a"), tile("b")]);

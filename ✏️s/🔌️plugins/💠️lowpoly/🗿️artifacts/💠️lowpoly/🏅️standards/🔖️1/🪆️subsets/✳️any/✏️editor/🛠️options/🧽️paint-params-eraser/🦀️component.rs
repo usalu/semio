@@ -17,7 +17,7 @@ pub async fn measure(config: &LowpolyConfig, labels: &LowpolyLabels) -> WindowMe
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn measure_is_tagged_for_the_eraser_utility() {
         let m = measure(&LowpolyConfig::default(), semio_framework_plugin::resolve_labels_for_locale::<LowpolyLabels>("en-US"));
         match m {

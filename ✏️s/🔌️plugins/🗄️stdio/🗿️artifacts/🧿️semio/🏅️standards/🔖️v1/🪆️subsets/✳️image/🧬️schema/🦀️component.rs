@@ -33,7 +33,7 @@ pub struct SemioImageArtifact {
 }
 
 impl Default for SemioImageArtifact {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self::from_snapshot(SemioImageSnapshot::default())
     }
 }
@@ -170,7 +170,7 @@ pub mod derived_construction {
     mod tests {
         use super::*;
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn typed_constructors_build_a_populated_snapshot() {
             let snapshot = SemioImageBuilderConstruction::new(2, 2)
                 .set_colorspace(SemioColorspace::Rgba)

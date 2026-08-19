@@ -131,3 +131,6 @@ puzzle = { path = "../../../🧩️puzzle/📦️packages/🦀️rust", package 
 sourcing = { path = "../../../🪵️sourcing/📦️packages/🦀️rust", package = "semio-s-plugin-sourcing", default-features = false }
 process = { path = "../../../🏭️process/📦️packages/🦀️rust", package = "semio-s-plugin-process", default-features = false }
 gis = { path = "../../../🌍️gis/📦️packages/🦀️rust", package = "semio-s-plugin-gis", default-features = false }
+
+[dev-dependencies]
+semio-framework-async-macros = { path = "../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }

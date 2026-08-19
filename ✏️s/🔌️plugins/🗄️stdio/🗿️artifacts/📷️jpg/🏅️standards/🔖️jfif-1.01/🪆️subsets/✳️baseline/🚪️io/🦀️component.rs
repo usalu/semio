@@ -105,7 +105,7 @@ pub mod derived_composition {
             out
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn engine_encoded_jpeg_composes_and_stamps_baseline() {
             let (w, h) = (32u32, 32u32);
             let snap = JpgSnapshot { width: w, height: h, pixels: gradient_image(w, h), ..JpgSnapshot::default() };
@@ -123,7 +123,7 @@ pub mod derived_composition {
             assert_eq!(composed.snapshot.sof_marker, crate::artifacts::jpg::standards::v_jfif_1_01::subsets::baseline::schema::SOF0);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn subset_validator_recheck_flags_no_hard_diagnostics_for_a_real_encode() {
             let (w, h) = (16u32, 16u32);
             let snap = JpgSnapshot { width: w, height: h, pixels: gradient_image(w, h), ..JpgSnapshot::default() };

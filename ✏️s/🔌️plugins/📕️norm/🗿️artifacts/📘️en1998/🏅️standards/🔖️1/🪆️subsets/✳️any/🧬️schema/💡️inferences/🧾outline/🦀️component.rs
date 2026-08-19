@@ -79,7 +79,7 @@ impl En1998Outline {
 }
 
 impl Default for En1998Outline {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self::compute(&En1998Snapshot::default())
     }
 }
@@ -90,13 +90,13 @@ impl Default for En1998Outline {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn outline_field_count_matches_section_outline_length() {
         let outline = En1998Outline::compute(&En1998Snapshot::default());
         assert_eq!(outline.field_count as usize, outline.section_outline.len());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn outline_is_deterministic() {
         let snapshot = En1998Snapshot::default();
         assert_eq!(En1998Outline::compute(&snapshot), En1998Outline::compute(&snapshot));

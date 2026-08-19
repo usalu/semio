@@ -120,7 +120,7 @@ impl store::ArtifactPack for Block5dSnapshot {
 //#endregion 🔖️HandcraftedArtifactCodecs
 
 impl Default for Block5dSnapshot {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self {
             schema: BLOCK_5D_SCHEMA.to_string(),
             part_kind: BlockKindIdentity::default(),

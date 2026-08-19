@@ -87,7 +87,7 @@ pub struct SemioTableSnapshot {
 }
 
 impl Default for SemioTableSnapshot {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { schema: STDIO_SEMIOTABLE_DOCUMENT_SCHEMA.into(), columns: Vec::new(), rows: Vec::new() }
     }
 }
@@ -331,7 +331,7 @@ mod tests {
         demo_table_snapshot()
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn json_pack_round_trips() {
         let snap = SemioTableSnapshot::default();
         let bytes = <SemioTableSnapshot as store::ArtifactPack>::encode_pack(&snap);
@@ -339,7 +339,7 @@ mod tests {
         assert_eq!(snap, back);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dsl_text_round_trips() {
         let snap = SemioTableSnapshot::default();
         let text = <SemioTableSnapshot as store::ArtifactDsl>::print_dsl(&snap);
@@ -350,7 +350,7 @@ mod tests {
     /// 🧪️ codec_retention_law: decode(encode(snapshot)) is byte-for-byte structurally identical
     /// on a fully-populated snapshot (columns/rows non-empty), not just the default. Also asserts
     /// the CRITICAL row/column alignment invariant survives a round trip untouched.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn codec_retention_law() {
         let snap = populated();
         let bytes = <SemioTableSnapshot as store::ArtifactPack>::encode_pack(&snap);

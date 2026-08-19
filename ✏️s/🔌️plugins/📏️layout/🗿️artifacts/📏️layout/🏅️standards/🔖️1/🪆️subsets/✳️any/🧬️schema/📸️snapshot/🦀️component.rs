@@ -429,7 +429,7 @@ mod round_trip_tests {
     /// 🧪️ Every field on `LayoutSnapshot` — including the two new composition slots — must survive
     /// both hand-rolled codecs (text and binary), independently. Codec completeness is not caught by
     /// `cargo check`; this is the real round-trip proof the migration recipe requires.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn background_drawing_and_referenced_model_round_trip_through_text_and_binary() {
         let snapshot = sample_with_composition();
         let text = store::ArtifactDsl::print_dsl(&snapshot);
@@ -441,7 +441,7 @@ mod round_trip_tests {
         assert_eq!(from_binary, snapshot);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn absent_composition_slots_round_trip_as_none() {
         let mut snapshot = sample_with_composition();
         snapshot.background_drawing = None;

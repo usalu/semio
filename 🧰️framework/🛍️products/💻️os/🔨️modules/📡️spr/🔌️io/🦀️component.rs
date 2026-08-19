@@ -21,6 +21,8 @@ mod native {
     /// only place `std::io::Error` is allowed to appear, per the family's no-`std::io::Error`-in-
     /// public-signatures rule.
     #[allow(clippy::needless_pass_by_value)] // used as a `map_err` callback, which passes the error by value
+    // 🚫️async: R9 pure accessor — only consumers are `Result::map_err`'s sync closure; no
+    // suspension point exists in the body either.
     fn io_err(err: std::io::Error) -> ProtocolError {
         ProtocolError::Io(err.to_string())
     }
@@ -38,22 +40,22 @@ mod native {
     /// @emoji 📖️ Re-derives a `ResumeState` from whatever `path` currently contains: runs
     /// `crate::os_spr::format::recover` (`RecoveryMode::LastCommit`), then reads back either the
     /// header-only `chain_0` (no commit yet) or the trusted tail's `REC_COMMIT` payload.
-    fn resume_state_for(path: &Path, limits: &ProtocolLimits) -> Result<ResumeState, ProtocolError> {
+    async fn resume_state_for(path: &Path, limits: &ProtocolLimits) -> Result<ResumeState, ProtocolError> {
         let source = crate::os_pack::io::FilePackSource::open(path)?;
-        let recovery = recover_records(&source, limits, RecoveryMode::LastCommit)?;
+        let recovery = recover_records(&source, limits, RecoveryMode::LastCommit).await?;
         if recovery.last_commit_seq == 0 {
             let mut header_bytes = [0u8; HEADER_SIZE];
-            source.read_exact_at(0, &mut header_bytes)?;
-            return Ok(ResumeState { end_offset: recovery.bytes_recovered, last_commit_seq: 0, chain_hash: Blake3Hasher.hash(&header_bytes) });
+            source.read_exact_at(0, &mut header_bytes).await?;
+            return Ok(ResumeState { end_offset: recovery.bytes_recovered, last_commit_seq: 0, chain_hash: Blake3Hasher.hash(&header_bytes).await });
         }
         let mut commit_bytes = vec![0u8; COMMIT_FRAME_LEN as usize];
-        source.read_exact_at(recovery.last_commit_offset, &mut commit_bytes)?;
+        source.read_exact_at(recovery.last_commit_offset, &mut commit_bytes).await?;
         // `FrameCursor::new` indexes directly into the slice it's given, so the cursor's own
         // `start_offset` must be 0 here (the local offset within `commit_bytes`), not the file's
         // absolute `last_commit_offset` — see crate::os_spr::format::FrameCursor::new's doc.
-        let mut cursor = FrameCursor::new(&commit_bytes, 0);
-        let frame = cursor.next_frame()?.ok_or_else(|| ProtocolError::Malformed { what: "resume commit frame", offset: recovery.last_commit_offset, detail: "expected a REC_COMMIT frame at the recovered commit offset".to_string() })?;
-        let commit = parse_commit_payload(frame.payload())?;
+        let mut cursor = FrameCursor::new(&commit_bytes, 0).await;
+        let frame = cursor.next_frame().await?.ok_or_else(|| ProtocolError::Malformed { what: "resume commit frame", offset: recovery.last_commit_offset, detail: "expected a REC_COMMIT frame at the recovered commit offset".to_string() })?;
+        let commit = parse_commit_payload(frame.payload().await).await?;
         Ok(ResumeState { end_offset: recovery.bytes_recovered, last_commit_seq: commit.commit_seq, chain_hash: commit.chain_hash })
     }
 
@@ -68,14 +70,14 @@ mod native {
     impl HistoryFile {
         /// @emoji 🆕️ Creates `path` fresh (truncating any existing file) and writes the header plus
         /// the `REC_DOC` record. No commit has happened yet — `resume_state().last_commit_seq == 0`
-        /// until the caller's first `appender().commit()`.
-        pub fn create(path: &Path, doc_id: &str, schema: &str, options: &WriteOptions) -> Result<Self, ProtocolError> {
+        /// until the caller's first `appender().commit().await`.
+        pub async fn create(path: &Path, doc_id: &str, schema: &str, options: &WriteOptions) -> Result<Self, ProtocolError> {
             let sink = crate::os_pack::io::FilePackSink::create(path)?;
-            let appender = HistoryAppender::begin(sink, doc_id, schema, options)?;
+            let appender = HistoryAppender::begin(sink, doc_id, schema, options).await?;
             let source = crate::os_pack::io::FilePackSource::open(path)?;
             let mut header_bytes = [0u8; HEADER_SIZE];
-            source.read_exact_at(0, &mut header_bytes)?;
-            let resume = ResumeState { end_offset: source.len(), last_commit_seq: 0, chain_hash: Blake3Hasher.hash(&header_bytes) };
+            source.read_exact_at(0, &mut header_bytes).await?;
+            let resume = ResumeState { end_offset: source.len().await, last_commit_seq: 0, chain_hash: Blake3Hasher.hash(&header_bytes).await };
             Ok(Self { appender: Some(appender), resume })
         }
 
@@ -103,48 +105,48 @@ mod native {
         /// fully preserved; only acceleration/snapshot data is lost, which the wider system already
         /// tolerates gracefully (`crate::os_spr::materialize::resolve_plan` falls back to full replay from
         /// genesis when a snapshot is missing/corrupt).
-        pub fn open_append(path: &Path, limits: &ProtocolLimits) -> Result<Self, ProtocolError> {
+        pub async fn open_append(path: &Path, limits: &ProtocolLimits) -> Result<Self, ProtocolError> {
             let source = crate::os_pack::io::FilePackSource::open(path)?;
-            let recovery = recover_records(&source, limits, RecoveryMode::LastCommit)?;
-            let header = read_header(&source)?;
+            let recovery = recover_records(&source, limits, RecoveryMode::LastCommit).await?;
+            let header = read_header(&source).await?;
             let mut trusted = vec![0u8; recovery.bytes_recovered as usize];
-            source.read_exact_at(0, &mut trusted)?;
+            source.read_exact_at(0, &mut trusted).await?;
             drop(source);
 
             let decode_options = DecodeOptions { verification: VerificationLevel::Standard, limits: limits.clone() };
-            let log = decode_history(&trusted, &decode_options)?;
+            let log = decode_history(&trusted, &decode_options).await?;
 
             let write_options = WriteOptions { required_flags: header.required_flags, optional_flags: header.optional_flags };
             let sink = crate::os_pack::io::FilePackSink::create(path)?;
-            let mut appender = HistoryAppender::begin(sink, &log.doc_id, &log.schema, &write_options)?;
+            let mut appender = HistoryAppender::begin(sink, &log.doc_id, &log.schema, &write_options).await?;
             for edit in &log.edits {
-                appender.append_edit(edit)?;
+                appender.append_edit(edit).await?;
             }
             for change in &log.changes {
-                appender.append_change(change)?;
+                appender.append_change(change).await?;
             }
             for checkpoint in &log.checkpoints {
-                appender.append_checkpoint(checkpoint)?;
+                appender.append_checkpoint(checkpoint).await?;
             }
             for alternative in &log.alternatives {
-                appender.append_alternative(alternative)?;
+                appender.append_alternative(alternative).await?;
             }
-            appender.set_active(log.active_alternative_id.as_deref())?;
-            appender.commit()?;
+            appender.set_active(log.active_alternative_id.as_deref()).await?;
+            appender.commit().await?;
 
-            let resume = resume_state_for(path, limits)?;
+            let resume = resume_state_for(path, limits).await?;
             Ok(Self { appender: Some(appender), resume })
         }
 
         /// @emoji 👓️ Opens an existing `.spr` file purely for inspection: computes `resume_state()`
         /// via `crate::os_spr::format::recover` without writing a single byte to `path`. `appender()` must
         /// never be called on a handle opened this way (see its doc).
-        pub fn open_read_only(path: &Path, limits: &ProtocolLimits) -> Result<Self, ProtocolError> {
-            let resume = resume_state_for(path, limits)?;
+        pub async fn open_read_only(path: &Path, limits: &ProtocolLimits) -> Result<Self, ProtocolError> {
+            let resume = resume_state_for(path, limits).await?;
             Ok(Self { appender: None, resume })
         }
 
-        pub fn resume_state(&self) -> &ResumeState {
+        pub async fn resume_state(&self) -> &ResumeState {
             &self.resume
         }
 
@@ -152,7 +154,7 @@ mod native {
         /// that constructor never builds a write path (see its doc); this mirrors the frozen
         /// contract's non-`Option` return type while keeping "read only" an honest guarantee (never
         /// touching the file) rather than a polite suggestion.
-        pub fn appender(&mut self) -> &mut HistoryAppender<crate::os_pack::io::FilePackSink> {
+        pub async fn appender(&mut self) -> &mut HistoryAppender<crate::os_pack::io::FilePackSink> {
             self.appender.as_mut().expect("HistoryFile::appender: this handle was opened via open_read_only and never built a write path")
         }
     }
@@ -161,7 +163,7 @@ mod native {
     //#region 🔖️Sidecar
     /// @emoji 🧾️ `.sprc` sidecar checkpoint bodies live beside the `.spr` file, named
     /// `<stem>.<hex8-of-body-hash>.sprc`.
-    pub fn sidecar_path(protocol_path: &Path, body_hash: &[u8; 32]) -> PathBuf {
+    pub async fn sidecar_path(protocol_path: &Path, body_hash: &[u8; 32]) -> PathBuf {
         let stem = protocol_path.file_stem().map(|s| s.to_string_lossy().into_owned()).unwrap_or_default();
         let mut hex8 = String::with_capacity(8);
         for byte in &body_hash[..4] {
@@ -172,20 +174,20 @@ mod native {
 
     /// @emoji 💾️ Writes a complete `.spk` pack file as a sidecar, atomically (`crate::os_pack::io::write_atomic`
     /// — temp file + fsync + rename, so a reader never observes a torn sidecar).
-    pub fn write_sidecar(protocol_path: &Path, body_hash: &[u8; 32], pack_bytes: &[u8]) -> Result<(), ProtocolError> {
-        crate::os_pack::io::write_atomic(&sidecar_path(protocol_path, body_hash), pack_bytes)?;
+    pub async fn write_sidecar(protocol_path: &Path, body_hash: &[u8; 32], pack_bytes: &[u8]) -> Result<(), ProtocolError> {
+        crate::os_pack::io::write_atomic(&sidecar_path(protocol_path, body_hash).await, pack_bytes)?;
         Ok(())
     }
 
-    pub fn read_sidecar(protocol_path: &Path, body_hash: &[u8; 32]) -> Result<Vec<u8>, ProtocolError> {
-        std::fs::read(sidecar_path(protocol_path, body_hash)).map_err(io_err)
+    pub async fn read_sidecar(protocol_path: &Path, body_hash: &[u8; 32]) -> Result<Vec<u8>, ProtocolError> {
+        std::fs::read(sidecar_path(protocol_path, body_hash).await).map_err(io_err)
     }
     //#endregion 🔖️Sidecar
 
     //#region 🔖️Recover
-    pub fn recover_file(path: &Path, limits: &ProtocolLimits, mode: RecoveryMode) -> Result<crate::os_spr::format::RecoveryReport, ProtocolError> {
+    pub async fn recover_file(path: &Path, limits: &ProtocolLimits, mode: RecoveryMode) -> Result<crate::os_spr::format::RecoveryReport, ProtocolError> {
         let source = crate::os_pack::io::FilePackSource::open(path)?;
-        recover_records(&source, limits, mode)
+        recover_records(&source, limits, mode).await
     }
     //#endregion 🔖️Recover
 
@@ -205,9 +207,9 @@ mod native {
     impl TailFollower {
         /// @emoji 📖️ Validates `path` looks like a real `.spr` file (header check) up front, so a
         /// bad path fails fast at `open` rather than on the first `poll`.
-        pub fn open(path: &Path, from_edit_ordinal: u64) -> Result<Self, ProtocolError> {
+        pub async fn open(path: &Path, from_edit_ordinal: u64) -> Result<Self, ProtocolError> {
             let source = crate::os_pack::io::FilePackSource::open(path)?;
-            read_header(&source)?;
+            read_header(&source).await?;
             Ok(Self { path: path.to_path_buf(), next_edit_ordinal: from_edit_ordinal })
         }
 
@@ -220,18 +222,18 @@ mod native {
         /// prior poll's dictionary state. So a correct incremental "just the new tail" decode isn't
         /// reachable through this crate family's public API; re-scanning from the start on every
         /// poll is the only option, not merely the simplest one.
-        pub fn poll(&mut self) -> Result<Vec<HistoryEdit>, ProtocolError> {
+        pub async fn poll(&mut self) -> Result<Vec<HistoryEdit>, ProtocolError> {
             let bytes = std::fs::read(&self.path).map_err(io_err)?;
-            let reader = HistoryReader::open(&bytes, &DecodeOptions::default())?;
+            let reader = HistoryReader::open(&bytes, &DecodeOptions::default()).await?;
             let mut out = Vec::new();
-            for edit in reader.edits().skip(self.next_edit_ordinal as usize) {
+            for edit in reader.edits().await.skip(self.next_edit_ordinal as usize) {
                 out.push(edit?);
             }
             self.next_edit_ordinal += out.len() as u64;
             Ok(out)
         }
 
-        pub fn last_edit_ordinal(&self) -> u64 {
+        pub async fn last_edit_ordinal(&self) -> u64 {
             self.next_edit_ordinal
         }
     }
@@ -253,19 +255,19 @@ mod native {
     /// `REC_COMPACTION` kind byte in `protocol_core` but defines no payload codec for it anywhere in
     /// the family): `format: u8 (=1), drop_ephemeral: u8 (0/1), keep_snapshots_tag: u8
     /// (0=All, 1=LatestPerAlternative, 2=LatestN), [latest_n: varint u64 iff tag==2]`.
-    fn encode_compaction_payload(options: &CompactOptions) -> Vec<u8> {
-        let mut out = crate::os_pack::ByteWriter::new();
-        out.write_u8(1);
-        out.write_u8(options.drop_ephemeral as u8);
+    async fn encode_compaction_payload(options: &CompactOptions) -> Vec<u8> {
+        let mut out = crate::os_pack::ByteWriter::new().await;
+        out.write_u8(1).await;
+        out.write_u8(options.drop_ephemeral as u8).await;
         match options.keep_snapshots {
-            KeepSnapshots::All => out.write_u8(0),
-            KeepSnapshots::LatestPerAlternative => out.write_u8(1),
+            KeepSnapshots::All => out.write_u8(0).await,
+            KeepSnapshots::LatestPerAlternative => out.write_u8(1).await,
             KeepSnapshots::LatestN(n) => {
-                out.write_u8(2);
-                out.write_varint_u64(n as u64);
+                out.write_u8(2).await;
+                out.write_varint_u64(n as u64).await;
             }
         }
-        out.into_bytes()
+        out.into_bytes().await
     }
 
     /// @emoji ✂️ Flushes a `REC_STR_DICT` delta record if `dict` grew since `*base` — byte-for-byte
@@ -273,19 +275,19 @@ mod native {
     /// `compact` cannot drive `crate::os_spr::history::encode_history`/`HistoryAppender` as a black box (it
     /// needs to interleave one extra `REC_COMPACTION` record into the same commit generation, and
     /// neither type exposes a raw `write_record` passthrough for that).
-    fn flush_dict(writer: &mut SprWriter<Vec<u8>>, dict: &DictBuilder, base: &mut u32) -> Result<(), ProtocolError> {
-        let len = dict.len();
+    async fn flush_dict(writer: &mut SprWriter<Vec<u8>>, dict: &DictBuilder, base: &mut u32) -> Result<(), ProtocolError> {
+        let len = dict.len().await;
         if len > *base {
-            let entries = dict.entries_since(*base);
-            let mut payload = crate::os_pack::ByteWriter::new();
-            payload.write_u8(1);
-            payload.write_varint_u64(*base as u64);
-            payload.write_varint_u64(entries.len() as u64);
+            let entries = dict.entries_since(*base).await;
+            let mut payload = crate::os_pack::ByteWriter::new().await;
+            payload.write_u8(1).await;
+            payload.write_varint_u64(*base as u64).await;
+            payload.write_varint_u64(entries.len() as u64).await;
             for entry in entries {
-                payload.write_varint_u64(entry.len() as u64);
-                payload.write_bytes(entry.as_bytes());
+                payload.write_varint_u64(entry.len() as u64).await;
+                payload.write_bytes(entry.as_bytes()).await;
             }
-            writer.write_record(crate::os_spr::REC_STR_DICT, true, &payload.into_bytes(), CodecId(0))?;
+            writer.write_record(crate::os_spr::REC_STR_DICT, true, &payload.into_bytes().await, CodecId(0)).await?;
             *base = len;
         }
         Ok(())
@@ -302,56 +304,56 @@ mod native {
     /// `REC_INDEX`/`REC_SEALED`/`REC_EPHEMERAL` slot to filter in the first place (see
     /// `HistoryFile::open_append`'s doc for the same crate-boundary caveat — this crate has no
     /// `protocol_materialize` dependency to interpret snapshot bodies with).
-    pub fn compact(path: &Path, options: &CompactOptions, limits: &ProtocolLimits) -> Result<(), ProtocolError> {
+    pub async fn compact(path: &Path, options: &CompactOptions, limits: &ProtocolLimits) -> Result<(), ProtocolError> {
         let source = crate::os_pack::io::FilePackSource::open(path)?;
-        let recovery = recover_records(&source, limits, RecoveryMode::LastCommit)?;
-        let header = read_header(&source)?;
+        let recovery = recover_records(&source, limits, RecoveryMode::LastCommit).await?;
+        let header = read_header(&source).await?;
         let mut trusted = vec![0u8; recovery.bytes_recovered as usize];
-        source.read_exact_at(0, &mut trusted)?;
+        source.read_exact_at(0, &mut trusted).await?;
         drop(source);
 
         let decode_options = DecodeOptions { verification: VerificationLevel::Standard, limits: limits.clone() };
-        let log = decode_history(&trusted, &decode_options)?;
+        let log = decode_history(&trusted, &decode_options).await?;
 
         let write_options = WriteOptions { required_flags: header.required_flags, optional_flags: header.optional_flags };
-        let mut writer = SprWriter::begin(Vec::<u8>::new(), &write_options)?;
-        let mut dict = DictBuilder::new();
+        let mut writer = SprWriter::begin(Vec::<u8>::new(), &write_options).await?;
+        let mut dict = DictBuilder::new().await;
         let mut dict_base = 0u32;
 
-        let doc_payload = encode_doc(&log.doc_id, &log.schema, &mut dict);
-        flush_dict(&mut writer, &dict, &mut dict_base)?;
-        writer.write_record(crate::os_spr::REC_DOC, true, &doc_payload, CodecId(0))?;
+        let doc_payload = encode_doc(&log.doc_id, &log.schema, &mut dict).await;
+        flush_dict(&mut writer, &dict, &mut dict_base).await?;
+        writer.write_record(crate::os_spr::REC_DOC, true, &doc_payload, CodecId(0)).await?;
 
-        let compaction_payload = encode_compaction_payload(options);
-        writer.write_record(crate::os_spr::REC_COMPACTION, true, &compaction_payload, CodecId(0))?;
+        let compaction_payload = encode_compaction_payload(options).await;
+        writer.write_record(crate::os_spr::REC_COMPACTION, true, &compaction_payload, CodecId(0)).await?;
 
         let ordinals: HashMap<&str, u64> = log.edits.iter().enumerate().map(|(i, e)| (e.id.as_str(), i as u64)).collect();
         for edit in &log.edits {
-            let payload = encode_edit(edit, &mut dict, |id| ordinals.get(id).copied())?;
-            flush_dict(&mut writer, &dict, &mut dict_base)?;
-            writer.write_record(crate::os_spr::REC_EDIT, true, &payload, CodecId(0))?;
+            let payload = encode_edit(edit, &mut dict, |id| ordinals.get(id).copied()).await?;
+            flush_dict(&mut writer, &dict, &mut dict_base).await?;
+            writer.write_record(crate::os_spr::REC_EDIT, true, &payload, CodecId(0)).await?;
         }
         for change in &log.changes {
-            let payload = encode_change(change, &mut dict, |id| ordinals.get(id).copied())?;
-            flush_dict(&mut writer, &dict, &mut dict_base)?;
-            writer.write_record(crate::os_spr::REC_CHANGE, true, &payload, CodecId(0))?;
+            let payload = encode_change(change, &mut dict, |id| ordinals.get(id).copied()).await?;
+            flush_dict(&mut writer, &dict, &mut dict_base).await?;
+            writer.write_record(crate::os_spr::REC_CHANGE, true, &payload, CodecId(0)).await?;
         }
         for checkpoint in &log.checkpoints {
-            let payload = encode_checkpoint(checkpoint, &mut dict)?;
-            flush_dict(&mut writer, &dict, &mut dict_base)?;
-            writer.write_record(crate::os_spr::REC_CHECKPOINT, true, &payload, CodecId(0))?;
+            let payload = encode_checkpoint(checkpoint, &mut dict).await?;
+            flush_dict(&mut writer, &dict, &mut dict_base).await?;
+            writer.write_record(crate::os_spr::REC_CHECKPOINT, true, &payload, CodecId(0)).await?;
         }
         for alternative in &log.alternatives {
-            let payload = encode_alternative(alternative, &mut dict)?;
-            flush_dict(&mut writer, &dict, &mut dict_base)?;
-            writer.write_record(crate::os_spr::REC_ALTERNATIVE, true, &payload, CodecId(0))?;
+            let payload = encode_alternative(alternative, &mut dict).await?;
+            flush_dict(&mut writer, &dict, &mut dict_base).await?;
+            writer.write_record(crate::os_spr::REC_ALTERNATIVE, true, &payload, CodecId(0)).await?;
         }
-        let active_payload = encode_active(log.active_alternative_id.as_deref(), &mut dict);
-        flush_dict(&mut writer, &dict, &mut dict_base)?;
-        writer.write_record(crate::os_spr::REC_ACTIVE, true, &active_payload, CodecId(0))?;
+        let active_payload = encode_active(log.active_alternative_id.as_deref(), &mut dict).await;
+        flush_dict(&mut writer, &dict, &mut dict_base).await?;
+        writer.write_record(crate::os_spr::REC_ACTIVE, true, &active_payload, CodecId(0)).await?;
 
-        writer.commit()?;
-        crate::os_pack::io::write_atomic(path, &writer.into_sink())?;
+        writer.commit().await?;
+        crate::os_pack::io::write_atomic(path, &writer.into_sink().await)?;
         Ok(())
     }
     //#endregion 🔖️Compact
@@ -367,7 +369,7 @@ mod native {
         /// `tempfile` crate dependency, matching `pack_io`'s own test convention.
         static DIR_COUNTER: AtomicU64 = AtomicU64::new(0);
 
-        fn scratch_dir(name: &str) -> PathBuf {
+        async fn scratch_dir(name: &str) -> PathBuf {
             let pid = std::process::id();
             let counter = DIR_COUNTER.fetch_add(1, Ordering::Relaxed);
             let dir = std::env::temp_dir().join(format!("protocol_io_test_{name}_{pid}_{counter}"));
@@ -375,7 +377,7 @@ mod native {
             dir
         }
 
-        fn sample_edit(id: &str) -> HistoryEdit {
+        async fn sample_edit(id: &str) -> HistoryEdit {
             HistoryEdit {
                 id: id.to_string(),
                 actor: Some("actor-1".to_string()),
@@ -390,83 +392,83 @@ mod native {
         }
 
         //#region 🔖️File
-        #[test]
-        fn create_then_append_then_commit_round_trips_through_open_read_only() {
-            let dir = scratch_dir("create_append");
+        #[semio_framework_async_macros::async_test]
+        async fn create_then_append_then_commit_round_trips_through_open_read_only() {
+            let dir = scratch_dir("create_append").await;
             let path = dir.join("doc.spr");
 
-            let mut file = HistoryFile::create(&path, "doc-1", "schema-1", &WriteOptions::default()).unwrap();
-            assert_eq!(file.resume_state().last_commit_seq, 0);
-            file.appender().append_edit(&sample_edit("edit-1")).unwrap();
-            file.appender().append_edit(&sample_edit("edit-2")).unwrap();
-            file.appender().commit().unwrap();
+            let mut file = HistoryFile::create(&path, "doc-1", "schema-1", &WriteOptions::default()).await.unwrap();
+            assert_eq!(file.resume_state().await.last_commit_seq, 0);
+            file.appender().await.append_edit(&sample_edit("edit-1").await).await.unwrap();
+            file.appender().await.append_edit(&sample_edit("edit-2").await).await.unwrap();
+            file.appender().await.commit().await.unwrap();
 
-            let read_only = HistoryFile::open_read_only(&path, &ProtocolLimits::default()).unwrap();
-            assert_eq!(read_only.resume_state().last_commit_seq, 1);
-            assert!(read_only.resume_state().end_offset > HEADER_SIZE as u64);
+            let read_only = HistoryFile::open_read_only(&path, &ProtocolLimits::default()).await.unwrap();
+            assert_eq!(read_only.resume_state().await.last_commit_seq, 1);
+            assert!(read_only.resume_state().await.end_offset > HEADER_SIZE as u64);
 
             let bytes = std::fs::read(&path).unwrap();
-            let log = decode_history(&bytes, &DecodeOptions::default()).unwrap();
+            let log = decode_history(&bytes, &DecodeOptions::default()).await.unwrap();
             assert_eq!(log.doc_id, "doc-1");
             assert_eq!(log.edits.len(), 2);
             assert_eq!(log.edits[0].id, "edit-1");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         #[should_panic(expected = "open_read_only")]
-        fn appender_panics_on_a_read_only_handle() {
-            let dir = scratch_dir("read_only_panic");
+        async fn appender_panics_on_a_read_only_handle() {
+            let dir = scratch_dir("read_only_panic").await;
             let path = dir.join("doc.spr");
-            HistoryFile::create(&path, "doc-1", "schema-1", &WriteOptions::default()).unwrap();
-            let mut read_only = HistoryFile::open_read_only(&path, &ProtocolLimits::default()).unwrap();
-            let _ = read_only.appender();
+            HistoryFile::create(&path, "doc-1", "schema-1", &WriteOptions::default()).await.unwrap();
+            let mut read_only = HistoryFile::open_read_only(&path, &ProtocolLimits::default()).await.unwrap();
+            let _ = read_only.appender().await;
         }
 
-        #[test]
-        fn open_read_only_never_writes_to_the_file() {
-            let dir = scratch_dir("read_only_no_write");
+        #[semio_framework_async_macros::async_test]
+        async fn open_read_only_never_writes_to_the_file() {
+            let dir = scratch_dir("read_only_no_write").await;
             let path = dir.join("doc.spr");
-            let mut file = HistoryFile::create(&path, "doc-1", "schema-1", &WriteOptions::default()).unwrap();
-            file.appender().append_edit(&sample_edit("edit-1")).unwrap();
-            file.appender().commit().unwrap();
+            let mut file = HistoryFile::create(&path, "doc-1", "schema-1", &WriteOptions::default()).await.unwrap();
+            file.appender().await.append_edit(&sample_edit("edit-1").await).await.unwrap();
+            file.appender().await.commit().await.unwrap();
             let before = std::fs::read(&path).unwrap();
 
-            let _read_only = HistoryFile::open_read_only(&path, &ProtocolLimits::default()).unwrap();
+            let _read_only = HistoryFile::open_read_only(&path, &ProtocolLimits::default()).await.unwrap();
             let after = std::fs::read(&path).unwrap();
             assert_eq!(before, after, "open_read_only must never mutate the file on disk");
         }
 
-        #[test]
-        fn open_append_resumes_and_preserves_prior_edits_across_a_process_restart() {
-            let dir = scratch_dir("open_append");
+        #[semio_framework_async_macros::async_test]
+        async fn open_append_resumes_and_preserves_prior_edits_across_a_process_restart() {
+            let dir = scratch_dir("open_append").await;
             let path = dir.join("doc.spr");
 
             {
-                let mut file = HistoryFile::create(&path, "doc-1", "schema-1", &WriteOptions::default()).unwrap();
-                file.appender().append_edit(&sample_edit("edit-1")).unwrap();
-                file.appender().commit().unwrap();
+                let mut file = HistoryFile::create(&path, "doc-1", "schema-1", &WriteOptions::default()).await.unwrap();
+                file.appender().await.append_edit(&sample_edit("edit-1").await).await.unwrap();
+                file.appender().await.commit().await.unwrap();
             }
             {
-                let mut file = HistoryFile::open_append(&path, &ProtocolLimits::default()).unwrap();
-                assert_eq!(file.resume_state().last_commit_seq, 1, "the replay-commit during resume is itself commit #1 of a fresh generation");
-                file.appender().append_edit(&sample_edit("edit-2")).unwrap();
-                file.appender().commit().unwrap();
+                let mut file = HistoryFile::open_append(&path, &ProtocolLimits::default()).await.unwrap();
+                assert_eq!(file.resume_state().await.last_commit_seq, 1, "the replay-commit during resume is itself commit #1 of a fresh generation");
+                file.appender().await.append_edit(&sample_edit("edit-2").await).await.unwrap();
+                file.appender().await.commit().await.unwrap();
             }
 
             let bytes = std::fs::read(&path).unwrap();
-            let log = decode_history(&bytes, &DecodeOptions::default()).unwrap();
+            let log = decode_history(&bytes, &DecodeOptions::default()).await.unwrap();
             assert_eq!(log.doc_id, "doc-1");
             assert_eq!(log.edits.iter().map(|e| e.id.as_str()).collect::<Vec<_>>(), vec!["edit-1", "edit-2"]);
         }
 
-        #[test]
-        fn open_append_truncates_a_torn_tail_before_resuming() {
-            let dir = scratch_dir("open_append_torn");
+        #[semio_framework_async_macros::async_test]
+        async fn open_append_truncates_a_torn_tail_before_resuming() {
+            let dir = scratch_dir("open_append_torn").await;
             let path = dir.join("doc.spr");
             {
-                let mut file = HistoryFile::create(&path, "doc-1", "schema-1", &WriteOptions::default()).unwrap();
-                file.appender().append_edit(&sample_edit("edit-1")).unwrap();
-                file.appender().commit().unwrap();
+                let mut file = HistoryFile::create(&path, "doc-1", "schema-1", &WriteOptions::default()).await.unwrap();
+                file.appender().await.append_edit(&sample_edit("edit-1").await).await.unwrap();
+                file.appender().await.commit().await.unwrap();
             }
             // Simulate a crash mid-write: append garbage bytes past the last valid commit.
             {
@@ -475,20 +477,20 @@ mod native {
                 f.write_all(&[0xDE, 0xAD, 0xBE, 0xEF, 0x00, 0x01, 0x02]).unwrap();
             }
 
-            let mut file = HistoryFile::open_append(&path, &ProtocolLimits::default()).unwrap();
-            file.appender().append_edit(&sample_edit("edit-2")).unwrap();
-            file.appender().commit().unwrap();
+            let mut file = HistoryFile::open_append(&path, &ProtocolLimits::default()).await.unwrap();
+            file.appender().await.append_edit(&sample_edit("edit-2").await).await.unwrap();
+            file.appender().await.commit().await.unwrap();
 
             let bytes = std::fs::read(&path).unwrap();
-            let log = decode_history(&bytes, &DecodeOptions::default()).unwrap();
+            let log = decode_history(&bytes, &DecodeOptions::default()).await.unwrap();
             assert_eq!(log.edits.iter().map(|e| e.id.as_str()).collect::<Vec<_>>(), vec!["edit-1", "edit-2"]);
         }
         //#endregion 🔖️File
 
         //#region 🔖️Sidecar
-        #[test]
-        fn sidecar_write_read_round_trips_and_names_by_hex8_of_hash() {
-            let dir = scratch_dir("sidecar");
+        #[semio_framework_async_macros::async_test]
+        async fn sidecar_write_read_round_trips_and_names_by_hex8_of_hash() {
+            let dir = scratch_dir("sidecar").await;
             let protocol_path = dir.join("doc.spr");
             let body_hash = [0xABu8; 32];
             let pack_bytes = b"a complete .spk pack file, opaque to this crate";
@@ -501,9 +503,9 @@ mod native {
             assert_eq!(read_back, pack_bytes);
         }
 
-        #[test]
-        fn read_sidecar_missing_file_is_an_io_error() {
-            let dir = scratch_dir("sidecar_missing");
+        #[semio_framework_async_macros::async_test]
+        async fn read_sidecar_missing_file_is_an_io_error() {
+            let dir = scratch_dir("sidecar_missing").await;
             let protocol_path = dir.join("doc.spr");
             let result = read_sidecar(&protocol_path, &[0u8; 32]);
             assert!(matches!(result, Err(ProtocolError::Io(_))));
@@ -511,16 +513,16 @@ mod native {
         //#endregion 🔖️Sidecar
 
         //#region 🔖️Recover
-        #[test]
-        fn recover_file_reports_the_committed_record_count() {
-            let dir = scratch_dir("recover");
+        #[semio_framework_async_macros::async_test]
+        async fn recover_file_reports_the_committed_record_count() {
+            let dir = scratch_dir("recover").await;
             let path = dir.join("doc.spr");
-            let mut file = HistoryFile::create(&path, "doc-1", "schema-1", &WriteOptions::default()).unwrap();
-            file.appender().append_edit(&sample_edit("edit-1")).unwrap();
-            file.appender().append_edit(&sample_edit("edit-2")).unwrap();
-            file.appender().commit().unwrap();
+            let mut file = HistoryFile::create(&path, "doc-1", "schema-1", &WriteOptions::default()).await.unwrap();
+            file.appender().await.append_edit(&sample_edit("edit-1").await).await.unwrap();
+            file.appender().await.append_edit(&sample_edit("edit-2").await).await.unwrap();
+            file.appender().await.commit().await.unwrap();
 
-            let report = recover_file(&path, &ProtocolLimits::default(), RecoveryMode::LastCommit).unwrap();
+            let report = recover_file(&path, &ProtocolLimits::default(), RecoveryMode::LastCommit).await.unwrap();
             assert_eq!(report.last_commit_seq, 1);
             assert_eq!(report.torn_tail_bytes, 0);
             // At least REC_DOC + 2x REC_EDIT + REC_COMMIT; may include extra REC_STR_DICT delta
@@ -531,76 +533,76 @@ mod native {
         //#endregion 🔖️Recover
 
         //#region 🔖️Sync
-        #[test]
-        fn tail_follower_polls_new_edits_across_multiple_commits_and_advances_its_ordinal() {
-            let dir = scratch_dir("tail");
+        #[semio_framework_async_macros::async_test]
+        async fn tail_follower_polls_new_edits_across_multiple_commits_and_advances_its_ordinal() {
+            let dir = scratch_dir("tail").await;
             let path = dir.join("doc.spr");
-            let mut file = HistoryFile::create(&path, "doc-1", "schema-1", &WriteOptions::default()).unwrap();
-            file.appender().append_edit(&sample_edit("edit-1")).unwrap();
-            file.appender().commit().unwrap();
+            let mut file = HistoryFile::create(&path, "doc-1", "schema-1", &WriteOptions::default()).await.unwrap();
+            file.appender().await.append_edit(&sample_edit("edit-1").await).await.unwrap();
+            file.appender().await.commit().await.unwrap();
 
-            let mut follower = TailFollower::open(&path, 0).unwrap();
-            let first = follower.poll().unwrap();
+            let mut follower = TailFollower::open(&path, 0).await.unwrap();
+            let first = follower.poll().await.unwrap();
             assert_eq!(first.iter().map(|e| e.id.as_str()).collect::<Vec<_>>(), vec!["edit-1"]);
-            assert_eq!(follower.last_edit_ordinal(), 1);
+            assert_eq!(follower.last_edit_ordinal().await, 1);
 
-            let empty = follower.poll().unwrap();
+            let empty = follower.poll().await.unwrap();
             assert!(empty.is_empty(), "no new edits since the last poll");
 
-            file.appender().append_edit(&sample_edit("edit-2")).unwrap();
-            file.appender().append_edit(&sample_edit("edit-3")).unwrap();
-            file.appender().commit().unwrap();
+            file.appender().await.append_edit(&sample_edit("edit-2").await).await.unwrap();
+            file.appender().await.append_edit(&sample_edit("edit-3").await).await.unwrap();
+            file.appender().await.commit().await.unwrap();
 
-            let second = follower.poll().unwrap();
+            let second = follower.poll().await.unwrap();
             assert_eq!(second.iter().map(|e| e.id.as_str()).collect::<Vec<_>>(), vec!["edit-2", "edit-3"]);
-            assert_eq!(follower.last_edit_ordinal(), 3);
+            assert_eq!(follower.last_edit_ordinal().await, 3);
         }
 
-        #[test]
-        fn tail_follower_open_from_a_nonzero_ordinal_skips_already_known_edits() {
-            let dir = scratch_dir("tail_from_ordinal");
+        #[semio_framework_async_macros::async_test]
+        async fn tail_follower_open_from_a_nonzero_ordinal_skips_already_known_edits() {
+            let dir = scratch_dir("tail_from_ordinal").await;
             let path = dir.join("doc.spr");
-            let mut file = HistoryFile::create(&path, "doc-1", "schema-1", &WriteOptions::default()).unwrap();
-            file.appender().append_edit(&sample_edit("edit-1")).unwrap();
-            file.appender().append_edit(&sample_edit("edit-2")).unwrap();
-            file.appender().commit().unwrap();
+            let mut file = HistoryFile::create(&path, "doc-1", "schema-1", &WriteOptions::default()).await.unwrap();
+            file.appender().await.append_edit(&sample_edit("edit-1").await).await.unwrap();
+            file.appender().await.append_edit(&sample_edit("edit-2").await).await.unwrap();
+            file.appender().await.commit().await.unwrap();
 
-            let mut follower = TailFollower::open(&path, 1).unwrap();
-            let polled = follower.poll().unwrap();
+            let mut follower = TailFollower::open(&path, 1).await.unwrap();
+            let polled = follower.poll().await.unwrap();
             assert_eq!(polled.iter().map(|e| e.id.as_str()).collect::<Vec<_>>(), vec!["edit-2"]);
         }
         //#endregion 🔖️Sync
 
         //#region 🔖️Compact
-        #[test]
-        fn compact_preserves_every_edit_and_records_a_compaction_provenance_marker() {
-            let dir = scratch_dir("compact");
+        #[semio_framework_async_macros::async_test]
+        async fn compact_preserves_every_edit_and_records_a_compaction_provenance_marker() {
+            let dir = scratch_dir("compact").await;
             let path = dir.join("doc.spr");
-            let mut file = HistoryFile::create(&path, "doc-1", "schema-1", &WriteOptions::default()).unwrap();
-            file.appender().append_edit(&sample_edit("edit-1")).unwrap();
-            file.appender().append_edit(&sample_edit("edit-2")).unwrap();
-            file.appender().append_change(&HistoryChange { id: "change-1".to_string(), saved_at: "2026-07-27T00:00:02Z".to_string(), edit_ids: vec!["edit-1".to_string(), "edit-2".to_string()], description: None }).unwrap();
-            file.appender().append_checkpoint(&HistoryCheckpoint { id: "ck-1".to_string(), timestamp: "2026-07-27T00:00:03Z".to_string(), change_ids: vec!["change-1".to_string()], parent_id: None, authors: vec![], message: None }).unwrap();
-            file.appender().append_alternative(&HistoryAlternative { id: "alt-1".to_string(), name: "main".to_string(), checkpoint_ids: vec!["ck-1".to_string()] }).unwrap();
-            file.appender().set_active(Some("alt-1")).unwrap();
-            file.appender().commit().unwrap();
+            let mut file = HistoryFile::create(&path, "doc-1", "schema-1", &WriteOptions::default()).await.unwrap();
+            file.appender().await.append_edit(&sample_edit("edit-1").await).await.unwrap();
+            file.appender().await.append_edit(&sample_edit("edit-2").await).await.unwrap();
+            file.appender().await.append_change(&HistoryChange { id: "change-1".to_string(), saved_at: "2026-07-27T00:00:02Z".to_string(), edit_ids: vec!["edit-1".to_string(), "edit-2".to_string()], description: None }).await.unwrap();
+            file.appender().await.append_checkpoint(&HistoryCheckpoint { id: "ck-1".to_string(), timestamp: "2026-07-27T00:00:03Z".to_string(), change_ids: vec!["change-1".to_string()], parent_id: None, authors: vec![], message: None }).await.unwrap();
+            file.appender().await.append_alternative(&HistoryAlternative { id: "alt-1".to_string(), name: "main".to_string(), checkpoint_ids: vec!["ck-1".to_string()] }).await.unwrap();
+            file.appender().await.set_active(Some("alt-1")).await.unwrap();
+            file.appender().await.commit().await.unwrap();
             drop(file);
 
-            let before = decode_history(&std::fs::read(&path).unwrap(), &DecodeOptions::default()).unwrap();
+            let before = decode_history(&std::fs::read(&path).unwrap(), &DecodeOptions::default()).await.unwrap();
 
-            compact(&path, &CompactOptions { drop_ephemeral: true, keep_snapshots: KeepSnapshots::LatestN(3) }, &ProtocolLimits::default()).unwrap();
+            compact(&path, &CompactOptions { drop_ephemeral: true, keep_snapshots: KeepSnapshots::LatestN(3) }, &ProtocolLimits::default()).await.unwrap();
 
             let after_bytes = std::fs::read(&path).unwrap();
-            let after = decode_history(&after_bytes, &DecodeOptions::default()).unwrap();
+            let after = decode_history(&after_bytes, &DecodeOptions::default()).await.unwrap();
             assert_eq!(before, after, "compact must be identity-preserving over everything HistoryLog models");
 
             // The REC_COMPACTION provenance marker is present immediately after REC_DOC (there may
             // be a REC_STR_DICT delta frame before REC_DOC, for the interned doc-id/schema/actor
             // strings, but nothing is ever written between REC_DOC and REC_COMPACTION).
-            let mut cursor = FrameCursor::new(&after_bytes, HEADER_SIZE as u64);
+            let mut cursor = FrameCursor::new(&after_bytes, HEADER_SIZE as u64).await;
             let mut kinds = Vec::new();
-            while let Some(frame) = cursor.next_frame().unwrap() {
-                kinds.push((frame.kind, frame.payload().to_vec()));
+            while let Some(frame) = cursor.next_frame().await.unwrap() {
+                kinds.push((frame.kind, frame.payload().await.to_vec()));
             }
             let doc_index = kinds.iter().position(|(kind, _)| *kind == crate::os_spr::REC_DOC).expect("REC_DOC present");
             let (compaction_kind, compaction_payload) = &kinds[doc_index + 1];
@@ -609,21 +611,21 @@ mod native {
             assert_eq!(compaction_payload[2], 2, "keep_snapshots tag 2 = LatestN");
 
             // The commit chain genuinely restarted: exactly one commit, seq 1.
-            let report = recover_file(&path, &ProtocolLimits::default(), RecoveryMode::LastCommit).unwrap();
+            let report = recover_file(&path, &ProtocolLimits::default(), RecoveryMode::LastCommit).await.unwrap();
             assert_eq!(report.last_commit_seq, 1);
         }
 
-        #[test]
-        fn compact_on_an_already_minimal_file_is_a_harmless_no_op_content_wise() {
-            let dir = scratch_dir("compact_minimal");
+        #[semio_framework_async_macros::async_test]
+        async fn compact_on_an_already_minimal_file_is_a_harmless_no_op_content_wise() {
+            let dir = scratch_dir("compact_minimal").await;
             let path = dir.join("doc.spr");
-            let mut file = HistoryFile::create(&path, "doc-1", "schema-1", &WriteOptions::default()).unwrap();
-            file.appender().commit().unwrap();
+            let mut file = HistoryFile::create(&path, "doc-1", "schema-1", &WriteOptions::default()).await.unwrap();
+            file.appender().await.commit().await.unwrap();
             drop(file);
 
-            compact(&path, &CompactOptions { drop_ephemeral: false, keep_snapshots: KeepSnapshots::All }, &ProtocolLimits::default()).unwrap();
+            compact(&path, &CompactOptions { drop_ephemeral: false, keep_snapshots: KeepSnapshots::All }, &ProtocolLimits::default()).await.unwrap();
 
-            let log = decode_history(&std::fs::read(&path).unwrap(), &DecodeOptions::default()).unwrap();
+            let log = decode_history(&std::fs::read(&path).unwrap(), &DecodeOptions::default()).await.unwrap();
             assert_eq!(log.doc_id, "doc-1");
             assert!(log.edits.is_empty());
         }

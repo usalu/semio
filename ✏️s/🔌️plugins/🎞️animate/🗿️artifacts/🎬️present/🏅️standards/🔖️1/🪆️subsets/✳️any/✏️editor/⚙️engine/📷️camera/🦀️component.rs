@@ -20,7 +20,7 @@ pub mod camera {
     }
 
     impl Default for Camera {
-        async fn default() -> Self {
+        fn default() -> Self {
             Self { frame_center: Point::ZERO, frame_width: 14.0, frame_height: 8.0, background: Color::BLACK, transform: Affine::IDENTITY }
         }
     }
@@ -128,7 +128,7 @@ pub mod camera {
     mod tests {
         use super::*;
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn moving_camera_interpolates_center() {
             let mut cam = MovingCamera::new(Camera::default());
             cam.set_target(Point::new(2.0, 2.0), 8.0);
@@ -136,7 +136,7 @@ pub mod camera {
             assert!(cam.camera.frame_center.x().abs() < 2.0);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn three_d_camera_projects_finite_point() {
             let cam = ThreeDCamera::new(Camera::default());
             let p = cam.project(1.0, 1.0, 1.0);
@@ -150,7 +150,7 @@ pub mod matrix {
 
     use crate::editor::animate::engine::text::color::Color;
     use crate::editor::animate::engine::geometry::geometry::rectangle;
-    use crate::editor::animate::engine::scene::sobject::{arrange, Group, Sobject};
+    use crate::editor::animate::engine::scene::sobject::{arrange, Group, Sobject, Sobjects};
     use crate::editor::animate::engine::text::text::{MathText, Text};
     use geometry::{Point, Vec2};
 
@@ -179,11 +179,11 @@ pub mod matrix {
         pub async fn from_rows(rows: Vec<Vec<String>>, cell_size: (f64, f64), color: Color) -> Self {
             let nrows = rows.len();
             let ncols = rows.iter().map(|r| r.len()).max().unwrap_or(0);
-            let mut children: Vec<Box<dyn Sobject>> = Vec::new();
+            let mut children: Vec<Sobjects> = Vec::new();
             for row in rows {
                 for cell in row {
                     let t = Text::new(cell, color);
-                    children.push(Box::new(t.inner));
+                    children.push((t.inner).into());
                 }
             }
             let mut group = Group::new(children);
@@ -192,11 +192,11 @@ pub mod matrix {
         }
 
         pub async fn math(entries: &[&str], cell_size: (f64, f64), color: Color) -> Self {
-            let children: Vec<Box<dyn Sobject>> = entries
+            let children: Vec<Sobjects> = entries
                 .iter()
                 .map(|e| {
                     let m = MathText::new(*e, color);
-                    Box::new(m.inner) as Box<dyn Sobject>
+                    (m.inner).into()
                 })
                 .collect();
             let cols = (entries.len() as f64).sqrt().ceil() as usize;
@@ -212,7 +212,7 @@ pub mod matrix {
             let h = b.height() + padding * 2.0;
             let c = b.center();
             let frame = rectangle(w, h, c, Color::TRANSPARENT, Some(color), 3.0);
-            self.group.add_child(Box::new(frame));
+            self.group.add_child((frame).into());
             self
         }
     }
@@ -228,17 +228,17 @@ pub mod matrix {
         pub async fn new(headers: Vec<String>, rows: &[Vec<String>], cell_size: (f64, f64), color: Color) -> Self {
             let ncols = headers.len().max(rows.iter().map(|r| r.len()).max().unwrap_or(0));
             let nrows = rows.len() + 1;
-            let mut children: Vec<Box<dyn Sobject>> = Vec::new();
+            let mut children: Vec<Sobjects> = Vec::new();
             for header in headers {
-                children.push(Box::new(Text::new(header, color).inner));
+                children.push((Text::new(header, color).inner).into());
             }
             for row in rows {
                 for cell in row {
-                    children.push(Box::new(Text::new(cell.clone(), color).inner));
+                    children.push((Text::new(cell.clone(), color).inner).into());
                 }
                 let pad = ncols.saturating_sub(row.len());
                 for _ in 0..pad {
-                    children.push(Box::new(Text::new("", color).inner));
+                    children.push((Text::new("", color).inner).into());
                 }
             }
             let mut group = Group::new(children);
@@ -249,7 +249,7 @@ pub mod matrix {
         pub async fn with_frame(mut self, color: Color, padding: f64) -> Self {
             let b = self.group.bounds();
             let frame = rectangle(b.width() + padding * 2.0, b.height() + padding * 2.0, b.center(), Color::TRANSPARENT, Some(color), 2.0);
-            self.group.add_child(Box::new(frame));
+            self.group.add_child((frame).into());
             self
         }
     }
@@ -291,7 +291,7 @@ pub mod matrix {
     mod tests {
         use super::*;
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn decimal_matrix_lerps() {
             let a = DecimalMatrix::new(vec![vec![0.0, 1.0]]);
             let b = DecimalMatrix::new(vec![vec![2.0, 3.0]]);
@@ -299,7 +299,7 @@ pub mod matrix {
             assert!((m.values[0][0] - 1.0).abs() < 1e-9);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn matrix_grid_layout() {
             let m = Matrix::from_rows(vec![vec!["a".into(), "b".into()], vec!["c".into(), "d".into()]], (1.0, 1.0), Color::WHITE);
             assert_eq!(m.rows, 2);
@@ -307,14 +307,14 @@ pub mod matrix {
             assert_eq!(m.group.children.len(), 4);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn table_has_header_and_rows() {
             let t = Table::new(vec!["x".into()], &[vec!["1".into()]], (1.0, 1.0), Color::WHITE);
             assert_eq!(t.rows, 2);
             assert_eq!(t.cols, 1);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn table_with_frame_adds_border_child() {
             let t = Table::new(vec!["a".into(), "b".into()], &[vec!["1".into()]], (1.0, 1.0), Color::WHITE);
             let before = t.group.children.len();
@@ -322,7 +322,7 @@ pub mod matrix {
             assert_eq!(framed.group.children.len(), before + 1);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn matrix_math_lays_out_entries() {
             let m = Matrix::math(&["1", "2", "3", "4"], (1.0, 1.0), Color::WHITE);
             assert_eq!(m.group.children.len(), 4);
@@ -330,7 +330,7 @@ pub mod matrix {
             assert_eq!(m.rows, 2);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn matrix_with_brackets_adds_frame_child() {
             let m = Matrix::from_rows(vec![vec!["a".into()]], (1.0, 1.0), Color::WHITE);
             let before = m.group.children.len();
@@ -338,7 +338,7 @@ pub mod matrix {
             assert_eq!(bracketed.group.children.len(), before + 1);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn decimal_matrix_to_matrix_sobject_formats_values() {
             let d = DecimalMatrix::new(vec![vec![1.5, 2.25]]);
             let m = d.to_matrix_sobject((1.0, 1.0), Color::WHITE);

@@ -120,7 +120,7 @@ mod tests {
         semio_framework_os::register_app_io(plugin_id, &definition);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn catalogue_tree_nests_apps_by_canonical_document() {
         seed_app("puzzle", "s.puzzle2d@1/*#editor", "Puzzle 2D", &["semio", "puzzle", "2d"], "puzzle2d.document");
         seed_app("puzzle", "s.puzzle3d@1/*#editor", "Puzzle 3D", &["semio", "puzzle", "3d"], "puzzle3d.document");

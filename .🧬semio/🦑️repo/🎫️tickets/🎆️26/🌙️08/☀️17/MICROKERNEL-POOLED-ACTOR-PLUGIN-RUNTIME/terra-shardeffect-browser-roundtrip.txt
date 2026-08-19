@@ -1,0 +1,62 @@
+terra-shard-effect-bridge — real browser evidence, ShardClient effect-request/effect-complete/effect-error
+
+Harness (ticket-scratch only, not committed):
+/private/tmp/claude-501/-Users-ueli-Documents-semio/e6a44461-bab7-421f-8a53-65123a5e9482/scratchpad/effectbridge-harness/
+  - shard-client.bundle.js   : `bun build 🧵️shard-client.ts --target=browser --format=esm` — REAL, unmodified ShardClient
+  - shard-worker.js          : REAL, unmodified output of shardWorkerSource() (🌐plugin-web-materialize.ts, called read-only)
+  - jcoprobe.js / .core.wasm / interfaces/ / preview2-shim/ : copied verbatim, read-only, from
+    🧫️fixtures/🔌️jcoprobe/🌐️harness/out-callback/ (terra-jco-spike's real jco-transpiled component)
+  - host-shim.js / bridge.js : hand-written for jcoprobe's own WIT namespace (semio:jcoprobe/*), same
+    reasoning terra-web-bridges' own report gives — implements effectRequest/__bindHostBridge/
+    __resolveEffect/__rejectEffect verbatim from the REAL hostShimSource() mechanism.
+  - driver.js / index.html / serve.ts : main-thread driver constructing the REAL ShardClient with a
+    real browser Worker, onHostEffect handler answering "slow-echo".
+
+Served via `bun serve.ts` (scratch-only static server, port 8931) — NEVER via .claude/launch.json
+(registrar-only). Driven entirely through the Browser pane (preview_start/get_page_text/
+read_console_messages), never Bash for server interaction.
+
+=== Console output (read_console_messages), final run ===
+[log] [driver] activate() resolved
+[log] [driver] onHostEffect actorId=probe-1 effect=slow-echo params={"ms":30,"v":777}
+[info] [host-shim] slowEcho(30,777) JS PROMISE RESOLVED value=777
+[log] [driver] SUCCESS turn result = {"ok":true,"value":777}
+[log] [driver] onHostEffect actorId=probe-1 effect=slow-echo params={"ms":10,"v":2989}
+[info] [host-shim] __rejectEffect called requestId=probe-1:slow-echo:2 message=deliberate failure: poisoned value from onHostEffect hadPendingEntry=true
+[info] [host-shim] slowEcho(10,2989) JS PROMISE REJECTED error=deliberate failure: poisoned value from onHostEffect
+[log] [driver] FAILURE turn result = {"ok":true,"unexpectedSuccess":true,"value":0}
+[log] EFFECT-ROUNDTRIP-SUCCESS: PASS
+[log] EFFECT-ROUNDTRIP-FAILURE-PATH: FAIL (see report — jco/wit-bindgen ABI limitation, not a ShardClient defect)
+[log] ==== DONE overall=false ====
+
+=== Interpretation ===
+SUCCESS PATH — fully proven: the REAL guest export `probe.awaitEcho(30, 777)` (which internally
+`.await`s the host import `probe-host::slow-echo`) resolved with value=777, the EXACT value returned
+by MY onHostEffect handler on the ShardClient main-thread, delivered through a real Worker, a real
+jco-transpiled component, and the new "frame"/effect-request -> onHostEffect -> effect-complete wire
+this packet added to 🧵️shard-client.ts. No hand-simulated "kernel" — the REAL ShardClient class ran
+this, bundled unmodified from source.
+
+FAILURE PATH — ShardClient's own half is fully proven; jco's guest-visible propagation is NOT, and is
+now NEGATIVELY confirmed for this exact case:
+  1. onHostEffect() threw "deliberate failure: poisoned value from onHostEffect".
+  2. ShardClient's handleEffectRequest caught the rejection and posted an effect-error frame
+     (proven by unit tests + this run reaching __rejectEffect).
+  3. shard-worker.js's deliverEffectResult correctly routed it to __rejectEffect.
+  4. host-shim.js's __rejectEffect fired (hadPendingEntry=true) and genuinely rejected the JS Promise
+     `slowEcho(10,2989)` returns — CONFIRMED by direct instrumentation on that Promise's own
+     .then/.catch, logged BEFORE jco's own trampoline code runs.
+  5. jco's generated trampoline (_trampoline27 in jcoprobe.js, ~:7876) DOES catch that rejection
+     (`task.setErrored(err); task.reject(err); ...`) but jcoprobe's `slow-echo: async func(...) -> u32`
+     WIT signature is a BARE u32 return, not `result<u32, E>` — there is no Rust-level error channel
+     for wit-bindgen to surface an Err through, so `await-echo`'s guest Rust
+     (`probe_host::slow_echo(ms, v).await` returning bare u32) observes a default value (0), not a
+     panic/Err. `probe.awaitEcho(...)`'s own JS promise therefore resolves, not rejects.
+
+This is a genuine, now RESOLVED "honestly unproven" item flagged by the sibling packet
+(terra-web-bridges report: "whether jco expects a result<T, pack>-returning host-async import to
+signal Err by throwing"). The NEGATIVE case is confirmed here: for a bare (non-result) return type,
+it does not propagate. Production `host-async` imports (component.wit ~:887) DO use `result<T, pack>`
+for effects with observable failure modes — this fixture's `slow-echo` does not, so the fixture itself
+cannot exercise the guest-visible-error path; only a result<>-typed WIT function could, and jcoprobe's
+WIT is a read-only fixture outside this packet's path_scope.

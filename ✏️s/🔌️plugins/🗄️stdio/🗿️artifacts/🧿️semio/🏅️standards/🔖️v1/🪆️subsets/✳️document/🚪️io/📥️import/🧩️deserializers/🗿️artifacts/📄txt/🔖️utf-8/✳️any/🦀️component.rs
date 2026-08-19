@@ -36,7 +36,7 @@ mod tests {
         TxtSnapshot { schema: crate::artifacts::txt::STDIO_TXT_DOCUMENT_SCHEMA.into(), lines: vec!["First line.".into(), String::new(), "Third line.".into()], trailing_newline: true, line_ending: LineEnding::Lf }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn each_line_becomes_a_paragraph_blank_lines_become_empty_paragraphs() {
         let semio = semio_framework_plugin::resolve_ready(SemioDocumentFromTxt::deserialize(&sample_txt())).expect("deserialize");
         assert_eq!(semio.blocks.len(), 3);

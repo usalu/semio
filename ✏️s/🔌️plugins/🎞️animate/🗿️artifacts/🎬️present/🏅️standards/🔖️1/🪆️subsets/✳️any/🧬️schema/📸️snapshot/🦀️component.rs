@@ -36,7 +36,7 @@ pub struct PresentSnapshot {
 }
 
 impl Default for PresentSnapshot {
-    async fn default() -> Self {
+    fn default() -> Self {
         default_snapshot()
     }
 }
@@ -52,7 +52,7 @@ pub async fn default_snapshot() -> PresentSnapshot {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn pack_round_trips() {
         let snap = PresentSnapshot::default();
         let bytes = <PresentSnapshot as store::ArtifactPack>::encode_pack(&snap);
@@ -60,7 +60,7 @@ mod tests {
         assert_eq!(snap, back);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dsl_text_round_trips() {
         let snap = PresentSnapshot::default();
         let text = <PresentSnapshot as store::ArtifactDsl>::print_dsl(&snap);
@@ -68,7 +68,7 @@ mod tests {
         assert_eq!(snap, back);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn populated_snapshot_pack_and_dsl_round_trip() {
         let source = crate::artifacts::present::default_figure_tile_source();
         let tiles = vec![crate::artifacts::present::FigureTileDraft {

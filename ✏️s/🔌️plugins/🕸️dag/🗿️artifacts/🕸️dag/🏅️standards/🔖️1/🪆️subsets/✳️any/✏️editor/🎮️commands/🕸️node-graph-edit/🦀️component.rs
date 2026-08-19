@@ -84,7 +84,7 @@ mod tests {
     /// `graph` domain's live selection (populated via the framework's own `interactionSelect` action —
     /// the only way a downstream crate can populate a genuine `InteractionView`) drives the batched
     /// delete-selection sub-op — ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn node_graph_edit_batches_connect_then_delete_selection() {
         let mut app = testkit::new_app_with_registry();
         let (source_id, target_id) = {
@@ -107,7 +107,7 @@ mod tests {
         assert_eq!(app.snapshot().expect("projection").nodes().len(), nodes_before - 1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn move_media_node_drag_coalesces_into_one_edit() {
         let mut app = testkit::new_app();
         let node_id = app.snapshot().expect("projection").nodes().first().map(|node| node.id.clone()).expect("node");
@@ -121,7 +121,7 @@ mod tests {
         assert_eq!(restored.nodes().iter().find(|node| node.id == node_id).unwrap().x, original, "undoing the coalesced drag restores the pre-drag position");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn disconnect_removes_a_known_edge_and_is_a_no_op_for_an_unknown_one() {
         let mut app = testkit::new_app();
         let edge_id = app.snapshot().expect("projection").edges().first().map(|edge| edge.id.clone());
@@ -134,7 +134,7 @@ mod tests {
         assert!(result.mutations.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn connect_media_ports_adds_an_edge_between_two_nodes() {
         let mut app = testkit::new_app();
         let (source_id, target_id) = {

@@ -419,7 +419,7 @@ mod tests {
     //#region 🔖️CommandSurface
     /// 🏷️ Every declared manifest action id must be reachable as exactly one command row, and every row's
     /// wire keyword must be distinct — the cross-cutting invariant `app_commands!` is there to hold.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn command_ids_are_unique_and_match_the_declared_manifest_actions() {
         let commands = every_command();
         let ids: Vec<&str> = commands.iter().map(|command| command.command_id()).collect();
@@ -431,7 +431,7 @@ mod tests {
     }
 
     /// ⚖️ LAW: text and binary are two projections of the same command, for every single row.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn every_command_round_trips_through_text_and_binary() {
         for command in every_command() {
             store::os_store::test_support::assert_op_text_binary_equivalence(&command);
@@ -442,7 +442,7 @@ mod tests {
     /// kebab-cased command id, except for the one documented divergence (`setLocale` → `locale`, an
     /// undeclared host-pushed command). This is what a missing `#[dsl(keyword = ..)]` on a payload struct
     /// silently breaks (the record prints with no keyword at all and no longer parses).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
         for command in every_command() {
             let id = command.command_id();
@@ -481,7 +481,7 @@ mod tests {
     //#endregion 🔖️CommandSurface
 
     //#region 🔖️ManifestSanity
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn the_manifest_stitches_every_taxonomy_node() {
         let json = serde_json::to_string(&create_vcs_app()).expect("app definition json");
         for id in [editor::VCS_PLAY_WINDOW_EDITOR, history::VCS_PLAY_WINDOW_HISTORY] {
@@ -497,7 +497,7 @@ mod tests {
     /// 🧪️ The registry-enforced app (View/Shell kind discipline) must still dispatch every declared
     /// manifest action — exercises `testkit::app_with_registry`, the counterpart to the bare `app()`
     /// every other node's tests use.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn registry_enforced_app_dispatches_a_declared_action() {
         use crate::editor::vcs::testkit::app_with_registry;
         let mut instance = app_with_registry();
@@ -511,7 +511,7 @@ mod tests {
     /// 🕹️ The "history" domain is declared `HierarchyProvider::Flat`, Pick-only, and scoped to the
     /// history window kind — see `VCS_INTERACTION_HISTORY`'s doc comment for why this is entity
     /// selection over checkpoints, not the per-row `checkoutCheckpoint`/`switchAlternative` navigation.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn history_interaction_domain_is_declared_flat_and_scoped_to_the_history_window() {
         let definition = create_vcs_app();
         let history_domain = definition.interactions.iter().find(|interaction| interaction.id == VCS_INTERACTION_HISTORY).expect("history interaction domain declared");
@@ -527,7 +527,7 @@ mod tests {
     //#endregion 🔖️Interaction
 
     //#region 🔖️CrossCutting
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn seeded_history_has_checkpoints() {
         let instance = app();
         let envelope = seeded_envelope(&instance);
@@ -544,7 +544,7 @@ mod tests {
         assert!(lanes.len() >= 3, "expected >=3 distinct swimlanes, got {lanes:?}");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn checkout_then_commit_forks_across_actions() {
         let mut instance = app();
         let envelope_before = seeded_envelope(&instance);
@@ -562,7 +562,7 @@ mod tests {
         assert_eq!(children_of_root_after, children_of_root_before + 1, "checking out the root then committing through actions must add a new fork of the root, not extend the trunk");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn undo_redo_round_trips_through_the_wrapper() {
         let mut instance = app();
         let before = instance.snapshot().expect("materialize snapshot").counter;
@@ -576,7 +576,7 @@ mod tests {
         assert_eq!(instance.snapshot().expect("materialize snapshot").counter, before + 1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_and_switch_alternative_round_trip_through_the_wrapper() {
         let mut instance = app();
         let create = instance.handle_action("createAlternative", Some(&serde_json::json!({ "name": "trying-something" })), &meta("local")).expect("create alternative");

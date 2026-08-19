@@ -98,13 +98,13 @@ mod tests {
     use semio_framework_plugin::testkit::meta;
     use serde_json::Value;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn renders_canvas_2d_scene() {
         let mut app = present_app();
         assert!(render_body(&mut app, PRESENT_PLAY_BODY_MAIN).contains("canvas-2d") || render_body(&mut app, PRESENT_PLAY_BODY_MAIN).contains("Canvas2d"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn definition_declares_the_canvas_2d_surface_and_body_key() {
         let definition = definition();
         assert_eq!(definition.body_key, PRESENT_PLAY_BODY_MAIN);
@@ -112,7 +112,7 @@ mod tests {
         assert!(definition.options.measures.is_empty(), "animate present declares no live chrome measures");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn source_frame_renders_as_actual_image_layer_behind_tiles() {
         let mut app = present_app();
         app.dispatch_typed(PresentCommand::SeedGrid(crate::editor::animate::commands::seed_grid::SeedGrid { rows: 1, columns: 2 }), &meta("local")).expect("seed grid");
@@ -131,7 +131,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn deck_to_canvas_layers_omits_data_url_when_source_has_no_image() {
         let base = crate::artifacts::present::default_present_snapshot();
         let (mut source, tiles) = crate::artifacts::present::present_working_scene(&base);
@@ -144,7 +144,7 @@ mod tests {
         assert!(source_layer.get("dataUrl").is_none() || source_layer.get("dataUrl") == Some(&Value::Null));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn deck_to_canvas_layers_treats_pdf_kind_as_non_image() {
         let base = crate::artifacts::present::default_present_snapshot();
         let (mut source, tiles) = crate::artifacts::present::present_working_scene(&base);

@@ -38,7 +38,7 @@ pub struct EpwArtifact {
 }
 
 impl Default for EpwArtifact {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self::from_snapshot(EpwSnapshot::default())
     }
 }

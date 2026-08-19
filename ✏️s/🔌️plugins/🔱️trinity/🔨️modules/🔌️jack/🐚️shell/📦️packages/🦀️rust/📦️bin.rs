@@ -119,7 +119,7 @@ mod tests {
         fixture.to_json().unwrap()
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn shell_loads_fixture() {
         let mut graph = Graph::load_json(&mini_json()).unwrap();
         let result = run(&mut graph, "MATCH (a:Piece) RETURN a.name").unwrap();

@@ -146,7 +146,7 @@ mod tests {
         ]
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn every_variant_registers_an_approved_semantic_descriptor() {
         for mutation in every_mutation() {
             let descriptor = protocol::SemanticMutation::semantics(&mutation);
@@ -164,7 +164,7 @@ mod tests {
     /// sanctioned `MutationKind::inverse` contract for "nothing changed, nothing to undo". These
     /// tests assert exactly that, matching `📐️cad`'s own precedent
     /// (`add_object_action_is_a_documented_no_op_pending_the_child_dispatch_seam`).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_step_diff_is_a_documented_no_op() {
         let base = empty_process3d_snapshot();
         let mutation = Process3dMutation::CreateStep(CreateStep { index: 0, step: cut_step("step-9") });
@@ -172,7 +172,7 @@ mod tests {
         assert!(mutation.inverse(&base).is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn delete_step_diff_is_a_documented_no_op() {
         let base = empty_process3d_snapshot();
         let mutation = Process3dMutation::DeleteStep(DeleteStep { id: "step-1".into() });
@@ -180,7 +180,7 @@ mod tests {
         assert!(mutation.inverse(&base).is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn rename_step_diff_is_a_documented_no_op() {
         let base = empty_process3d_snapshot();
         let mutation = Process3dMutation::RenameStep(RenameStep { id: "step-1".into(), new_label: "Renamed".into() });
@@ -188,7 +188,7 @@ mod tests {
         assert!(mutation.inverse(&base).is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn change_step_enabled_diff_is_a_documented_no_op() {
         let base = empty_process3d_snapshot();
         let mutation = Process3dMutation::ChangeStepEnabled(ChangeStepEnabled { id: "step-1".into(), new_enabled: false });
@@ -196,7 +196,7 @@ mod tests {
         assert!(mutation.inverse(&base).is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn change_step_origin_diff_is_a_documented_no_op() {
         let base = empty_process3d_snapshot();
         let origin = StepOrigin { machine_id: "saw".into(), capability_id: "cut".into() };
@@ -205,7 +205,7 @@ mod tests {
         assert!(mutation.inverse(&base).is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn replace_step_measure_diff_is_a_documented_no_op() {
         let base = empty_process3d_snapshot();
         let new_measure = ProcessMeasure::Drill { radius: 0.02, depth: 0.3, pose: Pose::default() };
@@ -214,7 +214,7 @@ mod tests {
         assert!(mutation.inverse(&base).is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn reorder_steps_diff_is_a_documented_no_op() {
         let base = empty_process3d_snapshot();
         let mutation = Process3dMutation::ReorderSteps(ReorderSteps { id: "b".into(), to_index: 0 });
@@ -223,14 +223,14 @@ mod tests {
     }
     //#endregion 🔖️StepMutationsAreDocumentedNoOps
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_machine_round_trips() {
         let base = empty_process3d_snapshot();
         let after = round_trip(&base, &Process3dMutation::CreateMachine(CreateMachine { index: 0, machine: saw_machine("machine-9") }));
         assert!(after.workshop.machines.iter().any(|machine| machine.id == "machine-9"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn delete_machine_round_trips() {
         let mut base = empty_process3d_snapshot();
         base.workshop.machines.push(saw_machine("machine-1"));
@@ -238,13 +238,13 @@ mod tests {
         assert!(!after.workshop.machines.iter().any(|machine| machine.id == "machine-1"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inverse_delete_machine_when_missing_returns_empty() {
         let base = empty_process3d_snapshot();
         assert!(Process3dMutation::DeleteMachine(DeleteMachine { id: "ghost".into() }).inverse(&base).is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn rename_machine_round_trips() {
         let mut base = empty_process3d_snapshot();
         base.workshop.machines.push(saw_machine("machine-1"));
@@ -252,7 +252,7 @@ mod tests {
         assert_eq!(after.workshop.machines.iter().find(|machine| machine.id == "machine-1").expect("machine-1 present").label, "Big Saw");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn change_machine_icon_round_trips() {
         let mut base = empty_process3d_snapshot();
         base.workshop.machines.push(saw_machine("machine-1"));
@@ -260,7 +260,7 @@ mod tests {
         assert_eq!(after.workshop.machines.iter().find(|machine| machine.id == "machine-1").expect("machine-1 present").icon_id, "drill");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn replace_machine_capabilities_round_trips() {
         let mut base = empty_process3d_snapshot();
         base.workshop.machines.push(saw_machine("machine-1"));
@@ -268,7 +268,7 @@ mod tests {
         assert!(after.workshop.machines.iter().find(|machine| machine.id == "machine-1").expect("machine-1 present").capabilities.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn move_stock_round_trips() {
         let base = empty_process3d_snapshot();
         let new_pose = Pose { position: [1.0, 2.0, 3.0], ..Pose::default() };
@@ -276,14 +276,14 @@ mod tests {
         assert_eq!(after.stock_pose, new_pose);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn change_stock_label_round_trips() {
         let base = empty_process3d_snapshot();
         let after = round_trip(&base, &Process3dMutation::ChangeStockLabel(ChangeStockLabel { new_label: "Beam".into() }));
         assert_eq!(after.stock_label, "Beam");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn replace_stock_solid_round_trips() {
         let base = empty_process3d_snapshot();
         let new_handle = brep_child_handle("stock", &brep_snapshot_for_working_solid(&WorkingSolid::Sphere { radius: 0.5 }));
@@ -291,7 +291,7 @@ mod tests {
         assert_eq!(after.stock_solid, new_handle);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn change_cursor_round_trips() {
         let base = empty_process3d_snapshot();
         let after = round_trip(&base, &Process3dMutation::ChangeCursor(ChangeCursor { new_resolved_up_to: Some(0) }));
@@ -304,7 +304,7 @@ mod tests {
     /// distinct new variants: an id-keyed create/delete pair on an ordered collection
     /// (`create-step`), an id-keyed create/delete pair on an unordered collection
     /// (`create-machine`), and a document-level facet setter (`change-stock-label`).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_step_satisfies_the_inverse_and_absorb_laws() {
         let base = empty_process3d_snapshot();
         let mutation = Process3dMutation::CreateStep(CreateStep { index: 0, step: cut_step("step-fresh") });
@@ -314,7 +314,7 @@ mod tests {
         protocol::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_machine_satisfies_the_inverse_and_absorb_laws() {
         let base = empty_process3d_snapshot();
         let mutation = Process3dMutation::CreateMachine(CreateMachine { index: 0, machine: saw_machine("machine-fresh") });
@@ -324,7 +324,7 @@ mod tests {
         protocol::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn change_stock_label_satisfies_the_inverse_and_absorb_laws() {
         let base = empty_process3d_snapshot();
         let mutation = Process3dMutation::ChangeStockLabel(ChangeStockLabel { new_label: "Beam".into() });
@@ -342,21 +342,21 @@ mod tests {
     /// `assert_outcome_policy_matrix` is not landed yet (checked at
     /// `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️testkit/🦀️component.rs`); TODO(1-D testkit
     /// laws pending): add a `MergePolicy` × `Severity` matrix test per verb family here once it lands.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn delete_machine_missing_target_is_an_error() {
         let base = empty_process3d_snapshot();
         let mutation = Process3dMutation::DeleteMachine(DeleteMachine { id: "does-not-exist".into() });
         protocol::testkit::assert_missing_target_is_error(&base, &mutation);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn rename_machine_missing_target_is_an_error() {
         let base = empty_process3d_snapshot();
         let mutation = Process3dMutation::RenameMachine(RenameMachine { id: "does-not-exist".into(), new_label: "X".into() });
         protocol::testkit::assert_missing_target_is_error(&base, &mutation);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_machine_duplicate_id_is_fatal_and_never_applies() {
         let mut base = empty_process3d_snapshot();
         base.workshop.machines.push(saw_machine("machine-1"));

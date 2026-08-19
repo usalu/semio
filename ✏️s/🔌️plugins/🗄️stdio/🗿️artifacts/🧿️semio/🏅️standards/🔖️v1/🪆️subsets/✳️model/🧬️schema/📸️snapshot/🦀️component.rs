@@ -195,7 +195,7 @@ pub struct SemioModelSnapshot {
 }
 
 impl Default for SemioModelSnapshot {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { schema: STDIO_SEMIOMODEL_DOCUMENT_SCHEMA.into(), spatial: Vec::new(), elements: Vec::new(), relations: Vec::new() }
     }
 }
@@ -867,7 +867,7 @@ pub(crate) async fn demo_semio_model_snapshot() -> SemioModelSnapshot {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn json_pack_round_trips() {
         let snap = SemioModelSnapshot::default();
         let bytes = <SemioModelSnapshot as store::ArtifactPack>::encode_pack(&snap);
@@ -875,7 +875,7 @@ mod tests {
         assert_eq!(snap, back);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dsl_text_round_trips() {
         let snap = SemioModelSnapshot::default();
         let text = <SemioModelSnapshot as store::ArtifactDsl>::print_dsl(&snap);
@@ -885,7 +885,7 @@ mod tests {
 
     /// 🧪️ codec_retention_law: decode(encode(x)) == x for a fully-populated snapshot (every
     /// collection non-empty, every field set), through both the pack (binary) and DSL (text) codecs.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn codec_retention_law() {
         let snap = demo_semio_model_snapshot();
         let packed = <SemioModelSnapshot as store::ArtifactPack>::encode_pack(&snap);

@@ -66,7 +66,7 @@ mod tests {
     use crate::editor::sourcing::testkit::{new_app, render as render_body};
     use crate::artifacts::curate::Filters;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn grid_instance_count_matches_filtered_stock_and_normalizes_scale() {
         let document = crate::artifacts::curate::schema::default_document();
         let cfg = SourcingCurateConfig { filters: Filters { module_ids: vec!["slabs".into()], ..Default::default() }, ..Default::default() };
@@ -81,14 +81,14 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn definition_declares_the_world3d_surface_and_body_key() {
         let def = definition();
         assert_eq!(def.body_key, SOURCING_CURATE_BODY_GRID);
         assert!(matches!(def.surface_kind, SurfaceKind::World3d));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn renders_via_the_app() {
         let mut app = new_app();
         assert!(render_body(&mut app, SOURCING_CURATE_BODY_GRID).contains("world3d"));

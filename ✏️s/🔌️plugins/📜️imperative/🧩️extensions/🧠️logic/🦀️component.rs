@@ -78,19 +78,23 @@ async fn operator_info(id: &str, name: &str, abbreviation: &str, summary: &str, 
     OperatorInfo { id: id.into(), extension: "imperative".into(), name: name.into(), abbreviation: abbreviation.into(), icon: "emoji:🧠️".into(), summary: summary.into(), inputs, outputs: vec![ChannelSpec::wildcard()], ..Default::default() }
 }
 
-async fn register_simple(registry: &mut Registry, info: OperatorInfo, operation: Box<dyn Operator>) {
-    registry.register_operator(info, vec![OperatorImpl { schemas: vec![], operator: operation }], &[]);
+// 🗺️ Generic over the concrete operator, not `Box<dyn Operator>`: each call site below passes a
+// single zero-sized operator type from this file, so the erasure the framework's `OperatorImpl`
+// still needs happens via ordinary unsizing coercion at `Box::new`, never as a named trait object
+// here — see R11 (open set at the framework registry, closed/singular at each call site).
+async fn register_simple<O: Operator + 'static>(registry: &mut Registry, info: OperatorInfo, operation: O) {
+    registry.register_operator(info, vec![OperatorImpl { schemas: vec![], operator: Box::new(operation) }], &[]);
 }
 
 pub async fn register(registry: &mut Registry) {
     register_simple(
         registry,
         operator_info("logic.compare", "Compare", "Cmp", "Compares two numeric scope keys and writes a boolean result", vec![string_channel("left"), string_channel("right"), string_channel("operator"), string_channel("into")]),
-        Box::new(LogicCompare),
+        LogicCompare,
     );
-    register_simple(registry, operator_info("logic.and", "And", "And", "Logical AND of two boolean scope keys", vec![string_channel("left"), string_channel("right"), string_channel("into")]), Box::new(LogicAnd));
-    register_simple(registry, operator_info("logic.or", "Or", "Or", "Logical OR of two boolean scope keys", vec![string_channel("left"), string_channel("right"), string_channel("into")]), Box::new(LogicOr));
-    register_simple(registry, operator_info("logic.not", "Not", "Not", "Logical NOT of a boolean scope key", vec![string_channel("source"), string_channel("into")]), Box::new(LogicNot));
+    register_simple(registry, operator_info("logic.and", "And", "And", "Logical AND of two boolean scope keys", vec![string_channel("left"), string_channel("right"), string_channel("into")]), LogicAnd);
+    register_simple(registry, operator_info("logic.or", "Or", "Or", "Logical OR of two boolean scope keys", vec![string_channel("left"), string_channel("right"), string_channel("into")]), LogicOr);
+    register_simple(registry, operator_info("logic.not", "Not", "Not", "Logical NOT of a boolean scope key", vec![string_channel("source"), string_channel("into")]), LogicNot);
     registry.finalize();
 }
 
@@ -171,7 +175,7 @@ semio_framework_plugin::extension_exports!(bundle);
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn logic_compare_gt() {
         let registry = module_registry();
         let input = Dictionary::new()

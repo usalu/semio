@@ -72,13 +72,13 @@ mod tests {
     use super::*;
     use protocol::Inference;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = En1991Snapshot::default();
         assert_eq!(En1991Inference::infer(&snapshot), En1991Inference::infer(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(En1991Inference::infer(&En1991Snapshot::default()), En1991Inference::default());
     }
@@ -86,7 +86,7 @@ mod tests {
 //#endregion 🧪️Tests
 
 //#region 🔖️ComplianceReport
-use crate::artifacts::en1990::standards::v1::subsets::any::schema::{NaDe, NaEn};
+use crate::artifacts::en1990::standards::v1::subsets::any::schema::{NaDe, NaEn, NationalAnnexes};
 use crate::artifacts::en1991::standards::v1::subsets::any::schema::{part_1_1, part_1_2, part_1_3, part_1_4, part_1_5, part_1_6, part_1_7, part_2, part_3, part_4};
 /// 📋️ Full EN 1991 compliance-report conformance law (ticket
 /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — relocated verbatim from the deleted
@@ -96,33 +96,35 @@ use crate::document::{AnnexChoice, CheckReport, CheckResult, ClauseId, ImposedCa
 
 /// 📋️ Aggregate action checks for a typical floor bay.
 pub async fn check_floor_actions(area_m2: f64, category: ImposedCategory, wind_zone_vb: f64, snow_zone: u8, use_de_na: bool) -> CheckReport {
-    let annex: &dyn NationalAnnex = if use_de_na { &NaDe } else { &NaEn };
+    // 🔀️ O1 de-dyn: runtime-chosen concrete type (was `&dyn NationalAnnex`) — the closed-set enum
+    // `NationalAnnexes` (`dyn_enum_close!` in en1990's schema module) replaces the trait object.
+    let annex: NationalAnnexes = if use_de_na { NaDe.into() } else { NaEn.into() };
     let mut report = CheckReport::default();
-    report.push(part_1_1::check_imposed(area_m2, category, annex));
+    report.push(part_1_1::check_imposed(area_m2, category, &annex));
     let c_e = part_1_4::exposure_factor(10.0, part_1_4::TerrainCategory::II);
     let q_p = part_1_4::peak_velocity_pressure(1.25, wind_zone_vb, c_e);
-    report.push(part_1_4::check_wind(part_1_4::wind_pressure(q_p, 0.8, 0.2), 1.5, annex));
+    report.push(part_1_4::check_wind(part_1_4::wind_pressure(q_p, 0.8, 0.2), 1.5, &annex));
     let s = part_1_3::roof_snow_load(part_1_3::ground_snow_load_zone(snow_zone), 0.8);
-    report.push(part_1_3::check_snow(s, 1.2, annex));
+    report.push(part_1_3::check_snow(s, 1.2, &annex));
     report
 }
 
 /// 📋️ Full EN 1991 action checks across parts 1-1 through 1-7 and parts 2–4.
 pub async fn check_full_actions(document: &En1991Snapshot) -> CheckReport {
-    let annex: &dyn NationalAnnex = if document.annex == AnnexChoice::De { &NaDe } else { &NaEn };
+    let annex: NationalAnnexes = if document.annex == AnnexChoice::De { NaDe.into() } else { NaEn.into() };
     let mut report = CheckReport::default();
-    report.push(part_1_1::check_imposed(document.area_m2, document.category, annex));
+    report.push(part_1_1::check_imposed(document.area_m2, document.category, &annex));
     report.push(part_1_1::check_self_weight(&document.self_weight_material, document.self_weight_thickness_m, document.assumed_g_k_kn_m2, document.annex));
     report.push(part_1_2::check_fire_action(document.fire_curve, document.fire_resistance_min, document.fire_member_capacity_c, document.annex));
     let s_k = part_1_3::design_ground_snow_load(document.annex, document.snow_zone, document.snow_altitude_m, document.en_s_k_kn_m2);
     let s = part_1_3::roof_snow_load(s_k, 0.8);
-    report.push(part_1_3::check_snow(s, 1.2, annex));
+    report.push(part_1_3::check_snow(s, 1.2, &annex));
     let v_b = part_1_4::design_basic_wind_velocity(document.annex, document.wind_zone, document.en_v_b_m_s);
     let c_e = part_1_4::exposure_factor(10.0, part_1_4::TerrainCategory::II);
     let q_p = part_1_4::peak_velocity_pressure(1.25, v_b, c_e);
     let c_sc_d = part_1_4::structural_factor(document.c_s, document.c_d);
     let w_p = part_1_4::wind_pressure(q_p, 0.8, 0.2) * c_sc_d;
-    report.push(part_1_4::check_wind(w_p, 1.5, annex));
+    report.push(part_1_4::check_wind(w_p, 1.5, &annex));
     report.push(part_1_5::check_temperature_action(document.delta_t_k, 50.0));
     let q_const = part_1_6::construction_load_kn_m2(&document.construction_activity);
     report.push(part_1_6::check_construction_load(q_const, 5.0));
@@ -147,7 +149,7 @@ pub async fn evaluate(document: &En1991Snapshot) -> CheckReport {
 mod compliance_report_tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn full_actions_de_na_numeric() {
         let doc = En1991Snapshot::default();
         let annex = NaDe;
@@ -177,7 +179,7 @@ mod compliance_report_tests {
         assert!(report.all_pass());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn evaluate_reaches_every_part_module() {
         let report = evaluate(&En1991Snapshot::default());
         assert!(report.checks.iter().any(|c| c.clause.family.contains("1991-1-1")));

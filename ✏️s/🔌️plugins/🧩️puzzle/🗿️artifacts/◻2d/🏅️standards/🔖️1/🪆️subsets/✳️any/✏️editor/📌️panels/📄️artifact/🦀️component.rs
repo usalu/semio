@@ -78,7 +78,7 @@ mod tests {
     use crate::editor::puzzle2d::testkit::*;
     use serde_json::json;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn document_panel_lists_nodes_section() {
         let mut app = concrete_forest_app();
         let json = render_body(&mut app, PUZZLE2D_PLAY_BODY_LAYERS);
@@ -88,7 +88,7 @@ mod tests {
 
     /// 🗣️ B1: locale/terminology are now real VCS'd `Puzzle2dConfig` state (was a per-call `ViewModel`
     /// override) — dispatch `setLocale`/`setTerminology` to change them, then render.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn labels_resolve_native_english_and_german_and_reuse() {
         let mut app = concrete_forest_app();
         let english = render_body(&mut app, PUZZLE2D_PLAY_BODY_LAYERS);

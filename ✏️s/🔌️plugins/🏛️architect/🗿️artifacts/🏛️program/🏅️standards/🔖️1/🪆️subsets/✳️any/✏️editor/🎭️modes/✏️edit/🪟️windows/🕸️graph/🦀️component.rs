@@ -109,20 +109,20 @@ mod tests {
     use super::*;
     use crate::artifacts::program::sample_plugin;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn definition_declares_the_node_graph_surface_and_body_key() {
         let definition = definition();
         assert_eq!(definition.body_key, ARCHITECT_BODY_GRAPH);
         assert!(matches!(definition.surface_kind, SurfaceKind::NodeGraph));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn the_graph_body_emits_a_node_graph_scene() {
         let json = serde_json::to_string(&render(&sample_plugin(), &ArchitectConfig::default())).expect("json");
         assert!(json.contains("node-graph"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn every_element_becomes_a_node_and_every_adjacency_an_edge() {
         let program = sample_plugin();
         let (nodes, edges) = graph_media_json(&program, &GraphCamera { x: 0.0, y: 0.0, zoom: 1.0 });

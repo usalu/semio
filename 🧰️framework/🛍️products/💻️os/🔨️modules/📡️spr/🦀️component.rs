@@ -44,13 +44,13 @@ pub use crate::os_spr::wire::{
 
 //#region 🔖️Compile
 /// 🎬️ Ops text -> `.spr` binary, the bidirectional law `protocol_cli compile`/`decompile` exercise.
-pub fn compile_ops(ops: &str, options: &EncodeOptions) -> Result<Vec<u8>, ProtocolError> {
-    encode_history(&parse_ops_text(ops)?, options)
+pub async fn compile_ops(ops: &str, options: &EncodeOptions) -> Result<Vec<u8>, ProtocolError> {
+    encode_history(&parse_ops_text(ops).await?, options).await
 }
 
 /// 🎬️ `.spr` binary -> ops text, the inverse of `compile_ops`.
-pub fn decompile_ops(bytes: &[u8], options: &DecodeOptions) -> Result<String, ProtocolError> {
-    print_ops_text(&decode_history(bytes, options)?)
+pub async fn decompile_ops(bytes: &[u8], options: &DecodeOptions) -> Result<String, ProtocolError> {
+    print_ops_text(&decode_history(bytes, options).await?).await
 }
 //#endregion 🔖️Compile
 
@@ -72,24 +72,24 @@ pub struct RecordSlice<'a> {
 /// target edit (e.g. an earlier dictionary base) are NOT included — a recipient shipping a slice
 /// over the wire is assumed to already hold that earlier context (this crate's own choice, the
 /// contract leaves exact slice bounds unspecified).
-pub fn extract_range<'a>(protocol_bytes: &'a [u8], ordinals: std::ops::Range<u64>) -> Result<RecordSlice<'a>, ProtocolError> {
+pub async fn extract_range<'a>(protocol_bytes: &'a [u8], ordinals: std::ops::Range<u64>) -> Result<RecordSlice<'a>, ProtocolError> {
     if ordinals.start >= ordinals.end {
         return Err(ProtocolError::Malformed { what: "extract_range ordinals", offset: 0, detail: "range must be non-empty (start < end)".to_string() });
     }
-    let recovery = crate::os_spr::format::recover(&protocol_bytes, &ProtocolLimits::default(), RecoveryMode::LastCommit)?;
+    let recovery = crate::os_spr::format::recover(&protocol_bytes, &ProtocolLimits::default(), RecoveryMode::LastCommit).await?;
     let trusted = &protocol_bytes[..recovery.bytes_recovered as usize];
 
-    let mut cursor = FrameCursor::new(trusted, crate::os_spr::format::HEADER_SIZE as u64);
+    let mut cursor = FrameCursor::new(trusted, crate::os_spr::format::HEADER_SIZE as u64).await;
     let mut ordinal = 0u64;
     let mut start_offset: Option<u64> = None;
     let mut end_offset: Option<u64> = None;
-    while let Some(frame) = cursor.next_frame()? {
+    while let Some(frame) = cursor.next_frame().await? {
         if frame.kind == crate::os_spr::REC_EDIT {
             if start_offset.is_none() && ordinal >= ordinals.start {
                 start_offset = Some(frame.offset);
             }
             if ordinal == ordinals.end - 1 {
-                end_offset = Some(frame.offset + frame.frame_len());
+                end_offset = Some(frame.offset + frame.frame_len().await);
                 break;
             }
             ordinal += 1;
@@ -113,8 +113,8 @@ pub fn extract_range<'a>(protocol_bytes: &'a [u8], ordinals: std::ops::Range<u64
 /// but rooted at nothing (no `chain_{n-1}` prefix) since a slice is deliberately position-agnostic.
 /// A caller (e.g. a semio_hub relaying a `RecordSlice`) computes this once at the source and ships the
 /// digest alongside the bytes; the receiver calls `verify_slice` to detect any in-transit tamper.
-pub fn verify_slice(slice: &[u8], expected_chain: &[u8; 32]) -> Result<(), ProtocolError> {
-    let computed = slice_content_chain(slice)?;
+pub async fn verify_slice(slice: &[u8], expected_chain: &[u8; 32]) -> Result<(), ProtocolError> {
+    let computed = slice_content_chain(slice).await?;
     if &computed == expected_chain {
         Ok(())
     } else {
@@ -124,15 +124,15 @@ pub fn verify_slice(slice: &[u8], expected_chain: &[u8; 32]) -> Result<(), Proto
 
 /// 🔐️ Shared by `verify_slice` and this crate's own tests: folds every frame's `blake3(full frame
 /// bytes)` digest in `slice` into one combined digest, in frame order.
-fn slice_content_chain(slice: &[u8]) -> Result<[u8; 32], ProtocolError> {
+async fn slice_content_chain(slice: &[u8]) -> Result<[u8; 32], ProtocolError> {
     let hasher = crate::os_spr::format::Blake3Hasher;
-    let mut cursor = FrameCursor::new(slice, 0);
+    let mut cursor = FrameCursor::new(slice, 0).await;
     let mut concat = Vec::new();
-    while let Some(frame) = cursor.next_frame()? {
-        let frame_bytes = &slice[frame.offset as usize..(frame.offset + frame.frame_len()) as usize];
-        concat.extend_from_slice(&hasher.hash(frame_bytes));
+    while let Some(frame) = cursor.next_frame().await? {
+        let frame_bytes = &slice[frame.offset as usize..(frame.offset + frame.frame_len().await) as usize];
+        concat.extend_from_slice(&hasher.hash(frame_bytes).await);
     }
-    Ok(hasher.hash(&concat))
+    Ok(hasher.hash(&concat).await)
 }
 
 /// 🧭️ Decodes just enough of a `.spr` file (trusted prefix + a full `HistoryLog` decode) to report
@@ -146,10 +146,10 @@ fn slice_content_chain(slice: &[u8]) -> Result<[u8; 32], ProtocolError> {
 /// no checkpoints yet, or a document with no edits yet, reports ordinal `0` / an empty edit id —
 /// the contract does not specify empty-history behavior, so this crate picks the least-surprising
 /// default (matching a fresh `HistoryAppender::begin` which has written zero edits).
-pub fn content_frontier(protocol_bytes: &[u8]) -> Result<FrontierSummary, ProtocolError> {
+pub async fn content_frontier(protocol_bytes: &[u8]) -> Result<FrontierSummary, ProtocolError> {
     let decode_options = DecodeOptions::default();
-    let log = decode_history(protocol_bytes, &decode_options)?;
-    let recovery = crate::os_spr::format::recover(&protocol_bytes, &decode_options.limits, RecoveryMode::LastCommit)?;
+    let log = decode_history(protocol_bytes, &decode_options).await?;
+    let recovery = crate::os_spr::format::recover(&protocol_bytes, &decode_options.limits, RecoveryMode::LastCommit).await?;
 
     let (head_edit_ordinal, head_edit_id) = match log.edits.last() {
         Some(edit) => ((log.edits.len() - 1) as u64, edit.id.clone()),
@@ -157,11 +157,11 @@ pub fn content_frontier(protocol_bytes: &[u8]) -> Result<FrontierSummary, Protoc
     };
 
     let chain_hash = if recovery.last_commit_seq == 0 {
-        crate::os_spr::format::Blake3Hasher.hash(&protocol_bytes[..crate::os_spr::format::HEADER_SIZE])
+        crate::os_spr::format::Blake3Hasher.hash(&protocol_bytes[..crate::os_spr::format::HEADER_SIZE]).await
     } else {
-        let mut cursor = FrameCursor::new(protocol_bytes, recovery.last_commit_offset);
-        let frame = cursor.next_frame()?.ok_or_else(|| ProtocolError::Malformed { what: "commit frame", offset: recovery.last_commit_offset, detail: "expected a commit frame at the recovered offset".to_string() })?;
-        crate::os_spr::format::parse_commit_payload(frame.payload())?.chain_hash
+        let mut cursor = FrameCursor::new(protocol_bytes, recovery.last_commit_offset).await;
+        let frame = cursor.next_frame().await?.ok_or_else(|| ProtocolError::Malformed { what: "commit frame", offset: recovery.last_commit_offset, detail: "expected a commit frame at the recovered offset".to_string() })?;
+        crate::os_spr::format::parse_commit_payload(frame.payload().await).await?.chain_hash
     };
 
     let alternatives = log.alternatives.iter().map(|alternative| build_alternative_head(&log, alternative)).collect();
@@ -170,6 +170,8 @@ pub fn content_frontier(protocol_bytes: &[u8]) -> Result<FrontierSummary, Protoc
 }
 
 /// 🧭️ See `content_frontier`'s design-choice note for the derivation this implements.
+// 🚫️async: R9 pure accessor — I/O-free lookup over already-decoded in-memory data, whose only
+// consumer is `Iterator::map`'s sync closure above.
 fn build_alternative_head(log: &HistoryLog, alternative: &HistoryAlternative) -> AlternativeHead {
     let checkpoint_id = alternative.checkpoint_ids.last().cloned().unwrap_or_default();
     let head_edit_ordinal = log.checkpoints.iter().find(|checkpoint| checkpoint.id == checkpoint_id).map_or(0, |checkpoint| checkpoint_head_edit_ordinal(log, checkpoint));
@@ -177,6 +179,7 @@ fn build_alternative_head(log: &HistoryLog, alternative: &HistoryAlternative) ->
 }
 
 /// 🧭️ Highest edit ordinal transitively reachable through `checkpoint.change_ids -> edit_ids`.
+// 🚫️async: R9 pure accessor — I/O-free, only consumer is `Option::map_or`'s sync closure above.
 fn checkpoint_head_edit_ordinal(log: &HistoryLog, checkpoint: &HistoryCheckpoint) -> u64 {
     let ordinal_of: std::collections::HashMap<&str, u64> = log.edits.iter().enumerate().map(|(ordinal, edit)| (edit.id.as_str(), ordinal as u64)).collect();
     checkpoint.change_ids.iter().filter_map(|change_id| log.changes.iter().find(|change| &change.id == change_id)).flat_map(|change| change.edit_ids.iter()).filter_map(|edit_id| ordinal_of.get(edit_id.as_str()).copied()).max().unwrap_or(0)
@@ -191,7 +194,7 @@ mod tests {
     /// 🧪️ Builds a tiny in-memory `.spr` buffer with `edit_count` edits (ids `"e0".."eN"`), each in
     /// its own commit generation so multi-commit paths (`extract_range`, `content_frontier`) get
     /// exercised too. Returns the raw bytes.
-    fn build_history_bytes(doc_id: &str, schema: &str, edit_count: usize) -> Vec<u8> {
+    async fn build_history_bytes(doc_id: &str, schema: &str, edit_count: usize) -> Vec<u8> {
         let mut appender = HistoryAppender::begin(Vec::new(), doc_id, schema, &WriteOptions::default()).unwrap();
         for i in 0..edit_count {
             let edit = HistoryEdit {
@@ -212,8 +215,8 @@ mod tests {
     }
 
     //#region 🔖️Reexports
-    #[test]
-    fn reexported_types_match_sibling_crate_shapes() {
+    #[semio_framework_async_macros::async_test]
+    async fn reexported_types_match_sibling_crate_shapes() {
         let limits = ProtocolLimits::default();
         assert!(limits.max_file_len > 0);
         let hlt = HybridLogicalTimestamp::new(1, 1000);
@@ -224,8 +227,8 @@ mod tests {
     //#endregion 🔖️Reexports
 
     //#region 🔖️Compile
-    #[test]
-    fn compile_ops_decompile_ops_round_trip() {
+    #[semio_framework_async_macros::async_test]
+    async fn compile_ops_decompile_ops_round_trip() {
         let log = HistoryLog {
             doc_id: "doc-1".to_string(),
             schema: "schema-1".to_string(),
@@ -260,23 +263,23 @@ mod tests {
         assert_eq!(parse_ops_text(&decompiled).unwrap().cursor, log.cursor);
     }
 
-    #[test]
-    fn compile_ops_rejects_malformed_text() {
+    #[semio_framework_async_macros::async_test]
+    async fn compile_ops_rejects_malformed_text() {
         assert!(compile_ops("not a valid ops line", &EncodeOptions::default()).is_err());
     }
     //#endregion 🔖️Compile
 
     //#region 🔖️Sync
-    #[test]
-    fn extract_range_returns_contiguous_slice_covering_requested_edits() {
+    #[semio_framework_async_macros::async_test]
+    async fn extract_range_returns_contiguous_slice_covering_requested_edits() {
         let bytes = build_history_bytes("doc-1", "schema-1", 4);
 
         // Independently compute each edit frame's [offset, offset+frame_len) span for cross-check.
-        let mut cursor = FrameCursor::new(&bytes, crate::os_spr::format::HEADER_SIZE as u64);
+        let mut cursor = FrameCursor::new(&bytes, crate::os_spr::format::HEADER_SIZE as u64).await;
         let mut edit_spans = Vec::new();
         while let Some(frame) = cursor.next_frame().unwrap() {
             if frame.kind == crate::os_spr::REC_EDIT {
-                edit_spans.push((frame.offset, frame.offset + frame.frame_len()));
+                edit_spans.push((frame.offset, frame.offset + frame.frame_len().await));
             }
         }
         assert_eq!(edit_spans.len(), 4);
@@ -288,7 +291,7 @@ mod tests {
         assert_eq!(slice.bytes, &bytes[edit_spans[1].0 as usize..edit_spans[2].1 as usize]);
 
         // The slice must itself be a structurally valid record stream (re-parseable from offset 0).
-        let mut inner = FrameCursor::new(slice.bytes, 0);
+        let mut inner = FrameCursor::new(slice.bytes, 0).await;
         let mut edit_kinds_in_slice = 0;
         while let Some(frame) = inner.next_frame().unwrap() {
             if frame.kind == crate::os_spr::REC_EDIT {
@@ -298,15 +301,15 @@ mod tests {
         assert_eq!(edit_kinds_in_slice, 2);
     }
 
-    #[test]
-    fn extract_range_rejects_empty_and_out_of_bounds_ranges() {
+    #[semio_framework_async_macros::async_test]
+    async fn extract_range_rejects_empty_and_out_of_bounds_ranges() {
         let bytes = build_history_bytes("doc-1", "schema-1", 2);
         assert!(extract_range(&bytes, 1..1).is_err());
         assert!(extract_range(&bytes, 0..5).is_err());
     }
 
-    #[test]
-    fn verify_slice_accepts_genuine_content_and_rejects_tamper() {
+    #[semio_framework_async_macros::async_test]
+    async fn verify_slice_accepts_genuine_content_and_rejects_tamper() {
         let bytes = build_history_bytes("doc-1", "schema-1", 3);
         let slice = extract_range(&bytes, 0..2).unwrap();
 
@@ -320,8 +323,8 @@ mod tests {
         assert!(verify_slice(slice.bytes, &[0u8; 32]).is_err());
     }
 
-    #[test]
-    fn content_frontier_reports_head_edit_and_chain_tip() {
+    #[semio_framework_async_macros::async_test]
+    async fn content_frontier_reports_head_edit_and_chain_tip() {
         let bytes = build_history_bytes("doc-1", "schema-1", 3);
         let frontier = content_frontier(&bytes).unwrap();
 
@@ -343,8 +346,8 @@ mod tests {
         assert_eq!(frontier.chain_hash, expected.chain_hash);
     }
 
-    #[test]
-    fn content_frontier_on_empty_history_reports_zero_head_and_no_alternatives() {
+    #[semio_framework_async_macros::async_test]
+    async fn content_frontier_on_empty_history_reports_zero_head_and_no_alternatives() {
         let bytes = build_history_bytes("doc-1", "schema-1", 0);
         let frontier = content_frontier(&bytes).unwrap();
         assert_eq!(frontier.head_edit_ordinal, 0);

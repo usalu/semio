@@ -118,7 +118,7 @@ pub mod derived_composition {
             bytes.iter().map(|b| format!("{b:02x}")).collect()
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn conforming_builder_snapshot_composes_and_stamps_ua() {
             let bytes = minimal_conforming_ua_pdf();
             let hex = hex_encode(&bytes);
@@ -127,7 +127,7 @@ pub mod derived_composition {
             assert!(composed.diagnostics.iter().all(|d| d.severity != Severity::Error), "no hard diagnostics expected: {:?}", composed.diagnostics);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn missing_markinfo_fails_compose() {
             let snapshot = PdfSnapshot::default();
             let bytes = <PdfSnapshot as store::ArtifactPack>::encode_pack(&snapshot);

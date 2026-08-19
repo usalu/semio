@@ -20,7 +20,7 @@ pub struct DagTopology {
 }
 
 impl Default for DagTopology {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { topo_order: Vec::new(), depth: BTreeMap::new(), cycle_free: true, node_count: 0 }
     }
 }
@@ -93,7 +93,7 @@ mod tests {
         DagFixtureEdge { id: id.into(), source: source.into(), target: target.into(), ..Default::default() }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn linear_chain_orders_roots_before_leaves_with_increasing_depth() {
         let nodes = vec![node("a"), node("b"), node("c")];
         let edges = vec![edge("e1", "a", "b"), edge("e2", "b", "c")];
@@ -106,7 +106,7 @@ mod tests {
         assert_eq!(topology.node_count, 3);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn a_cycle_is_reported_as_not_cycle_free_but_still_totals_every_node() {
         let nodes = vec![node("a"), node("b")];
         let edges = vec![edge("e1", "a", "b"), edge("e2", "b", "a")];
@@ -116,7 +116,7 @@ mod tests {
         assert_eq!(topology.node_count, 2);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dangling_edge_endpoints_are_ignored() {
         let nodes = vec![node("a")];
         let edges = vec![edge("e1", "a", "missing")];

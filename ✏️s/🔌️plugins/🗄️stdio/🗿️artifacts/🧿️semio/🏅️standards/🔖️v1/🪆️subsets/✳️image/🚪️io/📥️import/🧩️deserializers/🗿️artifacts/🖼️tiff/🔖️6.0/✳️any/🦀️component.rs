@@ -90,7 +90,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn maps_pixels_and_description_tag() {
         let semio = semio_framework_plugin::resolve_ready(SemioImageFromTiff::deserialize(&sample_tiff())).expect("deserialize");
         assert_eq!(semio.width, 2);

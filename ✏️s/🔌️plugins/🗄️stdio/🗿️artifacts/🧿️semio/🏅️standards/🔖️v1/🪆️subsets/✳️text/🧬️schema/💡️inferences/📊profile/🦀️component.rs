@@ -59,7 +59,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn censuses_words_chars_marks_and_distinct_languages() {
         let profile = compute_semio_text_profile(&populated());
         assert_eq!(profile.run_count, 4);
@@ -68,13 +68,13 @@ mod tests {
         assert_eq!(profile.languages, vec!["de".to_string(), "en".to_string()], "sorted, distinct, unspecified tag excluded");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = populated();
         assert_eq!(compute_semio_text_profile(&snapshot), compute_semio_text_profile(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(compute_semio_text_profile(&SemioTextSnapshot::default()), SemioTextProfile::default());
     }

@@ -157,7 +157,7 @@ impl ProcessTransport {
 }
 
 impl ShardTransport for ProcessTransport {
-    fn send(&self, bytes: &[u8]) {
+    async fn send(&self, bytes: &[u8]) {
         if self.killed.load(Ordering::SeqCst) {
             return;
         }
@@ -166,11 +166,11 @@ impl ShardTransport for ProcessTransport {
         }
     }
 
-    fn recv(&self) -> Option<Vec<u8>> {
+    async fn recv(&self) -> Option<Vec<u8>> {
         self.inbound.lock().ok().and_then(|mut queue| queue.pop_front())
     }
 
-    fn heartbeat(&self) -> u64 {
+    async fn heartbeat(&self) -> u64 {
         self.heartbeat_ms.load(Ordering::SeqCst)
     }
 
@@ -179,7 +179,7 @@ impl ShardTransport for ProcessTransport {
     /// never lingers as a zombie. Distinct from the involuntary-death path [`Self::is_child_alive`]/
     /// `heartbeat()` detect — this is the CAUSE, that is the SYMPTOM a supervisor observes when the
     /// cause was something else (an external `kill -9`, a real crash).
-    fn kill(&self) {
+    async fn kill(&self) {
         self.killed.store(true, Ordering::SeqCst);
         if let Ok(mut child) = self.child.lock() {
             let _ = child.kill();
@@ -192,7 +192,11 @@ impl ShardTransport for ProcessTransport {
 impl Drop for ProcessTransport {
     fn drop(&mut self) {
         if !self.killed.load(Ordering::SeqCst) {
-            ShardTransport::kill(self);
+            // 🚫️async: E5 executor bridge. `Drop::drop` (E1 — an externally-declared trait, `Drop`
+            // is language-fixed sync) cannot `.await`; this is the one `block_on` this file needs,
+            // bridging a destructor into `ShardTransport::kill`'s now-async signature. Sound: `kill`
+            // does no real awaiting (pure `AtomicBool`/`Mutex` work), so this never actually parks.
+            semio_framework_async::block_on(ShardTransport::kill(self));
         }
     }
 }
@@ -266,24 +270,24 @@ impl StdioTransport {
 }
 
 impl ShardTransport for StdioTransport {
-    fn send(&self, bytes: &[u8]) {
+    async fn send(&self, bytes: &[u8]) {
         if let Ok(mut guard) = self.stdout.lock() {
             let _ = framing::write_frame(&mut *guard, framing::TAG_DATA, bytes);
         }
     }
 
-    fn recv(&self) -> Option<Vec<u8>> {
+    async fn recv(&self) -> Option<Vec<u8>> {
         self.inbound.lock().ok().and_then(|mut queue| queue.pop_front())
     }
 
     /// 🚧️ No caller in this crate reads a `StdioTransport`'s own `heartbeat()` (the CHILD never
     /// needs to watch itself for liveness) — `0` is an honest "not tracked here", matching
     /// `LoopbackTransport::heartbeat`'s own precedent in `🧵️shard/🦀️component.rs`'s test module.
-    fn heartbeat(&self) -> u64 {
+    async fn heartbeat(&self) -> u64 {
         0
     }
 
-    fn kill(&self) {
+    async fn kill(&self) {
         self.alive.store(false, Ordering::SeqCst);
     }
 }
@@ -478,25 +482,29 @@ mod tests {
     /// `#[ignore]`d integration test — see the P1 report's `## kill-rebuild-evidence`.
     #[test]
     fn process_transport_round_trips_bytes_through_a_real_child_process() {
+        // 👶️ host-dedyn: `#[test] fn` is a sanctioned `block_on` entry point (R4 clause 5) —
+        // `ShardTransport`'s methods are `async fn` now (O1); every impl here resolves on its
+        // first poll (pure `Mutex`/`AtomicBool`/pipe I/O, no real suspension), so `block_on` never
+        // actually parks.
         let transport = ProcessTransport::spawn(Path::new("cat"), &[]).expect("spawn cat");
-        transport.send(b"hello-process-shard");
+        semio_framework_async::block_on(transport.send(b"hello-process-shard"));
         let mut received = None;
         for _ in 0..200 {
-            if let Some(bytes) = transport.recv() {
+            if let Some(bytes) = semio_framework_async::block_on(transport.recv()) {
                 received = Some(bytes);
                 break;
             }
             thread::sleep(Duration::from_millis(10));
         }
         assert_eq!(received, Some(b"hello-process-shard".to_vec()));
-        transport.kill();
+        semio_framework_async::block_on(transport.kill());
     }
 
     #[test]
     fn kill_terminates_the_child_and_is_observed_as_eof_on_recv_side() {
         let transport = ProcessTransport::spawn(Path::new("cat"), &[]).expect("spawn cat");
         assert!(transport.is_child_alive());
-        transport.kill();
+        semio_framework_async::block_on(transport.kill());
         let mut dead = false;
         for _ in 0..200 {
             if !transport.is_child_alive() {
@@ -562,8 +570,8 @@ mod tests {
         let shard_a = ProcessTransport::spawn(Path::new(&shard_bin), &[wasm_path.clone(), "scale-fixture-a".to_string(), "1".to_string()]).expect("spawn shard a");
         let shard_b = ProcessTransport::spawn(Path::new(&shard_bin), &[wasm_path.clone(), "scale-fixture-b".to_string(), "2".to_string()]).expect("spawn shard b");
 
-        shard_a.send(&instance_open_envelope(1, 1, "idle"));
-        shard_b.send(&instance_open_envelope(2, 1, "idle"));
+        semio_framework_async::block_on(shard_a.send(&instance_open_envelope(1, 1, "idle")));
+        semio_framework_async::block_on(shard_b.send(&instance_open_envelope(2, 1, "idle")));
 
         let outcome_a = recv_outcome(&shard_a, 400).expect("shard a must reply to InstanceOpen with a real ShardOutcome");
         let outcome_b = recv_outcome(&shard_b, 400).expect("shard b must reply to InstanceOpen with a real ShardOutcome");
@@ -580,7 +588,7 @@ mod tests {
         let mut lost = false;
         for _ in 0..100 {
             thread::sleep(Duration::from_millis(50));
-            if watchdog.poll_with_liveness(shard_a.heartbeat(), shard_a.is_child_alive(), now_ms()) {
+            if watchdog.poll_with_liveness(semio_framework_async::block_on(shard_a.heartbeat()), shard_a.is_child_alive(), now_ms()) {
                 lost = true;
                 break;
             }
@@ -591,18 +599,18 @@ mod tests {
         // here — out of this test's scope, `GuestRuntime::checkpoint`/`restore` are proven separately
         // by `🧵️shard/🦀️component.rs`'s K1 tests; this proves the PROCESS half of rebuild).
         let shard_a2 = ProcessTransport::spawn(Path::new(&shard_bin), &[wasm_path, "scale-fixture-a".to_string(), "3".to_string()]).expect("rebuild shard a");
-        shard_a2.send(&instance_open_envelope(3, 1, "idle"));
+        semio_framework_async::block_on(shard_a2.send(&instance_open_envelope(3, 1, "idle")));
         let outcome_a2 = recv_outcome(&shard_a2, 400).expect("rebuilt shard a must reply");
         assert!(matches!(outcome_a2, crate::shard::ShardOutcome::Turn { actor: 3, .. }), "rebuilt shard a: expected ShardOutcome::Turn, got {outcome_a2:?}");
 
         // 🎯️ Sibling isolation: shard b, never touched, is still alive and answers a SECOND turn.
         assert!(shard_b.is_child_alive(), "shard b must be unaffected by shard a's death");
-        shard_b.send(&wake_envelope(2, 2));
+        semio_framework_async::block_on(shard_b.send(&wake_envelope(2, 2)));
         let outcome_b2 = recv_outcome(&shard_b, 400).expect("shard b must still respond after shard a's kill+rebuild");
         assert!(matches!(outcome_b2, crate::shard::ShardOutcome::Turn { actor: 2, .. }), "shard b second turn: expected ShardOutcome::Turn, got {outcome_b2:?}");
 
-        shard_a2.kill();
-        shard_b.kill();
+        semio_framework_async::block_on(shard_a2.kill());
+        semio_framework_async::block_on(shard_b.kill());
     }
 
     /// terra-shard-grants: wraps in `crate::shard::ShardFrame::Envelope` — the wire now carries
@@ -646,7 +654,7 @@ mod tests {
 
     fn recv_outcome(transport: &ProcessTransport, attempts: u32) -> Option<crate::shard::ShardOutcome> {
         for _ in 0..attempts {
-            if let Some(bytes) = transport.recv() {
+            if let Some(bytes) = semio_framework_async::block_on(transport.recv()) {
                 return serde_json::from_slice(&bytes).ok();
             }
             thread::sleep(Duration::from_millis(50));

@@ -43,7 +43,7 @@ pub enum CadEntity {
 /// have produced field-by-field if it were allowed. See this type's own doc comment above for WHY
 /// `Default` is needed at all (the shared `engine::triples` spurious-bound workaround).
 impl Default for CadEntity {
-    async fn default() -> Self {
+    fn default() -> Self {
         CadEntity::Line { a: SemioPoint2::default(), b: SemioPoint2::default() }
     }
 }
@@ -107,7 +107,7 @@ pub struct SemioCadSnapshot {
 }
 
 impl Default for SemioCadSnapshot {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { schema: STDIO_SEMIOCAD_DOCUMENT_SCHEMA.into(), layers: Vec::new(), blocks: Vec::new(), entities: Vec::new() }
     }
 }
@@ -627,7 +627,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn json_pack_round_trips() {
         let snap = SemioCadSnapshot::default();
         let bytes = <SemioCadSnapshot as store::ArtifactPack>::encode_pack(&snap);
@@ -635,7 +635,7 @@ mod tests {
         assert_eq!(snap, back);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dsl_text_round_trips() {
         let snap = SemioCadSnapshot::default();
         let text = <SemioCadSnapshot as store::ArtifactDsl>::print_dsl(&snap);
@@ -645,7 +645,7 @@ mod tests {
 
     /// 🧪️ Law 5 — `codec_retention_law`: decode(encode(x)) == x on a fully populated snapshot
     /// (layers/blocks/nested-block-entities/top-level entities incl. `Insert`), both facets.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn codec_retention_law() {
         let snap = populated_snapshot();
         let bytes = <SemioCadSnapshot as store::ArtifactPack>::encode_pack(&snap);
@@ -659,7 +659,7 @@ mod tests {
 
     /// 🧪️ Every `CadEntity` variant (all 9) round-trips through both the pack binary and the dsl
     /// text codec — the demo fixture used by the fixture-honesty conformance law.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn demo_snapshot_round_trips_pack_and_dsl() {
         let demo = demo_cad_snapshot();
         let packed = <SemioCadSnapshot as store::ArtifactPack>::encode_pack(&demo);

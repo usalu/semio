@@ -13,7 +13,7 @@ pub struct ExteriorConvectionModel {
 }
 
 impl Default for ExteriorConvectionModel {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { base_h_w_m2k: 5.7, wind_coefficient: 3.8 }
     }
 }
@@ -34,7 +34,7 @@ pub struct InteriorConvectionModel {
 }
 
 impl Default for InteriorConvectionModel {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { h_min_w_m2k: 3.0, delta_t_coefficient: 5.1, delta_t_exponent: 0.25 }
     }
 }
@@ -151,33 +151,33 @@ pub async fn overall_u_value_w_m2k(construction_u: f64) -> f64 {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn exterior_h_increases_with_wind() {
         let model = ExteriorConvectionModel::default();
         assert!(model.h_w_m2k(5.0) > model.h_w_m2k(0.0));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn interior_h_increases_with_delta_t() {
         let model = InteriorConvectionModel::default();
         assert!(model.h_w_m2k(30.0, 20.0) > model.h_w_m2k(21.0, 20.0));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn ctf_flux_sign_correct() {
         let state = ConductionState::from_u_and_capacitance(0.3, 50_000.0, 3600.0);
         let flux = state.heat_flux_w_m2(0.0, 20.0);
         assert!(flux < 0.0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn steady_flux_cold_outside() {
         let q = steady_opaque_flux_w_m2(-5.0, 20.0, 0.25);
         assert!(q < 0.0);
         assert!((q - (-6.25)).abs() < 0.01);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn interior_surface_balance_near_air() {
         let balance = solve_interior_surface_temp(22.0, -2.0, 0.0, &InteriorConvectionModel::default());
         assert!(balance.surface_temp_c > 22.0);

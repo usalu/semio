@@ -84,7 +84,7 @@ pub mod derived_composition {
         use semio_framework_plugin::AnalyzeSource;
         use semio_framework_plugin::ArtifactBuilder as _;
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn conforming_builder_snapshot_composes_and_stamps_sav() {
             let snapshot = Ifc2x3SavBuilder::new().build().expect("clean SAV document must build");
             let bytes = <Ifc2x3Snapshot as store::ArtifactPack>::encode_pack(&snapshot);
@@ -93,7 +93,7 @@ pub mod derived_composition {
             assert!(composed.diagnostics.iter().all(|d| d.severity != Severity::Error), "no hard diagnostics expected: {:?}", composed.diagnostics);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn no_analysis_model_fails_compose_with_real_diagnostic() {
             let mut snapshot = Ifc2x3SavBuilder::new().build().expect("build");
             snapshot.document.instances.retain(|i| !i.is_type("IFCSTRUCTURALANALYSISMODEL"));

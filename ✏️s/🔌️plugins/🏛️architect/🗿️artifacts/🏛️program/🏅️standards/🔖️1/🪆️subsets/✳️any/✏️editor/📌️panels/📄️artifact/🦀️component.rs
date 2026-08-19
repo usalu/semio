@@ -68,14 +68,14 @@ mod tests {
     use super::*;
     use crate::artifacts::program::{empty_plugin, sample_plugin};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn the_tab_is_the_framework_document_tab_bound_to_this_apps_body_key() {
         let definition = definition();
         assert_eq!(definition.body_key.as_deref(), Some(ARCHITECT_BODY_DOCUMENT));
         assert!(matches!(definition.group, PanelGroup::Workbench));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn the_tree_lists_program_meta_and_the_elements() {
         let program = sample_plugin();
         let json = serde_json::to_string(&render(&program, &ArchitectConfig::default())).expect("json");
@@ -86,13 +86,13 @@ mod tests {
     /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the document panel binds the
     /// "program" interaction domain — the framework auto-injects/stamps selection over its bare
     /// element rows (see `render`'s own doc comment).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn the_tree_binds_the_program_interaction_domain() {
         let json = serde_json::to_string(&render(&sample_plugin(), &ArchitectConfig::default())).expect("json");
         assert!(json.contains("\"interactionDomain\":\"program\""));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn an_empty_program_renders_the_none_placeholder_row() {
         let json = serde_json::to_string(&render(&empty_plugin(), &ArchitectConfig::default())).expect("json");
         assert!(json.contains("architect-document.elements.empty"));

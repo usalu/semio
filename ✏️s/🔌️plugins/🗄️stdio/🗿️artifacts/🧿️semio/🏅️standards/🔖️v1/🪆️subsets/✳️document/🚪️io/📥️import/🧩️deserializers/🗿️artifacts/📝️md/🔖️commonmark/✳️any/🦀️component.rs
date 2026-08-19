@@ -127,7 +127,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn maps_headings_lists_code_and_quotes() {
         let semio = semio_framework_plugin::resolve_ready(SemioDocumentFromMd::deserialize(&sample_md())).expect("deserialize");
         assert!(semio.styles.is_empty());
@@ -139,7 +139,7 @@ mod tests {
         assert!(matches!(&semio.blocks[4], DocBlock::Quote { blocks } if blocks.len() == 1));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inline_image_lifts_to_its_own_block() {
         let md = MdSnapshot {
             schema: crate::artifacts::md::STDIO_MD_DOCUMENT_SCHEMA.into(),

@@ -84,13 +84,13 @@ mod tests {
     }
     // #endregion 🔖️Fixtures
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fem3d_pack_agrees_with_dsl_for_bundled_default_example() {
         let document = crate::artifacts::fem3d::dsl::parse_dsl(crate::artifacts::fem3d::dsl::FEM3D_EXAMPLE_TEXT).expect("parse default example");
         semio_framework_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&document);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fem3d_pack_agrees_with_dsl_for_fixture_documents() {
         semio_framework_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&Fem3dSnapshot::default());
         semio_framework_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&cantilever_fixture());
@@ -107,14 +107,14 @@ mod tests {
 mod semio_protocol_conformance {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn component_protocol_semio_is_protocol_dialect() {
         let g = ::dsl::parse_grammar(COMPONENT_PROTOCOL_SEMIO).expect("parse protocol.semio");
         assert_eq!(g.dialect, ::dsl::SemioDialect::Protocol);
         assert!(!COMPONENT_PROTOCOL_SEMIO.is_empty());
         let _ = COMPONENT_PROTOCOL_PATH;
     }
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn verify_protocol_bytes_against_encoded_pack() {
         use crate::artifacts::fem3d::Fem3dSnapshot;
         let document = Fem3dSnapshot::default();

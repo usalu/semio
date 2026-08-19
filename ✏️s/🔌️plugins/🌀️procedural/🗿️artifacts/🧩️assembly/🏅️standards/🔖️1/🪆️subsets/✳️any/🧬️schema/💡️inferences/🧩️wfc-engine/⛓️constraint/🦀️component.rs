@@ -10,11 +10,19 @@
 //! points above) is deferred alongside AC-4's rollback integration.
 
 use crate::wfc_engine::bitset::PatternSet;
+use crate::wfc_engine::constraints_card::CardinalityConstraint;
+use crate::wfc_engine::constraints_conn::{ConnectivityConstraint, ReachabilityConstraint};
 use crate::wfc_engine::domain::DomainStore;
 use crate::wfc_engine::error::ConstraintError;
+use crate::wfc_engine::flow::FlowConstraint;
 use crate::wfc_engine::ids::{NodeId, PatternId, RegionId};
 use crate::wfc_engine::model::CompiledModel;
 use crate::wfc_engine::weights::WeightTable;
+// 🚦️ De-dyn (O1/R11 closed-set case): every `impl Constraint` lives in this same crate (4 total,
+// imported above), so the closed-set mechanism applies — `dyn_enum_close!` below generates
+// `Constraints`, replacing every `Box<dyn Constraint>` seam. See
+// `.🧬semio/…/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME/📓️terra-dedyn-fleet-procedural-report.md`.
+use semio_framework_dispatch_macros::{dyn_enum, dyn_enum_close};
 
 // #region 🔖️Selector
 /// 🧷️ Which patterns a node counts as "selected" for a constraint — shared by every constraint
@@ -110,6 +118,7 @@ pub enum Exactness {
 }
 
 /// 🧷️ One global constraint.
+#[dyn_enum]
 pub trait Constraint {
     async fn name(&self) -> &'static str;
     async fn exactness(&self) -> Exactness;
@@ -124,10 +133,22 @@ pub trait Constraint {
     async fn validate_complete(&self, assignment: &[PatternId], adjacency: &AdjacencyView) -> Result<(), String>;
 }
 
+/// 🧷️ Every concrete [`Constraint`] this crate implements, closed here (bare `dyn_enum_close!`
+/// invocation — same module, trait declared first, see `dyn-enum-macro`'s recipe for why that
+/// avoids rustc#52234) rather than left `dyn`. Replaces every former `Box<dyn Constraint>` field.
+dyn_enum_close! {
+    pub enum Constraints: Constraint {
+        Flow(FlowConstraint),
+        Connectivity(ConnectivityConstraint),
+        Reachability(ReachabilityConstraint),
+        Cardinality(CardinalityConstraint),
+    }
+}
+
 /// 🧷️ A solver's constraints plus the adjacency view they read — bundled so `crate::wfc_engine::search`'s
 /// internals take one extra `Option<&ConstraintSet>` parameter instead of two.
 pub(crate) struct ConstraintSet<'a> {
-    pub constraints: &'a [Box<dyn Constraint>],
+    pub constraints: &'a [Constraints],
     pub adjacency: &'a AdjacencyView,
 }
 // #endregion 🔖️Constraint
@@ -137,7 +158,7 @@ pub(crate) struct ConstraintSet<'a> {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn adjacency_view_exposes_neighbors_and_regions() {
         let view = AdjacencyView::new(vec![vec![NodeId(1)], vec![NodeId(0), NodeId(2)], vec![NodeId(1)]], vec![RegionId(0), RegionId(1), RegionId(0)]);
         assert_eq!(view.node_count(), 3);

@@ -453,7 +453,7 @@ mod tests {
     use semio_framework_plugin::testkit;
     use semio_framework_plugin::{EditorApp, PluginApp};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn view_kind_config_only_commands_pass_kind_discipline() {
         // 🧬️ A registry-backed wrapper so the View-kind declarations actually get enforced.
         let mut app = new_app_with_registry();
@@ -464,7 +464,7 @@ mod tests {
     //#region 🔖️CommandSurface
     /// 🏷️ Every declared manifest action id must be reachable as exactly one command row, and every
     /// row's wire keyword must be distinct — the cross-cutting invariant `app_commands!` is there to hold.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn command_ids_are_unique_and_match_the_declared_manifest_actions() {
         let commands = every_command();
         let ids: Vec<&str> = commands.iter().map(|command| command.command_id()).collect();
@@ -481,7 +481,7 @@ mod tests {
     /// `setActiveExample` (and with it the whole `demo-stock` example) was dead in the demonstrator.
     /// Asserted through `<SourcingCurateApp as ArtifactEditor>` — NOT the free function — because the
     /// trait method is the seam the host actually calls.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn the_production_action_bridge_admits_every_declared_command() {
         for command in every_command() {
             let action = command.command_id();
@@ -496,7 +496,7 @@ mod tests {
     /// are framework-injected (`undo`/`copy`/`recordTutorial`/…) and must be skipped. Strictly stronger
     /// than enumerating the command rows: it catches an action that chrome declares but no command row
     /// backs.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn every_rendered_action_bridges_through_the_framework_harness() {
         testkit::assert_declared_actions_bridge_to_commands::<EditorApp<SourcingCurateApp>>(sourcing_manifest_for_testkit);
     }
@@ -504,7 +504,7 @@ mod tests {
     /// ⚖️ LAW: the bridge reads the manifest's OWN arg names — `setActiveExample` declares a select
     /// arg keyed `exampleId` (`🔖️Manifest`), and the payload field is `example_id`; the two
     /// vocabularies are joined here and nowhere else.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn the_action_bridge_reads_the_declared_arg_names() {
         let built = <SourcingCurateApp as ArtifactEditor>::command_from_action("setActiveExample", Some(&serde_json::json!({ "exampleId": DEMO_STOCK_EXAMPLE_ID })))
             .expect("setActiveExample must convert");
@@ -518,7 +518,7 @@ mod tests {
     /// ⚖️ LAW: text and binary are two projections of the same command, for every single row — the
     /// permanent successor of the old `📡️protocol` crate's
     /// `sourcing_curate_command_op_text_round_trips_every_variant`.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn every_command_round_trips_through_text_and_binary() {
         for command in every_command() {
             store::os_store::test_support::assert_op_text_binary_equivalence(&command);
@@ -531,7 +531,7 @@ mod tests {
     /// `setFilter*` family, and `setLocale`/`locale` all drop or rewrite the `set` prefix). This is what a
     /// missing `#[dsl(keyword = ..)]` on a payload struct silently breaks (the record prints with no
     /// keyword at all and no longer parses).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
         async fn expected_wire_key(id: &str) -> &'static str {
             match id {
@@ -564,7 +564,7 @@ mod tests {
     /// captured from the pre-merge `semio-s-app-sourcing-curate-protocol` crate
     /// (`wire-baseline-before.txt` in this ticket's folder). A regression here is a real format break, not
     /// a test-fixture mismatch.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn optional_field_rows_keep_their_pre_migration_bytes() {
         let cases: [(SourcingCurateCommand, &str, &str); 2] = [
             (
@@ -608,7 +608,7 @@ mod tests {
     }
     //#endregion 🔖️CommandSurface
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn app_definition_labels_resolve_german() {
         let def = &create_sourcing_curate_app();
         let (terminology, locale) = (semio_framework_plugin::Terminology::Native, semio_framework_plugin::Locale::De);
@@ -617,7 +617,7 @@ mod tests {
         assert_eq!(def.modes.iter().find(|entry| entry.id == edit::SOURCING_CURATE_MODE_CURATE).expect("curate mode").label.resolve(terminology, locale), "Kuratieren");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn sourcing_curate_io_declares_the_catalog_out_port_alongside_the_implicit_document_ports() {
         let io = sourcing_curate_io();
         assert_eq!(io.document_schema, SOURCING_CURATE_SCHEMA);
@@ -629,7 +629,7 @@ mod tests {
         assert_eq!(catalog_out.media_type.form, MediaForm::Type);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn sourcing_curate_io_and_catalog_export_round_trip() {
         let mut app = crate::editor::sourcing::testkit::new_app();
         let media = semio_framework_plugin::resolve_ready(app.export_media("catalog:out")).expect("catalog export");
@@ -645,7 +645,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn the_manifest_stitches_every_taxonomy_node() {
         let json = serde_json::to_string(&create_sourcing_curate_app()).expect("app definition json");
         for id in [pool::SOURCING_CURATE_WINDOW_POOL, curated::SOURCING_CURATE_WINDOW_CURATED, preview::SOURCING_CURATE_WINDOW_PREVIEW, grid::SOURCING_CURATE_WINDOW_GRID] {

@@ -82,7 +82,7 @@ pub enum Puzzle5dScale {
 /// mirror struct, which binds `scale` as `Option<serde_json::Value>` and is out of this derive's
 /// scope) keeps parsing it exactly as before.
 impl Serialize for Puzzle5dScale {
-    async fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         match self {
             Puzzle5dScale::Uniform(scale) => serializer.serialize_f64(*scale),
             Puzzle5dScale::Vec3(vec3) => vec3.serialize(serializer),
@@ -91,7 +91,7 @@ impl Serialize for Puzzle5dScale {
 }
 
 impl<'de> Deserialize<'de> for Puzzle5dScale {
-    async fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         match serde_json::Value::deserialize(deserializer)? {
             serde_json::Value::Number(n) => Ok(Puzzle5dScale::Uniform(n.as_f64().unwrap_or(1.0))),
             serde_json::Value::Array(items) if items.len() >= 3 => {
@@ -233,7 +233,7 @@ pub struct Puzzle5dPart {
 }
 
 impl Default for Puzzle5dPart {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { id: String::new(), part_kind: None, anchor: Puzzle5dPartAnchor::Fixed, part_2d: Puzzle5dPart2d::default(), part_3d: Puzzle5dPart3d::default(), grips: Vec::new() }
     }
 }
@@ -382,7 +382,7 @@ pub struct Puzzle5dGripTemplate {
 }
 
 impl Default for Puzzle5dGripTemplate {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { id: String::new(), name: String::new(), label: String::new(), description: String::new(), icon: String::new(), grip_kind: None, point: [0.0, 0.0, 0.0], direction: default_grip_direction(), t: None, mandatory: None, radius: None }
     }
 }
@@ -975,7 +975,7 @@ pub use crate::artifacts::puzzle5d::op::Puzzle5dPlaySnapshot;
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fastener_defaults_include_diagram_xy() {
         let fastener: Puzzle5dFastener = serde_json::from_value(serde_json::json!({
             "id": "f1",
@@ -989,7 +989,7 @@ mod tests {
         assert_eq!(fastener.rotation, 0.0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fastener_round_trips_eight_transform_params() {
         let fastener = Puzzle5dFastener { id: "f1".into(), source: "p1:g0".into(), target: "p2:g0".into(), fastener_kind: Some("fk".into()), gap: 1.0, shift: 2.0, rise: 3.0, rotation: 4.0, turn: 5.0, tilt: 6.0, x: 7.0, y: 8.0 };
         let value = serde_json::to_value(&fastener).unwrap();
@@ -999,7 +999,7 @@ mod tests {
         assert_eq!(back, fastener);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn part_anchor_defaults_to_fixed() {
         let part: Puzzle5dPart = serde_json::from_value(serde_json::json!({ "id": "p1" })).unwrap();
         assert_eq!(part.anchor, Puzzle5dPartAnchor::Fixed);
@@ -1007,7 +1007,7 @@ mod tests {
         assert_eq!(derived.anchor, Puzzle5dPartAnchor::Derived);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn kind_compatibility_unifies_important_and_specificity() {
         let row: Puzzle5dKindCompatibility = serde_json::from_value(serde_json::json!({
             "source": "a",
@@ -1028,7 +1028,7 @@ mod tests {
         assert_eq!(sparse.specificity, Puzzle5dCompatSpecificity::General);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn catalog_part_kind_carries_representations_and_grip_templates() {
         let kind = Puzzle5dCatalogPartKind {
             id: "hex".into(),
@@ -1065,13 +1065,13 @@ mod tests {
         assert_eq!(back.authors[0].name, "Ada");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn grip_template_direction_defaults_to_positive_z() {
         let template: Puzzle5dGripTemplate = serde_json::from_value(serde_json::json!({ "id": "g0" })).unwrap();
         assert_eq!(template.direction, [0.0, 0.0, 1.0]);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn catalog_grip_kind_is_port_like() {
         let kind = Puzzle5dCatalogGripKind {
             id: "b-l".into(),

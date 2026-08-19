@@ -42,7 +42,7 @@ impl Error {
 }
 
 impl fmt::Display for Error {
-    async fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         if let Some(ctx) = &self.context {
             write!(f, "[{:?}] {} ({})", self.severity, self.message, ctx)
         } else {
@@ -80,25 +80,25 @@ impl Diagnostics {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fatal_has_correct_severity() {
         let e = Error::fatal("bad model");
         assert_eq!(e.severity, Severity::Fatal);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn severe_and_warning_severities() {
         assert_eq!(Error::severe("x").severity, Severity::Severe);
         assert_eq!(Error::warning("x").severity, Severity::Warning);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn with_context_sets_context() {
         let e = Error::fatal("bad").with_context("zone1");
         assert_eq!(e.context.as_deref(), Some("zone1"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn display_includes_context_when_present() {
         let with_ctx = Error::severe("oops").with_context("surf1");
         assert!(format!("{with_ctx}").contains("surf1"));
@@ -106,7 +106,7 @@ mod tests {
         assert!(!format!("{without_ctx}").contains('('));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn diagnostics_push_has_fatal_and_merge() {
         let mut diag = Diagnostics::default();
         assert!(!diag.has_fatal());

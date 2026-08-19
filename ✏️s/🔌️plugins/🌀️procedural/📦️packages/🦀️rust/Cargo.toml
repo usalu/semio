@@ -45,6 +45,9 @@ default = ["plugin-entry"]
 plugin-entry = []
 
 [dependencies]
+# 🚦️ O1 de-dyn: `#[dyn_enum]`/`dyn_enum_close!` generate `Constraints` (⛓️constraint), replacing
+# the crate's 12 `Box<dyn Constraint>`/`&dyn SoftConstraint` seams — MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME.
+semio-framework-dispatch-macros = { path = "../../../../../🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust", package = "semio-framework-dispatch-macros" }
 semio-s-plugin-stdio = { path = "../../../🗄️stdio/📦️packages/🦀️rust", package = "semio-s-plugin-stdio", default-features = false }
 semio-framework-geometry = { path = "../../../../../🧰️framework/🔨️modules/📐️geometry/📦️packages/🦀️rust", package = "semio-framework-geometry" }
 semio-framework-graph = { path = "../../../../../🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust", package = "semio-framework-graph" }
@@ -66,6 +69,7 @@ wasm-bindgen = "0.2.106"
 semio-framework-os = { path = "../../../../../🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust", package = "semio-framework-os" }
 
 [dev-dependencies]
+semio-framework-async-macros = { path = "../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 # 🎬️ `EngineComputeTests` (below, in the procedural3d editor's root component.rs) exercises frustum-cull/AABB scene
 # math that now lives at `ui_wgpu`'s `kernel_3d_scene` mount (ticket
 # 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS wave MESH — `semio-framework-3d`

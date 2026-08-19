@@ -23,7 +23,7 @@ pub struct TiffArtifact {
 }
 
 impl Default for TiffArtifact {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self::from_snapshot(TiffSnapshot::default())
     }
 }

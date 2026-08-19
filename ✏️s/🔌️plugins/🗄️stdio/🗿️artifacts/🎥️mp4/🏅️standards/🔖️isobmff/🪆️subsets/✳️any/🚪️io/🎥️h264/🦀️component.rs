@@ -25,7 +25,7 @@ pub enum H264Error {
 }
 
 impl std::fmt::Display for H264Error {
-    async fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Truncated => write!(f, "h264: truncated bitstream"),
             Self::Malformed(m) => write!(f, "h264: malformed: {m}"),
@@ -287,7 +287,7 @@ pub async fn build_avcc_extended(sps_list: &[Vec<u8>], pps_list: &[Vec<u8>], nal
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn avcc_round_trips_sps_pps_lists() {
         // 🧪️ A tiny, structurally valid baseline SPS RBSP (profile_idc=66) — enough to exercise
         // parse_sps_dimensions and the avcC list round trip without depending on a real fixture.
@@ -302,7 +302,7 @@ mod tests {
         assert_eq!(nal_len, 4);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn strip_emulation_prevention_removes_three_byte() {
         let ebsp = [0x00, 0x00, 0x03, 0x01, 0x00, 0x00, 0x03, 0x02];
         assert_eq!(strip_emulation_prevention(&ebsp), vec![0x00, 0x00, 0x01, 0x00, 0x00, 0x02]);

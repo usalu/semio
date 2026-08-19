@@ -195,7 +195,7 @@ mod tests {
     use super::*;
     use crate::artifacts::puzzle5d::{Puzzle5dFastener, Puzzle5dGrip, Puzzle5dGrip2d, Puzzle5dGrip3d, Puzzle5dMeta, Puzzle5dPart, Puzzle5dPart2d, Puzzle5dPart3d, Puzzle5dPartAnchor, Puzzle5dSnapshot};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn flatten_writes_diagram_offsets_onto_part_2d() {
         let mut snapshot = Puzzle5dSnapshot {
             schema: "puzzle.5d".into(),

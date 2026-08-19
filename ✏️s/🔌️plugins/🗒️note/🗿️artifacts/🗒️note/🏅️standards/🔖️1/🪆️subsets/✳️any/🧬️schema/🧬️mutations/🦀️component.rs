@@ -153,7 +153,7 @@ mod tests {
         forward
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dispatch_registers_semantic_descriptors() {
         register_note_mutation_descriptors();
         for kind in NoteMutation::kinds() {
@@ -163,7 +163,7 @@ mod tests {
     }
 
     //#region 🔖️MutationLaws
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn root_scalar_inverse_and_absorb_laws() {
         let base = sample_snapshot();
         for mutation in [
@@ -185,7 +185,7 @@ mod tests {
         assert_mutation_diff_absorb_law(&base, d1, d2);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn asset_inverse_law_create_replace_delete() {
         let base = sample_snapshot();
         let asset = NoteImageAsset { mime: "image/jpeg".into(), data: "e".into(), width: None, height: None };
@@ -194,7 +194,7 @@ mod tests {
         assert_mutation_inverse_law(&base, &delete_asset("asset-1".into()));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn block_lifecycle_inverse_law_create_delete_duplicate() {
         let base = sample_snapshot();
         let new_block = NoteBlockNode::Text {
@@ -208,7 +208,7 @@ mod tests {
         assert_mutation_inverse_law(&base, &duplicate_block("b1".into(), dup));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn block_reparent_and_drag_inverse_law() {
         let mut base = sample_snapshot();
         base.blocks.push(NoteBlockNode::Group { id: "g1".into(), name: "Group".into(), x: 0.0, y: 0.0, width: 200.0, height: 200.0, rotation: 0.0, visible: true, locked: false, children: Vec::new() });
@@ -216,7 +216,7 @@ mod tests {
         assert_mutation_inverse_law(&base, &drag_blocks(vec!["b1".into(), "b2".into()], 5.0, -3.0));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn block_field_inverse_laws() {
         let base = sample_snapshot();
         assert_mutation_inverse_law(&base, &rename_block("b1".into(), "Renamed".into()));
@@ -231,7 +231,7 @@ mod tests {
         assert_mutation_inverse_law(&base, &edit_block_ink_stroke("b2".into(), vec![[0.0, 0.0], [1.0, 1.0]], 1.0, 2.0, 10.0, 10.0));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn table_row_column_inverse_laws() {
         let base = sample_snapshot();
         assert_mutation_inverse_law(&base, &insert_table_row("b3".into()));
@@ -240,7 +240,7 @@ mod tests {
         assert_mutation_inverse_law(&base, &remove_table_column("b3".into()));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_delete_block_round_trip_grows_and_shrinks_projection() {
         let base = sample_snapshot();
         let new_block = NoteBlockNode::Text {
@@ -253,7 +253,7 @@ mod tests {
         assert_eq!(removed.blocks.len(), base.blocks.len());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn delete_block_at_a_non_last_index_restores_exact_position_on_undo() {
         let base = sample_snapshot();
         // b1 is index 0 of 4; deleting then undoing must restore it there, not append it at the end.
@@ -265,7 +265,7 @@ mod tests {
     /// ✅️ §C2/fan-out-recipe laws (`26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS`):
     /// one `assert_missing_target_is_error`/Fatal check per verb family this facet implements
     /// (create/delete(s)/rename/change/move/resize/drag/duplicate/insert/remove/edit/replace).
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_block_duplicate_id_is_fatal() {
         let base = sample_snapshot();
         let existing = NoteBlockNode::Text {
@@ -277,37 +277,37 @@ mod tests {
         assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn delete_block_missing_target_is_error() {
         let base = sample_snapshot();
         assert_missing_target_is_error(&base, &delete_block("ghost".into()));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn delete_blocks_missing_target_is_error() {
         let base = sample_snapshot();
         assert_missing_target_is_error(&base, &delete_blocks(vec!["ghost".into()]));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn rename_block_missing_target_is_error() {
         let base = sample_snapshot();
         assert_missing_target_is_error(&base, &rename_block("ghost".into(), "x".into()));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn change_block_locked_missing_target_is_error() {
         let base = sample_snapshot();
         assert_missing_target_is_error(&base, &change_block_locked("ghost".into(), true));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn move_block_missing_target_is_error() {
         let base = sample_snapshot();
         assert_missing_target_is_error(&base, &move_block("ghost".into(), 1.0, 1.0));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn move_block_non_finite_is_fatal() {
         let base = sample_snapshot();
         let outcome = move_block("b1".into(), f64::NAN, 0.0).diff(&base);
@@ -315,19 +315,19 @@ mod tests {
         assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn resize_block_missing_target_is_error() {
         let base = sample_snapshot();
         assert_missing_target_is_error(&base, &resize_block("ghost".into(), 10.0, 10.0));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn drag_blocks_missing_target_is_error() {
         let base = sample_snapshot();
         assert_missing_target_is_error(&base, &drag_blocks(vec!["ghost".into()], 1.0, 1.0));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn duplicate_block_missing_source_is_error() {
         let base = sample_snapshot();
         let block = NoteBlockNode::Text {
@@ -337,32 +337,32 @@ mod tests {
         assert_missing_target_is_error(&base, &duplicate_block("ghost".into(), block));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn insert_table_row_missing_target_is_error() {
         let base = sample_snapshot();
         assert_missing_target_is_error(&base, &insert_table_row("ghost".into()));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn remove_table_row_missing_target_is_error() {
         let base = sample_snapshot();
         assert_missing_target_is_error(&base, &remove_table_row("ghost".into()));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn edit_block_text_missing_target_is_error() {
         let base = sample_snapshot();
         assert_missing_target_is_error(&base, &edit_block_text("ghost".into(), Vec::new()));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn replace_asset_payload_missing_target_is_error() {
         let base = sample_snapshot();
         let asset = NoteImageAsset { mime: "image/jpeg".into(), data: "e".into(), width: None, height: None };
         assert_missing_target_is_error(&base, &replace_asset_payload("ghost".into(), asset));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn create_asset_duplicate_id_is_fatal() {
         let base = sample_snapshot();
         let asset = NoteImageAsset { mime: "image/png".into(), data: "d".into(), width: None, height: None };
@@ -371,7 +371,7 @@ mod tests {
         assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn delete_asset_missing_target_is_error() {
         let base = sample_snapshot();
         assert_missing_target_is_error(&base, &delete_asset("ghost".into()));

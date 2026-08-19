@@ -25,7 +25,7 @@ pub struct Puzzle2dCamera {
 }
 
 impl Default for Puzzle2dCamera {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { x: 0.0, y: 0.0, zoom: 1.0 }
     }
 }
@@ -55,7 +55,7 @@ pub struct Puzzle2dHandle {
 }
 
 impl Default for Puzzle2dHandle {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { id: String::new(), handle_kind: None, angle: 0.0, radius: None, color: None, icon_kind: None, scale: None, visible: None, locked: None }
     }
 }
@@ -107,7 +107,7 @@ pub struct Puzzle2dNode {
 }
 
 impl Default for Puzzle2dNode {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self {
             id: String::new(),
             node_kind: None,
@@ -167,7 +167,7 @@ pub struct Puzzle2dEdge {
 }
 
 impl Default for Puzzle2dEdge {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { id: String::new(), source: String::new(), target: String::new(), edge_kind: None, gap: 0.0, shift: 0.0, rise: 0.0, rotation: 0.0, turn: 0.0, tilt: 0.0, x: 0.0, y: 0.0, source_tip: None, target_tip: None, visible: None, locked: None }
     }
 }
@@ -260,7 +260,7 @@ pub struct Puzzle2dHandleTemplate {
 }
 
 impl Default for Puzzle2dHandleTemplate {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { id: String::new(), name: String::new(), label: String::new(), description: String::new(), icon: String::new(), handle_kind: None, angle: 0.0, t: None, mandatory: None, radius: None }
     }
 }
@@ -548,7 +548,7 @@ pub use crate::artifacts::puzzle2d::op::Puzzle2dPlaySnapshot;
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn puzzle2d_edge_connection_params_default_to_zero() {
         let edge = Puzzle2dEdge::default();
         assert_eq!(edge.gap, 0.0);
@@ -561,13 +561,13 @@ mod tests {
         assert_eq!(edge.y, 0.0);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn puzzle2d_node_anchor_defaults_to_fixed() {
         let node = Puzzle2dNode::default();
         assert_eq!(node.anchor, Puzzle2dNodeAnchor::Fixed);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn puzzle2d_edge_serde_roundtrips_connection_params() {
         let edge = Puzzle2dEdge { id: "e1".into(), source: "a".into(), target: "b".into(), gap: 1.0, shift: 2.0, rise: 3.0, rotation: 10.0, turn: 20.0, tilt: 30.0, x: 4.0, y: 5.0, ..Default::default() };
         let json = serde_json::to_string(&edge).expect("serialize");
@@ -577,7 +577,7 @@ mod tests {
         assert!(json.contains("\"rotation\":10"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn puzzle2d_kind_compatibility_includes_important() {
         let row = Puzzle2dKindCompatibility { source: "a".into(), target: "b".into(), bidirectional: true, important: true, specificity: Puzzle2dCompatSpecificity::Handle };
         let json = serde_json::to_value(&row).expect("serialize");
@@ -586,7 +586,7 @@ mod tests {
         assert_eq!(json["specificity"], "handle");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn puzzle2d_kind_catalogs_serde_roundtrip() {
         let catalogs = Puzzle2dKindCatalogs {
             nodes: vec![Puzzle2dCatalogNodeKind {

@@ -28,7 +28,7 @@ pub struct Block2dArtifact {
 
 //#region 🔖️Conversions
 impl Default for Block2dArtifact {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self::from_snapshot(Block2dSnapshot::default())
     }
 }
@@ -258,12 +258,12 @@ pub async fn next_id<'a>(existing: impl Iterator<Item = &'a str>, prefix: &str) 
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn empty_definition_matches_default() {
         assert_eq!(empty_block2d_snapshot(), Block2dSnapshot::default());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn next_id_skips_existing() {
         let existing = ["h0", "h1"];
         assert_eq!(next_id(existing.into_iter(), "h"), "h2");

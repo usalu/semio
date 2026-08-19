@@ -92,7 +92,7 @@ mod tests {
 
     /// 🎥️ `SetViewport` is config-only — it must never emit a `SequenceMutation` (no VCS edit, no
     /// undo entry) and instead write straight into the config store.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_viewport_writes_config_not_operations() {
         let mut app = new_app();
         let result = app.dispatch_typed(SequenceCommand::SetViewport(SetViewport { camera: SequenceCamera { x: 5.0, y: 6.0, zoom: 2.0 } }), &semio_framework_plugin::testkit::meta("local")).expect("viewport pan/zoom");
@@ -106,7 +106,7 @@ mod tests {
     /// injected `interactionSelect` verb against the "steps" domain — requires a registry-wired app
     /// (see `select_steps`'s own doc comment) so `NodeGraphEdit::apply` (not the macro-dispatched
     /// `handle`, which always sees an empty selection) reads the live selection.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn node_graph_edit_delete_selection_clears_selection() {
         let mut app = new_app_with_registry_wired();
         select_steps(&mut app, &["step-1"]);

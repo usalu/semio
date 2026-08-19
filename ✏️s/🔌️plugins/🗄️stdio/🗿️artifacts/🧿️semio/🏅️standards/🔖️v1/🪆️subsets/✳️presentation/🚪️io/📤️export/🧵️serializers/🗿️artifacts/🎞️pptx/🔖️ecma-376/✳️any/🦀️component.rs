@@ -119,7 +119,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn maps_shapes_positions_and_placeholder_kind() {
         let pptx = semio_framework_plugin::resolve_ready(SemioPresentationToPptx::serialize(&sample_semio())).expect("serialize");
         assert_eq!(pptx.presentation.slides.len(), 1);

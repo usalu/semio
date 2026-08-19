@@ -18,7 +18,7 @@ pub struct NoteIntoPng;
 impl Serializer<NoteSnapshot> for NoteIntoPng {
     const INTO: Dialect = PNG_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    async fn serialize(from: &NoteSnapshot) -> IoResult<IoPayload> {
+    fn serialize(from: &NoteSnapshot) -> IoResult<IoPayload> {
         let (w, h) = note_document_bounds(from);
         let width = w.max(1);
         let height = h.max(1);

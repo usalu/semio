@@ -103,18 +103,18 @@ mod tests {
     //#endregion 🧸️Fixtures
 
     //#region 🧪️InferenceLaws
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = parent_child_snapshot();
         assert_eq!(Puzzle2dInference::infer(&snapshot), Puzzle2dInference::infer(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(Puzzle2dInference::infer(&Puzzle2dSnapshot::default()), Puzzle2dInference::default());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_matches_compute_flat_position_directly() {
         let snapshot = parent_child_snapshot();
         let inferred = Puzzle2dInference::infer(&snapshot);
@@ -234,7 +234,7 @@ mod fastened_tests {
     use super::*;
     use crate::artifacts::puzzle2d::{Puzzle2dCamera, Puzzle2dEdge, Puzzle2dMeta, Puzzle2dNode, Puzzle2dNodeAnchor, Puzzle2dSnapshot};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fastened_layout_places_child_from_origin_parent_by_handle_angle() {
         let mut snapshot = Puzzle2dSnapshot {
             schema: "puzzle.2d".into(),

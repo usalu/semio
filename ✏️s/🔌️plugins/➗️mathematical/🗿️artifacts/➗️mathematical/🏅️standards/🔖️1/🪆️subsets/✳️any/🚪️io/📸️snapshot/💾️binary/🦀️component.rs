@@ -111,12 +111,12 @@ mod tests {
     use super::*;
     use crate::artifacts::mathematical::{MathematicalGeometry, MathematicalGraph};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mathematical_snapshot_dsl_pack_equivalence_default() {
         store::os_store::test_support::assert_dsl_pack_equivalence(&MathematicalSnapshot::default());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mathematical_snapshot_dsl_pack_equivalence_with_seed_and_empty_collections() {
         let mut graph = MathematicalGraph {
             algorithm: "bfs".into(),
@@ -129,7 +129,7 @@ mod tests {
         store::os_store::test_support::assert_dsl_pack_equivalence(&snapshot);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn command_envelope_round_trip_holds_for_an_applied_operation() {
         use crate::artifacts::mathematical::mutations::update_graph_algorithm::mutation::UpdateGraphAlgorithm;
         use crate::artifacts::mathematical::op::MathematicalMutation;

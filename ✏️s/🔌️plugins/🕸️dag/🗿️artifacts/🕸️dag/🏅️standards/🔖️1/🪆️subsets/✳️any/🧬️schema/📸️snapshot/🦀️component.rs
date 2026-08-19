@@ -42,7 +42,7 @@ pub struct DagSnapshot {
 }
 
 impl Default for DagSnapshot {
-    async fn default() -> Self {
+    fn default() -> Self {
         default_snapshot()
     }
 }
@@ -60,21 +60,21 @@ pub async fn default_snapshot() -> DagSnapshot {
 /// child — the bridge goes through the working-scene converter, never through `nodes`/`edges` fields
 /// (this struct no longer has any).
 impl From<DagSnapshot> for infinite_board_port_directed_dag::DagSnapshot {
-    async fn from(value: DagSnapshot) -> Self {
+    fn from(value: DagSnapshot) -> Self {
         let scene = crate::artifacts::dag::dag_working_scene(&value);
         Self { schema: value.schema, nodes: scene.nodes, edges: scene.edges }
     }
 }
 
 impl From<infinite_board_port_directed_dag::DagSnapshot> for DagSnapshot {
-    async fn from(value: infinite_board_port_directed_dag::DagSnapshot) -> Self {
+    fn from(value: infinite_board_port_directed_dag::DagSnapshot) -> Self {
         let content = crate::artifacts::dag::dag_content_child_handle_and_cache(value.nodes, value.edges);
         Self { schema: value.schema, content }
     }
 }
 
 impl From<&DagSnapshot> for infinite_board_port_directed_dag::DagSnapshot {
-    async fn from(value: &DagSnapshot) -> Self {
+    fn from(value: &DagSnapshot) -> Self {
         value.clone().into()
     }
 }

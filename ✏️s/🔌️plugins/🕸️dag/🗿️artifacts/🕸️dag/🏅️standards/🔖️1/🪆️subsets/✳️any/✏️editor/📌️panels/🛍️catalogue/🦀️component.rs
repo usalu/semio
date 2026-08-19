@@ -43,7 +43,7 @@ mod tests {
     use super::*;
     use crate::editor::dag::testkit::{new_app, render as render_body};
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn renders_every_node_kind() {
         let mut app = new_app();
         let json = render_body(&mut app, DAG_PLAY_BODY_CATALOGUE);
@@ -52,7 +52,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn definition_binds_the_framework_catalogue_tab_to_this_body_key() {
         let definition = definition();
         assert_eq!(definition.id(), FRAMEWORK_PANEL_TAB_CATALOGUE_ID);

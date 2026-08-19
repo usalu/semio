@@ -72,13 +72,13 @@ mod tests {
     use super::*;
     use protocol::Inference;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = Vdi3805Snapshot::default();
         assert_eq!(Vdi3805Inference::infer(&snapshot), Vdi3805Inference::infer(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(Vdi3805Inference::infer(&Vdi3805Snapshot::default()), Vdi3805Inference::default());
     }
@@ -494,7 +494,7 @@ mod compliance_report_tests {
     use super::*;
     use std::collections::BTreeSet;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn evaluate_reaches_operative_sheet_families() {
         let report = evaluate(&Vdi3805Snapshot::default());
         let parts: BTreeSet<String> = report.checks.iter().map(|c| c.clause.part.clone()).filter(|p| p.chars().all(|ch| ch.is_ascii_digit())).collect();
@@ -508,7 +508,7 @@ mod compliance_report_tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn reserved_sheet_returns_not_applicable() {
         let doc = Vdi3805Snapshot::default();
         let result = part_15::check(&doc);
@@ -517,7 +517,7 @@ mod compliance_report_tests {
         assert_eq!(result.status, CheckStatus::NotApplicable);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn historical_part_check_respects_strict_mode() {
         let mut doc = Vdi3805Snapshot { strict_mode: true, ..Vdi3805Snapshot::default() };
         let result = part_12::check(&doc);
@@ -528,21 +528,21 @@ mod compliance_report_tests {
         assert_eq!(result.status, CheckStatus::Pass);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn multi_profile_part_check_reports_metadata_when_no_product() {
         let doc = Vdi3805Snapshot::default();
         let result = part_08::check(&doc);
         assert_eq!(result.status, CheckStatus::Pass);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn evaluate_reports_strict_mode_check() {
         let doc = Vdi3805Snapshot { strict_mode: true, ..Vdi3805Snapshot::default() };
         let report = evaluate(&doc);
         assert!(report.checks.iter().any(|c| c.clause.section == "strict"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn evaluate_skips_geometry_and_curve_checks_when_absent() {
         let mut doc = Vdi3805Snapshot::default();
         doc.geometry.clear();

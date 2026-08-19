@@ -72,13 +72,13 @@ mod tests {
     use super::*;
     use protocol::Inference;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let snapshot = En1995Snapshot::default();
         assert_eq!(En1995Inference::infer(&snapshot), En1995Inference::infer(&snapshot));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
         assert_eq!(En1995Inference::infer(&En1995Snapshot::default()), En1995Inference::default());
     }
@@ -185,7 +185,7 @@ pub async fn evaluate(document: &En1995Snapshot) -> CheckReport {
 mod compliance_report_tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn full_timber_worked_example() {
         let report = check_full_timber(25.0, 50.0, 15.0, 1_800_000.0, 20_000.0, 200.0, 300.0, 24.0, 21.0, 4.0, ServiceClass::Sc1, LoadDuration::Medium, 80.0, 18.0, 12_000.0, 30.0, 300.0, AnnexChoice::De, 0.3, 500_000.0);
         assert_eq!(report.checks.len(), 8);
@@ -196,7 +196,7 @@ mod compliance_report_tests {
         assert!(report.checks[7].utilization < 1.0, "bridge fatigue check should pass");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn evaluate_runs_all_parts() {
         let report = evaluate(&En1995Snapshot::default());
         assert_eq!(report.checks.len(), 8);

@@ -94,20 +94,20 @@ mod tests {
     use super::*;
     use crate::artifacts::program::sample_plugin;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn definition_declares_the_block_list_surface_and_body_key() {
         let definition = definition();
         assert_eq!(definition.body_key, ARCHITECT_BODY_REGISTER);
         assert!(matches!(definition.surface_kind, SurfaceKind::BlockList));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn the_active_registers_rows_become_block_list_steps() {
         let json = serde_json::to_string(&render(&sample_plugin(), &ArchitectConfig::default())).expect("json");
         assert!(json.contains("Reception"));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn an_empty_register_renders_the_placeholder() {
         let cfg = ArchitectConfig { active_register: "benchmarks".into(), ..ArchitectConfig::default() };
         let json = serde_json::to_string(&render(&sample_plugin(), &cfg)).expect("json");

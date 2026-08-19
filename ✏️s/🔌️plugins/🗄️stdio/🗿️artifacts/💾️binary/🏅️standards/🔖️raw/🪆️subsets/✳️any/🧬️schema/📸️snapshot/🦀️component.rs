@@ -24,7 +24,7 @@ pub struct BinarySnapshot {
 }
 
 impl Default for BinarySnapshot {
-    async fn default() -> Self {
+    fn default() -> Self {
         Self { schema: STDIO_BINARY_DOCUMENT_SCHEMA.into(), bytes: Vec::new() }
     }
 }

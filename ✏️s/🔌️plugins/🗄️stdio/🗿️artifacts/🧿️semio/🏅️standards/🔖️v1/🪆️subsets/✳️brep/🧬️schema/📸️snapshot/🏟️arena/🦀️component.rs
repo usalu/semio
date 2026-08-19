@@ -40,7 +40,7 @@ macro_rules! define_id {
             }
         }
         impl std::fmt::Display for $name {
-            async fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
                 write!(f, "{}-{}-{}", $tag, self.index, self.generation)
             }
         }
@@ -82,7 +82,7 @@ pub struct Store<T, Id> {
 }
 
 impl<T, Id: ArenaId> Default for Store<T, Id> {
-    async fn default() -> Self {
+    fn default() -> Self {
         Store::new()
     }
 }
@@ -161,14 +161,14 @@ mod tests {
 
     define_id!(TestId, "test");
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn insert_and_get_round_trips() {
         let mut store: Store<i32, TestId> = Store::new();
         let id = store.insert(42);
         assert_eq!(store.get(id), Some(&42));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn remove_then_get_returns_none() {
         let mut store: Store<i32, TestId> = Store::new();
         let id = store.insert(1);
@@ -176,7 +176,7 @@ mod tests {
         assert_eq!(store.get(id), None);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn stale_handle_after_reuse_returns_none() {
         let mut store: Store<i32, TestId> = Store::new();
         let a = store.insert(1);
@@ -188,7 +188,7 @@ mod tests {
         assert_eq!(store.get(b), Some(&2));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn iteration_is_index_ordered_and_skips_removed_slots() {
         let mut store: Store<i32, TestId> = Store::new();
         let a = store.insert(10);
@@ -202,7 +202,7 @@ mod tests {
         assert!(collected[1].0.raw_index() == c.raw_index());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn len_reflects_only_live_entries() {
         let mut store: Store<i32, TestId> = Store::new();
         let a = store.insert(1);
@@ -213,14 +213,14 @@ mod tests {
         assert!(!store.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn display_uses_readable_tag_index_generation_format() {
         let mut store: Store<i32, TestId> = Store::new();
         let id = store.insert(1);
         assert_eq!(id.to_string(), format!("test-{}-{}", id.raw_index(), id.raw_generation()));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn serde_round_trips_an_id() {
         let mut store: Store<i32, TestId> = Store::new();
         let id = store.insert(1);
@@ -232,7 +232,7 @@ mod tests {
     mod quick {
         use super::*;
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn random_insert_remove_sequence_never_aliases_a_removed_id() {
             let mut rng = semio_framework_geometry::random::Rng::from_seed(83);
             let mut store: Store<u64, TestId> = Store::new();
